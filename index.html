@@ -480,6 +480,9 @@ html[data-season="noel"] body::after{background-image:radial-gradient(2.5px 2.5p
 
 <div class="wrap" id="app"></div>
 
+<script src="vendor/supabase.js"></script>
+<script src="config.js"></script>
+<script src="cloud.js"></script>
 <script>
 /* ======= DONNÉES : une ligne = une carte =======
    r : D = Départ, C = Commune, R = Rare, E = Épique, L = Légendaire */
@@ -755,6 +758,13 @@ async function initStore(){
     else await dbDoc.set(dataOf());
     delete P._migrated; store="cloud"; lbInit(db,uid); render();
   }catch(e){ store="local"; if(P._migrated) save(); lbCanWrite=false; try{ const db=await window.claude.use("db"); if(db&&lbUid) lbInit(db,lbUid); }catch(_){ } render(); }
+}
+
+function accountHTML(){
+  const h=window.helvara;
+  if(store==="cloud"&&h&&h.google) return `Progression sauvegardée sur ton compte Google${h.email?` (${esc(h.email)})`:""}. <button class="toggle" data-act="glogout">Se déconnecter</button>`;
+  if(store==="cloud") return `Progression sauvegardée pour cet appareil. <button class="toggle" data-act="glogin">Se connecter avec Google</button> pour la retrouver partout.`;
+  return `Progression sauvegardée sur cet appareil.${h&&h.error?` <span class="hint">${esc(h.error)}</span>`:""}`;
 }
 
 /* ======= CLASSEMENT ======= */
@@ -1421,11 +1431,11 @@ function mpResume(){
 function duelHTML(){
   const s=mpSession();
   const invite=`<section class="sec"><h2>Inviter un ami</h2><ol class="rules">
-    <li>Ouvre <b>Partager</b> en haut de la page et invite ton ami <b>par e-mail</b>. Garde l'accès général sur « Uniquement les personnes invitées ».</li>
-    <li><b>Éditeur</b> : sa progression est sauvegardée sur son compte. <b>Observateur</b> : il joue normalement, mais sa progression reste sur son appareil.</li>
+    <li>Envoie-lui l'adresse de cette page.</li>
+    <li>Il peut jouer tout de suite. En se connectant avec <b>Google</b> (bas de l'accueil), il retrouve sa progression sur tous ses appareils.</li>
     <li>Il ouvre le lien, construit son deck, puis rejoint ton salon avec le code.</li></ol></section>`;
   if(!roomTried) return `<section class="sec"><h2>Duel entre amis</h2><p class="hint">Connexion au salon…</p></section>`;
-  if(!room) return `<section class="sec"><h2>Duel entre amis</h2><p>Le salon en direct n'est pas disponible ici. Ouvre le jeu dans Claude, depuis le lien partagé par invitation.</p></section>${invite}`;
+  if(!room) return `<section class="sec"><h2>Duel entre amis</h2><p>Le salon en direct est injoignable pour l'instant. Vérifie ta connexion internet, puis recharge la page.</p></section>${invite}`;
   if(S&&S.mp&&S.mp.resuming) return `<section class="sec mpbox"><h2>Reconnexion</h2><p>Retour dans le salon <b class="mpcode">${esc(myMp.code)}</b>. En attente de ${esc(S.mp.oppNick)}…</p><button class="ghost" data-act="mpquit">Abandonner le duel</button></section>`;
   if(!deckReady()) return `<section class="sec"><h2>Duel entre amis</h2><p>Complète d'abord ton deck de 12 cartes.</p><button class="primary" data-act="go" data-to="deck">Aller au deck</button></section>`;
   if(!myMp){
@@ -1561,7 +1571,7 @@ function homeHTML(){
   </div>
   ${questsHTML()}
   <div class="foot">
-    <span>${store==="cloud"?"Progression sauvegardée sur ton compte.":"Progression sauvegardée sur cet appareil."}</span>
+    <span>${accountHTML()}</span>
     <span class="footbtns"><button class="toggle" data-act="tuto">Revoir le tutoriel</button><button class="toggle" data-act="music" aria-pressed="${P.music}">Musique : ${P.music?"activée":"coupée"}</button><button class="toggle" data-act="sfx" aria-pressed="${P.sfx}">Effets : ${P.sfx?"activés":"coupés"}</button></span>
   </div>`;
 }
@@ -1926,6 +1936,8 @@ document.addEventListener("click", e=>{
     case "editname": editName=true; sfx("click"); render(); return;
     case "cancelname": editName=false; render(); return;
     case "music": P.music=!P.music; save(); render(); return;
+    case "glogin": sfx("click"); if(window.helvara) window.helvara.signIn(); return;
+    case "glogout": sfx("click"); if(window.helvara&&confirm("Te déconnecter ? Ta progression reste sur ton compte Google.")) window.helvara.signOut(); return;
     case "sfx": P.sfx=!P.sfx; save(); if(P.sfx) SFX.click(); render(); return;
     case "claim": { const q=P.q&&P.q.list[+el.dataset.i]; if(q&&!q.c&&q.p>=QDEF[q.id].n){ q.c=true; P.chf+=QDEF[q.id].r; save(); sfx("coin"); } render(); return; }
     case "fanpick": fanPick=P.fan.filter(id=>P.owned.includes(id)); sfx("click"); render(); return;
