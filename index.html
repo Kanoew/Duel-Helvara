@@ -201,11 +201,13 @@ pre{background:var(--deep);border:1px solid var(--line);border-radius:10px;paddi
 .idline .idname{font-family:var(--display);font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .idline .idrank{display:flex;align-items:center;gap:6px;color:var(--mist);font-size:13px;white-space:nowrap}
 .vitrinewrap{margin:6px 0 14px}
-.vitrine{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
-.vitrine::-webkit-scrollbar{display:none}
-.vslide{flex:0 0 100%;scroll-snap-align:center;display:flex;justify-content:center;padding:6px 0 10px}
-.vcard{background:none;border:0;padding:0;cursor:zoom-in;width:min(62%,240px)}
-.vcard .full{pointer-events:none;box-shadow:0 14px 30px rgba(0,0,0,.55)}
+.vitrinewrap .fan{touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;max-width:520px;margin:0 auto}
+.fan .fcard{position:absolute;width:40%;top:6%;left:30%;background:none;border:0;padding:0;cursor:pointer;transition:transform .25s ease}
+.fan .fcard .full{position:static;width:100%;box-shadow:0 14px 30px rgba(0,0,0,.55);transform:none}
+.fan .fcard:nth-child(1){transform:rotate(-12deg) translateX(-38%);z-index:1}
+.fan .fcard:nth-child(2){z-index:3;top:0;cursor:zoom-in}
+.fan .fcard:nth-child(3){transform:rotate(12deg) translateX(38%);z-index:2}
+.pick,.thumb{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 .vfoot{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .vdots{display:flex;gap:7px}.vdots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .2s}.vdots i.on{background:var(--frost)}
 .playhint{text-align:center;margin:6px 0 14px}
@@ -1555,11 +1557,23 @@ function ulHTML(){
     <p class="hint">Tu possèdes ${u.n}. Leur fusion ultra-légendaire t'attend.</p>
     <button class="primary" data-act="ulclaim" data-id="${u.id}">Réclamer la carte</button><button class="ghost" data-act="ullater">Plus tard</button></div></div>`;
 }
-function vitrineHTML(){
+function fanIds(){
   const own=P.fan.filter(id=>P.owned.includes(id));
-  const fan=own.length===3?own:[...(P.deck.length?P.deck:["yarden","izzy","celeste"])].sort((a,b)=>CARDS[b].cost-CARDS[a].cost).slice(0,3);
-  return `<section class="vitrinewrap"><div class="vitrine" aria-label="Vitrine">${fan.map(id=>`<div class="vslide"><button class="vcard" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button></div>`).join("")}</div>
-    <div class="vfoot"><span class="vdots">${fan.map((_,i)=>`<i class="${i===vIdx?"on":""}"></i>`).join("")}</span><button class="ghost small" data-act="fanpick">Choisir mes cartes</button></div></section>`;
+  if(own.length===3) return own;
+  const f=[...(P.deck.length?P.deck:["yarden","izzy","celeste"])].sort((a,b)=>CARDS[b].cost-CARDS[a].cost).slice(0,3);
+  return f.map((_,i)=>f[(i+vIdx)%f.length]);
+}
+/* La vitrine tourne : la carte du centre devient la première, et le choix est gardé. */
+function fanRotate(step){
+  const own=P.fan.filter(id=>P.owned.includes(id));
+  if(own.length===3){ P.fan=step>0?[own[1],own[2],own[0]]:[own[2],own[0],own[1]]; save(); }
+  else vIdx=(vIdx+(step>0?1:2))%3;
+  sfx("select"); render();
+}
+function vitrineHTML(){
+  const fan=fanIds(), order=fan.length===3?[fan[2],fan[0],fan[1]]:fan, pos=fan.length===3?[-1,0,1]:fan.map((_,i)=>i);
+  return `<section class="vitrinewrap"><div class="fan" aria-label="Vitrine : glisse pour faire tourner les cartes">${order.map((id,k)=>`<button class="fcard" data-act="fantap" data-pos="${pos[k]}" data-id="${id}" aria-label="${pos[k]===0?"Agrandir ":"Mettre en avant "}${CARDS[id].name}">${fullCard(id)}</button>`).join("")}</div>
+    <div class="vfoot"><span class="hint">Glisse pour faire tourner</span><button class="ghost small" data-act="fanpick">Choisir mes cartes</button></div></section>`;
 }
 let vIdx=0;
 function homeHTML(){
@@ -1619,7 +1633,7 @@ function filterChips(){
 }
 function deckHTML(){
   const sorted=[...P.deck].sort((a,b)=>CARDS[a].cost-CARDS[b].cost||CARDS[a].pow-CARDS[b].pow);
-  const slots=[]; for(let i=0;i<ECO.deckSize;i++) slots.push(sorted[i]?thumb(sorted[i],`data-act="deckout" data-id="${sorted[i]}"`):`<div class="thumb empty"></div>`);
+  const slots=[]; for(let i=0;i<ECO.deckSize;i++) slots.push(sorted[i]?thumb(sorted[i],`data-act="deckout" data-id="${sorted[i]}" data-lp="z${sorted[i]}"`):`<div class="thumb empty"></div>`);
   const coll=POOL.filter(id=>SHOWN(id)&&(deckFilter==="all"||CARDS[id].fac===deckFilter)).sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].cost-CARDS[b].cost||CARDS[a].name.localeCompare(CARDS[b].name));
   const avg=P.deck.length?(P.deck.reduce((a,id)=>a+CARDS[id].cost,0)/P.deck.length).toFixed(1):"–";
   const full=P.deck.length>=ECO.deckSize;
@@ -1639,9 +1653,9 @@ function deckHTML(){
   <section class="sec">
     <h2>Toutes les cartes · ${P.owned.length}/${avail().length}</h2>
     ${filterChips()}
-    <p class="hint">Touche une carte pour l'ajouter au deck ou l'en retirer. Les cartes grisées restent à trouver.</p>
+    <p class="hint">Touche une carte pour l'ajouter au deck ou l'en retirer, garde le doigt dessus pour la voir en grand. Les cartes grisées restent à trouver.</p>
     <div class="grid">${coll.map(id=>{ if(!P.owned.includes(id)) return lockedCard(id); const inn=P.deck.includes(id); const off=!inn&&full;
-      return `<button class="pick ${inn?"in":""} ${off?"off":""}" data-act="toggle" data-id="${id}" aria-pressed="${inn}">${inn?`<span class="tag">Dans le deck</span>`:""}${fullCard(id)}</button>`; }).join("")||`<p class="hint">Aucune carte de cette faction pour l'instant.</p>`}</div>
+      return `<button class="pick ${inn?"in":""} ${off?"off":""}" data-act="toggle" data-id="${id}" data-lp="z${id}" aria-pressed="${inn}">${inn?`<span class="tag">Dans le deck</span>`:""}${fullCard(id)}</button>`; }).join("")||`<p class="hint">Aucune carte de cette faction pour l'instant.</p>`}</div>
   </section>
   ${locsHTML()}
   <button class="play" data-act="play" ${deckReady()?"":"disabled"}>${deckReady()?"Jouer avec ce deck":`Encore ${12-P.deck.length} carte${12-P.deck.length>1?"s":""} à ajouter`}</button>`;
@@ -1950,12 +1964,10 @@ function render(){
   { const se=season(); if(se) document.documentElement.dataset.season=se; else delete document.documentElement.dataset.season; }
   const hw=document.querySelector(".handwrap"), hs=hw?hw.scrollLeft:0;
   if(screen==="codex") screen="deck"; /* Deck et Collection ne font plus qu'un */
-  const vt=document.querySelector(".vitrine"), vs=vt?vt.scrollLeft:0;
   const body = screen==="play"?gameHTML():screen==="profile"?profileHTML():screen==="deck"?deckHTML():screen==="shop"?shopHTML():screen==="codex"?codexHTML():screen==="rules"?rulesHTML():screen==="duel"?duelHTML():screen==="blitz"?blitzHTML():screen==="board"?boardHTML():screen==="hist"?histHTML():homeHTML();
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
   app.innerHTML = header()+body+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+packOpenHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
   const h=document.querySelector(".handwrap"); if(h) h.scrollLeft=hs;
-  const v=document.querySelector(".vitrine"); if(v) v.scrollLeft=vs;
   music();
   if(editName){ const i=document.getElementById("name-input"); if(i && document.activeElement!==i){ i.focus(); i.select(); } }
 }
@@ -1964,19 +1976,23 @@ function render(){
 document.addEventListener("pointerdown", ()=>{ if(!bgmArmed){ bgmArmed=true; music(); } });
 document.addEventListener("visibilitychange", ()=>{ if(document.hidden&&bgm) bgm.pause(); else music(); });
 document.addEventListener("pointerdown", e=>{
-  const el=e.target.closest("[data-lp]"); if(!el||!S||screen!=="play") return;
+  const el=e.target.closest("[data-lp]"); if(!el) return;
+  const lp=el.dataset.lp, outside=lp[0]==="z"; /* z… : appui long hors partie (Collection) */
+  if(!outside&&(!S||screen!=="play")) return;
   lpFired=false; clearTimeout(lpTimer);
-  lpTimer=setTimeout(()=>{ lpFired=true; gz=el.dataset.lp; sfx("select"); render(); },450);
+  lpTimer=setTimeout(()=>{ lpFired=true; if(outside) zoomId=lp.slice(1); else gz=lp; sfx("select"); render(); },450);
 });
 ["pointerup","pointercancel","pointerleave"].forEach(t=>document.addEventListener(t,()=>clearTimeout(lpTimer)));
 document.addEventListener("contextmenu", e=>{ if(e.target.closest("[data-lp]")) e.preventDefault(); });
-document.addEventListener("scroll", e=>{
-  const v=e.target; if(!v.classList||!v.classList.contains("vitrine")) return;
-  const i=Math.round(v.scrollLeft/Math.max(1,v.clientWidth)); if(i===vIdx) return; vIdx=i;
-  document.querySelectorAll(".vdots i").forEach((d,k)=>d.classList.toggle("on",k===i));
-}, true);
+let fanStart=null, fanSwiped=0;
+document.addEventListener("pointerdown", e=>{ fanStart=e.target.closest(".fan")?{x:e.clientX,y:e.clientY}:null; });
+document.addEventListener("pointerup", e=>{
+  if(!fanStart) return; const dx=e.clientX-fanStart.x, dy=e.clientY-fanStart.y; fanStart=null;
+  if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)){ fanSwiped=Date.now(); fanRotate(dx<0?1:-1); }
+});
 document.addEventListener("click", e=>{
   if(lpFired){ lpFired=false; e.preventDefault(); e.stopPropagation(); return; }
+  if(Date.now()-fanSwiped<400){ fanSwiped=0; e.preventDefault(); return; } /* le clic qui suit un glissement */
   const el=e.target.closest("[data-act]"); if(!el) return;
   const act=el.dataset.act;
   ac(); bgmArmed=true;
@@ -1996,6 +2012,7 @@ document.addEventListener("click", e=>{
     case "fanclose": fanPick=null; render(); return;
     case "fansave": if(fanPick.length===3){ P.fan=[...fanPick]; save(); sfx("buff"); } fanPick=null; render(); return;
     case "zoom": zoomId=el.dataset.id; sfx("select"); render(); return;
+    case "fantap": { const pos=+el.dataset.pos; if(pos===0){ zoomId=el.dataset.id; sfx("select"); render(); } else fanRotate(pos); return; }
     case "unzoom": if(el.classList.contains("veil")&&e.target.closest(".zoominfo")) return; zoomId=null; render(); return;
     case "avpick": avPick=true; sfx("click"); render(); return;
     case "avclose": if(el.classList.contains("veil")&&e.target.closest(".avpanel")) return; avPick=false; render(); return;
