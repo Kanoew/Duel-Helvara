@@ -531,7 +531,7 @@ const CARDS = {
   inanna:  {name:"Inanna", cost:5, pow:5, fac:"jugement", r:"E", fx:"Révélation : toutes les cartes ici reviennent à leur puissance de base, des deux côtés.", img:"images/inanna.jpg?v=5"},
   oya:     {name:"Oya", cost:5, pow:4, fac:"jugement", r:"E", fx:"Révélation : change la carte adverse la plus forte ici en carte de puissance 1, sans effet.", img:"images/oya.jpg?v=5"},
   sekhmet: {name:"Sekhmet", cost:5, pow:6, fac:"jugement", r:"E", fx:"Révélation : détruit toutes les autres cartes de puissance 2 ou moins ici, des deux côtés.", img:"images/sekhmet.jpg?v=5"},
-  jordan:  {name:"Jordan, le Créateur", cost:1, pow:-1, fac:"primordial", r:"E", fx:"Révélation : ajoute Yarden Weiss à ta main depuis ton deck.", img:"images/jordan.jpg"},
+  jordan:  {name:"Jordan, le Créateur", cost:1, pow:-1, fac:"primordial", r:"E", fx:"Ne peut pas être affaibli. Révélation : ajoute Yarden Weiss à ta main depuis ton deck.", img:"images/jordan.jpg"},
   jordan_n:{name:"Jordan, le Narrateur", base:"jordan", cost:1, pow:0, fac:"primordial", r:"E", fx:"Révélation : ajoute à ta main, depuis ton deck, une carte qui peut former une Fusion avec Jordan.", img:"images/jordan_n.jpg?v=7"},
   /* --- OCTOBRE 2026 --- */
   lilith:  {name:"Lilith", cost:6, pow:5, fac:"desir", r:"L", rel:"2026-10-01", fx:"Révélation : la carte adverse la plus forte ici (6 ou moins) passe de ton côté. Si ton côté est plein, elle est détruite.", img:"images/lilith.jpg?v=5"},
@@ -606,7 +606,7 @@ const LOCS = {
   sousgare:  {name:"Sous-gare, 4B", img:"images/lieux/sousgare.jpg", fx:"Félix fait crédit : les cartes jouées ici coûtent 1 de moins."},
   ruelle:    {name:"La Ruelle", img:"images/lieux/ruelle.jpg", fx:"Là où tout a commencé. 2 cartes maximum par joueur.", cap:2},
   tour:      {name:"Ouchy, 16e étage", img:"images/lieux/tour.jpg", fx:"Chez Izzy : les cartes de puissance de base 5+ ont +2 ici."},
-  faille:    {name:"La Faille", img:"images/lieux/faille.jpg", fx:"Fin du tour 4 : détruit la carte la plus faible de chaque côté."},
+  faille:    {name:"La Faille", img:"images/lieux/faille.jpg", fx:"Fin du tour 4 : détruit la carte la plus faible de chaque côté (Ame-no-Uzume y résiste)."},
   archives:  {name:"Archives de Thot", img:"images/lieux/archives.jpg", fx:"Quand tu joues une carte ici, pioche 1 carte."},
   cathedrale:{name:"Cathédrale d'Helvara", img:"images/lieux/cathedrale.jpg", fx:"Les divinités observent : le côté avec moins de cartes ici gagne +3."}
 };
@@ -705,6 +705,7 @@ function clean(p){
     season:(typeof p.season==="string"&&/^\d{4}-\d{2}$/.test(p.season))?p.season:seasonKey(), sw:num(p.sw,0), sl:num(p.sl,0), sd:num(p.sd,0),
     tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
     bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,5).map(h=>({mode:String(h.mode||"").slice(0,12),res:h.res,opp:String(h.opp||"").slice(0,48),sc:String(h.sc||"").slice(0,12),t:Number(h.t)||0,deck:String(h.deck||"").slice(0,20)})):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
+    daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
     q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c}))}:null};
   out.deck=[...out.decks[out.di].cards];
   if(retired){ out._migrated=true; migratedNote=`Nouvelle collection : ${retired} carte${retired>1?"s":""} provisoire${retired>1?"s":""} remboursée${retired>1?"s":""} (+${retired*25} CHF).`; }
@@ -720,6 +721,14 @@ function checkSeason(){
   seasonNote=`Nouvelle saison ! Tu as fini au rang ${rankName(P.best)} (+${reward} CHF) et tu reprends à ${rankName(newLv)}.`;
   P.chf+=reward; P.lv=newLv; P.st=0; P.streak=0; P.best=newLv; P.sw=0; P.sl=0; P.sd=0; P.season=k;
   return true;
+}
+let dailyNote="";
+function claimDaily(){
+  const t=today(), d=P.daily||{day:"",n:0}; if(d.day===t) return;
+  const y=new Date(); y.setDate(y.getDate()-1);
+  const n=d.day===dayKey(y)?(d.n%7)+1:1, gain=n===7?50:20;
+  P.daily={day:t,n}; P.chf+=gain; save();
+  dailyNote=n===7?`7e jour d'affilée : +${gain} CHF !`:`Connexion du jour : +${gain} CHF (jour ${n} sur 7, le 7e rapporte 50 CHF).`;
 }
 function ensureQuests(){
   const k=dayKey(); if(P.q&&P.q.day===k&&P.q.list.length===2) return false;
@@ -940,7 +949,7 @@ function cardPow(s,li,c){
     if(c.id==="fange") p+=S.discarded||0;
     if(c.id==="yarden_d") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&o.rev&&CARDS[o.id].fac==="primordial"&&!CARDS[o.id].token) p+=2;
   }
-  if(!shielded(s,li)&&!sunlit(s)&&!(c.id==="ecorche"&&!c.neg)) p-=S.board[opp(s)][li].filter(o=>live(o)&&o.id==="hathor").length;
+  if(!shielded(s,li)&&!sunlit(s)&&!noWeak(c)) p-=S.board[opp(s)][li].filter(o=>live(o)&&o.id==="hathor").length;
   if(locIs(li,"tour") && d.pow>=5 && !d.token) p+=2;
   if(S.board[opp(s)][li].some(o=>live(o)&&o.id==="chernobog")) p=Math.min(p,d.pow);
   if(hasHere(s,li,"psyche")) p=Math.max(1,p);
@@ -961,7 +970,8 @@ function leader(li){
 const who=s=>s==="p"?P.name:(S&&S.mp?S.mp.oppNick:"L'adversaire");
 const sunlit=s=>S.board[s].some(col=>col.some(x=>live(x)&&x.id==="amaterasu"));
 function discard(s,c){ S.hand[s]=S.hand[s].filter(x=>x!==c); S.discarded=(S.discarded||0)+1; }
-function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||(c.id==="ecorche"&&!c.neg)) return false; c.pow=c.pow<=0?c.pow:Math.max(0,c.pow-n); return true; }
+const noWeak=c=>(c.id==="ecorche"||c.id==="jordan")&&!c.neg; /* l'Écorché et Jordan, le Créateur */
+function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)) return false; c.pow-=n; return true; }
 function destroy(s,li,c){ if(shielded(s,li)) return false; S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.destroyed++; if(s==="e") S.killE=(S.killE||0)+1; return true; }
 const nm=c=>CARDS[c.id].name;
 
@@ -1154,7 +1164,7 @@ async function resolveTurn(mine, theirs, animate){
   }
   if(S.turn===4){
     S.locs.forEach((L,li)=>{ if(locIs(li,"faille")){
-      for(const s of ["p","e"]){ const arr=S.board[s][li].filter(c=>c.rev); if(!arr.length) continue;
+      for(const s of ["p","e"]){ const arr=S.board[s][li].filter(c=>c.rev&&!(c.id==="uzume"&&!c.neg)); if(!arr.length) continue;
         const w=arr.sort((a,b)=>cardPow(s,li,a)-cardPow(s,li,b))[0];
         if(destroy(s,li,w)){ log(`La Faille détruit ${nm(w)} (${who(s)})`); sfx("destroy"); } }
     }});
@@ -1535,7 +1545,7 @@ function homeHTML(){
     ? `<form class="namerow" id="nameform"><input id="name-input" maxlength="24" value="${esc(P.name)}" aria-label="Ton nom" autocomplete="off"><button class="primary small" type="submit">Enregistrer</button><button class="ghost small" type="button" data-act="cancelname">Annuler</button></form>`
     : `<div class="namerow"><button class="ghost small" data-act="editname">Changer de nom</button></div>`;
   return `
-  ${seasonNote?`<div class="notice">${seasonNote}</div>`:""}
+  ${seasonNote?`<div class="notice">${seasonNote}</div>`:""}${dailyNote?`<div class="notice">${dailyNote}</div>`:""}
   ${seasonBarHTML()}
   ${bannerHTML()}
   ${migratedNote?`<div class="notice">${migratedNote}</div>`:""}
@@ -1767,7 +1777,7 @@ function rulesHTML(){
       <li><b>Détruire</b> : la carte quitte le plateau. Eir et Ame-no-Uzume l'empêchent, sauf si l'effet dit « rien ne la protège » : là, aucune protection ne tient.</li>
       <li><b>Défausser</b> : la carte quitte ta main sans être jouée.</li>
       <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
-      <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. Eir, Amaterasu et l'Écorché Silencieux l'empêchent.</li>
+      <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
       <li><b>Perdre ses effets</b> : la carte garde sa puissance, mais ses effets Continu et ses bonus ne comptent plus.</li>
       <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck.</li>
       <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
@@ -1931,7 +1941,7 @@ document.addEventListener("click", e=>{
   const act=el.dataset.act;
   ac(); bgmArmed=true;
   switch(act){
-    case "go": { const to=el.dataset.to; if(to!=="home") seasonNote=""; if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
+    case "go": { const to=el.dataset.to; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
     case "play": sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
@@ -2025,7 +2035,7 @@ document.addEventListener("keydown", e=>{
 window.claude?.hot?.snapshot?.(()=>({S:S&&S.mp?null:S,uidN,games,screen:screen==='play'&&S&&S.mp?'home':screen}));
 function boot(d){
   if(d && d.S!==undefined){ S=(d.S&&d.S.bonus)?d.S:null; uidN=d.uidN||0; games=d.games||0; screen=d.screen||"home"; if(S) S.busy=false; }
-  render(); initStore().finally(()=>{ storeReady=true; render(); }); initRoom();
+  render(); initStore().finally(()=>{ storeReady=true; claimDaily(); render(); }); initRoom();
 }
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
 </script>
