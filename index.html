@@ -1976,6 +1976,7 @@ function render(){
 document.addEventListener("pointerdown", ()=>{ if(!bgmArmed){ bgmArmed=true; music(); } });
 document.addEventListener("visibilitychange", ()=>{ if(document.hidden&&bgm) bgm.pause(); else music(); });
 document.addEventListener("pointerdown", e=>{
+  lpFired=false; /* sur téléphone, un appui long n'est suivi d'aucun clic : le prochain toucher repart de zéro */
   const el=e.target.closest("[data-lp]"); if(!el) return;
   const lp=el.dataset.lp, outside=lp[0]==="z"; /* z… : appui long hors partie (Collection) */
   if(!outside&&(!S||screen!=="play")) return;
