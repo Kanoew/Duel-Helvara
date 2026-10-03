@@ -37,6 +37,8 @@
     // Ce compte Google est déjà lié à un autre joueur (autre appareil) : on s'y connecte directement.
     let linking = false; try { linking = sessionStorage.getItem(LINK_FLAG) === "1"; sessionStorage.removeItem(LINK_FLAG); } catch(e) {}
     if(linking && errCode && errCode !== "access_denied"){
+      // La partie anonyme de cet appareil est abandonnée : on retire sa ligne du classement.
+      if(session && session.user) await sb.from("board").delete().eq("user_id", session.user.id).then(() => {}, () => {});
       await sb.auth.signInWithOAuth({ provider:"google", options:{ redirectTo: home() } });
       return new Promise(() => {}); // la page part vers Google
     }

@@ -680,7 +680,7 @@ const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","
 
 /* ======= SAUVEGARDE ======= */
 const SAVE_KEY = "duel-helvara-save-v1";
-function freshProfile(){ return {name:"Jordan", chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}}; }
+function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}}; }
 let migratedNote="";
 const COVERS=["primordial","desir","jugement","helvara"];
 function defDecks(){ return COVERS.map((c,i)=>({name:`Deck ${i+1}`,cover:c,cards:[]})); }
@@ -784,10 +784,11 @@ function lbRelay(){ if(!room||!lbDb||!lbCanWrite) return;
     const cur=lbRows.find(x=>x.id===id); if(cur&&JSON.stringify([cur.lv,cur.st,cur.sw,cur.sl,cur.season,cur.nick,cur.av])===key){ lbRelayed[id]=key; continue; }
     lbRelayed[id]=key; lbDb.doc("board/"+id).set({...r,uid:id,at:Date.now()}).catch(()=>{}); } }
 function lbOnline(){ const m={}; if(room) for(const p of room.peers()){ const raw=p.presence&&p.presence.lb; const id=p.by||(raw&&raw.uid); if(raw&&id) m[id]=lbClean(raw); } return m; }
+function lbCount(){ return lbRows.filter(r=>r.season===seasonKey()&&r.id!==lbUid&&(r.lv||r.st||r.sw||r.sl||r.best)).length+1; }
 function boardHTML(){
   const on=lbOnline(), map={}; for(const r of lbRows) map[r.id]=r; for(const [id,r] of Object.entries(on)) map[id]={...map[id],...r,id};
   if(lbUid) map[lbUid]={...lbClean(lbMe()),id:lbUid};
-  const k=LB_SEASON(); const all=Object.values(map).filter(r=>r&&r.nick);
+  const k=LB_SEASON(); const all=Object.values(map).filter(r=>r&&r.nick&&(r.id===lbUid||r.lv||r.st||r.sw||r.sl||r.best));
   const cur=all.filter(r=>r.season===k).sort((a,b)=>b.lv-a.lv||b.st-a.st||b.sw-a.sw), old=all.filter(r=>r.season!==k);
   const row=(r,i)=>`<div class="lbrow ${r.id===lbUid?"me":""}"><span class="lbn">${i+1}</span>${r.av?`<span class="avatar sm" style="background-image:url('images/avatars/${r.av}.jpg?v=7')"></span>`:`<span class="avatar sm empty">${esc(r.nick.charAt(0).toUpperCase())}</span>`}<span class="lbmain"><b>${esc(r.nick)}${r.id===lbUid?" (toi)":""}</b>${on[r.id]?`<i class="lbon">en ligne</i>`:""}<small>${rankName(r.lv)} · ${r.sw} V · ${r.sl} D</small></span>${rankIcon(r.lv,"sm")}</div>`;
   return `<section class="sec"><h2>Classement · ${seasonLabel()}</h2>
@@ -1565,7 +1566,7 @@ function homeHTML(){
   <button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Duel entre amis</span><span class="m">${S&&S.mp&&!S.over?`Duel en cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon et partage le code"}${P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:""}</span></button>
   <div class="quick">
     <button class="qcard" data-act="go" data-to="deck"><span class="t">Deck</span><span class="m">${esc(P.decks[P.di].name)} · ${P.deck.length}/12 cartes · ${P.owned.length}/${avail().length} en collection</span></button>
-    <button class="qcard" data-act="go" data-to="board"><span class="t">Classement</span><span class="m">${lbRows.filter(r=>r.season===seasonKey()).length||1} joueur${(lbRows.filter(r=>r.season===seasonKey()).length||1)>1?"s":""} cette saison</span></button>
+    <button class="qcard" data-act="go" data-to="board"><span class="t">Classement</span><span class="m">${lbCount()} joueur${lbCount()>1?"s":""} cette saison</span></button>
     <button class="qcard" data-act="go" data-to="shop"><span class="t">Boutique</span><span class="m">${P.starter?"Packs et Échoppe du jour":"Première Brûlure disponible"}</span></button>
     <button class="qcard" data-act="go" data-to="hist"><span class="t">Historique</span><span class="m">${P.hist&&P.hist.length?`Dernière : ${P.hist[0].res==="win"?"victoire":P.hist[0].res==="lose"?"défaite":"égalité"} · ${esc(P.hist[0].mode)}`:"Aucune partie pour l'instant"}</span></button>
   </div>

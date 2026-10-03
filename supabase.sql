@@ -33,6 +33,8 @@ create policy "saves: modif perso"   on public.saves for update to authenticated
 create policy "board: lecture libre" on public.board for select to anon, authenticated using (true);
 create policy "board: ajout perso"   on public.board for insert to authenticated with check (auth.uid() = user_id);
 create policy "board: modif perso"   on public.board for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "board: suppression perso" on public.board;
+create policy "board: suppression perso" on public.board for delete to authenticated using (auth.uid() = user_id);
 
 -- Garde-fou : une sauvegarde ou une ligne de classement ne peut pas dépasser 256 Ko.
 alter table public.saves drop constraint if exists saves_taille;
