@@ -189,6 +189,9 @@ pre{background:var(--deep);border:1px solid var(--line);border-radius:10px;paddi
 .fan{position:relative;aspect-ratio:1.4/1;max-width:100%;width:100%;background:none;border:0;padding:0;cursor:pointer;display:block}
 .fan .full{pointer-events:none}
 .fanedit{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);z-index:4;background:var(--deep);border:1px solid var(--line);border-radius:999px;font-size:11px;padding:2px 10px;color:var(--mist);white-space:nowrap}
+.langbtn{display:flex;height:32px;padding:3px;border-radius:999px;background:var(--deep);border:1px solid var(--line);cursor:pointer;flex:none;font:600 11px/1 inherit;letter-spacing:.06em}
+.langbtn span{display:grid;place-items:center;padding:0 8px;border-radius:999px;color:var(--mist)}
+.langbtn span.on{background:var(--lake);color:var(--frost)}
 .helpbtn{width:32px;height:32px;border-radius:50%;background:var(--deep);border:1px solid var(--line);color:var(--mist);font-family:var(--display);font-size:17px;cursor:pointer;flex:none}
 .helpbtn[aria-current]{border-color:var(--me);color:var(--frost)}
 .fan .full{position:absolute;width:40%;top:6%;left:30%;box-shadow:0 14px 30px rgba(0,0,0,.55)}
@@ -503,6 +506,7 @@ html[data-season="noel"] body::after{background-image:radial-gradient(2.5px 2.5p
 <script src="vendor/supabase.js"></script>
 <script src="config.js"></script>
 <script src="cloud.js"></script>
+<script src="cartes-en.js"></script>
 <script>
 /* ======= DONNÉES : une ligne = une carte =======
    r : D = Départ, C = Commune, R = Rare, E = Épique, L = Légendaire */
@@ -637,6 +641,24 @@ const FAC = {
   jugement:{c:"var(--jugement)",n:"Jugement"}
 };
 const RAR = {D:{n:"Départ",c:"var(--mist)"}, C:{n:"Commune",c:"#b9c4d4"}, R:{n:"Rare",c:"#7fb6e6"}, E:{n:"Épique",c:"#b58cf0"}, L:{n:"Légendaire",c:"var(--warm)"}, U:{n:"Ultra-légendaire",c:"#f2c6ff"}, T:{n:"Jeton",c:"var(--mist)"}};
+
+/* ======= LANGUE : français par défaut, anglais via cartes-en.js ======= */
+const FR={cards:{},locs:{},fac:{},rar:{}};
+for(const k in CARDS) FR.cards[k]={n:CARDS[k].name,fx:CARDS[k].fx};
+for(const k in LOCS) FR.locs[k]={n:LOCS[k].name,fx:LOCS[k].fx};
+for(const k in FAC) FR.fac[k]=FAC[k].n;
+for(const k in RAR) FR.rar[k]=RAR[k].n;
+let LANG=(()=>{ try{ return localStorage.getItem("helvara-lang")==="en"?"en":"fr"; }catch(e){ return "fr"; } })();
+function applyLang(){
+  const EN=LANG==="en"&&window.HELVARA_EN, pick=(t,k,fr)=>t&&t[k]!=null?t[k]:fr;
+  for(const k in CARDS){ const t=EN&&EN.cards[k]; CARDS[k].name=pick(t,"n",FR.cards[k].n); CARDS[k].fx=pick(t,"fx",FR.cards[k].fx); }
+  for(const k in LOCS){ const t=EN&&EN.locs[k]; LOCS[k].name=pick(t,"n",FR.locs[k].n); LOCS[k].fx=pick(t,"fx",FR.locs[k].fx); }
+  for(const k in FAC) FAC[k].n=pick(EN&&EN.fac,k,FR.fac[k]);
+  for(const k in RAR) RAR[k].n=pick(EN&&EN.rar,k,FR.rar[k]);
+  document.documentElement.lang=LANG;
+}
+function setLang(l){ LANG=l==="en"?"en":"fr"; try{ localStorage.setItem("helvara-lang",LANG); }catch(e){} applyLang(); }
+applyLang();
 const POOL = Object.keys(CARDS).filter(k=>!CARDS[k].token);
 const STARTER = ["passante","coursier","ishara","felix","veilleur","celeste","colosse","esquille","yarden","izzy","devote","thot"];
 const today=()=>window.__today||dayKey();
@@ -1516,7 +1538,7 @@ function header(){
     ? `<button class="back" data-act="go" data-to="home">← Accueil</button>`
     : `<nav class="tabs" role="tablist">${tabs.map(([k,n])=>`<button role="tab" aria-selected="${screen===k}" data-act="go" data-to="${k}" ${k==="shop"&&!P.starter&&P.tuto&&screen!=="shop"?'class="pulse"':""}>${n}</button>`).join("")}</nav>`;
   return `<header class="top"><h1 class="brand">Duel d'Helvara<small>Le Sang de Tiamat${season()?` · ${SEASON[season()].sub}`:""}</small></h1>
-    <div class="topright"><button class="helpbtn" data-act="go" data-to="rules" aria-label="Règles" ${screen==="rules"?'aria-current="page"':""}>?</button></div></header>
+    <div class="topright"><button class="langbtn" data-act="lang" aria-label="${LANG==="fr"?"Switch to English":"Passer en français"}"><span class="${LANG==="fr"?"on":""}">FR</span><span class="${LANG==="en"?"on":""}">EN</span></button><button class="helpbtn" data-act="go" data-to="rules" aria-label="Règles" ${screen==="rules"?'aria-current="page"':""}>?</button></div></header>
     ${screen==="play"?"":`<button class="idline" data-act="go" data-to="profile" aria-label="Voir mon profil">${avatarHTML("sm")}<span class="idname">${esc(P.name)}</span><span class="idrank">${rankIcon(P.lv,"sm")}<span>${rankName(P.lv)}</span></span><span class="chfchip">${P.chf} <small>CHF</small></span></button>`}
     <div class="navrow">${nav}</div>`;
 }
@@ -2005,6 +2027,7 @@ document.addEventListener("click", e=>{
     case "editname": editName=true; sfx("click"); render(); return;
     case "cancelname": editName=false; render(); return;
     case "music": P.music=!P.music; save(); render(); return;
+    case "lang": setLang(LANG==="fr"?"en":"fr"); sfx("click"); render(); return;
     case "glogin": sfx("click"); if(window.helvara) window.helvara.signIn(); return;
     case "glogout": sfx("click"); if(window.helvara&&confirm("Te déconnecter ? Ta progression reste sur ton compte Google.")) window.helvara.signOut(); return;
     case "sfx": P.sfx=!P.sfx; save(); if(P.sfx) SFX.click(); render(); return;
