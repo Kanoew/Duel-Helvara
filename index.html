@@ -566,7 +566,7 @@ const CARDS = {
   ereshkigal:{name:"Ereshkigal", cost:6, pow:7, fac:"primordial", r:"L", rel:"2026-10-01", fx:"Révélation : détruit toutes les cartes adverses ici de puissance 3 ou moins. Rien ne les protège.", img:"images/ereshkigal.jpg"},
   pele:    {name:"Pele", cost:5, pow:6, fac:"primordial", r:"E", rel:"2026-10-01", fx:"Révélation : la lave inflige −2 à toutes les autres cartes ici, des deux côtés.", img:"images/pele.jpg"},
   ares:    {name:"Arès", cost:4, pow:3, fac:"primordial", r:"R", rel:"2026-10-01", fx:"Révélation : −1 à chaque carte adverse ici, et +1 pour chacune.", img:"images/ares.jpg?v=6"},
-  nergal:  {name:"Nergal", cost:5, pow:4, fac:"primordial", r:"E", rel:"2026-10-01", fx:"Révélation : −1 à toutes les cartes adverses, dans les 3 lieux. +3 si Ereshkigal est de ton côté.", img:"images/nergal.jpg?v=7"},
+  nergal:  {name:"Nergal", cost:5, pow:4, fac:"primordial", r:"E", rel:"2026-10-01", fx:"Révélation : −1 à toutes les cartes adverses, dans les 3 lieux. Continu : +3 tant qu'Ereshkigal est de ton côté.", img:"images/nergal.jpg?v=7"},
   rusalka: {name:"Rusalka", cost:2, pow:2, fac:"primordial", r:"C", rel:"2026-10-01", fx:"Révélation : détruit la carte adverse la plus faible ici si elle a 2 ou moins.", img:"images/rusalka.jpg"},
   mere:    {name:"La Mère de Cendre", cost:5, pow:4, fac:"primordial", r:"E", rel:"2026-10-01", fx:"Révélation : laisse un Cendreux de puissance 2 dans chacun de tes autres lieux.", img:"images/mere.jpg"},
   nuee:    {name:"La Nuée de Miroirs", cost:4, pow:3, fac:"primordial", r:"E", rel:"2026-10-01", fx:"Révélation : copie la puissance de ta carte la plus forte ici.", img:"images/nuee.jpg"},
@@ -966,6 +966,7 @@ function cardPow(s,li,c){
     if(c.id==="freyr" && hasHere(s,li,"freya")) p+=2;
     if(c.id==="freya" && hasHere(s,li,"freyr")) p+=4;
     if(c.id==="selene" && S.turn>=5) p+=3;
+    if(c.id==="nergal" && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="ereshkigal"))) p+=3; /* continu */
     if(c.id==="fange") p+=S.discarded||0;
     if(c.id==="yarden_d") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&o.rev&&CARDS[o.id].fac==="primordial"&&!CARDS[o.id].token) p+=2;
   }
@@ -1058,7 +1059,7 @@ function reveal(s,li,c){
     case "ereshkigal": { const vs=foes.filter(x=>pw(o,li,x)<=3); if(vs.length){ S.board[o][li]=S.board[o][li].filter(x=>!vs.includes(x)); S.destroyed+=vs.length; if(o==="e") S.killE=(S.killE||0)+vs.length; note=`détruit ${vs.length} carte${vs.length>1?"s":""}`; snd="destroy"; } break; }
     case "pele": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li]) if(x!==c&&x.rev&&weaken(side,li,x,2)) n++; if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "ares": { let n=0; for(const x of targets) if(weaken(o,li,x,1)) n++; if(n){ c.pow+=n; note=`−1 à ${n}, +${n}`; snd="debuff"; } break; }
-    case "nergal": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="debuff"; } if(onSide(s,"ereshkigal")) buffSelf(3); break; }
+    case "nergal": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
     case "rusalka": { const t=weakest(targets,o,li); if(t&&pw(o,li,t)<=2&&destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } break; }
     case "mere": { let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)){ const t=mk("cendreux"); t.rev=true; t.fresh=true; S.board[s][i].push(t); n++; } if(n) note=`${n} Cendreux`; break; }
     case "nuee": { const t=strongest(mates,s,li); if(t){ const v=pw(s,li,t); if(v>c.pow){ c.pow=v; note=`reflète ${v}`; snd="buff"; } } break; }
