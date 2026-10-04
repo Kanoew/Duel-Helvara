@@ -507,6 +507,7 @@ html[data-season="noel"] body::after{background-image:radial-gradient(2.5px 2.5p
 <script src="config.js"></script>
 <script src="cloud.js"></script>
 <script src="cartes-en.js"></script>
+<script src="interface-en.js"></script>
 <script>
 /* ======= DONNÉES : une ligne = une carte =======
    r : D = Départ, C = Commune, R = Rare, E = Épique, L = Légendaire */
@@ -655,10 +656,36 @@ function applyLang(){
   for(const k in LOCS){ const t=EN&&EN.locs[k]; LOCS[k].name=pick(t,"n",FR.locs[k].n); LOCS[k].fx=pick(t,"fx",FR.locs[k].fx); }
   for(const k in FAC) FAC[k].n=pick(EN&&EN.fac,k,FR.fac[k]);
   for(const k in RAR) RAR[k].n=pick(EN&&EN.rar,k,FR.rar[k]);
+  /* tables de l'interface : copie française prise au premier passage */
+  const D=LANG==="en"&&window.HELVARA_UI_EN&&window.HELVARA_UI_EN.data;
+  if(!FR.data) FR.data={TIERS:[...TIERS],MONTHS:[...MONTHS],QDEF:Object.fromEntries(Object.entries(QDEF).map(([k,q])=>[k,q.t])),
+    PACKS:Object.fromEntries(PACKS.map(p=>[p.id,{name:p.name,desc:p.desc}])),SEASON:JSON.parse(JSON.stringify(SEASON)),
+    DROPS:Object.fromEntries(DROPS.map(d=>[d.id,d.hint])),ULS:Object.fromEntries(ULS.map(u=>[u.id,u.n]))};
+  const F=FR.data;
+  TIERS.forEach((_,i)=>TIERS[i]=D?D.TIERS[i]:F.TIERS[i]);
+  MONTHS.forEach((_,i)=>MONTHS[i]=D?D.MONTHS[i]:F.MONTHS[i]);
+  for(const k in QDEF) QDEF[k].t=pick(D&&D.QDEF,k,F.QDEF[k]);
+  for(const p of PACKS){ const t=D&&D.PACKS[p.id]; p.name=pick(t,"name",F.PACKS[p.id].name); p.desc=pick(t,"desc",F.PACKS[p.id].desc); }
+  for(const k in SEASON) Object.assign(SEASON[k],F.SEASON[k],D&&D.SEASON[k]||{});
+  for(const d of DROPS) d.hint=pick(D&&D.DROPS,d.id,F.DROPS[d.id]);
+  for(const u of ULS) u.n=pick(D&&D.ULS,u.id,F.ULS[u.id]);
   document.documentElement.lang=LANG;
 }
+/* Interface : en anglais, chaque texte affiché passe par le dictionnaire d'interface-en.js */
+function trUI(t){
+  const U=window.HELVARA_UI_EN; if(LANG!=="en"||!U||!t) return t;
+  const m=/^(\s*)([\s\S]*?)(\s*)$/.exec(t), core=m[2].replace(/\s+/g," "); if(!core) return t;
+  let r=U.exact[core]; if(r===undefined) for(const [re,f] of U.rules){ const x=core.match(re); if(x){ r=f(...x); break; } }
+  return r===undefined?t:m[1]+r+m[3];
+}
+function translateDOM(root){
+  if(LANG!=="en") return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName)?2:1});
+  const nodes=[]; let n; while(n=w.nextNode()) nodes.push(n);
+  for(const t of nodes){ const v=trUI(t.nodeValue); if(v!==t.nodeValue) t.nodeValue=v; }
+  root.querySelectorAll("[aria-label],[placeholder],[title]").forEach(e=>{ for(const a of ["aria-label","placeholder","title"]){ const v=e.getAttribute(a); if(v){ const x=trUI(v); if(x!==v) e.setAttribute(a,x); } } });
+}
 function setLang(l){ LANG=l==="en"?"en":"fr"; try{ localStorage.setItem("helvara-lang",LANG); }catch(e){} applyLang(); }
-applyLang();
 const POOL = Object.keys(CARDS).filter(k=>!CARDS[k].token);
 const STARTER = ["passante","coursier","ishara","felix","veilleur","celeste","colosse","esquille","yarden","izzy","devote","thot"];
 const today=()=>window.__today||dayKey();
@@ -696,7 +723,7 @@ const SEASON={
   noel:{sub:"Veillée de l'Étoile",who:"Joueur d'Helvara · veillée de Noël",eyebrow:"Veillée de l'Étoile · jusqu'au 2 janvier",title:"La neige tombe sur Helvara",hint:"Les vignes sont blanches et le lac retient son souffle. Le Pli de l'Étoile cache Aphrodite, Sekhmet, Calypso et Apsu dans leurs versions de Noël.",btn:"Ouvrir le Pli de l'Étoile",win:"Victoire sous l'Étoile",lose:"La nuit d'hiver l'emporte"}
 };
 function inWin(w){ if(!w) return true; const d=md(); return w[0]<=w[1]?(d>=w[0]&&d<=w[1]):(d>=w[0]||d<=w[1]); }
-function frDate(m){ const [mm,dd]=m.split("-"); return `${+dd===1?"1er":+dd} ${MONTHS[+mm-1]}`; }
+function frDate(m){ const [mm,dd]=m.split("-"); return LANG==="en"?`${MONTHS[+mm-1]} ${+dd}`:`${+dd===1?"1er":+dd} ${MONTHS[+mm-1]}`; }
 function soonWin(w){ if(!w||inWin(w)) return false; const y=+today().slice(0,4); let s=new Date(y,+w[0].slice(0,2)-1,+w[0].slice(3)); const t=new Date(today()); if(s<t) s=new Date(y+1,s.getMonth(),s.getDate()); return (s-t)/864e5<=14; }
 const TIERS=["Passant","Initié","Agent","Élu","Héraut","Avatar","Divinité d'Helvara"];
 const MAXLV=18, RVAL={D:0,C:1,R:2,E:3,L:4,U:5};
@@ -705,7 +732,7 @@ const maxSt=lv=>{ const t=tierOf(lv); return t<2?3:t<4?4:5; };
 const rankName=lv=>tierOf(lv)===6?TIERS[6]:`${TIERS[tierOf(lv)]} ${["III","II","I"][lv%3]}`;
 const MONTHS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 function seasonKey(d=new Date()){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
-function seasonLabel(){ const d=new Date(); const m=MONTHS[d.getMonth()]; return `Saison ${/^[aeiouy]/.test(m)?"d'":"de "}${m}`; }
+function seasonLabel(){ const d=new Date(); const m=MONTHS[d.getMonth()]; return LANG==="en"?`${m} season`:`Saison ${/^[aeiouy]/.test(m)?"d'":"de "}${m}`; }
 function daysLeft(){ const d=new Date(); return Math.max(1,Math.ceil((new Date(d.getFullYear(),d.getMonth()+1,1)-d)/864e5)); }
 const QDEF={
   play3:{t:"Joue 3 parties",n:3,r:50,small:1},
@@ -1990,6 +2017,7 @@ function render(){
   const body = screen==="play"?gameHTML():screen==="profile"?profileHTML():screen==="deck"?deckHTML():screen==="shop"?shopHTML():screen==="codex"?codexHTML():screen==="rules"?rulesHTML():screen==="duel"?duelHTML():screen==="blitz"?blitzHTML():screen==="board"?boardHTML():screen==="hist"?histHTML():homeHTML();
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
   app.innerHTML = header()+body+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+packOpenHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
+  translateDOM(app);
   const h=document.querySelector(".handwrap"); if(h) h.scrollLeft=hs;
   music();
   if(editName){ const i=document.getElementById("name-input"); if(i && document.activeElement!==i){ i.focus(); i.select(); } }
@@ -2029,7 +2057,7 @@ document.addEventListener("click", e=>{
     case "music": P.music=!P.music; save(); render(); return;
     case "lang": setLang(LANG==="fr"?"en":"fr"); sfx("click"); render(); return;
     case "glogin": sfx("click"); if(window.helvara) window.helvara.signIn(); return;
-    case "glogout": sfx("click"); if(window.helvara&&confirm("Te déconnecter ? Ta progression reste sur ton compte Google.")) window.helvara.signOut(); return;
+    case "glogout": sfx("click"); if(window.helvara&&confirm(trUI("Te déconnecter ? Ta progression reste sur ton compte Google."))) window.helvara.signOut(); return;
     case "sfx": P.sfx=!P.sfx; save(); if(P.sfx) SFX.click(); render(); return;
     case "claim": { const q=P.q&&P.q.list[+el.dataset.i]; if(q&&!q.c&&q.p>=QDEF[q.id].n){ q.c=true; P.chf+=QDEF[q.id].r; save(); sfx("coin"); } render(); return; }
     case "fanpick": fanPick=P.fan.filter(id=>P.owned.includes(id)); sfx("click"); render(); return;
@@ -2056,7 +2084,7 @@ document.addEventListener("click", e=>{
     case "mpcancel": mpClear(); render(); return;
     case "mpresume": mpResume(); return;
     case "mpforget": mpSaveSession(null); render(); return;
-    case "mpcopy": { const t=myMp&&myMp.code; const old=el.textContent; navigator.clipboard.writeText(t).then(()=>{ el.textContent="Copié"; setTimeout(()=>{ el.textContent=old; },1500); }).catch(()=>{}); return; }
+    case "mpcopy": { const t=myMp&&myMp.code; const old=el.textContent; navigator.clipboard.writeText(t).then(()=>{ el.textContent=trUI("Copié"); setTimeout(()=>{ el.textContent=old; },1500); }).catch(()=>{}); return; }
     case "mpagain": if(S&&S.mp){ S.mp.wantAgain=true; mpPush({again:myMp.g}); sfx("click"); render(); mpTick(); } return;
     case "mpquit": mpClear(); mpSaveSession(null); if(S&&S.mp) S=null; screen="home"; render(); window.scrollTo(0,0); return;
     case "dismiss": if(!P.dis.includes(el.dataset.id)) P.dis.push(el.dataset.id); save(); render(); return;
@@ -2116,6 +2144,7 @@ document.addEventListener("keydown", e=>{
 /* ======= DÉMARRAGE ======= */
 window.claude?.hot?.snapshot?.(()=>({S:S&&S.mp?null:S,uidN,games,screen:screen==='play'&&S&&S.mp?'home':screen}));
 function boot(d){
+  applyLang();
   if(d && d.S!==undefined){ S=(d.S&&d.S.bonus)?d.S:null; uidN=d.uidN||0; games=d.games||0; screen=d.screen||"home"; if(S) S.busy=false; }
   render(); initStore().finally(()=>{ storeReady=true; claimDaily(); render(); }); initRoom();
 }
