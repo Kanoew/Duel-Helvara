@@ -202,7 +202,18 @@
     "Promotion !":"Promotion!", "Rétrogradation":"Demotion", "+2 étoiles (série)":"+2 stars (streak)", "+1 étoile":"+1 star", "−1 étoile":"−1 star",
     "Passant et Initié : une défaite ne coûte rien":"Wanderer and Initiate: a loss costs nothing", "Plancher du palier : rien de perdu":"Tier floor: nothing lost",
     "Égalité : rang inchangé":"Draw: rank unchanged", "(Morrigan)":"(Morrigan)", "(Nemesis)":"(Nemesis)", "Aucune partie en cours.":"No game in progress.",
-    "Main changée":"Hand redrawn", "Vasseur (paiement)":"Vasseur (payment)", "Brigid":"Brigid", "Idunn":"Idunn", "Ishtar":"Ishtar",
+    "Main changée":"Hand redrawn",
+    "⚖ L'adversaire jure sur":"⚖ The opponent swears on", ". Relever le défi ?":". Take up the challenge?", "Relever":"Accept", "Ignorer":"Ignore",
+    "⚖ Serment croisé sur":"⚖ Cross Oath on", "⚖ L'adversaire a juré sur":"⚖ The opponent swore on",
+    ": remporte ce lieu et la partie pour +4 étoiles. Perds-le et ta victoire ne rapportera aucune étoile.":": win this location and the game for +4 stars. Lose it and your win will earn no stars.",
+    "⚖ Serment croisé":"⚖ Cross Oath", "⚖ Serment adverse":"⚖ Enemy Oath", "⚖ Serment":"⚖ Oath",
+    "Serment croisé, c'est définitif. Remporte ce lieu et la partie : +4 étoiles. Perds-le : ta victoire ne rapportera aucune étoile.":"Cross Oath, this is final. Win this location and the game: +4 stars. Lose it: your win will earn no stars.",
+    "Serment croisé tenu : +4 étoiles":"Cross Oath kept: +4 stars", "Serment croisé tenu, mais la partie est perdue":"Cross Oath kept, but the game is lost",
+    "Serment croisé perdu : ta victoire ne rapporte aucune étoile":"Cross Oath lost: your win earns no stars", "Serment croisé perdu, sans étoile en moins":"Cross Oath lost, no extra star lost",
+    "+4 étoiles (serment croisé)":"+4 stars (Cross Oath)", "Aucune étoile gagnée":"No stars earned",
+    "Serment adverse":"Enemy Oath", "Serment croisé":"Cross Oath",
+    ": l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le":": the opponent can also swear on a location, between turns 2 and 4. You can take up the challenge by swearing on the same location: that's the",
+    ". Remporte ce lieu et la partie : +4 étoiles, série comprise. Perds ce lieu : ta victoire ne rapporte aucune étoile, mais une défaite ne coûte jamais plus que d'habitude.":". Win this location and the game: +4 stars, streak included. Lose this location: your win earns no stars, but a loss never costs more than usual.", "Vasseur (paiement)":"Vasseur (payment)", "Brigid":"Brigid", "Idunn":"Idunn", "Ishtar":"Ishtar",
     "Te déconnecter ? Ta progression reste sur ton compte Google.":"Sign out? Your progress stays on your Google account.",
     "Supabase n'est pas configuré : le jeu tourne hors ligne.":"Supabase isn't configured: the game runs offline."
   };
@@ -325,8 +336,11 @@
     [/^(Idunn|Ishtar) · ([+−]\d+) à (.+) \((.+)\)$/, (m,c,v,a,w)=>`${c} · ${v} to ${a} (${who(w)})`],
     [/^La Faille détruit (.+) \((.+)\)$/, (m,a,w)=>`The Rift destroys ${a} (${who(w)})`],
     [/^Lac Ouchy · un Reflet apparaît \((.+)\)$/, (m,w)=>`Lake Ouchy · a Reflection appears (${who(w)})`],
+    [/^L'adversaire jure sur (.+)$/, (m,a)=>`The opponent swears on ${a}`],
+    [/^Serment croisé sur (.+)$/, (m,a)=>`Cross Oath on ${a}`],
     [/^Serment prêté sur (.+)$/, (m,a)=>`Oath sworn on ${a}`],
     [/^Vasseur paie : \+4 \((.+)\)$/, (m,w)=>`Vasseur pays: +4 (${who(w)})`],
+    [/^[^→]+ · [^→]+$/, m=>{ const p=m.split(" · "); return p.every(x=>exact[x]!==undefined)?p.map(x=>exact[x]).join(" · "):m; }],
     [/^(.+?) · (.+?) → (.+?)(?: \((.+)\))?$/, (m,w,c,l,n)=>`${who(w)} · ${c} → ${l}${n?` (${note(n)})`:""}`]
   ];
   function vde(r){ return r?r.replace(/(\d+) V · (\d+) D · (\d+) É/,"$1 W · $2 L · $3 D"):""; }

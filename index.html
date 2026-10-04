@@ -373,6 +373,8 @@ html[data-season="noel"] body::after{background-image:radial-gradient(2.5px 2.5p
 .oathchip{border-color:rgba(219,168,98,.55);color:var(--warm)}
 .oathchip.on{background:rgba(219,168,98,.16)}
 .loc.oath{box-shadow:0 0 0 2px var(--warm) inset}
+.loc.aioath{box-shadow:0 0 0 2px var(--ko) inset}
+.loc.cross{box-shadow:0 0 0 2px var(--warm) inset,0 0 0 4px var(--ko) inset}
 .oathres.kept{color:#9fe0b0}.oathres.broken{color:var(--ko)}
 .stallgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .stallgrid .cell{display:flex;flex-direction:column;gap:6px}
@@ -676,7 +678,7 @@ function trUI(t){
   const U=window.HELVARA_UI_EN; if(LANG!=="en"||!U||!t) return t;
   const m=/^(\s*)([\s\S]*?)(\s*)$/.exec(t), core=m[2].replace(/\s+/g," "); if(!core) return t;
   let r=U.exact[core]; if(r===undefined) for(const [re,f] of U.rules){ const x=core.match(re); if(x){ r=f(...x); break; } }
-  return r===undefined?t:m[1]+r+m[3];
+  return r===undefined?t:(/^[:;,.!?]/.test(r)?"":m[1])+r+m[3]; /* pas d'espace avant la ponctuation en anglais */
 }
 function translateDOM(root){
   if(LANG!=="en") return;
@@ -969,6 +971,25 @@ function newGame(){
 }
 function log(t){ S.log.unshift(t); S.log=S.log.slice(0,40); }
 function draw(s){ if(S.deck[s].length && S.hand[s].length<7) S.hand[s].push(S.deck[s].shift()); }
+/* Serment adverse : l'IA jure sur le lieu où elle mène le plus. Plus elle est forte, plus elle ose (et bluffe un peu). */
+function aiOath(){
+  if(!oathOK()||S.aiOath!=null) return;
+  const t=S.aiTier||0; let best=null;
+  for(let li=0;li<3;li++) if(S.locs[li].rev){ const m=total("e",li)-total("p",li); if(!best||m>best.m) best={li,m}; }
+  if(!best) return;
+  let li=null;
+  if(best.m>=(S.turn>=4?2:4)&&Math.random()<0.3+0.08*t) li=best.li;
+  else if(S.turn>=3&&Math.random()<0.04+0.02*t){ const c=[0,1,2].filter(i=>S.locs[i].rev&&total("e",i)-total("p",i)>=-3); if(c.length) li=c[Math.floor(Math.random()*c.length)]; }
+  if(li==null) return;
+  S.aiOath=li; log(`L'adversaire jure sur ${LOCS[S.locs[li].id].name}`); sfx("legend");
+}
+function aiOathBar(){
+  if(S.aiOath==null||S.over) return "";
+  const n=LOCS[S.locs[S.aiOath].id].name;
+  if(S.oath===S.aiOath) return `<div class="oathbar sworn">⚖ Serment croisé sur <b>${n}</b> : remporte ce lieu et la partie pour +4 étoiles. Perds-le et ta victoire ne rapportera aucune étoile.</div>`;
+  if(S.oath==null&&oathOK()&&!S.aiOathSkip) return `<div class="oathbar"><span>⚖ L'adversaire jure sur <b>${n}</b>. Relever le défi ?</span><span class="oathbtns" style="margin:0"><button class="primary small" data-act="oathcross">Relever</button><button class="ghost small" data-act="oathskip">Ignorer</button></span></div>`;
+  return `<div class="oathbar sworn" style="color:var(--mist)">⚖ L'adversaire a juré sur <b>${n}</b>.</div>`;
+}
 function startTurn(){
   S.turn++;
   S.energy=S.turn+S.bonus.p; S.energyE=S.turn+S.bonus.e; S.bonus={p:0,e:0};
@@ -1239,21 +1260,24 @@ async function resolveTurn(mine, theirs, animate){
         if(destroy(s,li,w)){ log(`La Faille détruit ${nm(w)} (${who(s)})`); sfx("destroy"); } }
     }});
   }
+  if(S.turn>=2&&S.turn<=4) aiOath();
   render(); await wait(300);
   for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) c.fresh=false;
   S.busy=false;
   if(S.turn>=6) finish(); else startTurn();
 }
 function loseStar(){ if(P.st>0) P.st--; else if(P.lv<MAXLV&&P.lv%3!==0){ P.lv--; P.st=maxSt(P.lv)-1; } }
-function applyRank(res,oath){
+function applyRank(res,oath,cross){
   const before=P.lv; let bonus=0;
   if(res==="win"){ P.streak++; bonus=(P.streak>=2&&P.lv<12)?1:0;
-    for(let i=0;i<(1+bonus)*(oath==="kept"?2:1);i++){ P.st++; if(P.lv<MAXLV&&P.st>maxSt(P.lv)){ P.lv++; P.st=1; } } }
+    /* Serment croisé : +4 étoiles plafonnées (série comprise) si tenu, aucune si rompu */
+    const n=cross?(oath==="kept"?4:0):(1+bonus)*(oath==="kept"?2:1);
+    for(let i=0;i<n;i++){ P.st++; if(P.lv<MAXLV&&P.st>maxSt(P.lv)){ P.lv++; P.st=1; } } }
   else if(res==="lose"){ P.streak=0; if(tierOf(P.lv)<2){} else if(P.st>0) P.st--; else if(P.lv<MAXLV&&P.lv%3!==0){ P.lv--; P.st=maxSt(P.lv)-1; } }
   else P.streak=0;
-  if(oath==="broken") loseStar();
+  if(oath==="broken"&&!cross) loseStar();
   P.best=Math.max(P.best,P.lv);
-  return {up:P.lv>before, down:P.lv<before, bonus, res, oath};
+  return {up:P.lv>before, down:P.lv<before, bonus, res, oath, cross:!!cross};
 }
 function starsHTML(lv,st){
   if(lv>=MAXLV) return `<span class="stars"><i class="star on">✦</i> ${st} point${st>1?"s":""} divin${st>1?"s":""}</span>`;
@@ -1288,7 +1312,7 @@ function finish(){
   }
   if(res==="win") P.sw++; else if(res==="lose") P.sl++; else P.sd++;
   const oath=S.oath!=null?(leader(S.oath)==="p"?"kept":"broken"):null;
-  const rk=applyRank(res,oath);
+  const rk=applyRank(res,oath,S.oath!=null&&S.oath===S.aiOath);
   P.chf+=gain; pushHist("IA",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew); save(); lbPublish();
   S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,rk,qDone};
   if(rk.up) setTimeout(()=>sfx("legend"),900);
@@ -1887,6 +1911,7 @@ function rulesHTML(){
       <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(i*3,"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
       <li>Victoire : +1 étoile, +2 à partir de 2 victoires d'affilée (jusqu'à Héraut). Défaite : −1 étoile, sauf en Passant et Initié où elle ne coûte rien. Égalité : rien ne bouge.</li>
       <li><b>Le Serment</b> (parties classées uniquement) : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé. Si tu le remportes, les étoiles gagnées sont doublées. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
+      <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Remporte ce lieu et la partie : +4 étoiles, série comprise. Perds ce lieu : ta victoire ne rapporte aucune étoile, mais une défaite ne coûte jamais plus que d'habitude.</li>
       <li>Le début de chaque palier est un plancher : on ne redescend jamais sous un palier atteint pendant la saison.</li>
       <li>Plus ton rang est haut, plus l'adversaire construit un deck solide et joue bien. Il n'utilise jamais une rareté que tu n'as pas encore trouvée.</li>
       <li>Chaque mois, nouvelle saison : tu redescends de 3 paliers (une Divinité repart en Élu) et tu reçois 25 CHF par palier atteint (175 CHF pour la Divinité).</li>
@@ -1917,8 +1942,9 @@ function locHTML(li){
   const L=S.locs[li], d=LOCS[L.id], a=total("p",li), b=total("e",li), w=leader(li);
   const can=S.sel&&!S.busy&&canStage(findHand(S.sel),li);
   const img=L.rev?d.img:"images/lieux/inconnu.jpg";
-  const tags=[S.oath===li?"⚖ Serment":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
-  return `<div class="loc${can?" can":""}${L.locked?" locked":""}${S.oath===li?" oath":""}" style="background-image:${VEIL},url('${img}')" data-act="stage" data-li="${li}" data-lp="l${li}" tabindex="0">
+  const cross=S.oath===li&&S.aiOath===li;
+  const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
+  return `<div class="loc${can?" can":""}${L.locked?" locked":""}${cross?" cross":S.oath===li?" oath":S.aiOath===li?" aioath":""}" style="background-image:${VEIL},url('${img}')" data-act="stage" data-li="${li}" data-lp="l${li}" tabindex="0">
     <span class="tot f${w==="e"?" lead":""}">${b}</span>
     <div class="inner"><div class="nm">${L.rev?d.name:"Lieu inconnu"}</div><div class="fx">${tags.length?`<b>${tags.join(" · ")}</b>`:(L.rev?d.fx:`Révélé au tour ${li+1}`)}</div></div>
     <span class="tot m${w==="p"?" lead":""}">${a}</span></div>`;
@@ -1960,7 +1986,7 @@ function resultHTML(){
     <h2>${t}</h2>
     ${o.blitz?`<div class="rankline"><b>Blitz · ${o.wins} victoire${o.wins>1?"s":""} sur 3</b><br><span>${o.ended?(o.gain?`Blitz terminé : +${o.gain} CHF`:"Blitz terminé, sans récompense"):o.res==="draw"?"Égalité : le match est à rejouer":`Prochain match contre une IA ${TIERS[BZ.tiers[o.wins]]}`}</span></div>`:`<div class="reward">+${o.gain} CHF</div>`}
     ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.map(id=>QDEF[id].t).join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
-    ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : étoiles doublées":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":P.lv%3===0&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
+    ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":"Serment croisé tenu, mais la partie est perdue"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":"Serment croisé perdu, sans étoile en moins")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : étoiles doublées":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":P.lv%3===0&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
     <div class="rows">${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span><span style="color:var(--me)">${r.a}</span> · <span style="color:var(--foe)">${r.b}</span></span></div>`).join("")}</div>
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
@@ -1979,6 +2005,7 @@ function gameHTML(){
     ${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}
     ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn" data-act="end" ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
   </div>
+  ${aiOathBar()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.jpg?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
@@ -1990,7 +2017,7 @@ function gameHTML(){
 const oathOK=()=>S&&!S.mp&&!S.tut&&!S.blitz&&!S.over&&S.turn<=5;
 function oathHTML(){
   const ls=[0,1,2].filter(li=>S.locs[li].rev);
-  if(S.oathPick!=null) return `<div><div class="t">⚖ Serment sur ${LOCS[S.locs[S.oathPick].id].name} ?</div><div class="m">C'est définitif. Gagne ce lieu : étoiles doublées. Perds-le : −1 étoile.</div><div class="oathbtns"><button class="primary small" data-act="oathok">Je le jure</button><button class="ghost small" data-act="oathno">Annuler</button></div></div>`;
+  if(S.oathPick!=null) return `<div><div class="t">⚖ Serment sur ${LOCS[S.locs[S.oathPick].id].name} ?</div><div class="m">${S.oathPick===S.aiOath?"Serment croisé, c'est définitif. Remporte ce lieu et la partie : +4 étoiles. Perds-le : ta victoire ne rapportera aucune étoile.":"C'est définitif. Gagne ce lieu : étoiles doublées. Perds-le : −1 étoile."}</div><div class="oathbtns"><button class="primary small" data-act="oathok">Je le jure</button><button class="ghost small" data-act="oathno">Annuler</button></div></div>`;
   return `<div><div class="t">⚖ Serment</div><div class="m">Une fois par partie, jusqu'au tour 5. Choisis un lieu révélé.</div><div class="oathbtns">${ls.map(li=>`<button class="toggle" data-act="oathpick" data-li="${li}">${LOCS[S.locs[li].id].name}</button>`).join("")}<button class="ghost small" data-act="oathclose">Fermer</button></div></div>`;
 }
 function gzHTML(){
@@ -2115,6 +2142,8 @@ document.addEventListener("click", e=>{
   if(act==="oathmode"){ S.oathMode=!S.oathMode; S.oathPick=null; sfx("click"); render(); return; }
   if(act==="oathclose"){ S.oathMode=false; S.oathPick=null; render(); return; }
   if(act==="oathpick"){ if(oathOK()&&S.oath==null) S.oathPick=+el.dataset.li; sfx("select"); render(); return; }
+  if(act==="oathcross"){ if(oathOK()&&S.oath==null&&S.aiOath!=null){ S.oath=S.aiOath; S.oathMode=false; S.oathPick=null; log(`Serment croisé sur ${LOCS[S.locs[S.oath].id].name}`); sfx("legend"); } render(); return; }
+  if(act==="oathskip"){ S.aiOathSkip=true; render(); return; }
   if(act==="oathno"){ S.oathPick=null; render(); return; }
   if(act==="oathok"){ if(oathOK()&&S.oath==null&&S.oathPick!=null){ S.oath=S.oathPick; S.oathPick=null; S.oathMode=false; log(`Serment prêté sur ${LOCS[S.locs[S.oath].id].name}`); sfx("legend"); } render(); return; }
   if(act==="mull"){ if(S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.staged.length){ const n=S.hand.p.length; S.deck.p=shuffle([...S.deck.p,...S.hand.p]); S.hand.p=[]; for(let i=0;i<n;i++) draw("p"); S.mull=true; S.sel=null; log("Main changée"); sfx("pack"); } render(); return; }
