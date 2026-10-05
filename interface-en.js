@@ -216,7 +216,7 @@
     "+4 étoiles (serment croisé)":"+4 stars (Cross Oath)", "Aucune étoile gagnée":"No stars earned",
     "Serment adverse":"Enemy Oath", "Serment croisé":"Cross Oath",
     ": l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le":": the opponent can also swear on a location, between turns 2 and 4. You can take up the challenge by swearing on the same location: that's the",
-    ". Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.":". Location and game won: +4 stars, streak included. Location and game lost: −4 stars (never below the tier floor). Location won but game lost, or the reverse: 0.", "Vasseur (paiement)":"Vasseur (payment)", "Floraison passée":"Blossom passed", "Brigid":"Brigid", "Idunn":"Idunn", "Ishtar":"Ishtar",
+    ". Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.":". Location and game won: +4 stars, streak included. Location and game lost: −4 stars (never below the tier floor). Location won but game lost, or the reverse: 0.", "Vasseur (paiement)":"Vasseur (payment)", "Floraison passée":"Blossom passed", "Le Relieur":"The Bookbinder", "Brigid":"Brigid", "Idunn":"Idunn", "Ishtar":"Ishtar",
     "Te déconnecter ? Ta progression reste sur ton compte Google.":"Sign out? Your progress stays on your Google account.",
     "Supabase n'est pas configuré : le jeu tourne hors ligne.":"Supabase isn't configured: the game runs offline."
   };

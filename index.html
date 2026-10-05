@@ -628,6 +628,10 @@ const CARDS = {
   mohini:  {name:"Mohini", cost:1, pow:1, fac:"desir", r:"L", fx:"Révélation : la carte adverse la plus forte ici perd ses effets.", img:"images/mohini.jpg"},
   melinoe: {name:"Melinoë", cost:2, pow:2, fac:"primordial", r:"R", fx:"Révélation : défausse une carte au hasard de ta main, puis +3. Main vide : pas de bonus.", img:"images/melinoe.jpg"},
   biblio:  {name:"Le Bibliothécaire des Passages", cost:1, pow:2, fac:"helvara", r:"C", fx:"Révélation : pioche 1 carte si tu as moins de cartes en main que l'adversaire.", img:"images/biblio.jpg"},
+  comptable:{name:"Le Comptable du Grand-Pont", cost:1, pow:1, fac:"helvara", r:"R", fx:"Révélation : +1 par autre carte à toi ici.", img:"images/comptable.jpg"},
+  relieur: {name:"Le Relieur", cost:2, pow:2, fac:"helvara", r:"R", fx:"Révélation : rend sa puissance de base à ta carte affaiblie la plus faible ici.", img:"images/relieur.jpg"},
+  funambule:{name:"Le Funambule du Belvédère", cost:2, pow:2, fac:"helvara", r:"R", fx:"Révélation : +2 si c'est ta seule carte ici.", img:"images/funambule.jpg"},
+  tyr:     {name:"Týr", cost:2, pow:3, fac:"jugement", r:"E", fx:"Révélation : −1 à chaque carte adverse ici qui a 4 de puissance ou plus.", img:"images/tyr.jpg"},
   reflet:  {name:"Reflet", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par le Lac Ouchy.", img:"", token:true},
   illusion:{name:"Illusion", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Kitsune.", img:"", token:true},
   lanterne:{name:"Lanterne", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par Dame Joanna.", img:"images/lanterne.jpg?v=7", token:true},
@@ -1149,6 +1153,10 @@ function reveal(s,li,c){
     case "konohana": c.bloom=S.turn+1; note="en fleur jusqu'au prochain tour"; break;
     case "mohini": { const t=strongest(targets,o,li); if(t&&!t.neg){ t.neg=true; note=`${nm(t)} perd ses effets`; snd="void"; } break; }
     case "melinoe": { const t=gPick(S.hand[s]); if(t){ discard(s,t); note=`défausse ${nm(t)}`; buffSelf(3); } break; }
+    case "comptable": if(mates.length) buffSelf(mates.length); break;
+    case "relieur": { const t=weakest(mates.filter(x=>x.pow<CARDS[x.id].pow),s,li); if(t){ const v=CARDS[t.id].pow-t.pow; t.pow=CARDS[t.id].pow; (t.mods=t.mods||[]).push({v,src:"Le Relieur"}); note=`+${v} à ${nm(t)}`; snd="buff"; } break; }
+    case "funambule": if(!mates.length) buffSelf(2); break;
+    case "tyr": { let n=0; for(const x of targets) if(pw(o,li,x)>=4&&weaken(o,li,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
     case "biblio": if(S.hand[s].length<S.hand[o].length){ draw(s); note="pioche 1 carte"; } break;
     case "ereshkigal": { const vs=foes.filter(x=>pw(o,li,x)<=3); if(vs.length){ S.board[o][li]=S.board[o][li].filter(x=>!vs.includes(x)); S.destroyed+=vs.length; if(o==="e") S.killE=(S.killE||0)+vs.length; note=`détruit ${vs.length} carte${vs.length>1?"s":""}`; snd="destroy"; } break; }
     case "pele": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li]) if(x!==c&&x.rev&&weaken(side,li,x,2)) n++; if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
