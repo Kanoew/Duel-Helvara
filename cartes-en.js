@@ -112,6 +112,8 @@ window.HELVARA_EN = {
     relieur:{n:"The Bookbinder", fx:"On Reveal: restore your weakest weakened card here to its base Power."},
     funambule:{n:"The Belvédère Tightrope Walker", fx:"On Reveal: +2 if it's your only card here."},
     tyr:{n:"Tyr", fx:"On Reveal: −1 to each enemy card here with 4 Power or more."},
+    medee:{n:"Medea", fx:"On Reveal: \u22122 to the strongest enemy card here. +2 if Hecate is on your side."},
+    medee_h:{n:"Medea, Spectral Bride", fx:"On Reveal: poison the strongest enemy card here: it loses 1 at the end of each turn, down to 0. If Hecate is on your side, also poison the second strongest."},
     reflet:{n:"Reflection", fx:"Token left by Lake Ouchy."},
     illusion:{n:"Illusion", fx:"Token left by Kitsune."},
     lanterne:{n:"Lantern", fx:"Token left by Lady Joanna."},

@@ -632,6 +632,8 @@ const CARDS = {
   relieur: {name:"Le Relieur", cost:2, pow:2, fac:"helvara", r:"R", fx:"Révélation : rend sa puissance de base à ta carte affaiblie la plus faible ici.", img:"images/relieur.jpg"},
   funambule:{name:"Le Funambule du Belvédère", cost:2, pow:2, fac:"helvara", r:"R", fx:"Révélation : +2 si c'est ta seule carte ici.", img:"images/funambule.jpg"},
   tyr:     {name:"Týr", cost:2, pow:3, fac:"jugement", r:"E", fx:"Révélation : −1 à chaque carte adverse ici qui a 4 de puissance ou plus.", img:"images/tyr.jpg"},
+  medee:   {name:"Médée", cost:4, pow:3, fac:"jugement", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : −2 à la carte adverse la plus forte ici. +2 si Hécate est de ton côté.", img:"images/medee.jpg"},
+  medee_h: {name:"Médée, Mariée Spectrale", base:"medee", cost:5, pow:3, fac:"jugement", r:"E", rel:"2026-10-12", ex:"halloween", fx:"Révélation : empoisonne la carte adverse la plus forte ici : elle perd 1 à la fin de chaque tour, jusqu'à 0. Si Hécate est de ton côté, empoisonne aussi la deuxième.", img:"images/medee_h.jpg"},
   reflet:  {name:"Reflet", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par le Lac Ouchy.", img:"", token:true},
   illusion:{name:"Illusion", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Kitsune.", img:"", token:true},
   lanterne:{name:"Lanterne", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par Dame Joanna.", img:"images/lanterne.jpg?v=7", token:true},
@@ -708,7 +710,7 @@ const ULS=[{id:"ulya",req:["yarden",["apsu","apsu_n"]],n:"Yarden Weiss et Apsu"}
   {id:"ulaph",req:[["aphrodite","aphrodite_n"],"yarden"],n:"Aphrodite et Yarden Weiss"},{id:"ulcal",req:[["calypso","calypso_n"],["jordan","jordan_n"]],n:"Calypso et Jordan"},{id:"ulnem",req:["nemesis",["jordan","jordan_n"]],n:"Nemesis et Jordan"}];
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
 const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, Psyché, Amaterasu, La Mère de Cendre… et la première ultra-légendaire, Yarden X Apsu."},
-  {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."}];
+  {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."}];
 const hasReq=(list,r)=>Array.isArray(r)?r.some(x=>list.includes(x)):list.includes(r);
 const ULof=id=>ULS.find(u=>u.id===id);
 const charOf=id=>CARDS[id].base||id;
@@ -731,7 +733,7 @@ const PACKS = [
 const md=()=>today().slice(5);
 function season(){ for(const id of ["halloween","noel"]){ const pk=PACKS.find(x=>x.id===id); if(pk&&inWin(pk.win)) return id; } return null; }
 const SEASON={
-  halloween:{sub:"Nuit des Citrouilles",who:"Joueur d'Helvara · nuit d'Halloween",eyebrow:"Nuit des Citrouilles · jusqu'au 2 novembre",title:"Le voile est mince à Helvara",hint:"Les citrouilles brûlent sur les quais. Le Pli des Citrouilles cache Dame Joanna, et Morrigan, Nyx, Izzy, Yarden, Arès et Nergal dans leurs versions d'Halloween.",btn:"Ouvrir le Pli des Citrouilles",win:"Victoire sous la lune rousse",lose:"Les morts ont gagné cette nuit"},
+  halloween:{sub:"Nuit des Citrouilles",who:"Joueur d'Helvara · nuit d'Halloween",eyebrow:"Nuit des Citrouilles · jusqu'au 2 novembre",title:"Le voile est mince à Helvara",hint:"Les citrouilles brûlent sur les quais. Le Pli des Citrouilles cache Dame Joanna, et Morrigan, Nyx, Izzy, Yarden, Arès, Nergal et Médée dans leurs versions d'Halloween.",btn:"Ouvrir le Pli des Citrouilles",win:"Victoire sous la lune rousse",lose:"Les morts ont gagné cette nuit"},
   noel:{sub:"Veillée de l'Étoile",who:"Joueur d'Helvara · veillée de Noël",eyebrow:"Veillée de l'Étoile · jusqu'au 2 janvier",title:"La neige tombe sur Helvara",hint:"Les vignes sont blanches et le lac retient son souffle. Le Pli de l'Étoile cache Aphrodite, Sekhmet, Calypso et Apsu dans leurs versions de Noël.",btn:"Ouvrir le Pli de l'Étoile",win:"Victoire sous l'Étoile",lose:"La nuit d'hiver l'emporte"}
 };
 function inWin(w){ if(!w) return true; const d=md(); return w[0]<=w[1]?(d>=w[0]&&d<=w[1]):(d>=w[0]||d<=w[1]); }
@@ -1157,6 +1159,11 @@ function reveal(s,li,c){
     case "relieur": { const t=weakest(mates.filter(x=>x.pow<CARDS[x.id].pow),s,li); if(t){ const v=CARDS[t.id].pow-t.pow; t.pow=CARDS[t.id].pow; (t.mods=t.mods||[]).push({v,src:"Le Relieur"}); note=`+${v} à ${nm(t)}`; snd="buff"; } break; }
     case "funambule": if(!mates.length) buffSelf(2); break;
     case "tyr": { let n=0; for(const x of targets) if(pw(o,li,x)>=4&&weaken(o,li,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
+    case "medee": { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,2)){ note=`−2 à ${nm(t)}`; snd="debuff"; } if(onSide(s,"hecate")) buffSelf(2); break; }
+    case "medee_h": { /* poison lent : la robe brûle, rien ne l'arrête (sauf les protections contre l'affaiblissement) */
+      const tg=targets.slice().sort((a,b)=>pw(o,li,b)-pw(o,li,a)).slice(0,onSide(s,"hecate")?2:1);
+      for(const t of tg) t.poison=true;
+      if(tg.length){ note=`empoisonne ${tg.map(nm).join(" et ")}`; snd="debuff"; } break; }
     case "biblio": if(S.hand[s].length<S.hand[o].length){ draw(s); note="pioche 1 carte"; } break;
     case "ereshkigal": { const vs=foes.filter(x=>pw(o,li,x)<=3); if(vs.length){ S.board[o][li]=S.board[o][li].filter(x=>!vs.includes(x)); S.destroyed+=vs.length; if(o==="e") S.killE=(S.killE||0)+vs.length; note=`détruit ${vs.length} carte${vs.length>1?"s":""}`; snd="destroy"; } break; }
     case "pele": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li]) if(x!==c&&x.rev&&weaken(side,li,x,2)) n++; if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
@@ -1283,6 +1290,9 @@ async function resolveTurn(mine, theirs, animate){
   /* Konohanasakuya-Hime : la floraison passe à la fin du tour qui suit son arrivée */
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="konohana"&&c.bloom===S.turn&&c.pow>0){
     (c.mods=c.mods||[]).push({v:-c.pow,src:"Floraison passée"}); c.pow=0; log(`Konohanasakuya-Hime · la floraison est passée (${who(s)})`); sfx("debuff"); }
+  /* Poison de Médée, Mariée Spectrale : −1 à chaque fin de tour, jusqu'à 0 */
+  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(c.poison&&c.rev&&cardPow(s,li,c)>0&&weaken(s,li,c,1)){
+    (c.mods=c.mods||[]).push({v:-1,src:"Poison de Médée"}); log(`Poison de Médée · −1 à ${nm(c)} (${who(s)})`); sfx("debuff"); }
   /* Ishtar : fin de tour (pas après le tour 6) */
   if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="ishtar"){
     const o=opp(s); const t=S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];

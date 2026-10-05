@@ -59,6 +59,8 @@
     [/^paiera au tour (\d+)$/, (m,t)=>`will pay on turn ${t}`],
     [/^ne sera jamais payé$/, ()=>"will never be paid"],
     [/^en fleur jusqu'au prochain tour$/, ()=>"in bloom until next turn"],
+    [/^empoisonne (.+) et (.+)$/, (m,a,b)=>`poisons ${a} and ${b}`],
+    [/^empoisonne (.+)$/, (m,a)=>`poisons ${a}`],
     [/^(.+) perd ses effets$/, (m,a)=>`${a} loses its effects`]
   ];
   function note(t){
@@ -325,6 +327,7 @@
     [/^Coût (-?\d+) · puissance de base (-?\d+)( · actuelle)?$/, (m,c,p,a)=>`Cost ${c} · base Power ${p}${a?" · current":""}`],
     [/^(.+) Vritra a verrouillé ce lieu : plus personne ne peut y jouer\.$/, (m,a)=>`${a} Vritra locked this location: no one can play here anymore.`],
     [/^(.+) · effets continus et lieu$/, (m,a)=>`${a} · ongoing effects and location`],
+    [/^(.+) · Poison de Médée$/, (m,a)=>`${a} · Medea's poison`],
     [/^(.+) · Floraison passée$/, (m,a)=>`${a} · Blossom passed`],
     [/^(.+) · Vasseur \(paiement\)$/, (m,a)=>`${a} · Vasseur (payment)`],
     [/^⚖ Serment sur (.+) \?$/, (m,a)=>`⚖ Oath on ${a}?`],
@@ -343,6 +346,7 @@
     [/^L'adversaire jure sur (.+)$/, (m,a)=>`The opponent swears on ${a}`],
     [/^Serment croisé sur (.+)$/, (m,a)=>`Cross Oath on ${a}`],
     [/^Konohanasakuya-Hime · la floraison est passée \((.+)\)$/, (m,w)=>`Konohanasakuya-hime · the blossom has passed (${who(w)})`],
+    [/^Poison de Médée · −1 à (.+) \((.+)\)$/, (m,a,w)=>`Medea's poison · −1 to ${a} (${who(w)})`],
     [/^Serment prêté sur (.+)$/, (m,a)=>`Oath sworn on ${a}`],
     [/^Vasseur paie : \+4 \((.+)\)$/, (m,w)=>`Vasseur pays: +4 (${who(w)})`],
     [/^[^→]+ · [^→]+$/, m=>{ const p=m.split(" · "); return p.every(x=>exact[x]!==undefined)?p.map(x=>exact[x]).join(" · "):m; }],
@@ -365,12 +369,12 @@
         noel:{name:"Star Fold",desc:"Christmas edition. More epics and legendaries than anywhere else."}
       },
       SEASON:{
-        halloween:{sub:"Pumpkin Night",who:"Player of Helvara · Halloween night",eyebrow:"Pumpkin Night · until November 2",title:"The veil is thin in Helvara",hint:"Pumpkins burn along the quays. The Pumpkin Fold hides Lady Joanna, and Morrigan, Nyx, Izzy, Yarden, Ares and Nergal in their Halloween versions.",btn:"Open the Pumpkin Fold",win:"Victory under the russet moon",lose:"The dead won tonight"},
+        halloween:{sub:"Pumpkin Night",who:"Player of Helvara · Halloween night",eyebrow:"Pumpkin Night · until November 2",title:"The veil is thin in Helvara",hint:"Pumpkins burn along the quays. The Pumpkin Fold hides Lady Joanna, and Morrigan, Nyx, Izzy, Yarden, Ares, Nergal and Medea in their Halloween versions.",btn:"Open the Pumpkin Fold",win:"Victory under the russet moon",lose:"The dead won tonight"},
         noel:{sub:"Star Vigil",who:"Player of Helvara · Christmas Eve",eyebrow:"Star Vigil · until January 2",title:"Snow falls on Helvara",hint:"The vineyards are white and the lake holds its breath. The Star Fold hides Aphrodite, Sekhmet, Calypso and Apsu in their Christmas versions.",btn:"Open the Star Fold",win:"Victory under the Star",lose:"The winter night prevails"}
       },
       DROPS:{
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
-        nov26:"Nemesis, Anubis, Susanoo, Aphrodite, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."
+        nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."
       },
       ULS:{ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan"}
     }
