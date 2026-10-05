@@ -728,10 +728,16 @@ function inWin(w){ if(!w) return true; const d=md(); return w[0]<=w[1]?(d>=w[0]&
 function frDate(m){ const [mm,dd]=m.split("-"); return LANG==="en"?`${MONTHS[+mm-1]} ${+dd}`:`${+dd===1?"1er":+dd} ${MONTHS[+mm-1]}`; }
 function soonWin(w){ if(!w||inWin(w)) return false; const y=+today().slice(0,4); let s=new Date(y,+w[0].slice(0,2)-1,+w[0].slice(3)); const t=new Date(today()); if(s<t) s=new Date(y+1,s.getMonth(),s.getDate()); return (s-t)/864e5<=14; }
 const TIERS=["Passant","Initié","Agent","Élu","Héraut","Avatar","Divinité d'Helvara"];
-const MAXLV=18, RVAL={D:0,C:1,R:2,E:3,L:4,U:5};
-const tierOf=lv=>Math.min(6,Math.floor(lv/3));
+/* Divisions par palier : 3, sauf Héraut et Avatar (5). START = premier niveau de chaque palier, c'est aussi son plancher. */
+const DIV=[3,3,3,3,5,5,1], START=[0,3,6,9,12,17,22];
+const MAXLV=22, RVAL={D:0,C:1,R:2,E:3,L:4,U:5};
+const tierOf=lv=>{ let t=0; while(t<6&&lv>=START[t+1]) t++; return t; };
+const isFloor=lv=>lv===START[tierOf(lv)];
 const maxSt=lv=>{ const t=tierOf(lv); return t<2?3:t<4?4:5; };
-const rankName=lv=>tierOf(lv)===6?TIERS[6]:`${TIERS[tierOf(lv)]} ${["III","II","I"][lv%3]}`;
+const ROMAN=["I","II","III","IV","V"];
+const rankName=lv=>{ const t=tierOf(lv); return t===6?TIERS[6]:`${TIERS[t]} ${ROMAN[DIV[t]-1-(lv-START[t])]}`; };
+/* Anciennes sauvegardes (3 divisions partout, 18 niveaux) : même rang, nouvelle échelle */
+const migrateLv=lv=>lv<12?lv:lv<15?12+(lv-12)*2:lv<18?17+(lv-15)*2:22;
 const MONTHS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 function seasonKey(d=new Date()){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
 function seasonLabel(){ const d=new Date(); const m=MONTHS[d.getMonth()]; return LANG==="en"?`${m} season`:`Saison ${/^[aeiouy]/.test(m)?"d'":"de "}${m}`; }
@@ -751,7 +757,7 @@ const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","
 
 /* ======= SAUVEGARDE ======= */
 const SAVE_KEY = "duel-helvara-save-v1";
-function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}}; }
+function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}}; }
 let migratedNote="";
 const COVERS=["primordial","desir","jugement","helvara"];
 function defDecks(){ return COVERS.map((c,i)=>({name:`Deck ${i+1}`,cover:c,cards:[]})); }
@@ -772,7 +778,7 @@ function clean(p){
   const owned=[...new Set(rawOwned.filter(id=>POOL.includes(id)))];
   const deck=[...new Set(Array.isArray(p.deck)?p.deck:[])].filter(id=>owned.includes(id)).slice(0,ECO.deckSize);
   const out={name:(typeof p.name==="string"&&p.name.trim()?p.name.trim().slice(0,24):f.name), chf:num(p.chf,f.chf)+retired*25, w:num(p.w,0), l:num(p.l,0), d:num(p.d,0), owned, deck, sfx:p.sfx!==false,
-    lv:Math.min(MAXLV,num(p.lv,0)), st:num(p.st,0), streak:num(p.streak,0), best:Math.min(MAXLV,num(p.best,0)),
+    lv:Math.min(MAXLV,p.rv===2?num(p.lv,0):migrateLv(num(p.lv,0))), st:num(p.st,0), streak:num(p.streak,0), best:Math.min(MAXLV,p.rv===2?num(p.best,0):migrateLv(num(p.best,0))), rv:2,
     season:(typeof p.season==="string"&&/^\d{4}-\d{2}$/.test(p.season))?p.season:seasonKey(), sw:num(p.sw,0), sl:num(p.sl,0), sd:num(p.sd,0),
     tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
     bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,5).map(h=>({mode:String(h.mode||"").slice(0,12),res:h.res,opp:String(h.opp||"").slice(0,48),sc:String(h.sc||"").slice(0,12),t:Number(h.t)||0,deck:String(h.deck||"").slice(0,20)})):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
@@ -788,7 +794,7 @@ function dataOf(){ const {_migrated,...d}=P; return d; }
 let seasonNote="";
 function checkSeason(){
   const k=seasonKey(); if(P.season===k) return false;
-  const endTier=tierOf(P.best), reward=25*(endTier+1), newLv=Math.max(0,tierOf(P.lv)-3)*3;
+  const endTier=tierOf(P.best), reward=25*(endTier+1), newLv=START[Math.max(0,tierOf(P.lv)-3)];
   seasonNote=`Nouvelle saison ! Tu as fini au rang ${rankName(P.best)} (+${reward} CHF) et tu reprends à ${rankName(newLv)}.`;
   P.chf+=reward; P.lv=newLv; P.st=0; P.streak=0; P.best=newLv; P.sw=0; P.sl=0; P.sd=0; P.season=k;
   return true;
@@ -850,9 +856,9 @@ function accountHTML(){
 /* ======= CLASSEMENT ======= */
 let lbDb=null, lbUid=null, lbRows=[], lbUnsub=null, lbCanWrite=true;
 const LB_SEASON=()=>seasonKey();
-function lbMe(){ return {nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,lv:P.lv,st:P.st,best:P.best,sw:P.sw,sl:P.sl,season:P.season,uid:lbUid||null}; }
+function lbMe(){ return {nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,lv:P.lv,st:P.st,best:P.best,sw:P.sw,sl:P.sl,season:P.season,uid:lbUid||null,rv:2}; }
 function lbClean(x){ if(!x||typeof x!=="object") return null; const n=v=>Number.isFinite(v)?Math.max(0,Math.min(999,Math.floor(v))):0;
-  return {nick:(typeof x.nick==="string"&&x.nick.trim()?x.nick.trim().slice(0,24):"Joueur"),av:POOL.includes(x.av)?x.av:null,lv:Math.min(MAXLV,n(x.lv)),st:n(x.st),best:Math.min(MAXLV,n(x.best)),sw:n(x.sw),sl:n(x.sl),season:typeof x.season==="string"?x.season.slice(0,7):"",at:Number(x.at)||0}; }
+  return {nick:(typeof x.nick==="string"&&x.nick.trim()?x.nick.trim().slice(0,24):"Joueur"),av:POOL.includes(x.av)?x.av:null,lv:Math.min(MAXLV,x.rv===2?n(x.lv):migrateLv(n(x.lv))),st:n(x.st),best:Math.min(MAXLV,x.rv===2?n(x.best):migrateLv(n(x.best))),sw:n(x.sw),sl:n(x.sl),season:typeof x.season==="string"?x.season.slice(0,7):"",at:Number(x.at)||0}; }
 async function lbInit(db,uid){ lbDb=db; lbUid=uid;
   try{ lbUnsub=db.collection("board").onSnapshot(q=>{ lbRows=q.docs.map(d=>({id:d.id,...lbClean(d.data())})).filter(r=>r.nick); if(screen==="board"||screen==="home") render(); },()=>{}); }catch(e){}
   lbPublish(); }
@@ -986,7 +992,7 @@ function aiOath(){
 function aiOathBar(){
   if(S.aiOath==null||S.over) return "";
   const n=LOCS[S.locs[S.aiOath].id].name;
-  if(S.oath===S.aiOath) return `<div class="oathbar sworn">⚖ Serment croisé sur <b>${n}</b> : remporte ce lieu et la partie pour +4 étoiles. Perds-le et ta victoire ne rapportera aucune étoile.</div>`;
+  if(S.oath===S.aiOath) return `<div class="oathbar sworn">⚖ Serment croisé sur <b>${n}</b> : tout se joue sur ce lieu. Gagne-le avec la partie : +4 étoiles. Perds-le avec la partie : −4.</div>`;
   if(S.oath==null&&oathOK()&&!S.aiOathSkip) return `<div class="oathbar"><span>⚖ L'adversaire jure sur <b>${n}</b>. Relever le défi ?</span><span class="oathbtns" style="margin:0"><button class="primary small" data-act="oathcross">Relever</button><button class="ghost small" data-act="oathskip">Ignorer</button></span></div>`;
   return `<div class="oathbar sworn" style="color:var(--mist)">⚖ L'adversaire a juré sur <b>${n}</b>.</div>`;
 }
@@ -1266,14 +1272,17 @@ async function resolveTurn(mine, theirs, animate){
   S.busy=false;
   if(S.turn>=6) finish(); else startTurn();
 }
-function loseStar(){ if(P.st>0) P.st--; else if(P.lv<MAXLV&&P.lv%3!==0){ P.lv--; P.st=maxSt(P.lv)-1; } }
+function loseStar(){ if(P.st>0) P.st--; else if(P.lv<MAXLV&&!isFloor(P.lv)){ P.lv--; P.st=maxSt(P.lv)-1; } }
 function applyRank(res,oath,cross){
   const before=P.lv; let bonus=0;
   if(res==="win"){ P.streak++; bonus=(P.streak>=2&&P.lv<12)?1:0;
     /* Serment croisé : +4 étoiles plafonnées (série comprise) si tenu, aucune si rompu */
     const n=cross?(oath==="kept"?4:0):(1+bonus)*(oath==="kept"?2:1);
     for(let i=0;i<n;i++){ P.st++; if(P.lv<MAXLV&&P.st>maxSt(P.lv)){ P.lv++; P.st=1; } } }
-  else if(res==="lose"){ P.streak=0; if(tierOf(P.lv)<2){} else if(P.st>0) P.st--; else if(P.lv<MAXLV&&P.lv%3!==0){ P.lv--; P.st=maxSt(P.lv)-1; } }
+  else if(res==="lose"){ P.streak=0;
+    /* Serment croisé : lieu tenu, la défaite ne coûte rien ; lieu perdu, −4 étoiles (jamais sous le plancher du palier) */
+    if(cross){ if(oath==="broken") for(let i=0;i<4;i++) loseStar(); }
+    else if(tierOf(P.lv)<2){} else loseStar(); }
   else P.streak=0;
   if(oath==="broken"&&!cross) loseStar();
   P.best=Math.max(P.best,P.lv);
@@ -1908,10 +1917,10 @@ function rulesHTML(){
   </section>
   <section class="sec"><h2>Rangs et saisons</h2>
     <ol class="rules">
-      <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(i*3,"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
+      <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I), sauf Héraut et Avatar qui en ont cinq (V à I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(i*3,"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
       <li>Victoire : +1 étoile, +2 à partir de 2 victoires d'affilée (jusqu'à Héraut). Défaite : −1 étoile, sauf en Passant et Initié où elle ne coûte rien. Égalité : rien ne bouge.</li>
       <li><b>Le Serment</b> (parties classées uniquement) : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé. Si tu le remportes, les étoiles gagnées sont doublées. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
-      <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Remporte ce lieu et la partie : +4 étoiles, série comprise. Perds ce lieu : ta victoire ne rapporte aucune étoile, mais une défaite ne coûte jamais plus que d'habitude.</li>
+      <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.</li>
       <li>Le début de chaque palier est un plancher : on ne redescend jamais sous un palier atteint pendant la saison.</li>
       <li>Plus ton rang est haut, plus l'adversaire construit un deck solide et joue bien. Il n'utilise jamais une rareté que tu n'as pas encore trouvée.</li>
       <li>Chaque mois, nouvelle saison : tu redescends de 3 paliers (une Divinité repart en Élu) et tu reçois 25 CHF par palier atteint (175 CHF pour la Divinité).</li>
@@ -1986,7 +1995,7 @@ function resultHTML(){
     <h2>${t}</h2>
     ${o.blitz?`<div class="rankline"><b>Blitz · ${o.wins} victoire${o.wins>1?"s":""} sur 3</b><br><span>${o.ended?(o.gain?`Blitz terminé : +${o.gain} CHF`:"Blitz terminé, sans récompense"):o.res==="draw"?"Égalité : le match est à rejouer":`Prochain match contre une IA ${TIERS[BZ.tiers[o.wins]]}`}</span></div>`:`<div class="reward">+${o.gain} CHF</div>`}
     ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.map(id=>QDEF[id].t).join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
-    ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":"Serment croisé tenu, mais la partie est perdue"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":"Serment croisé perdu, sans étoile en moins")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : étoiles doublées":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":P.lv%3===0&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
+    ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : étoiles doublées":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
     <div class="rows">${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span><span style="color:var(--me)">${r.a}</span> · <span style="color:var(--foe)">${r.b}</span></span></div>`).join("")}</div>
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
@@ -2017,7 +2026,7 @@ function gameHTML(){
 const oathOK=()=>S&&!S.mp&&!S.tut&&!S.blitz&&!S.over&&S.turn<=5;
 function oathHTML(){
   const ls=[0,1,2].filter(li=>S.locs[li].rev);
-  if(S.oathPick!=null) return `<div><div class="t">⚖ Serment sur ${LOCS[S.locs[S.oathPick].id].name} ?</div><div class="m">${S.oathPick===S.aiOath?"Serment croisé, c'est définitif. Remporte ce lieu et la partie : +4 étoiles. Perds-le : ta victoire ne rapportera aucune étoile.":"C'est définitif. Gagne ce lieu : étoiles doublées. Perds-le : −1 étoile."}</div><div class="oathbtns"><button class="primary small" data-act="oathok">Je le jure</button><button class="ghost small" data-act="oathno">Annuler</button></div></div>`;
+  if(S.oathPick!=null) return `<div><div class="t">⚖ Serment sur ${LOCS[S.locs[S.oathPick].id].name} ?</div><div class="m">${S.oathPick===S.aiOath?"Serment croisé, c'est définitif. Lieu et partie gagnés : +4 étoiles. Lieu et partie perdus : −4. Sinon : 0.":"C'est définitif. Gagne ce lieu : étoiles doublées. Perds-le : −1 étoile."}</div><div class="oathbtns"><button class="primary small" data-act="oathok">Je le jure</button><button class="ghost small" data-act="oathno">Annuler</button></div></div>`;
   return `<div><div class="t">⚖ Serment</div><div class="m">Une fois par partie, jusqu'au tour 5. Choisis un lieu révélé.</div><div class="oathbtns">${ls.map(li=>`<button class="toggle" data-act="oathpick" data-li="${li}">${LOCS[S.locs[li].id].name}</button>`).join("")}<button class="ghost small" data-act="oathclose">Fermer</button></div></div>`;
 }
 function gzHTML(){
