@@ -622,6 +622,12 @@ const CARDS = {
   ulcal:   {name:"Calypso X Jordan", cost:5, pow:4, fac:"desir", r:"U", rel:"2026-11-01", soon:"2026-10-27", fx:"Continu : tes cartes ici ne peuvent être ni détruites ni affaiblies, et les autres gagnent +2. Exige Calypso et Jordan dans le deck.", img:"images/ulcal.jpg?v=6"},
   ulnem:   {name:"Nemesis X Jordan", cost:6, pow:2, fac:"jugement", r:"U", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : détruit la carte la plus forte de chaque côté ici, puis tes autres cartes ici gagnent +2. Exige Nemesis et Jordan dans le deck.", img:"images/ulnem.jpg?v=6"},
   /* JETONS */
+  /* Faible coût, octobre 2026 */
+  hermes:  {name:"Hermès", cost:1, pow:1, fac:"desir", r:"R", fx:"Révélation : déplace ta carte la plus forte ici vers un lieu révélé qu'elle te ferait remporter.", img:"images/hermes.jpg"},
+  konohana:{name:"Konohanasakuya-Hime", cost:1, pow:4, fac:"desir", r:"E", fx:"À la fin du tour qui suit son arrivée, tombe à 0 : la floraison est passée.", img:"images/konohana.jpg"},
+  mohini:  {name:"Mohini", cost:1, pow:1, fac:"desir", r:"L", fx:"Révélation : la carte adverse la plus forte ici perd ses effets.", img:"images/mohini.jpg"},
+  melinoe: {name:"Melinoë", cost:2, pow:2, fac:"primordial", r:"R", fx:"Révélation : défausse une carte au hasard de ta main, puis +3. Main vide : pas de bonus.", img:"images/melinoe.jpg"},
+  biblio:  {name:"Le Bibliothécaire des Passages", cost:1, pow:2, fac:"helvara", r:"C", fx:"Révélation : pioche 1 carte si tu as moins de cartes en main que l'adversaire.", img:"images/biblio.jpg"},
   reflet:  {name:"Reflet", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par le Lac Ouchy.", img:"", token:true},
   illusion:{name:"Illusion", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Kitsune.", img:"", token:true},
   lanterne:{name:"Lanterne", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par Dame Joanna.", img:"images/lanterne.jpg?v=7", token:true},
@@ -1132,6 +1138,18 @@ function reveal(s,li,c){
     case "eris": { const t=strongest(targets,o,li); const spots=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(t&&spots.length){ const i=gPick(spots); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
     case "durga": { const t=strongest(targets,o,li); if(t&&pw(o,li,t)>=7){ if(destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } } else buffSelf(3); break; }
     case "hecate": draw(s); draw(s); note="pioche 2 cartes"; break;
+    case "hermes": { /* ta plus forte carte ici part vers un lieu révélé où elle te fait mener (de préférence un lieu que tu ne menais pas) */
+      const t=strongest(mates,s,li); if(!t) break; let best=null;
+      for(const i of [0,1,2]){ if(i===li||!S.locs[i].rev||S.board[s][i].length>=capOf(s,i)) continue;
+        const was=leader(i)===s; S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t);
+        const wins=leader(i)===s, gap=total(s,i)-total(o,i);
+        S.board[s][i]=S.board[s][i].filter(x=>x!==t); S.board[s][li].push(t);
+        if(wins&&(!best||(!was&&best.was)||(was===best.was&&gap<best.gap))) best={i,was,gap}; }
+      if(best){ S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][best.i].push(t); note=`${nm(t)} part vers ${LOCS[S.locs[best.i].id].name}`; snd="buff"; } break; }
+    case "konohana": c.bloom=S.turn+1; note="en fleur jusqu'au prochain tour"; break;
+    case "mohini": { const t=strongest(targets,o,li); if(t&&!t.neg){ t.neg=true; note=`${nm(t)} perd ses effets`; snd="void"; } break; }
+    case "melinoe": { const t=gPick(S.hand[s]); if(t){ discard(s,t); note=`défausse ${nm(t)}`; buffSelf(3); } break; }
+    case "biblio": if(S.hand[s].length<S.hand[o].length){ draw(s); note="pioche 1 carte"; } break;
     case "ereshkigal": { const vs=foes.filter(x=>pw(o,li,x)<=3); if(vs.length){ S.board[o][li]=S.board[o][li].filter(x=>!vs.includes(x)); S.destroyed+=vs.length; if(o==="e") S.killE=(S.killE||0)+vs.length; note=`détruit ${vs.length} carte${vs.length>1?"s":""}`; snd="destroy"; } break; }
     case "pele": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li]) if(x!==c&&x.rev&&weaken(side,li,x,2)) n++; if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "ares": { let n=0; for(const x of targets) if(weaken(o,li,x,1)) n++; if(n){ c.pow+=n; note=`−1 à ${n}, +${n}`; snd="debuff"; } break; }
@@ -1254,6 +1272,9 @@ async function resolveTurn(mine, theirs, animate){
   if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="idunn"){
     const t=S.board[s][li].filter(x=>x.rev).sort((a,b)=>cardPow(s,li,a)-cardPow(s,li,b))[0]; if(t){ t.pow+=1; (t.mods=t.mods||[]).push({v:1,src:"Idunn"}); log(`Idunn · +1 à ${nm(t)} (${who(s)})`); sfx("buff"); }
   }
+  /* Konohanasakuya-Hime : la floraison passe à la fin du tour qui suit son arrivée */
+  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="konohana"&&c.bloom===S.turn&&c.pow>0){
+    (c.mods=c.mods||[]).push({v:-c.pow,src:"Floraison passée"}); c.pow=0; log(`Konohanasakuya-Hime · la floraison est passée (${who(s)})`); sfx("debuff"); }
   /* Ishtar : fin de tour (pas après le tour 6) */
   if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="ishtar"){
     const o=opp(s); const t=S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];
