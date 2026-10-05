@@ -10,6 +10,8 @@
 
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
+    [/^\+1 à (.+), encre indélébile$/, (m,a)=>`+1 to ${a}, permanent ink`],
+    [/^défausse (.+), pioche 2$/, (m,a)=>`discards ${a}, draws 2`],
     [/^\+1 énergie au prochain tour$/, ()=>"+1 energy next turn"],
     [/^ajoute (.+) à sa main$/, (m,a)=>`adds ${a} to hand`],
     [/^l'effet du lieu s'arrête$/, ()=>"the location's effect stops"],
@@ -59,6 +61,19 @@
     [/^paiera au tour (\d+)$/, (m,t)=>`will pay on turn ${t}`],
     [/^ne sera jamais payé$/, ()=>"will never be paid"],
     [/^en fleur jusqu'au prochain tour$/, ()=>"in bloom until next turn"],
+    [/^Mjölnir → (.+)$/, (m,a)=>`Mjölnir → ${a}`],
+    [/^Ombre → (.+)$/, (m,a)=>`Shadow → ${a}`],
+    [/^(\d+) cartes? passen?t? par le Bifröst$/, (m,n)=>`${n} ${s(n,"card")} cross the Bifröst`],
+    [/^ressuscite (\d+) cartes?, intouchables$/, (m,n)=>`resurrects ${n} ${s(n,"card")}, untouchable`],
+    [/^ressuscite (\d+) cartes?$/, (m,n)=>`resurrects ${n} ${s(n,"card")}`],
+    [/^ressuscite (.+)$/, (m,a)=>`resurrects ${a}`],
+    [/^(.+) revient malade \(−2\)$/, (m,a)=>`${a} comes back sick (−2)`],
+    [/^l'ivresse fait défausser (.+) et (.+)$/, (m,a,b)=>`drunkenness makes them discard ${a} and ${b}`],
+    [/^l'ivresse fait défausser (.+)$/, (m,a)=>`drunkenness makes them discard ${a}`],
+    [/^pioche 1$/, ()=>"draws 1"],
+    [/^le reflux emporte (\d+) cartes?$/, (m,n)=>`the ebb tide takes ${n} ${s(n,"card")}`],
+    [/^(\d+) Pourceaux?$/, (m,n)=>`${n} Swine`],
+    [/^charme (.+)$/, (m,a)=>`charms ${a}`],
     [/^empoisonne (.+) et (.+)$/, (m,a,b)=>`poisons ${a} and ${b}`],
     [/^empoisonne (.+)$/, (m,a)=>`poisons ${a}`],
     [/^(.+) perd ses effets$/, (m,a)=>`${a} loses its effects`]
@@ -218,7 +233,10 @@
     "+4 étoiles (serment croisé)":"+4 stars (Cross Oath)", "Aucune étoile gagnée":"No stars earned",
     "Serment adverse":"Enemy Oath", "Serment croisé":"Cross Oath",
     ": l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le":": the opponent can also swear on a location, between turns 2 and 4. You can take up the challenge by swearing on the same location: that's the",
-    ". Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.":". Location and game won: +4 stars, streak included. Location and game lost: −4 stars (never below the tier floor). Location won but game lost, or the reverse: 0.", "Vasseur (paiement)":"Vasseur (payment)", "Floraison passée":"Blossom passed", "Le Relieur":"The Bookbinder", "Brigid":"Brigid", "Idunn":"Idunn", "Ishtar":"Ishtar",
+    ". Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.":". Location and game won: +4 stars, streak included. Location and game lost: −4 stars (never below the tier floor). Location won but game lost, or the reverse: 0.", "Vasseur (paiement)":"Vasseur (payment)", "Floraison passée":"Blossom passed", "Le Tatoueur":"The Tattooist", "Le glas":"The knell", "Loviatar":"Loviatar", "Mjölnir":"Mjölnir",
+    "Main adverse :":"Enemy hand:", "Défausses :":"Discards:", "Cimetières :":"Graveyards:",
+    "Ressusciter":"Resurrect", ": une carte défaussée ou détruite revient sur le plateau, révélée, à sa puissance de base, sans déclencher sa Révélation (sauf mention contraire).":": a discarded or destroyed card comes back to the board, revealed, at base Power, without triggering its On Reveal (unless stated otherwise).",
+    "Charmer":"Charm", ": la carte reste du côté adverse, mais sa puissance compte pour toi.":": the card stays on the enemy side, but its Power counts for you.", "Le Relieur":"The Bookbinder", "Brigid":"Brigid", "Idunn":"Idunn", "Ishtar":"Ishtar",
     "Te déconnecter ? Ta progression reste sur ton compte Google.":"Sign out? Your progress stays on your Google account.",
     "Supabase n'est pas configuré : le jeu tourne hors ligne.":"Supabase isn't configured: the game runs offline."
   };
@@ -328,6 +346,7 @@
     [/^(.+) Vritra a verrouillé ce lieu : plus personne ne peut y jouer\.$/, (m,a)=>`${a} Vritra locked this location: no one can play here anymore.`],
     [/^(.+) · effets continus et lieu$/, (m,a)=>`${a} · ongoing effects and location`],
     [/^(.+) · Poison de Médée$/, (m,a)=>`${a} · Medea's poison`],
+    [/^(.+) · (Le Tatoueur|Le glas|Mjölnir|Loviatar)$/, (m,a,b)=>`${a} · ${exact[b]}`],
     [/^(.+) · Floraison passée$/, (m,a)=>`${a} · Blossom passed`],
     [/^(.+) · Vasseur \(paiement\)$/, (m,a)=>`${a} · Vasseur (payment)`],
     [/^⚖ Serment sur (.+) \?$/, (m,a)=>`⚖ Oath on ${a}?`],
@@ -347,6 +366,10 @@
     [/^Serment croisé sur (.+)$/, (m,a)=>`Cross Oath on ${a}`],
     [/^Konohanasakuya-Hime · la floraison est passée \((.+)\)$/, (m,w)=>`Konohanasakuya-hime · the blossom has passed (${who(w)})`],
     [/^Poison de Médée · −1 à (.+) \((.+)\)$/, (m,a,w)=>`Medea's poison · −1 to ${a} (${who(w)})`],
+    [/^Thor récupère Mjölnir : \+2 \((.+)\)$/, (m,w)=>`Thor gets Mjölnir back: +2 (${who(w)})`],
+    [/^Le glas sonne : \+(\d+) à (\d+) cartes? \((.+)\)$/, (m,v,n,w)=>`The knell tolls: +${v} to ${n} ${s(n,"card")} (${who(w)})`],
+    [/^Le Tombeau rend (\d+) cartes? \((.+)\)$/, (m,n,w)=>`The Tomb gives back ${n} ${s(n,"card")} (${who(w)})`],
+    [/^Main adverse : (\d+)$/, (m,n)=>`Enemy hand: ${n}`],
     [/^Serment prêté sur (.+)$/, (m,a)=>`Oath sworn on ${a}`],
     [/^Vasseur paie : \+4 \((.+)\)$/, (m,w)=>`Vasseur pays: +4 (${who(w)})`],
     [/^[^→]+ · [^→]+$/, m=>{ const p=m.split(" · "); return p.every(x=>exact[x]!==undefined)?p.map(x=>exact[x]).join(" · "):m; }],
@@ -366,17 +389,20 @@
         voile:{name:"Seal of the Veil",desc:"Epics come into play."},
         breche:{name:"Breach of the Seal",desc:"Anything can come out of it, legendaries included."},
         halloween:{name:"Pumpkin Fold",desc:"Halloween edition. More epics and legendaries than anywhere else."},
+        nouvelan:{name:"Twelfth Stroke Fold",desc:"New Year edition. More epics and legendaries than anywhere else."},
         noel:{name:"Star Fold",desc:"Christmas edition. More epics and legendaries than anywhere else."}
       },
       SEASON:{
         halloween:{sub:"Pumpkin Night",who:"Player of Helvara · Halloween night",eyebrow:"Pumpkin Night · until November 2",title:"The veil is thin in Helvara",hint:"Pumpkins burn along the quays. The Pumpkin Fold hides Lady Joanna, and Morrigan, Nyx, Izzy, Yarden, Ares, Nergal and Medea in their Halloween versions.",btn:"Open the Pumpkin Fold",win:"Victory under the russet moon",lose:"The dead won tonight"},
-        noel:{sub:"Star Vigil",who:"Player of Helvara · Christmas Eve",eyebrow:"Star Vigil · until January 2",title:"Snow falls on Helvara",hint:"The vineyards are white and the lake holds its breath. The Star Fold hides Aphrodite, Sekhmet, Calypso and Apsu in their Christmas versions.",btn:"Open the Star Fold",win:"Victory under the Star",lose:"The winter night prevails"}
+        noel:{sub:"Star Vigil",who:"Player of Helvara · Christmas Eve",eyebrow:"Star Vigil · until January 2",title:"Snow falls on Helvara",hint:"The vineyards are white and the lake holds its breath. The Star Fold hides Aphrodite, Sekhmet, Calypso and Apsu in their Christmas versions.",btn:"Open the Star Fold",win:"Victory under the Star",lose:"The winter night prevails"},
+        nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel in her New Year's Eve version.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
       },
       DROPS:{
+        dec26:"Odin, Thor, Hel, Baldur, Hades, Poseidon, Circe, Qetesh, the people of Lausanne… five new fusions, the Creator's Domain and the Tomb.",
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."
       },
-      ULS:{ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan"}
+      ULS:{ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur"}
     }
   };
 })();

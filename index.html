@@ -295,12 +295,12 @@ pre{background:var(--deep);border:1px solid var(--line);border-radius:10px;paddi
 .soonbar .toggle{margin-top:8px}
 /* ===== thèmes saisonniers ===== */
 html[data-season="halloween"]{--warm:#ec8a3c;--me:#7cc4e4}
-html[data-season="noel"]{--warm:#e7c77e;--me:#8fd0f0}
+html[data-season="noel"],html[data-season="nouvelan"]{--warm:#e7c77e;--me:#8fd0f0}
 html[data-season="halloween"] body::before{background:linear-gradient(180deg,rgba(14,10,22,.45),rgba(12,8,18,.82)),url("images/fond_halloween.jpg") center/cover no-repeat,var(--ink)}
-html[data-season="noel"] body::before{background:linear-gradient(180deg,rgba(8,14,24,.4),rgba(8,12,20,.8)),url("images/fond_noel.jpg") center/cover no-repeat,var(--ink)}
+html[data-season="noel"] body::before,html[data-season="nouvelan"] body::before{background:linear-gradient(180deg,rgba(8,14,24,.4),rgba(8,12,20,.8)),url("images/fond_noel.jpg") center/cover no-repeat,var(--ink)}
 html[data-season] body::after{content:"";position:fixed;inset:-20% 0 0 0;z-index:-1;pointer-events:none;opacity:.55}
 html[data-season="halloween"] body::after{background-image:radial-gradient(2px 2px at 12% 80%,#ff9b4a 60%,transparent),radial-gradient(1.5px 1.5px at 37% 60%,#ffb36b 60%,transparent),radial-gradient(2px 2px at 64% 90%,#ff8a3a 60%,transparent),radial-gradient(1.5px 1.5px at 85% 70%,#c98bff 60%,transparent),radial-gradient(2px 2px at 52% 40%,#ff9b4a 60%,transparent);background-size:340px 420px;animation:embers 18s linear infinite}
-html[data-season="noel"] body::after{background-image:radial-gradient(2.5px 2.5px at 10% 10%,#fff 60%,transparent),radial-gradient(1.8px 1.8px at 30% 45%,#e8f4ff 60%,transparent),radial-gradient(2.2px 2.2px at 58% 20%,#fff 60%,transparent),radial-gradient(1.5px 1.5px at 78% 62%,#dbeeff 60%,transparent),radial-gradient(2px 2px at 90% 30%,#fff 60%,transparent);background-size:300px 360px;animation:snow 22s linear infinite}
+html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{background-image:radial-gradient(2.5px 2.5px at 10% 10%,#fff 60%,transparent),radial-gradient(1.8px 1.8px at 30% 45%,#e8f4ff 60%,transparent),radial-gradient(2.2px 2.2px at 58% 20%,#fff 60%,transparent),radial-gradient(1.5px 1.5px at 78% 62%,#dbeeff 60%,transparent),radial-gradient(2px 2px at 90% 30%,#fff 60%,transparent);background-size:300px 360px;animation:snow 22s linear infinite}
 @keyframes embers{from{background-position:0 0}to{background-position:40px -840px}}
 @keyframes snow{from{background-position:0 0}to{background-position:-60px 1080px}}
 @media (prefers-reduced-motion: reduce){ html[data-season] body::after{animation:none} }
@@ -373,6 +373,7 @@ html[data-season="noel"] body::after{background-image:radial-gradient(2.5px 2.5p
 .oathchip{border-color:rgba(219,168,98,.55);color:var(--warm)}
 .oathchip.on{background:rgba(219,168,98,.16)}
 .loc.oath{box-shadow:0 0 0 2px var(--warm) inset}
+.pilesbar{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mist);margin:2px 0 6px}
 .loc.aioath{box-shadow:0 0 0 2px var(--ko) inset}
 .loc.cross{box-shadow:0 0 0 2px var(--warm) inset,0 0 0 4px var(--ko) inset}
 .oathres.kept{color:#9fe0b0}.oathres.broken{color:var(--ko)}
@@ -634,18 +635,48 @@ const CARDS = {
   tyr:     {name:"Týr", cost:2, pow:3, fac:"jugement", r:"E", fx:"Révélation : −1 à chaque carte adverse ici qui a 4 de puissance ou plus.", img:"images/tyr.jpg"},
   medee:   {name:"Médée", cost:4, pow:3, fac:"jugement", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : −2 à la carte adverse la plus forte ici. +2 si Hécate est de ton côté.", img:"images/medee.jpg"},
   medee_h: {name:"Médée, Mariée Spectrale", base:"medee", cost:5, pow:3, fac:"jugement", r:"E", rel:"2026-10-12", ex:"halloween", fx:"Révélation : empoisonne la carte adverse la plus forte ici : elle perd 1 à la fin de chaque tour, jusqu'à 0. Si Hécate est de ton côté, empoisonne aussi la deuxième.", img:"images/medee_h.jpg"},
+  /* Vague de décembre 2026 */
+  carillonneur:{name:"Le Carillonneur de la Cathédrale", cost:3, pow:1, fac:"helvara", r:"L", rel:"2026-12-01", soon:"2026-11-26", fx:"Continu : à la fin de chaque tour, +1. Fin du tour 6 : le glas sonne, tes autres cartes ici gagnent la moitié de sa puissance (arrondie au-dessous).", img:"images/carillonneur.jpg"},
+  boucher: {name:"Le Boucher de la Riponne", cost:1, pow:3, fac:"helvara", r:"C", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : défausse une carte au hasard de ta main.", img:"images/boucher.jpg"},
+  tatoueur:{name:"Le Tatoueur de Chauderon", cost:2, pow:2, fac:"helvara", r:"R", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ta carte la plus forte ici gagne +1 et ne peut plus être affaiblie.", img:"images/tatoueur.jpg"},
+  graffeur:{name:"Le Graffeur du Tunnel de la Borde", cost:3, pow:2, fac:"helvara", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Continu : +2 de ton côté dans les lieux voisins.", img:"images/graffeur.jpg"},
+  odin:    {name:"Odin", cost:4, pow:4, fac:"jugement", r:"L", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : défausse la carte la plus chère de ta main, puis pioche 2 cartes.", img:"images/odin.jpg"},
+  thor:    {name:"Thor", cost:4, pow:3, fac:"primordial", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : lance Mjölnir (jeton de puissance 2) dans un autre lieu. Si Mjölnir est détruit, Thor gagne +2.", img:"images/thor.jpg"},
+  heimdall:{name:"Heimdall", cost:3, pow:3, fac:"jugement", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : tes autres cartes ici passent par le Bifröst vers un lieu où l'on ne peut plus jouer, s'il y a de la place. Sinon, +2.", img:"images/heimdall.jpg"},
+  hel:     {name:"Hel", cost:6, pow:4, fac:"primordial", r:"L", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ressuscite tes cartes défaussées dans des lieux au hasard, à leur puissance de base, sans Révélation.", img:"images/hel.jpg"},
+  dionysos:{name:"Dionysos", cost:3, pow:3, fac:"desir", r:"R", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : chaque joueur pioche 1 carte, puis défausse une carte au hasard.", img:"images/dionysos.jpg"},
+  poseidon:{name:"Poséidon", cost:5, pow:3, fac:"primordial", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : le reflux renvoie dans la main adverse les cartes adverses de coût 3 ou moins ici.", img:"images/poseidon.jpg"},
+  hades:   {name:"Hadès", cost:5, pow:4, fac:"primordial", r:"L", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ressuscite ici ta carte détruite la plus forte, sans Révélation.", img:"images/hades.jpg"},
+  circe:   {name:"Circé", cost:5, pow:3, fac:"desir", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : les cartes adverses ici de puissance 3 ou moins deviennent des Pourceaux (puissance 1, sans effet).", img:"images/circe.jpg"},
+  qetesh:  {name:"Qetesh", cost:5, pow:3, fac:"desir", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : la carte adverse la plus forte ici (4 ou moins) est charmée. Sa puissance compte pour toi, mais elle reste de son côté.", img:"images/qetesh.jpg"},
+  oshun:   {name:"Oshun", cost:4, pow:3, fac:"desir", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : +1 à toutes tes autres cartes, dans les 3 lieux.", img:"images/oshun.jpg"},
+  scathach:{name:"Scáthach", cost:4, pow:3, fac:"jugement", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : laisse une Ombre de Scáthach (puissance −3, sans effet) du côté adverse, dans un autre lieu.", img:"images/scathach.jpg"},
+  loviatar:{name:"Loviatar", cost:4, pow:3, fac:"primordial", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ressuscite ici ta dernière carte défaussée. Elle revient malade : sans Révélation et avec −2.", img:"images/loviatar.jpg"},
+  baldur:  {name:"Baldur", cost:4, pow:4, fac:"jugement", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Les effets adverses ne peuvent ni le détruire ni l'affaiblir, sauf ceux des cartes de coût 2 ou moins (le gui) et ceux où « rien ne le protège ».", img:"images/baldur.jpg"},
+  ulcirce: {name:"Nyx X Circé", cost:6, pow:3, fac:"primordial", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : les cartes adverses ici deviennent des Pourceaux. Exige Nyx et Circé dans le deck.", img:"images/ulcirce.jpg"},
+  uloshun: {name:"Nyx X Oshun", cost:6, pow:4, fac:"primordial", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : détruit la carte adverse la plus forte ici, puis +2 à ta carte la plus faible dans chaque lieu. Exige Nyx et Oshun dans le deck.", img:"images/uloshun.jpg"},
+  ulqetjor:{name:"Qetesh X Jordan", cost:6, pow:4, fac:"desir", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Continu : tes autres cartes ont +1, dans les 3 lieux. Exige Qetesh et Jordan dans le deck.", img:"images/ulqetjor.jpg"},
+  ulqetyar:{name:"Qetesh X Yarden", cost:6, pow:3, fac:"desir", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Continu : +3 par lieu où tu as à la fois une carte Désir et une carte Primordiale. Exige Qetesh et Yarden Weiss dans le deck.", img:"images/ulqetyar.jpg"},
+  ulhel:   {name:"Hel X Baldur", cost:6, pow:3, fac:"primordial", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ressuscite tes cartes défaussées dans des lieux au hasard, sans Révélation. Elles ne peuvent être ni détruites ni affaiblies. Exige Hel et Baldur dans le deck.", img:"images/ulhel.jpg"},
+  hel_r:   {name:"Hel, Reine du Réveillon", base:"hel", cost:5, pow:2, fac:"primordial", r:"E", rel:"2026-12-31", soon:"2026-12-26", ex:"nouvelan", fx:"Révélation : ressuscite ici ta carte défaussée la plus chère, avec sa Révélation.", img:"images/hel_r.jpg"},
   reflet:  {name:"Reflet", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par le Lac Ouchy.", img:"", token:true},
   illusion:{name:"Illusion", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Kitsune.", img:"", token:true},
   lanterne:{name:"Lanterne", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par Dame Joanna.", img:"images/lanterne.jpg?v=7", token:true},
   cendreux:{name:"Cendreux", cost:0, pow:2, fac:"primordial", r:"T", fx:"Jeton laissé par la Mère de Cendre.", img:"", token:true},
-  refaph:  {name:"Reflet d'Aphrodite", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Aphrodite.", img:"images/refaph.jpg?v=6", token:true}
+  refaph:  {name:"Reflet d'Aphrodite", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Aphrodite.", img:"images/refaph.jpg?v=6", token:true},
+  mjolnir: {name:"Mjölnir", cost:0, pow:2, fac:"primordial", r:"T", fx:"Jeton lancé par Thor. S'il est détruit, Thor gagne +2.", img:"images/mjolnir.jpg", token:true},
+  ombre:   {name:"Ombre de Scáthach", cost:0, pow:-3, fac:"jugement", r:"T", fx:"Jeton laissé par Scáthach chez l'adversaire.", img:"images/ombre.jpg", token:true},
+  pourceau:{name:"Pourceau", cost:0, pow:1, fac:"desir", r:"T", fx:"Une carte changée en Pourceau par Circé.", img:"images/pourceau.jpg", token:true}
 };
+const locPool=()=>Object.keys(LOCS).filter(k=>!LOCS[k].rel||today()>=LOCS[k].rel); /* lieux sortis */
 const LOCS = {
   ouchy:     {name:"Lac Ouchy", img:"images/lieux/ouchy.jpg", fx:"La première carte que chaque joueur joue ici laisse un Reflet de puissance 2."},
   sousgare:  {name:"Sous-gare, 4B", img:"images/lieux/sousgare.jpg", fx:"Félix fait crédit : les cartes jouées ici coûtent 1 de moins."},
   ruelle:    {name:"La Ruelle", img:"images/lieux/ruelle.jpg", fx:"Là où tout a commencé. 2 cartes maximum par joueur.", cap:2},
   tour:      {name:"Ouchy, 16e étage", img:"images/lieux/tour.jpg", fx:"Chez Izzy : les cartes de puissance de base 5+ ont +2 ici."},
-  faille:    {name:"La Faille", img:"images/lieux/faille.jpg", fx:"Fin du tour 4 : détruit la carte la plus faible de chaque côté. Les cartes protégées (Eir, Ame-no-Uzume) y résistent."},
+  domaine:   {name:"Le Domaine du Créateur", img:"images/lieux/domaine.jpg", fx:"Les cartes qui forment une Fusion avec Jordan ont +2 ici.", rel:"2026-12-01"},
+  tombeau:   {name:"Le Tombeau", img:"images/lieux/tombeau.jpg", fx:"Fin du tour 6 : chaque joueur invoque ici ses cartes défaussées, au hasard, tant qu'il reste de la place.", rel:"2026-12-01"},
+  faille:    {name:"La Faille", img:"images/lieux/faille.jpg", fx:"Fin du tour 4 : détruit la carte la plus faible de chaque côté. Les cartes protégées (Eir, Ame-no-Uzume, Baldur) y résistent."},
   archives:  {name:"Archives de Thot", img:"images/lieux/archives.jpg", fx:"Quand tu joues une carte ici, pioche 1 carte."},
   cathedrale:{name:"Cathédrale d'Helvara", img:"images/lieux/cathedrale.jpg", fx:"Les divinités observent : le côté avec moins de cartes ici gagne +3."}
 };
@@ -707,10 +738,14 @@ const REL=id=>!CARDS[id].rel||today()>=CARDS[id].rel;
 const avail=()=>POOL.filter(REL);
 const PACK=(ex)=>POOL.filter(id=>REL(id)&&CARDS[id].r!=="U"&&(!CARDS[id].ex||CARDS[id].ex===ex));
 const ULS=[{id:"ulya",req:["yarden",["apsu","apsu_n"]],n:"Yarden Weiss et Apsu"},{id:"ulji",req:[["jordan","jordan_n"],["izzy","izzy_h"]],n:"Jordan et Izzy"},
-  {id:"ulaph",req:[["aphrodite","aphrodite_n"],"yarden"],n:"Aphrodite et Yarden Weiss"},{id:"ulcal",req:[["calypso","calypso_n"],["jordan","jordan_n"]],n:"Calypso et Jordan"},{id:"ulnem",req:["nemesis",["jordan","jordan_n"]],n:"Nemesis et Jordan"}];
+  {id:"ulaph",req:[["aphrodite","aphrodite_n"],"yarden"],n:"Aphrodite et Yarden Weiss"},{id:"ulcal",req:[["calypso","calypso_n"],["jordan","jordan_n"]],n:"Calypso et Jordan"},{id:"ulnem",req:["nemesis",["jordan","jordan_n"]],n:"Nemesis et Jordan"},
+  {id:"ulcirce",req:[["nyx","nyx_h"],"circe"],n:"Nyx et Circé"},{id:"uloshun",req:[["nyx","nyx_h"],"oshun"],n:"Nyx et Oshun"},
+  {id:"ulqetjor",req:["qetesh",["jordan","jordan_n"]],n:"Qetesh et Jordan"},{id:"ulqetyar",req:["qetesh","yarden"],n:"Qetesh et Yarden Weiss"},
+  {id:"ulhel",req:[["hel","hel_r"],"baldur"],n:"Hel et Baldur"}];
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
 const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, Psyché, Amaterasu, La Mère de Cendre… et la première ultra-légendaire, Yarden X Apsu."},
-  {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."}];
+  {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."},
+  {id:"dec26",rel:"2026-12-01",soon:"2026-11-26",hint:"Odin, Thor, Hel, Baldur, Hadès, Poséidon, Circé, Qetesh, les gens de Lausanne… cinq nouvelles fusions, le Domaine du Créateur et le Tombeau."}];
 const hasReq=(list,r)=>Array.isArray(r)?r.some(x=>list.includes(x)):list.includes(r);
 const ULof=id=>ULS.find(u=>u.id===id);
 const charOf=id=>CARDS[id].base||id;
@@ -728,13 +763,16 @@ const PACKS = [
   {id:"halloween", name:"Pli des Citrouilles", img:"images/packs/halloween.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], win:["10-12","11-02"],
    desc:"Édition d'Halloween. Plus d'épiques et de légendaires que partout ailleurs."},
   {id:"noel", name:"Pli de l'Étoile", img:"images/packs/noel.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], win:["12-14","01-02"],
-   desc:"Édition de Noël. Plus d'épiques et de légendaires que partout ailleurs."}
+   desc:"Édition de Noël. Plus d'épiques et de légendaires que partout ailleurs."},
+  {id:"nouvelan", name:"Pli du Douzième Coup", img:"images/packs/nouvelan.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], win:["12-31","01-18"],
+   desc:"Édition du Nouvel An. Plus d'épiques et de légendaires que partout ailleurs."}
 ];
 const md=()=>today().slice(5);
-function season(){ for(const id of ["halloween","noel"]){ const pk=PACKS.find(x=>x.id===id); if(pk&&inWin(pk.win)) return id; } return null; }
+function season(){ for(const id of ["nouvelan","halloween","noel"]){ /* le Nouvel An prend la main dès le 31 décembre */ const pk=PACKS.find(x=>x.id===id); if(pk&&inWin(pk.win)) return id; } return null; }
 const SEASON={
   halloween:{sub:"Nuit des Citrouilles",who:"Joueur d'Helvara · nuit d'Halloween",eyebrow:"Nuit des Citrouilles · jusqu'au 2 novembre",title:"Le voile est mince à Helvara",hint:"Les citrouilles brûlent sur les quais. Le Pli des Citrouilles cache Dame Joanna, et Morrigan, Nyx, Izzy, Yarden, Arès, Nergal et Médée dans leurs versions d'Halloween.",btn:"Ouvrir le Pli des Citrouilles",win:"Victoire sous la lune rousse",lose:"Les morts ont gagné cette nuit"},
-  noel:{sub:"Veillée de l'Étoile",who:"Joueur d'Helvara · veillée de Noël",eyebrow:"Veillée de l'Étoile · jusqu'au 2 janvier",title:"La neige tombe sur Helvara",hint:"Les vignes sont blanches et le lac retient son souffle. Le Pli de l'Étoile cache Aphrodite, Sekhmet, Calypso et Apsu dans leurs versions de Noël.",btn:"Ouvrir le Pli de l'Étoile",win:"Victoire sous l'Étoile",lose:"La nuit d'hiver l'emporte"}
+  noel:{sub:"Veillée de l'Étoile",who:"Joueur d'Helvara · veillée de Noël",eyebrow:"Veillée de l'Étoile · jusqu'au 2 janvier",title:"La neige tombe sur Helvara",hint:"Les vignes sont blanches et le lac retient son souffle. Le Pli de l'Étoile cache Aphrodite, Sekhmet, Calypso et Apsu dans leurs versions de Noël.",btn:"Ouvrir le Pli de l'Étoile",win:"Victoire sous l'Étoile",lose:"La nuit d'hiver l'emporte"},
+  nouvelan:{sub:"Nuit du Douzième Coup",who:"Joueur d'Helvara · nuit du Réveillon",eyebrow:"Nuit du Douzième Coup · jusqu'au 18 janvier",title:"Minuit sonne sur Helvara",hint:"La cathédrale compte les coups et les morts écoutent. Le Pli du Douzième Coup cache Hel dans sa version du Réveillon.",btn:"Ouvrir le Pli du Douzième Coup",win:"Victoire au dernier coup",lose:"L'année est partie sans toi"}
 };
 function inWin(w){ if(!w) return true; const d=md(); return w[0]<=w[1]?(d>=w[0]&&d<=w[1]):(d>=w[0]||d<=w[1]); }
 function frDate(m){ const [mm,dd]=m.split("-"); return LANG==="en"?`${MONTHS[+mm-1]} ${+dd}`:`${+dd===1?"1er":+dd} ${MONTHS[+mm-1]}`; }
@@ -934,7 +972,7 @@ const SFX = {
   legend(){ [523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.9+i*.07,.4,"triangle",.07)); }
 };
 function sfx(n){ if(!quiet && P.sfx && SFX[n]) try{ SFX[n](); }catch(e){} }
-const MUSIC={home:"audio/accueil.mp3",play:"audio/partie.mp3",home_halloween:"audio/accueil_halloween.mp3",home_noel:"audio/accueil_noel.mp3"}; let bgm=null, bgmKey=null, bgmArmed=false;
+const MUSIC={home:"audio/accueil.mp3",play:"audio/partie.mp3",home_halloween:"audio/accueil_halloween.mp3",home_noel:"audio/accueil_noel.mp3",home_nouvelan:"audio/accueil_noel.mp3"}; let bgm=null, bgmKey=null, bgmArmed=false;
 function music(){
   const se=season(); const key=screen==="play"?"play":se?"home_"+se:"home";
   if(!P.music||!bgmArmed){ if(bgm) bgm.pause(); return; }
@@ -974,7 +1012,7 @@ function newGame(){
   RNG=Math.random;
   if(!deckReady()){ screen="deck"; render(); return; }
   if(S&&S.blitz&&!S.over) bzEndRun();
-  const locIds = games===0 && P.w+P.l+P.d===0 ? ["ruelle","ouchy","sousgare"] : shuffle(Object.keys(LOCS)).slice(0,3);
+  const locIds = games===0 && P.w+P.l+P.d===0 ? ["ruelle","ouchy","sousgare"] : shuffle(locPool()).slice(0,3);
   games++;
   S={turn:0, energy:0, energyE:0, bonus:{p:0,e:0}, destroyed:0,
     locs:locIds.map(id=>({id,rev:false,stopped:false,locked:false})),
@@ -1001,6 +1039,8 @@ function aiOath(){
   if(li==null) return;
   S.aiOath=li; log(`L'adversaire jure sur ${LOCS[S.locs[li].id].name}`); sfx("legend");
 }
+function pilesHTML(){ if(S.tut) return ""; piles(); const D=S.discardPile, G=S.graveyard;
+  return `<div class="pilesbar"><span>Main adverse : <b>${S.hand.e.length}</b></span><span>Défausses : <b style="color:var(--me)">${D.p.length}</b> · <b style="color:var(--foe)">${D.e.length}</b></span><span>Cimetières : <b style="color:var(--me)">${G.p.length}</b> · <b style="color:var(--foe)">${G.e.length}</b></span></div>`; }
 function aiOathBar(){
   if(S.aiOath==null||S.over) return "";
   const n=LOCS[S.locs[S.aiOath].id].name;
@@ -1056,16 +1096,21 @@ function cardPow(s,li,c){
     if(c.id==="selene" && S.turn>=5) p+=3;
     if(c.id==="nergal" && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="ereshkigal"))) p+=3; /* continu */
     if(c.id==="fange") p+=S.discarded||0;
+    if(c.id==="ulqetyar") for(let i=0;i<3;i++){ const f=S.board[s][i].filter(o=>o.rev).map(o=>CARDS[o.id].fac); if(f.includes("desir")&&f.includes("primordial")) p+=3; }
     if(c.id==="yarden_d") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&o.rev&&CARDS[o.id].fac==="primordial"&&!CARDS[o.id].token) p+=2;
   }
-  if(!shielded(s,li)&&!sunlit(s)&&!noWeak(c)) p-=S.board[opp(s)][li].filter(o=>live(o)&&o.id==="hathor").length;
+  for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&live(o)&&o.id==="ulqetjor") p+=1;
+  if(locIs(li,"domaine")&&JPARTNERS.has(c.id)) p+=2;
+  if(!shielded(s,li)&&!sunlit(s)&&!noWeak(c)&&!(c.id==="baldur"&&!c.neg)) p-=S.board[opp(s)][li].filter(o=>live(o)&&o.id==="hathor").length;
   if(locIs(li,"tour") && d.pow>=5 && !d.token) p+=2;
   if(S.board[opp(s)][li].some(o=>live(o)&&o.id==="chernobog")) p=Math.min(p,d.pow);
   if(hasHere(s,li,"psyche")) p=Math.max(1,p);
   return p;
 }
 function total(s,li){
-  let t=S.board[s][li].reduce((a,c)=>a+cardPow(s,li,c),0);
+  const o=opp(s);
+  let t=S.board[s][li].reduce((a,c)=>a+(c.charm===o?0:cardPow(s,li,c)),0)+S.board[o][li].reduce((a,c)=>a+(c.charm===s?cardPow(o,li,c):0),0);
+  for(const i of [li-1,li+1]) if(i>=0&&i<3) t+=2*S.board[s][i].filter(c=>live(c)&&c.id==="graffeur").length;
   if(locIs(li,"cathedrale")){ const a=S.board[s][li].filter(c=>c.rev).length, b=S.board[opp(s)][li].filter(c=>c.rev).length; if(a>0&&a<b) t+=3; }
   return t;
 }
@@ -1078,14 +1123,40 @@ function leader(li){
 }
 const who=s=>s==="p"?P.name:(S&&S.mp?S.mp.oppNick:"L'adversaire");
 const sunlit=s=>S.board[s].some(col=>col.some(x=>live(x)&&x.id==="amaterasu"));
-function discard(s,c){ S.hand[s]=S.hand[s].filter(x=>x!==c); S.discarded=(S.discarded||0)+1; }
-const noWeak=c=>(c.id==="ecorche"||c.id==="jordan")&&!c.neg; /* l'Écorché et Jordan, le Créateur */
-function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)) return false; c.pow-=n; return true; }
-function destroy(s,li,c){ if(shielded(s,li)) return false; S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.destroyed++; if(s==="e") S.killE=(S.killE||0)+1; return true; }
+/* Défausse et cimetière : on garde les cartes (Hel, Hadès, Loviatar, le Tombeau). Les jetons et les Échos disparaissent. */
+const piles=()=>{ S.discardPile=S.discardPile||{p:[],e:[]}; S.graveyard=S.graveyard||{p:[],e:[]}; };
+const real=c=>!CARDS[c.id].token&&!c.echo;
+function discard(s,c){ S.hand[s]=S.hand[s].filter(x=>x!==c); S.discarded=(S.discarded||0)+1; piles(); if(real(c)) S.discardPile[s].push(c.id); }
+function bury(s,c){ piles(); if(real(c)) S.graveyard[s].push(c.id);
+  if(c.id==="mjolnir"&&c.thor){ for(const col of S.board[s]) for(const t of col) if(t.uid===c.thor&&live(t)){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Mjölnir"}); log(`Thor récupère Mjölnir : +2 (${who(s)})`); } } }
+/* Ressusciter : la carte revient révélée, à sa puissance de base, sans Révélation (sauf withReveal). */
+function resurrect(s,id,li,from,opts={}){
+  if(S.locs[li].locked&&!opts.anyLoc) return null; if(S.board[s][li].length>=capOf(s,li)) return null;
+  const pile=from==="grave"?S.graveyard[s]:S.discardPile[s]; const k=pile.lastIndexOf(id); if(k<0) return null; pile.splice(k,1);
+  const c=mk(id); c.fresh=true; S.board[s][li].push(c);
+  if(opts.ward) c.ward=true; if(opts.sick){ c.pow-=opts.sick; c.mods.push({v:-opts.sick,src:"Loviatar"}); }
+  if(opts.withReveal) reveal(s,li,c); else c.rev=true;
+  return c;
+}
+function resurrectAll(s,opts={}){ piles(); let n=0; const ids=gShuffle(S.discardPile[s].slice());
+  for(const id of ids){ const sp=[0,1,2].filter(i=>!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)); if(!sp.length) break; if(resurrect(s,id,gPick(sp),"discard",opts)) n++; }
+  return n; }
+/* Source de l'effet en cours : Baldur ne cède qu'aux effets adverses de coût 2 ou moins (le gui). */
+let SRC=null;
+const baldurSafe=(s,c)=>c.id==="baldur"&&!c.neg&&!(SRC&&(SRC.s===s||SRC.cost<=2));
+const noWeak=c=>((c.id==="ecorche"||c.id==="jordan")&&!c.neg)||c.noweak||c.ward; /* l'Écorché, Jordan, le Tatoueur, Hel X Baldur */
+function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)||baldurSafe(s,c)) return false; c.pow-=n; return true; }
+function destroy(s,li,c){ if(shielded(s,li)||c.ward||baldurSafe(s,c)) return false; S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.destroyed++; bury(s,c); if(s==="e") S.killE=(S.killE||0)+1; return true; }
 const nm=c=>CARDS[c.id].name;
+/* Cartes qui forment une Fusion avec Jordan (Domaine du Créateur) */
+const JPARTNERS=new Set((()=>{ const out=[]; for(const u of ULS) if(u.req.some(r=>[].concat(r).some(x=>charOf(x)==="jordan"))) for(const r of u.req) for(const x of [].concat(r)) if(charOf(x)!=="jordan") out.push(x); return out; })());
 
 function reveal(s,li,c){
-  c.rev=true; c.fresh=true;
+  const prevSrc=SRC; SRC={s,cost:CARDS[c.id].cost};
+  try{ revealFx(s,li,c); } finally { SRC=prevSrc; }
+}
+function revealFx(s,li,c){
+  c.rev=true; c.fresh=true; piles();
   const o=opp(s), d=CARDS[c.id];
   const foes=S.board[o][li].filter(x=>x.rev);
   const targets=foes.filter(x=>!untargetable(s,o,x));
@@ -1135,10 +1206,10 @@ function reveal(s,li,c){
     case "troll": { const t=weakest(mates,s,li); if(t&&destroy(s,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } break; }
     case "vritra": S.locs[li].locked=true; note="le lieu est verrouillé"; snd="lock"; break;
     case "yarden": if([0,1,2].every(i=>S.board[s][i].length>0)) buffSelf(4); break;
-    case "nyx": { const t=strongest(foes,o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.destroyed++; if(o==="e") S.killE=(S.killE||0)+1; note=`détruit ${nm(t)}`; snd="void"; } break; }
+    case "nyx": { const t=strongest(foes,o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.destroyed++; bury(o,t); if(o==="e") S.killE=(S.killE||0)+1; note=`détruit ${nm(t)}`; snd="void"; } break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(6); snd=foes.length?"void":snd; break; }
     case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
-      if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else { S.destroyed++; if(o==="e") S.killE=(S.killE||0)+1; note=`${nm(t)} est détruite`; } snd="void"; } break; }
+      if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else { S.destroyed++; bury(o,t); if(o==="e") S.killE=(S.killE||0)+1; note=`${nm(t)} est détruite`; } snd="void"; } break; }
     case "psyche": { const t=weakest(mates,s,li)||c; t.pow+=2; note=`+2 à ${nm(t)}`; snd="buff"; break; }
     case "tlazol": { let n=0; for(const x of mates) if(x.pow<CARDS[x.id].pow){ x.pow=CARDS[x.id].pow; n++; } if(n){ c.pow+=2*n; note=`purifie ${n} carte${n>1?"s":""}, +${2*n}`; snd="buff"; } break; }
     case "eris": { const t=strongest(targets,o,li); const spots=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(t&&spots.length){ const i=gPick(spots); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
@@ -1164,8 +1235,30 @@ function reveal(s,li,c){
       const tg=targets.slice().sort((a,b)=>pw(o,li,b)-pw(o,li,a)).slice(0,onSide(s,"hecate")?2:1);
       for(const t of tg) t.poison=true;
       if(tg.length){ note=`empoisonne ${tg.map(nm).join(" et ")}`; snd="debuff"; } break; }
+    case "boucher": { const t=gPick(S.hand[s]); if(t){ discard(s,t); note=`défausse ${nm(t)}`; } break; }
+    case "tatoueur": { const t=strongest(mates,s,li); if(t){ t.pow+=1; t.noweak=true; (t.mods=t.mods||[]).push({v:1,src:"Le Tatoueur"}); note=`+1 à ${nm(t)}, encre indélébile`; snd="buff"; } break; }
+    case "odin": { const t=S.hand[s].slice().sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; if(t) discard(s,t); draw(s); draw(s); note=t?`défausse ${nm(t)}, pioche 2`:"pioche 2"; break; }
+    case "thor": { const sp=[0,1,2].filter(i=>i!==li&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)); if(sp.length){ const i=gPick(sp); const m=mk("mjolnir"); m.rev=true; m.fresh=true; m.thor=c.uid; S.board[s][i].push(m); note=`Mjölnir → ${LOCS[S.locs[i].id].name}`; snd="destroy"; } break; }
+    case "heimdall": { let n=0; const lk=[0,1,2].filter(i=>i!==li&&S.locs[i].locked);
+      for(const t of mates.slice()){ const i=lk.find(i=>S.board[s][i].length<capOf(s,i)); if(i==null) break; S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t); n++; }
+      if(n){ note=`${n} carte${n>1?"s":""} passe${n>1?"nt":""} par le Bifröst`; snd="buff"; } else buffSelf(2); break; }
+    case "hel": { const n=resurrectAll(s); if(n){ note=`ressuscite ${n} carte${n>1?"s":""}`; snd="void"; } break; }
+    case "ulhel": { const n=resurrectAll(s,{ward:true}); if(n){ note=`ressuscite ${n} carte${n>1?"s":""}, intouchables`; snd="void"; } break; }
+    case "hel_r": { const ids=S.discardPile[s].slice().sort((a,b)=>CARDS[b].cost-CARDS[a].cost); if(ids.length&&S.board[s][li].length<capOf(s,li)){ const r=resurrect(s,ids[0],li,"discard",{withReveal:true}); if(r){ note=`ressuscite ${nm(r)}`; snd="void"; } } break; }
+    case "loviatar": { const id=S.discardPile[s][S.discardPile[s].length-1]; if(id){ const r=resurrect(s,id,li,"discard",{sick:2}); if(r){ note=`${nm(r)} revient malade (−2)`; snd="void"; } } break; }
+    case "hades": { const ids=S.graveyard[s].slice().sort((a,b)=>CARDS[b].pow-CARDS[a].pow); if(ids.length){ const r=resurrect(s,ids[0],li,"grave"); if(r){ note=`ressuscite ${nm(r)}`; snd="void"; } } break; }
+    case "dionysos": { const lost=[]; for(const side of [s,o]){ draw(side); const t=gPick(S.hand[side]); if(t){ discard(side,t); lost.push(nm(t)); } } note=lost.length?`l'ivresse fait défausser ${lost.join(" et ")}`:"pioche 1"; snd="void"; break; }
+    case "poseidon": { let n=0; for(const t of targets.filter(x=>CARDS[x.id].cost<=3)){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); if(!real(t)) continue; n++;
+        if(S.hand[o].length<7) S.hand[o].push(mk(t.id)); else { S.discarded=(S.discarded||0)+1; S.discardPile[o].push(t.id); } }
+      if(n){ note=`le reflux emporte ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
+    case "circe": case "ulcirce": { let n=0; if(!shielded(o,li)) for(const t of targets) if(c.id==="ulcirce"||pw(o,li,t)<=3){ t.orig=t.id; t.id="pourceau"; t.pow=1; t.neg=true; t.mods=[]; n++; }
+      if(n){ note=`${n} Pourceau${n>1?"x":""}`; snd="void"; } break; }
+    case "qetesh": { const t=strongest(targets.filter(x=>pw(o,li,x)<=4&&!x.charm),o,li); if(t){ t.charm=s; note=`charme ${nm(t)}`; snd="void"; } break; }
+    case "oshun": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[s][i]) if(x!==c&&x.rev){ x.pow+=1; n++; } if(n){ note=`+1 à ${n} carte${n>1?"s":""}`; snd="buff"; } break; }
+    case "scathach": { const sp=[0,1,2].filter(i=>i!==li&&!S.locs[i].locked&&S.board[o][i].length<capOf(o,i)); if(sp.length){ const i=gPick(sp); const m=mk("ombre"); m.rev=true; m.fresh=true; m.neg=true; S.board[o][i].push(m); note=`Ombre → ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
+    case "uloshun": { const t=strongest(targets,o,li); if(t&&destroy(o,li,t)) note=`détruit ${nm(t)}`; let n=0; for(let i=0;i<3;i++){ const w=weakest(S.board[s][i].filter(x=>x.rev),s,i); if(w){ w.pow+=2; n++; } } note=(note?note+", ":"")+`+2 à ${n} carte${n>1?"s":""}`; snd="destroy"; break; }
     case "biblio": if(S.hand[s].length<S.hand[o].length){ draw(s); note="pioche 1 carte"; } break;
-    case "ereshkigal": { const vs=foes.filter(x=>pw(o,li,x)<=3); if(vs.length){ S.board[o][li]=S.board[o][li].filter(x=>!vs.includes(x)); S.destroyed+=vs.length; if(o==="e") S.killE=(S.killE||0)+vs.length; note=`détruit ${vs.length} carte${vs.length>1?"s":""}`; snd="destroy"; } break; }
+    case "ereshkigal": { const vs=foes.filter(x=>pw(o,li,x)<=3); if(vs.length){ S.board[o][li]=S.board[o][li].filter(x=>!vs.includes(x)); S.destroyed+=vs.length; vs.forEach(x=>bury(o,x)); if(o==="e") S.killE=(S.killE||0)+vs.length; note=`détruit ${vs.length} carte${vs.length>1?"s":""}`; snd="destroy"; } break; }
     case "pele": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li]) if(x!==c&&x.rev&&weaken(side,li,x,2)) n++; if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "ares": { let n=0; for(const x of targets) if(weaken(o,li,x,1)) n++; if(n){ c.pow+=n; note=`−1 à ${n}, +${n}`; snd="debuff"; } break; }
     case "nergal": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
@@ -1184,7 +1277,7 @@ function reveal(s,li,c){
     case "ulji": { const hd=S.hand[o].slice().sort((a,b)=>CARDS[b.id].pow-CARDS[a.id].pow||CARDS[b.id].cost-CARDS[a.id].cost)[0];
       if(hd){ S.hand[o]=S.hand[o].filter(x=>x!==hd); let dest=S.board[s][li].length<capOf(s,li)?li:null; if(dest==null){ const sp=[0,1,2].filter(i=>S.board[s][i].length<capOf(s,i)); if(sp.length) dest=gPick(sp); }
         if(dest!=null){ hd.rev=true; hd.fresh=true; S.board[s][dest].push(hd); note=`invoque ${nm(hd)}${dest!==li?` (${LOCS[S.locs[dest].id].name})`:""}`; snd="void"; }
-        else { S.discarded=(S.discarded||0)+1; note=`${nm(hd)} est défaussée, plus de place`; } } break; }
+        else { S.discarded=(S.discarded||0)+1; piles(); S.discardPile[o].push(hd.id); note=`${nm(hd)} est défaussée, plus de place`; } } break; }
     case "kitsune": { const spots=[0,1,2].filter(i=>i!==li&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i));
       if(spots.length){ const i=gPick(spots); const t=mk("illusion"); t.rev=true; t.fresh=true; S.board[s][i].push(t); note=`Illusion → ${LOCS[S.locs[i].id].name}`; } break; }
     case "freyr": S.bonus[s]+=1; note="+1 énergie au prochain tour"; break;
@@ -1217,8 +1310,8 @@ function reveal(s,li,c){
 }
 
 /* ======= IA ======= */
-const HITS=["thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","susanoo","calypso","chasseur","maree","set","andraste","ulaph","ulnem"];
-const NEEDS_MATES=["bastet","anat","troll","tefnut"];
+const HITS=["circe","ulcirce","qetesh","poseidon","uloshun","tyr","medee","medee_h","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","susanoo","calypso","chasseur","maree","set","andraste","ulaph","ulnem"];
+const NEEDS_MATES=["oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
 function aiPlan(){
   if(S.tut){ return (TUT.plays[S.turn]||[]).map(([id,li])=>({c:S.hand.e.find(x=>x.id===id),li})).filter(x=>x.c); }
   let en=S.energyE, first=true; const plays=[], pend=[0,0,0];
@@ -1291,20 +1384,30 @@ async function resolveTurn(mine, theirs, animate){
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="konohana"&&c.bloom===S.turn&&c.pow>0){
     (c.mods=c.mods||[]).push({v:-c.pow,src:"Floraison passée"}); c.pow=0; log(`Konohanasakuya-Hime · la floraison est passée (${who(s)})`); sfx("debuff"); }
   /* Poison de Médée, Mariée Spectrale : −1 à chaque fin de tour, jusqu'à 0 */
-  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(c.poison&&c.rev&&cardPow(s,li,c)>0&&weaken(s,li,c,1)){
+  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(c.poison&&c.rev&&cardPow(s,li,c)>0&&(SRC={s:opp(s),cost:CARDS.medee_h.cost},weaken(s,li,c,1))&&!(SRC=null)){
     (c.mods=c.mods||[]).push({v:-1,src:"Poison de Médée"}); log(`Poison de Médée · −1 à ${nm(c)} (${who(s)})`); sfx("debuff"); }
+  SRC=null;
   /* Ishtar : fin de tour (pas après le tour 6) */
   if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="ishtar"){
     const o=opp(s); const t=S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];
-    if(t&&weaken(o,li,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Ishtar"}); log(`Ishtar · −1 à ${nm(t)} (${who(o)})`); sfx("debuff"); }
+    SRC={s,cost:CARDS.ishtar.cost}; const ok=t&&weaken(o,li,t,1); SRC=null;
+    if(ok){ (t.mods=t.mods||[]).push({v:-1,src:"Ishtar"}); log(`Ishtar · −1 à ${nm(t)} (${who(o)})`); sfx("debuff"); }
   }
   if(S.turn===4){
     S.locs.forEach((L,li)=>{ if(locIs(li,"faille")){
-      for(const s of ["p","e"]){ const arr=S.board[s][li].filter(c=>c.rev&&!(c.id==="uzume"&&!c.neg)); if(!arr.length) continue;
+      for(const s of ["p","e"]){ const arr=S.board[s][li].filter(c=>c.rev&&!(c.id==="uzume"&&!c.neg)&&!baldurSafe(s,c)&&!c.ward); if(!arr.length) continue;
         const w=arr.sort((a,b)=>cardPow(s,li,a)-cardPow(s,li,b))[0];
         if(destroy(s,li,w)){ log(`La Faille détruit ${nm(w)} (${who(s)})`); sfx("destroy"); } }
     }});
   }
+  /* Carillonneur : +1 à chaque fin de tour ; au tour 6, le glas partage la moitié de sa puissance */
+  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="carillonneur"){
+    SRC={s,cost:CARDS.carillonneur.cost}; c.pow+=1; (c.mods=c.mods||[]).push({v:1,src:"Le Carillonneur"});
+    if(S.turn===6&&!c.knell){ c.knell=true; const v=Math.floor(Math.max(0,cardPow(s,li,c))/2); const ms=S.board[s][li].filter(x=>x!==c&&x.rev);
+      if(v&&ms.length){ ms.forEach(x=>{ x.pow+=v; (x.mods=x.mods||[]).push({v,src:"Le glas"}); }); log(`Le glas sonne : +${v} à ${ms.length} carte${ms.length>1?"s":""} (${who(s)})`); sfx("legend"); } }
+    SRC=null; }
+  /* Le Tombeau : fin du tour 6, les défaussés reviennent */
+  if(S.turn===6){ piles(); S.locs.forEach((L,li)=>{ if(locIs(li,"tombeau")) for(const s of ["p","e"]){ let n=0; for(const id of gShuffle(S.discardPile[s].slice())){ if(!resurrect(s,id,li,"discard",{anyLoc:true})) break; n++; } if(n){ log(`Le Tombeau rend ${n} carte${n>1?"s":""} (${who(s)})`); sfx("void"); } } }); }
   if(S.turn>=2&&S.turn<=4) aiOath();
   render(); await wait(300);
   for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) c.fresh=false;
@@ -1442,7 +1545,7 @@ function bzStart(){ if(P.bz.run&&!P.bz.run.over) return;
 function bzPick(id){ const r=P.bz.run; if(!r||r.over||!r.opts.includes(id)||r.deck.length>=12) return; r.deck.push(id); r.opts=r.deck.length<12?bzRoll(r.deck):[]; save(); sfx("select"); render(); }
 function bzEndRun(){ const r=P.bz.run; if(!r||r.over) return; r.over=true; r.gain=BZ.gain[r.wins]; P.chf+=r.gain; save(); if(r.gain) setTimeout(()=>sfx("coin"),500); }
 function bzGame(){ const r=P.bz.run; if(!r||r.over||r.deck.length<12) return;
-  RNG=Math.random; const locIds=shuffle(Object.keys(LOCS)).slice(0,3); games++;
+  RNG=Math.random; const locIds=shuffle(locPool()).slice(0,3); games++;
   const t=BZ.tiers[r.wins];
   S={turn:0, energy:0, energyE:0, bonus:{p:0,e:0}, destroyed:0,
     locs:locIds.map(id=>({id,rev:false,stopped:false,locked:false})),
@@ -1513,7 +1616,7 @@ const validDeck=d=>Array.isArray(d)&&d.length===12&&new Set(d).size===12&&d.ever
 const safeNick=n=>(typeof n==="string"&&n.trim()?n.trim().slice(0,24):"Adversaire");
 function mpNewMatch(om){
   const g=(myMp.g||0)+1, seed=Math.floor(Math.random()*2147483647);
-  const locs=shuffle(Object.keys(LOCS)).slice(0,3);
+  const locs=shuffle(locPool()).slice(0,3);
   mpPush({g,seed,locs,oppTok:om.tok,hist:{},t:0,again:0});
   mpStart(om,false);
 }
@@ -1910,7 +2013,7 @@ function finishTuto(){
 function lockedCard(id){ return `<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${RAR[CARDS[id].r].n}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?`Possède ${ULof(id).n}`:CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`; }
 function locsHTML(){ return `<section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
-    <div class="locs">${Object.values(LOCS).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
+    <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
   </section>`; }
 function codexHTML(){
   return `
@@ -1921,7 +2024,7 @@ function codexHTML(){
       <div class="grid">${ids.map(id=>P.owned.includes(id)?`<button class="zoombtn" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button>`:`<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${RAR[CARDS[id].r].n}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?`Possède ${ULof(id).n}`:CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`).join("")}</div></section>`; }).join("")}
   <section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
-    <div class="locs">${Object.values(LOCS).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
+    <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
   </section>`;
 }
 function rulesHTML(){
@@ -1951,6 +2054,8 @@ function rulesHTML(){
       <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck.</li>
       <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
       <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
+      <li><b>Ressusciter</b> : une carte défaussée ou détruite revient sur le plateau, révélée, à sa puissance de base, sans déclencher sa Révélation (sauf mention contraire).</li>
+      <li><b>Charmer</b> : la carte reste du côté adverse, mais sa puissance compte pour toi.</li>
       <li><b>De ton côté</b> : uniquement tes cartes révélées. <b>En jeu</b> : n'importe quelle carte révélée, des deux côtés.</li>
       <li>Sur le plateau, le petit chiffre vert ou rouge indique l'écart avec la puissance de base. Appui long pour voir le détail.</li>
     </ol>
@@ -2054,6 +2159,7 @@ function gameHTML(){
     ${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}
     ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn" data-act="end" ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
   </div>
+  ${pilesHTML()}
   ${aiOathBar()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.jpg?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
