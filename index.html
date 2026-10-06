@@ -2122,7 +2122,7 @@ function rulesHTML(){
   </section>
   <section class="sec"><h2>Rangs et saisons</h2>
     <ol class="rules">
-      <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I), sauf Héraut et Avatar qui en ont cinq (V à I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(i*3,"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
+      <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I), sauf Héraut et Avatar qui en ont cinq (V à I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(START[i],"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
       <li>Victoire : +1 étoile, +2 à partir de 2 victoires d'affilée (jusqu'à Héraut). Défaite : −1 étoile, sauf en Passant et Initié où elle ne coûte rien. Égalité : rien ne bouge.</li>
       <li><b>Le Serment</b> (parties classées uniquement) : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé. Si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
       <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.</li>
