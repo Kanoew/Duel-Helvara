@@ -507,6 +507,35 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 
 @media (prefers-reduced-motion: reduce){ .mini.flip{animation:none} .hc{transition:none} }
 @media (max-width:420px){ .hc{width:78px} .loc .fx{-webkit-line-clamp:2} }
+/* menu à icônes : en bas sur téléphone, à gauche sur grand écran */
+.ico{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.icobtn{display:grid;place-items:center;position:relative}
+.icobtn .ico{width:18px;height:18px}
+.icobtn.dot::after{content:"";position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--warm);box-shadow:0 0 0 2px var(--ink)}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:4;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(10,14,22,.94);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.dock button{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;border-radius:12px;padding:5px 2px;color:var(--mist);cursor:pointer;font-size:11px;font-weight:600;min-width:0}
+.dock button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock button[aria-current]{color:var(--frost);background:var(--lake)}
+.dock button.pulse{color:var(--warm);box-shadow:inset 0 0 0 1px var(--warm);animation:pulse 1.6s ease-in-out infinite}
+body.hasdock{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+@media (min-width:900px){
+  .dock{top:0;right:auto;width:104px;grid-template-columns:none;grid-auto-rows:min-content;align-content:center;gap:8px;border-top:0;border-right:1px solid var(--line);padding:12px 8px}
+  .dock button{padding:10px 2px;font-size:11.5px}
+  body.hasdock{padding-bottom:24px;padding-left:120px}
+}
+@media (prefers-reduced-motion: reduce){ .dock button.pulse{animation:none} }
+.sheet{width:min(460px,100%);max-height:88vh;overflow:auto;display:flex;flex-direction:column;gap:12px;background:var(--deep);border:1px solid var(--line);border-radius:16px;padding:16px}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)}
+.setrow > span:first-child{color:var(--mist);font-size:13px}
+.setacc{line-height:1.7}
+.modes{grid-template-columns:repeat(2,minmax(0,1fr))}
+.modes .qcard{padding:10px 12px}
+.modes .qcard .t{font-size:16px}
+.modes .qcard .m{font-size:12px}
+.playhint.top{margin:-10px 0 -4px;text-align:center}
+/* le premier écran tient sans défiler : la vitrine rétrécit sur les petits écrans */
+.vitrinewrap .fan{max-width:min(520px,calc((100svh - 390px)*1.4))}
+
 </style>
 
 <div class="wrap" id="app"></div>
@@ -1749,15 +1778,36 @@ function thumb(id,act){
   const d=CARDS[id];
   return `<button class="thumb" ${act} aria-label="${d.name}, coût ${d.cost}, puissance ${d.pow}">${art(id)}<span class="cost">${d.cost}</span><span class="pw">${d.pow}</span></button>`;
 }
+const ICO={
+  home:'<path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/>',
+  deck:'<rect x="4" y="6" width="11" height="15" rx="2"/><path d="M9 3h9a2 2 0 0 1 2 2v13"/>',
+  shop:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  board:'<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M8 20h8"/>',
+  book:'<path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path d="M4 20a2 2 0 0 0 2 2h13v-4"/><path d="M9 7h6"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'};
+const ico=k=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
+let sheet=null; /* "quests" ou "settings" : panneau ouvert depuis l'en-tête */
+const questReady=()=>{ if(ensureQuests()) save(); return P.q.list.some(q=>!q.c&&q.p>=QDEF[q.id].n); };
 function header(){
-  const tabs=[["home","Accueil"],["deck","Collection"],["shop","Boutique"],["board","Classement"]];
-  const nav = screen==="play"
-    ? `<button class="back" data-act="go" data-to="home">← Accueil</button>`
-    : `<nav class="tabs" role="tablist">${tabs.map(([k,n])=>`<button role="tab" aria-selected="${screen===k}" data-act="go" data-to="${k}" ${k==="shop"&&!P.starter&&P.tuto&&screen!=="shop"?'class="pulse"':""}>${n}</button>`).join("")}</nav>`;
+  const ready=questReady();
   return `<header class="top"><h1 class="brand">Duel d'Helvara<small>Le Sang de Tiamat${season()?` · ${SEASON[season()].sub}`:""}</small></h1>
-    <div class="topright"><button class="langbtn" data-act="lang" aria-label="${LANG==="fr"?"Switch to English":"Passer en français"}"><span class="${LANG==="fr"?"on":""}">FR</span><span class="${LANG==="en"?"on":""}">EN</span></button><button class="helpbtn" data-act="go" data-to="rules" aria-label="Règles" ${screen==="rules"?'aria-current="page"':""}>?</button></div></header>
-    ${screen==="play"?"":`<button class="idline" data-act="go" data-to="profile" aria-label="Voir mon profil">${avatarHTML("sm")}<span class="idname">${esc(P.name)}</span><span class="idrank">${rankIcon(P.lv,"sm")}<span>${rankName(P.lv)}</span></span><span class="chfchip">${P.chf} <small>CHF</small></span></button>`}
-    <div class="navrow">${nav}</div>`;
+    <div class="topright"><button class="helpbtn icobtn${ready?" dot":""}" data-act="sheet" data-s="quests" aria-label="Quêtes du jour">${ico("book")}</button><button class="helpbtn icobtn" data-act="sheet" data-s="settings" aria-label="Réglages">${ico("gear")}</button><button class="helpbtn" data-act="go" data-to="rules" aria-label="Règles" ${screen==="rules"?'aria-current="page"':""}>?</button></div></header>
+    ${screen==="play"?`<div class="navrow"><button class="back" data-act="go" data-to="home">← Accueil</button></div>`:`<button class="idline" data-act="go" data-to="profile" aria-label="Voir mon profil">${avatarHTML("sm")}<span class="idname">${esc(P.name)}</span><span class="idrank">${rankIcon(P.lv,"sm")}<span>${rankName(P.lv)}</span></span><span class="chfchip">${P.chf} <small>CHF</small></span></button>`}`;
+}
+/* Menu principal : barre d'icônes en bas sur téléphone, colonne à gauche sur grand écran. */
+function dockHTML(){
+  if(screen==="play") return "";
+  const tabs=[["home","Accueil"],["deck","Collection"],["shop","Boutique"],["board","Classement"]];
+  return `<nav class="dock" aria-label="Menu">${tabs.map(([k,n])=>`<button data-act="go" data-to="${k}" ${screen===k?'aria-current="page"':""} ${k==="shop"&&!P.starter&&P.tuto&&screen!=="shop"?'class="pulse"':""}>${ico(k)}<span>${n}</span></button>`).join("")}</nav>`;
+}
+function sheetHTML(){
+  if(!sheet) return "";
+  const body=sheet==="quests"?questsHTML():`<section class="quests"><div class="qhead"><h2>Réglages</h2></div>
+    <div class="setrow"><span>Langue</span><button class="langbtn" data-act="lang" aria-label="${LANG==="fr"?"Switch to English":"Passer en français"}"><span class="${LANG==="fr"?"on":""}">FR</span><span class="${LANG==="en"?"on":""}">EN</span></button></div>
+    <div class="setrow"><span>Son</span><span class="footbtns"><button class="toggle" data-act="music" aria-pressed="${P.music}">Musique : ${P.music?"activée":"coupée"}</button><button class="toggle" data-act="sfx" aria-pressed="${P.sfx}">Effets : ${P.sfx?"activés":"coupés"}</button></span></div>
+    <div class="setrow"><span>Tutoriel</span><button class="toggle" data-act="tuto">Revoir le tutoriel</button></div>
+    <div class="setacc hint">${accountHTML()}</div></section>`;
+  return `<div class="veil" data-act="sheetclose"><div class="sheet" data-act="sheetin">${body}<button class="ghost" data-act="sheetclose">Fermer</button></div></div>`;
 }
 
 /* --- accueil --- */
@@ -1821,21 +1871,17 @@ function homeHTML(){
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
   return `
   ${seasonNote?`<div class="notice">${seasonNote}</div>`:""}${dailyNote?`<div class="notice">${dailyNote}</div>`:""}
-  ${seasonBarHTML()}
-  ${bannerHTML()}
   ${migratedNote?`<div class="notice">${migratedNote}</div>`:""}
   ${vitrineHTML()}
+  <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
   <button class="play" data-act="${inGame?"resume":"play"}" ${deckReady()||inGame?"":"disabled"}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>
-  <div class="hint playhint">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
   <div class="modes">
-    <button class="qcard duelcard bzcard" data-act="go" data-to="blitz"><span class="t">Blitz</span><span class="m">${P.bz.run&&!P.bz.run.over?`En cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`:bzFree()?"Ta partie gratuite du jour t'attend · jusqu'à 300 CHF":`Prochaine partie gratuite dans ${hoursToReset()} h · ${BZ.price} CHF`}</span></button>
-    <button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Duel entre amis</span><span class="m">${S&&S.mp&&!S.over?`Duel en cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon et partage le code"}${P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:""}</span></button>
+    <button class="qcard duelcard bzcard" data-act="go" data-to="blitz"><span class="t">Blitz</span><span class="m">${P.bz.run&&!P.bz.run.over?`En cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`:bzFree()?"Partie gratuite du jour":`Gratuit dans ${hoursToReset()} h`}</span></button>
+    <button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Duel entre amis</span><span class="m">${S&&S.mp&&!S.over?`En cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon"}${P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:""}</span></button>
   </div>
-  ${questsHTML()}
-  <div class="foot">
-    <span>${accountHTML()}</span>
-    <span class="footbtns"><button class="toggle" data-act="tuto">Revoir le tutoriel</button><button class="toggle" data-act="music" aria-pressed="${P.music}">Musique : ${P.music?"activée":"coupée"}</button><button class="toggle" data-act="sfx" aria-pressed="${P.sfx}">Effets : ${P.sfx?"activés":"coupés"}</button></span>
-  </div>`;
+  ${seasonBarHTML()}
+  ${bannerHTML()}
+`;
 }
 
 /* --- profil --- */
@@ -2213,7 +2259,8 @@ function render(){
   if(screen==="codex") screen="deck"; /* Deck et Collection ne font plus qu'un */
   const body = screen==="play"?gameHTML():screen==="profile"?profileHTML():screen==="deck"?deckHTML():screen==="shop"?shopHTML():screen==="codex"?codexHTML():screen==="rules"?rulesHTML():screen==="duel"?duelHTML():screen==="blitz"?blitzHTML():screen==="board"?boardHTML():screen==="hist"?histHTML():homeHTML();
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
-  app.innerHTML = header()+body+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+packOpenHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
+  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+packOpenHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
+  document.body.classList.toggle("hasdock",screen!=="play");
   translateDOM(app);
   const h=document.querySelector(".handwrap"); if(h) h.scrollLeft=hs;
   music();
@@ -2246,7 +2293,10 @@ document.addEventListener("click", e=>{
   const act=el.dataset.act;
   ac(); bgmArmed=true;
   switch(act){
-    case "go": { const to=el.dataset.to; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
+    case "sheet": sheet=sheet===el.dataset.s?null:el.dataset.s; sfx("click"); render(); return;
+    case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; sheet=null; render(); return;
+    case "sheetin": return;
+    case "go": { const to=el.dataset.to; sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
     case "play": sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
@@ -2290,7 +2340,7 @@ document.addEventListener("click", e=>{
     case "packclose": packOpen=null; render(); return;
     case "tutoplay": tutoStep=-1; sfx("click"); startTutorial(); return;
     case "tutodone": finishTuto(); return;
-    case "tuto": sfx("click"); startTutorial(); return;
+    case "tuto": sheet=null; sfx("click"); startTutorial(); return;
     case "buy": buyPack(el.dataset.pid); return;
     case "filter": deckFilter=el.dataset.f; sfx("click"); render(); return;
     case "toggle": { const id=el.dataset.id;
