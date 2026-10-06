@@ -555,6 +555,12 @@ body.inplay .loc{min-height:92px}
 body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
 .wrap > .vitrinewrap{margin-block:auto}
 .vitrinewrap .fan{max-width:min(520px,calc((100dvh - 390px)*1.4))}
+
+/* effets visuels */
+.fxlayer{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:4}
+.loc.fxshake{animation:fxshake .45s ease}
+@keyframes fxshake{0%,100%{transform:none}20%{transform:translate(-3px,1px) rotate(-.6deg)}40%{transform:translate(3px,-1px) rotate(.6deg)}60%{transform:translate(-2px,0)}80%{transform:translate(2px,1px)}}
+@media (prefers-reduced-motion: reduce){ .loc.fxshake{animation:none} }
 </style>
 
 <div class="wrap" id="app"></div>
@@ -587,7 +593,7 @@ const CARDS = {
   vritra:  {name:"Vritra", cost:5, pow:5, fac:"primordial", r:"L", fx:"Révélation : plus personne ne peut jouer ici.", img:"images/vritra.jpg?v=5"},
   yarden:  {name:"Yarden Weiss", cost:5, pow:6, fac:"primordial", r:"E", fx:"Révélation : +4 si tu as des cartes dans les 3 lieux (celles posées ce tour comptent).", img:"images/yarden.jpg?v=5"},
   nyx:     {name:"Nyx", cost:6, pow:5, fac:"primordial", r:"L", fx:"Révélation : détruit la carte adverse la plus forte ici. Rien ne la protège.", img:"images/nyx.jpg?v=5"},
-  apsu:    {name:"Apsu", cost:6, pow:8, fac:"primordial", r:"L", fx:"Révélation : les cartes adverses ici perdent leurs effets. +6 si Yarden Weiss est de ton côté.", img:"images/apsu.jpg?v=5"},
+  apsu:    {name:"Apsu", cost:6, pow:8, fac:"primordial", r:"L", vfx:"apsu", fx:"Révélation : les cartes adverses ici perdent leurs effets. +6 si Yarden Weiss est de ton côté.", img:"images/apsu.jpg?v=5"},
   /* DÉSIR */
   kitsune: {name:"Kitsune", cost:1, pow:1, fac:"desir", r:"C", fx:"Révélation : laisse une Illusion de puissance 2 dans un autre lieu.", img:"images/kitsune.jpg"},
   uzume:   {name:"Ame-no-Uzume", cost:2, pow:3, fac:"desir", r:"R", fx:"Les effets adverses ne peuvent ni la cibler ni la détruire, sauf ceux où « rien ne la protège ».", img:"images/uzume.jpg"},
@@ -634,7 +640,7 @@ const CARDS = {
   charognard:{name:"Le Charognard du M2", cost:2, pow:2, fac:"helvara", r:"C", rel:"2026-10-01", fx:"Révélation : +3 si une carte a été détruite ou défaussée pendant la partie.", img:"images/charognard.jpg"},
   ficelle: {name:"La Ficelle Dévorante", cost:5, pow:4, fac:"helvara", r:"E", rel:"2026-10-01", fx:"Révélation : détruit tes autres cartes ici. +3 pour chacune.", img:"images/ficelle.jpg"},
   ecorche: {name:"L'Écorché Silencieux", cost:3, pow:3, fac:"helvara", r:"R", rel:"2026-10-01", fx:"Ne peut pas être affaibli. Révélation : −2 à une carte adverse au hasard ici.", img:"images/ecorche.jpg"},
-  ulya:    {name:"Yarden X Apsu", cost:9, pow:12, fac:"primordial", r:"U", rel:"2026-10-01", fx:"Coûte 1 de moins par autre carte dans ta main. Révélation : +1 par carte restée dans ta main. Exige Yarden Weiss et Apsu dans le deck.", img:"images/ulya.jpg"},
+  ulya:    {name:"Yarden X Apsu", cost:9, pow:12, fac:"primordial", r:"U", vfx:"apsu", rel:"2026-10-01", fx:"Coûte 1 de moins par autre carte dans ta main. Révélation : +1 par carte restée dans ta main. Exige Yarden Weiss et Apsu dans le deck.", img:"images/ulya.jpg"},
   /* --- HALLOWEEN (Pli des Citrouilles uniquement) --- */
   morrigan_h:{name:"Morrigan, Sorcière d'Halloween", base:"morrigan", cost:2, pow:2, fac:"jugement", r:"E", rel:"2026-10-12", ex:"halloween", fx:"Révélation : pioche 2 cartes, puis défausse la carte la plus chère de ta main.", img:"images/morrigan_h.jpg"},
   nyx_h:   {name:"Nyx, Guerrière d'Halloween", base:"nyx", cost:5, pow:4, fac:"primordial", r:"E", rel:"2026-10-12", ex:"halloween", fx:"Révélation : détruit les 2 cartes adverses les plus faibles ici.", img:"images/nyx_h.jpg"},
@@ -646,7 +652,7 @@ const CARDS = {
   aphrodite_n:{name:"Aphrodite, Étoile de Noël", base:"aphrodite", cost:5, pow:4, fac:"desir", r:"E", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : laisse un Reflet d'Aphrodite de puissance 3 dans chacun de tes autres lieux.", img:"images/aphrodite_n.jpg?v=7"},
   sekhmet_n:{name:"Sekhmet, Lionne de l'Hiver", base:"sekhmet", cost:5, pow:4, fac:"jugement", r:"E", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : détruit les cartes adverses de puissance 2 ou moins ici. Les tiennes sont épargnées.", img:"images/sekhmet_n.jpg?v=6"},
   calypso_n:{name:"Calypso, Reine des Glaces", base:"calypso", cost:5, pow:3, fac:"desir", r:"E", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : la carte adverse la plus forte ici devient captive (0 tant que Calypso reste en jeu). +1 par carte adverse ici.", img:"images/calypso_n.jpg?v=6"},
-  apsu_n:  {name:"Apsu, Veillée des Chaînes", base:"apsu", cost:6, pow:7, fac:"primordial", r:"L", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : les cartes adverses ici perdent leurs effets. Ta prochaine carte coûte 2 de moins. +4 si Yarden Weiss est de ton côté.", img:"images/apsu_n.jpg?v=7"},
+  apsu_n:  {name:"Apsu, Veillée des Chaînes", base:"apsu", cost:6, pow:7, fac:"primordial", r:"L", vfx:"apsu", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : les cartes adverses ici perdent leurs effets. Ta prochaine carte coûte 2 de moins. +4 si Yarden Weiss est de ton côté.", img:"images/apsu_n.jpg?v=7"},
   joanna:  {name:"Dame Joanna", cost:2, pow:2, fac:"helvara", r:"E", rel:"2026-10-12", ex:"halloween", fx:"Révélation : laisse une Lanterne de puissance 2 dans chacun de tes autres lieux où tu as déjà une carte.", img:"images/joanna.jpg?v=7"},
   ulji:    {name:"Jordan X Izzy", cost:6, pow:6, fac:"desir", r:"U", rel:"2026-10-01", fx:"Révélation : prend la carte la plus puissante de la main adverse et l'invoque ici, ou dans un autre lieu si c'est plein. Exige Jordan et Izzy dans le deck.", img:"images/ulji.jpg"},
   /* --- NOVEMBRE 2026 --- */
@@ -1036,6 +1042,83 @@ function music(){
 /* ======= ÉTAT DE PARTIE ======= */
 let S=null, uidN=0, games=0, screen="home", editName=false, deckMsg="", deckFilter="all";
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+/* ======= EFFETS VISUELS =======
+   Une seule toile par-dessus l'écran, une seule boucle d'animation, en pause quand l'onglet est caché.
+   Purement décoratif : aléatoire propre (jamais celui du jeu, partagé en duel), et toute erreur est avalée. */
+const FX=(()=>{
+  let cv=null, ctx=null, items=[], raf=0, dpr=1;
+  const rnd=Math.random, reduced=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const size=()=>{ dpr=Math.min(2,devicePixelRatio||1); cv.width=innerWidth*dpr; cv.height=innerHeight*dpr; };
+  const ensure=()=>{ if(!cv||!cv.isConnected){ cv=document.createElement("canvas"); cv.className="fxlayer"; cv.setAttribute("aria-hidden","true"); document.body.appendChild(cv); ctx=cv.getContext("2d"); size(); } return !!ctx; };
+  addEventListener("resize",()=>{ if(cv) size(); });
+  document.addEventListener("visibilitychange",()=>{ if(document.hidden) items=[]; });
+  function loop(t){
+    raf=0; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,innerWidth,innerHeight);
+    items=items.filter(it=>{ const p=(t-it.t0)/it.dur; if(p>=1) return false; try{ ctx.save(); it.draw(ctx,Math.max(0,p)); ctx.restore(); return true; }catch(e){ return false; } });
+    if(items.length) raf=requestAnimationFrame(loop);
+  }
+  const add=(dur,draw)=>{ items.push({t0:performance.now(),dur,draw}); if(!raf) raf=requestAnimationFrame(loop); };
+  const locEl=li=>document.querySelector(`.loc[data-li="${li}"]`);
+  const rect=el=>el&&el.getBoundingClientRect();
+  const shake=(el,cls)=>{ if(!el||reduced()) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+  const ease=p=>1-Math.pow(1-p,3);
+  const REG={
+    /* La Faille s'ouvre : fissure brûlante qui court sur le lieu, braises qui s'en échappent */
+    faille_open({li}){
+      const el=locEl(li); if(!el) return; shake(el,"fxshake");
+      const n=9, jag=Array.from({length:n+1},(_,i)=>({x:i/n,y:(i===0||i===n)?0:(rnd()-.5)*.5}));
+      const sparks=Array.from({length:reduced()?0:36},()=>({u:rnd(),v:(rnd()-.5)*.1,vy:-(.2+rnd()*.6),vx:(rnd()-.5)*.3,r:1+rnd()*1.8,d:rnd()*.5}));
+      add(reduced()?500:1150,(c,p)=>{ const r=rect(locEl(li)); if(!r) return;
+        const cx=r.left, cy=r.top+r.height/2, w=r.width, h=r.height, k=reduced()?1:ease(Math.min(1,p/.55));
+        const pts=jag.filter(q=>q.x<=k+.001).map(q=>[cx+q.x*w,cy+q.y*h*.45]);
+        const glow=c.createRadialGradient(cx+w/2,cy,0,cx+w/2,cy,w*.7); glow.addColorStop(0,`rgba(255,90,60,${.35*k})`); glow.addColorStop(1,"rgba(120,20,60,0)");
+        c.fillStyle=glow; c.fillRect(r.left,r.top,w,h);
+        if(pts.length>1){ for(const [lw,col,blur] of [[6+6*k,"rgba(170,40,90,.55)",18],[2.5+2*k,"rgba(255,140,80,.95)",10],[1,"rgba(255,245,220,1)",0]]){
+          c.beginPath(); pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y)); c.lineWidth=lw; c.strokeStyle=col; c.shadowColor="#ff5a3c"; c.shadowBlur=blur; c.lineJoin="round"; c.stroke(); } }
+        c.shadowBlur=0;
+        for(const sp of sparks){ const t=(p-sp.d)/(1-sp.d); if(t<=0||sp.u>k) continue;
+          const x=cx+sp.u*w+sp.vx*t*w*.3, y=cy+sp.v*h+sp.vy*t*h*.9; c.globalAlpha=1-t; c.fillStyle=t<.4?"#ffe2b0":"#ff6a3c"; c.beginPath(); c.arc(x,y,sp.r,0,7); c.fill(); }
+      });
+    },
+    /* La Faille se referme : des éclats venus des deux camps sont aspirés dans la fissure */
+    faille_close({li}){
+      const el=locEl(li); if(!el) return; const col=el.parentElement, sides=col?[col.children[0],col.children[2]]:[];
+      const shards=reduced()?[]:sides.flatMap((sd,k)=>{ const r=rect(sd); if(!r) return []; return Array.from({length:22},()=>({x:r.left+rnd()*r.width,y:r.top+rnd()*r.height,s:3+rnd()*5,a:rnd()*6,spin:(rnd()-.5)*8,c:k?"#6fb8de":"#9a8cd0"})); });
+      add(reduced()?400:900,(c,p)=>{ const r=rect(locEl(li)); if(!r) return; const cx=r.left+r.width/2, cy=r.top+r.height/2, k=ease(p);
+        c.globalAlpha=1-p; c.strokeStyle="rgba(255,140,80,.9)"; c.lineWidth=3*(1-p); c.shadowColor="#ff5a3c"; c.shadowBlur=14;
+        c.beginPath(); c.moveTo(r.left+r.width*p/2,cy); c.lineTo(r.right-r.width*p/2,cy); c.stroke(); c.shadowBlur=0;
+        for(const sh of shards){ const x=sh.x+(cx-sh.x)*k, y=sh.y+(cy-sh.y)*k, s=sh.s*(1-k*.9);
+          c.save(); c.translate(x,y); c.rotate(sh.a+sh.spin*p); c.globalAlpha=(1-p)*.9; c.fillStyle=sh.c; c.fillRect(-s/2,-s/2,s,s*.6); c.restore(); }
+      });
+    },
+    /* Apsu : les eaux douces montent sur le lieu. En ultra (Yarden X Apsu) : averse sur tout l'écran. */
+    apsu({li,ultra}){
+      const el=locEl(li); if(!el) return; if(ultra) shake(el,"fxshake");
+      const W=innerWidth, H=innerHeight, red=reduced();
+      const drops=(ultra&&!red)?Array.from({length:Math.min(160,Math.round(W*H/2600))},()=>({x:rnd()*W*1.2,y:-rnd()*H,l:10+rnd()*18,v:.9+rnd()*.7})):[];
+      const rings=Array.from({length:red?0:(ultra?9:5)},()=>({u:.1+rnd()*.8,d:rnd()*.6}));
+      add(red?500:(ultra?1900:1200),(c,p)=>{ const r=rect(locEl(li)); if(!r) return;
+        const fade=p<.15?p/.15:p>.8?(1-p)/.2:1;
+        if(ultra){ c.fillStyle=`rgba(10,40,80,${.32*fade})`; c.fillRect(0,0,W,H);
+          c.strokeStyle=`rgba(170,215,255,${.55*fade})`; c.lineWidth=1.2; c.beginPath();
+          for(const d of drops){ const y=(d.y+p*H*1.6*d.v)%(H+40), x=d.x-y*.18; c.moveTo(x,y); c.lineTo(x-d.l*.18,y+d.l); } c.stroke(); }
+        const lvl=r.bottom-r.height*.62*Math.sin(Math.min(1,p*1.4)*Math.PI/2)*fade;
+        const g=c.createLinearGradient(0,lvl,0,r.bottom); g.addColorStop(0,`rgba(90,180,235,${.55*fade})`); g.addColorStop(1,`rgba(10,50,110,${.75*fade})`);
+        c.save(); c.beginPath(); c.roundRect?c.roundRect(r.left,r.top,r.width,r.height,12):c.rect(r.left,r.top,r.width,r.height); c.clip();
+        c.fillStyle=g; c.beginPath(); c.moveTo(r.left,r.bottom);
+        for(let x=0;x<=r.width;x+=6) c.lineTo(r.left+x,lvl+Math.sin(x/14+p*14)*3);
+        c.lineTo(r.right,r.bottom); c.closePath(); c.fill();
+        c.strokeStyle=`rgba(220,240,255,${.8*fade})`; c.lineWidth=1.5;
+        for(const ri of rings){ const t=(p-ri.d)/.4; if(t<0||t>1) continue; c.globalAlpha=(1-t)*fade; c.beginPath(); c.ellipse(r.left+ri.u*r.width,lvl+4,4+t*22,1.5+t*6,0,0,7); c.stroke(); }
+        c.restore();
+        if(ultra&&p<.25){ c.fillStyle=`rgba(200,235,255,${(.25-p)*1.2})`; c.fillRect(0,0,W,H); }
+      });
+    },
+  };
+  return { play(key,arg){ try{ if(REG[key]&&ensure()) REG[key](arg||{}); }catch(e){} } };
+})();
+/* Effet visuel d'une carte à sa Révélation : réservé aux légendaires et ultra-légendaires qui en ont un (champ vfx). */
+function cardVfx(id,li){ const d=CARDS[id]; if(d&&d.vfx&&(d.r==="L"||d.r==="U")) FX.play(d.vfx,{li,ultra:d.r==="U"}); }
 const shuffle=a=>{ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 const pickRand=a=>a[Math.floor(Math.random()*a.length)];
 let RNG=Math.random; const rnd=()=>RNG();
@@ -1437,6 +1520,7 @@ async function resolveTurn(mine, theirs, animate){
     await wait(560);
     if(!S.board[s][x.li].includes(x.c)) continue;
     { const m=snapPow(); reveal(s,x.li,x.c); diffPow(m,CARDS[x.c.id].name); } render();
+    if(animate) cardVfx(x.c.id,x.li);
   }
   /* Idunn : fin de tour (pas après le tour 6) */
   if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="idunn"){
@@ -1456,6 +1540,8 @@ async function resolveTurn(mine, theirs, animate){
     if(ok){ (t.mods=t.mods||[]).push({v:-1,src:"Ishtar"}); log(`Ishtar · −1 à ${nm(t)} (${who(o)})`); sfx("debuff"); }
   }
   if(S.turn===4){
+    const rifts=[0,1,2].filter(li=>locIs(li,"faille"));
+    if(animate&&rifts.length){ rifts.forEach(li=>FX.play("faille_open",{li})); await wait(1150); rifts.forEach(li=>FX.play("faille_close",{li})); }
     S.locs.forEach((L,li)=>{ if(locIs(li,"faille")){
       for(const s of ["p","e"]){ const arr=S.board[s][li].filter(c=>c.rev&&!(c.id==="uzume"&&!c.neg)&&!baldurSafe(s,c)&&!c.ward); if(!arr.length) continue;
         const w=arr.sort((a,b)=>cardPow(s,li,a)-cardPow(s,li,b))[0];
