@@ -373,7 +373,12 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .oathchip{border-color:rgba(219,168,98,.55);color:var(--warm)}
 .oathchip.on{background:rgba(219,168,98,.16)}
 .loc.oath{box-shadow:0 0 0 2px var(--warm) inset}
-.pilesbar{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mist);margin:2px 0 6px}
+.pilesbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-size:12px;color:var(--mist);margin:2px 0 6px}
+.pilebtn{font:inherit;color:inherit;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:2px 9px;cursor:pointer}
+.pilebtn:hover{border-color:rgba(255,255,255,.3)}
+.pilepanel{width:min(460px,100%);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.pileside .m{margin-bottom:6px}
+.pilegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
 .loc.aioath{box-shadow:0 0 0 2px var(--ko) inset}
 .loc.cross{box-shadow:0 0 0 2px var(--warm) inset,0 0 0 4px var(--ko) inset}
 .oathres.kept{color:#9fe0b0}.oathres.broken{color:var(--ko)}
@@ -1040,7 +1045,16 @@ function aiOath(){
   S.aiOath=li; log(`L'adversaire jure sur ${LOCS[S.locs[li].id].name}`); sfx("legend");
 }
 function pilesHTML(){ if(S.tut) return ""; piles(); const D=S.discardPile, G=S.graveyard;
-  return `<div class="pilesbar"><span>Main adverse : <b>${S.hand.e.length}</b></span><span>Défausses : <b style="color:var(--me)">${D.p.length}</b> · <b style="color:var(--foe)">${D.e.length}</b></span><span>Cimetières : <b style="color:var(--me)">${G.p.length}</b> · <b style="color:var(--foe)">${G.e.length}</b></span></div>`; }
+  return `<div class="pilesbar"><span>Main adverse : <b>${S.hand.e.length}</b></span><button class="pilebtn" data-act="pileview" data-p="d"><span>Défausses :</span> <b style="color:var(--me)">${D.p.length}</b> · <b style="color:var(--foe)">${D.e.length}</b></button><button class="pilebtn" data-act="pileview" data-p="g"><span>Cimetières :</span> <b style="color:var(--me)">${G.p.length}</b> · <b style="color:var(--foe)">${G.e.length}</b></button></div>`; }
+/* Défausse ou cimetière ouverts au toucher : les deux camps, la carte la plus récente en premier. */
+function pileHTML(){
+  piles(); const grave=gz==="pg", P2=grave?S.graveyard:S.discardPile;
+  const side=(s,lab,col)=>{ const ids=P2[s].slice().reverse();
+    return `<div class="pileside"><div class="m" style="color:${col}">${lab} · ${ids.length}</div>${ids.length?`<div class="pilegrid">${ids.map(id=>thumb(id,`data-act="zoom" data-id="${id}"`)).join("")}</div>`:`<p class="hint">Vide.</p>`}</div>`; };
+  return `<div class="veil" data-act="gzclose"><div class="pilepanel zoominfo"><div class="t">${grave?"Cimetières":"Défausses"}</div>
+    <p class="hint">${grave?"Les cartes détruites.":"Les cartes défaussées depuis la main."} Touche une carte pour la lire.</p>
+    ${side("p","Toi","var(--me)")}${side("e","Adversaire","var(--foe)")}
+    <button class="ghost" data-act="gzclose">Fermer</button></div></div>`; }
 function aiOathBar(){
   if(S.aiOath==null||S.over) return "";
   const n=LOCS[S.locs[S.aiOath].id].name;
@@ -2177,6 +2191,7 @@ function oathHTML(){
 }
 function gzHTML(){
   if(!gz||!S) return "";
+  if(gz[0]==="p") return pileHTML();
   if(gz[0]==="l"){ const li=+gz.slice(1), L=S.locs[li], d=LOCS[L.id];
     return `<div class="veil" data-act="gzclose"><div class="gzloc"><div class="gzimg" style="background-image:url('${L.rev?d.img:"images/lieux/inconnu.jpg"}')"></div>
       <div class="zoominfo"><div class="t">${L.rev?d.name:"Lieu inconnu"}</div><p>${L.rev?d.fx:`Il sera révélé au début du tour ${li+1}.`}${L.stopped?" <b>Effet arrêté par Perséphone.</b>":""}${L.locked?" <b>Verrouillé par Vritra : plus personne ne peut y jouer.</b>":""}</p>
@@ -2289,7 +2304,9 @@ document.addEventListener("click", e=>{
       save(); render(); return; }
     case "deckout": { const id=el.dataset.id; P.deck=P.deck.filter(x=>x!==id); deckMsg=pruneUL(); sfx("undo"); save(); render(); return; }
     case "close": S.over.closed=true; render(); return;
+    case "pileview": if(S){ gz="p"+el.dataset.p; sfx("select"); render(); } return;
   }
+  if(act==="gzclose"&&gz&&gz[0]==="p"&&e.target.closest(".pilepanel")&&!e.target.closest("button")) return; /* un toucher dans le panneau ne le ferme pas */
   if(act==="gzclose"){ gz=null; render(); return; }
   if(!S||S.busy) return;
   if(act==="end"){ sfx("click"); endTurn(); return; }
