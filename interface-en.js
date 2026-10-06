@@ -139,7 +139,7 @@
     "Les lieux d'Helvara":"The locations of Helvara", "Trois lieux par partie, révélés aux tours 1, 2 et 3.":"Three locations per game, revealed on turns 1, 2 and 3.",
     "Touche une carte pour l'agrandir.":"Tap a card to enlarge it.", "Ton deck est plein : retire d'abord une carte.":"Your deck is full: remove a card first.",
     "Ta vitrine":"Your showcase", "Cartes affichées":"Displayed cards", "En faire mon avatar":"Make it my avatar", "Choisir un avatar":"Choose an avatar",
-    "Fusion disponible":"Fusion available", "Réclamer la carte":"Claim the card", "Ultra-légendaire":"Ultra-legendary",
+    "Fusion disponible":"Fusion available", "Ultra-légendaire de faction":"Faction ultra-legendary", "Réclamer la carte":"Claim the card", "Ultra-légendaire":"Ultra-legendary",
     /* boutique */
     "Pack de départ · 12 cartes":"Starter pack · 12 cards", "Tu as déjà toutes les cartes de ces raretés":"You already own every card of these rarities",
     "Collection complète":"Collection complete", "Ouvre d'abord la Première Brûlure":"Open the First Burn first", "Acheter et ouvrir":"Buy and open",
@@ -287,6 +287,8 @@
     [/^Une seule version par personnage : retire d'abord (.+)\.$/, (m,a)=>`Only one version per character: remove ${a} first.`],
     [/^Choisis les 3 cartes affichées sur l'accueil · (\d)\/3\. La première choisie passe au centre\.$/, (m,n)=>`Choose the 3 cards shown on the home screen · ${n}/3. The first one chosen goes in the centre.`],
     [/^Chaque carte de ta collection débloque son portrait · (\d+)\/(\d+)$/, (m,a,b)=>`Each card in your collection unlocks its portrait · ${a}/${b}`],
+    [/^Ta collection compte assez de cartes (.+)\. (.+) rejoint ta faction\.$/, (m,f,n)=>`Your collection holds enough ${({Jugement:"Judgement","Désir":"Desire"})[f]||f} cards. ${n} joins your faction.`],
+    [/^Prométhée garde (\d+) énergie en réserve \((.+)\)$/, (m,k,w)=>`Prometheus keeps ${k} energy in reserve (${w==="L'adversaire"?'the opponent':w})`],
     [/^Tu possèdes (.+)\. Leur fusion ultra-légendaire t'attend\.$/, (m,a)=>`You own ${a}. Their ultra-legendary fusion awaits.`],
     [/^Agrandir (.+)$/, (m,a)=>`Enlarge ${a}`],
     [/^Mettre en avant (.+)$/, (m,a)=>`Feature ${a}`],
@@ -402,11 +404,12 @@
         nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel in her New Year's Eve version.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
       },
       DROPS:{
+        nov15:"Prometheus, who keeps the fire in reserve, and Nike, the first faction ultra-legendary: 8 Judgement cards are enough to get her.",
         dec26:"Odin, Thor, Hel, Baldur, Hades, Poseidon, Circe, Qetesh, the people of Lausanne… five new fusions, the Creator's Domain and the Tomb.",
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."
       },
-      ULS:{ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur"}
+      ULS:{nike:"8 Judgement cards, Nike included",ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur"}
     }
   };
 })();

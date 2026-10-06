@@ -65,6 +65,8 @@ window.HELVARA_EN = {
     charognard:{n:"The M2 Scavenger", fx:"On Reveal: +3 if a card was destroyed or discarded during the game."},
     ficelle:{n:"The Devouring Thread", fx:"On Reveal: destroy your other cards here. +3 for each."},
     ecorche:{n:"The Silent Flayed One", fx:"Can't be weakened. On Reveal: −2 to a random enemy card here."},
+    promethee:{n:"Prometheus", fx:"Ongoing: the energy you don't spend carries over to the next turn (10 max)."},
+    nike:{fx:"On Reveal: +2 for each other card you played before her this turn. Requires 8 Judgement cards in the deck, Nike included."},
     ulya:{fx:"Costs 1 less for each other card in your hand. On Reveal: +1 for each card left in your hand. Requires Yarden Weiss and Apsu in the deck."},
     morrigan_h:{n:"Morrigan, Halloween Witch", fx:"On Reveal: draw 2 cards, then discard the most expensive card in your hand."},
     nyx_h:{n:"Nyx, Halloween Warrior", fx:"On Reveal: destroy the 2 weakest enemy cards here."},

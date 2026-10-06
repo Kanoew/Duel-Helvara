@@ -561,6 +561,14 @@ body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
 .loc.fxshake{animation:fxshake .45s ease}
 @keyframes fxshake{0%,100%{transform:none}20%{transform:translate(-3px,1px) rotate(-.6deg)}40%{transform:translate(3px,-1px) rotate(.6deg)}60%{transform:translate(-2px,0)}80%{transform:translate(2px,1px)}}
 @media (prefers-reduced-motion: reduce){ .loc.fxshake{animation:none} }
+
+/* cartes en grand : inclinaison, reflet, ambiance ; cadre des ultra-légendaires tracé à l'intérieur pour ne jamais être rogné */
+.full.tilt{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .18s ease-out;touch-action:pan-y}
+.full.tilt::before{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.5),transparent 40%),linear-gradient(115deg,transparent 20%,rgba(255,180,90,.22) 40%,rgba(120,220,255,.22) 55%,transparent 75%);mix-blend-mode:color-dodge;opacity:calc(.12 + var(--glow,0) * .7);transition:opacity .3s}
+.full .ambcv{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;mix-blend-mode:screen}
+.full.holo{box-shadow:0 0 22px rgba(242,198,255,.45);outline:2px solid #f2c6ff;outline-offset:-2px}
+.zoomwrap{padding:14px 10px}
+@media (prefers-reduced-motion: reduce){ .full.tilt{transform:none;transition:none} }
 </style>
 
 <div class="wrap" id="app"></div>
@@ -717,6 +725,8 @@ const CARDS = {
   ulqetjor:{name:"Qetesh X Jordan", vfx:"ulqetjor", cost:6, pow:4, fac:"desir", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Continu : tes autres cartes ont +1, dans les 3 lieux. Exige Qetesh et Jordan dans le deck.", img:"images/ulqetjor.jpg"},
   ulqetyar:{name:"Qetesh X Yarden", vfx:"ulqetyar", cost:6, pow:3, fac:"desir", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Continu : +3 par lieu où tu as à la fois une carte Désir et une carte Primordiale. Exige Qetesh et Yarden Weiss dans le deck.", img:"images/ulqetyar.jpg"},
   ulhel:   {name:"Hel X Baldur", vfx:"ulhel", cost:6, pow:3, fac:"primordial", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ressuscite tes cartes défaussées dans des lieux au hasard, sans Révélation. Elles ne peuvent être ni détruites ni affaiblies. Exige Hel et Baldur dans le deck.", img:"images/ulhel.jpg"},
+  promethee:{name:"Prométhée", vfx:"promethee", cost:1, pow:1, fac:"primordial", r:"L", rel:"2026-11-15", soon:"2026-11-10", fx:"Continu : l'énergie que tu ne dépenses pas est conservée au tour suivant (10 maximum).", img:"images/promethee.jpg"},
+  nike:    {name:"Nike", vfx:"nike", cost:3, pow:1, fac:"jugement", r:"U", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : +2 pour chaque autre carte que tu as jouée avant elle ce tour. Exige 8 cartes Jugement dans le deck, Nike comprise.", img:"images/nike.jpg"},
   hel_r:   {name:"Hel, Reine du Réveillon", base:"hel", cost:5, pow:2, fac:"primordial", r:"E", rel:"2026-12-31", soon:"2026-12-26", ex:"nouvelan", fx:"Révélation : ressuscite ici ta carte défaussée la plus chère, avec sa Révélation.", img:"images/hel_r.jpg"},
   reflet:  {name:"Reflet", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par le Lac Ouchy.", img:"", token:true},
   illusion:{name:"Illusion", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Kitsune.", img:"", token:true},
@@ -796,7 +806,7 @@ const today=()=>window.__today||dayKey();
 const REL=id=>!CARDS[id].rel||today()>=CARDS[id].rel;
 const avail=()=>POOL.filter(REL);
 const PACK=(ex)=>POOL.filter(id=>REL(id)&&CARDS[id].r!=="U"&&(!CARDS[id].ex||CARDS[id].ex===ex));
-const ULS=[{id:"ulya",req:["yarden",["apsu","apsu_n"]],n:"Yarden Weiss et Apsu"},{id:"ulji",req:[["jordan","jordan_n"],["izzy","izzy_h"]],n:"Jordan et Izzy"},
+const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike comprise"},{id:"ulya",req:["yarden",["apsu","apsu_n"]],n:"Yarden Weiss et Apsu"},{id:"ulji",req:[["jordan","jordan_n"],["izzy","izzy_h"]],n:"Jordan et Izzy"},
   {id:"ulaph",req:[["aphrodite","aphrodite_n"],"yarden"],n:"Aphrodite et Yarden Weiss"},{id:"ulcal",req:[["calypso","calypso_n"],["jordan","jordan_n"]],n:"Calypso et Jordan"},{id:"ulnem",req:["nemesis",["jordan","jordan_n"]],n:"Nemesis et Jordan"},
   {id:"ulcirce",req:[["nyx","nyx_h"],"circe"],n:"Nyx et Circé"},{id:"uloshun",req:[["nyx","nyx_h"],"oshun"],n:"Nyx et Oshun"},
   {id:"ulqetjor",req:["qetesh",["jordan","jordan_n"]],n:"Qetesh et Jordan"},{id:"ulqetyar",req:["qetesh","yarden"],n:"Qetesh et Yarden Weiss"},
@@ -804,9 +814,12 @@ const ULS=[{id:"ulya",req:["yarden",["apsu","apsu_n"]],n:"Yarden Weiss et Apsu"}
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
 const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, Psyché, Amaterasu, La Mère de Cendre… et la première ultra-légendaire, Yarden X Apsu."},
   {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."},
+  {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée, qui garde le feu en réserve, et Nike, la première ultra-légendaire de faction : 8 cartes Jugement suffisent pour l'obtenir."},
   {id:"dec26",rel:"2026-12-01",soon:"2026-11-26",hint:"Odin, Thor, Hel, Baldur, Hadès, Poséidon, Circé, Qetesh, les gens de Lausanne… cinq nouvelles fusions, le Domaine du Créateur et le Tombeau."}];
 const hasReq=(list,r)=>Array.isArray(r)?r.some(x=>list.includes(x)):list.includes(r);
 const ULof=id=>ULS.find(u=>u.id===id);
+/* Une ultra-légendaire de fusion exige ses cartes ; une ultra-légendaire de faction exige assez de cartes de sa faction (elle comprise). */
+const ulOk=(u,list)=>u.fac?list.filter(x=>x!==u.id&&CARDS[x]&&CARDS[x].fac===u.fac).length>=u.min-1:u.req.every(r=>hasReq(list,r));
 const charOf=id=>CARDS[id].base||id;
 const OCT_REL="2026-10-01";
 const ECO = {win:50, draw:20, loss:10, deckSize:12, tuto:100, dup:{D:10,C:10,R:20,E:40,L:80}};
@@ -1052,10 +1065,14 @@ const FX=(()=>{
   const ensure=()=>{ if(!cv||!cv.isConnected){ cv=document.createElement("canvas"); cv.className="fxlayer"; cv.setAttribute("aria-hidden","true"); document.body.appendChild(cv); ctx=cv.getContext("2d"); size(); } return !!ctx; };
   addEventListener("resize",()=>{ if(cv) size(); });
   document.addEventListener("visibilitychange",()=>{ if(document.hidden) items=[]; });
+  let amb=[];
   function loop(t){
-    raf=0; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,innerWidth,innerHeight);
+    raf=0;
+    amb=amb.filter(a=>{ if(!a.cv.isConnected) return false; try{ const c=a.ctx; c.setTransform(a.dpr,0,0,a.dpr,0,0); c.clearRect(0,0,a.w,a.h); const p=((t-a.t0)%4200)/4200; for(const g of a.gens) g(c,p,.85); return true; }catch(e){ return false; } });
+    if(!ctx){ if(amb.length) raf=requestAnimationFrame(loop); return; }
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,innerWidth,innerHeight);
     items=items.filter(it=>{ const p=(t-it.t0)/it.dur; if(p>=1) return false; try{ ctx.save(); it.draw(ctx,Math.max(0,p)); ctx.restore(); return true; }catch(e){ ctx.restore(); (window.__fxErr=window.__fxErr||[]).push(String(e)); return false; } });
-    if(items.length) raf=requestAnimationFrame(loop);
+    if(items.length||amb.length) raf=requestAnimationFrame(loop);
   }
   const add=(dur,draw)=>{ items.push({t0:performance.now(),dur,draw}); if(!raf) raf=requestAnimationFrame(loop); };
   const locEl=li=>document.querySelector(`.loc[data-li="${li}"]`);
@@ -1136,23 +1153,23 @@ const FX=(()=>{
   };
   /* --- ambiances plein écran, réservées aux ultra-légendaires --- */
   const SCREEN={
-    rain:o=>{ const W=innerWidth,H=innerHeight, ds=Array.from({length:Math.min(160,Math.round(W*H/2600))},()=>({x:rnd()*W*1.2,y:-rnd()*H,l:10+rnd()*18,v:.9+rnd()*.7}));
+    rain:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, ds=Array.from({length:Math.min(160,Math.round(W*H/2600))},()=>({x:rnd()*W*1.2,y:-rnd()*H,l:10+rnd()*18,v:.9+rnd()*.7}));
       return (c,p,f)=>{ c.strokeStyle=rgba(o.col||"170,215,255",.55*f); c.lineWidth=1.2; c.beginPath(); for(const d of ds){ const y=(d.y+p*H*1.6*d.v)%(H+40), x=d.x-y*.18; c.moveTo(x,y); c.lineTo(x-d.l*.18,y+d.l); } c.stroke(); }; },
-    petals:o=>{ const W=innerWidth,H=innerHeight, ds=Array.from({length:Math.min(70,Math.round(W*H/6000))},()=>({x:rnd()*W,y:-rnd()*H*.8,s:4+rnd()*5,v:.5+rnd()*.6,ph:rnd()*6,c:o.col[Math.floor(rnd()*o.col.length)]}));
-      return (c,p,f)=>{ for(const d of ds){ const y=d.y+p*H*1.3*d.v, x=d.x+Math.sin(p*6+d.ph)*30; c.save(); c.translate(x,y); c.rotate(p*5+d.ph); c.globalAlpha=.85*f; c.fillStyle=rgba(d.c,1); c.beginPath(); c.ellipse(0,0,d.s,d.s*.55,0,0,7); c.fill(); c.restore(); } }; },
-    embers:o=>{ const W=innerWidth,H=innerHeight, ds=Array.from({length:Math.min(90,Math.round(W*H/4500))},()=>({x:rnd()*W,y:o.up?H+rnd()*H*.5:-rnd()*H*.6,s:1.5+rnd()*2.5,v:.6+rnd()*.8,ph:rnd()*6}));
+    petals:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, ds=Array.from({length:Math.min(70,Math.round(W*H/6000))},()=>({x:rnd()*W,y:-rnd()*H*.8,s:4+rnd()*5,v:.5+rnd()*.6,ph:rnd()*6,c:o.col[Math.floor(rnd()*o.col.length)]}));
+      return (c,p,f)=>{ for(const d of ds){ const y=d.y+p*H*1.3*d.v, x=d.x+Math.sin(p*6+d.ph)*30; c.save(); c.translate(x,y); c.rotate(p*5+d.ph); c.globalAlpha=.85*f; c.fillStyle=rgba(d.c,1); c.beginPath(); c.ellipse(0,0,d.s*(o.thin?1.6:1),d.s*(o.thin?.3:.55),0,0,7); c.fill(); c.restore(); } }; },
+    embers:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, ds=Array.from({length:Math.min(90,Math.round(W*H/4500))},()=>({x:rnd()*W,y:o.up?H+rnd()*H*.5:-rnd()*H*.6,s:1.5+rnd()*2.5,v:.6+rnd()*.8,ph:rnd()*6}));
       return (c,p,f)=>{ c.globalCompositeOperation="lighter"; for(const d of ds){ const y=o.up?d.y-p*H*1.2*d.v:d.y+p*H*1.4*d.v, x=d.x+Math.sin(p*5+d.ph)*12;
         const g=c.createRadialGradient(x,y,0,x,y,d.s*3); g.addColorStop(0,rgba(o.col[0],.95*f)); g.addColorStop(.4,rgba(o.col[1]||o.col[0],.5*f)); g.addColorStop(1,rgba(o.col[1]||o.col[0],0)); c.fillStyle=g; c.fillRect(x-d.s*3,y-d.s*3,d.s*6,d.s*6); }
         c.globalCompositeOperation="source-over"; }; },
-    lightning:o=>{ const W=innerWidth,H=innerHeight, bolts=[.12,.42,.7].map(t=>{ let x=W*(.2+rnd()*.6), y=0; const pts=[[x,y]]; while(y<H*.7){ y+=20+rnd()*40; x+=(rnd()-.5)*60; pts.push([x,y]); } return {t,pts}; });
+    lightning:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, bolts=[.12,.42,.7].map(t=>{ let x=W*(.2+rnd()*.6), y=0; const pts=[[x,y]]; while(y<H*.7){ y+=20+rnd()*40; x+=(rnd()-.5)*60; pts.push([x,y]); } return {t,pts}; });
       return (c,p,f)=>{ for(const b of bolts){ const a=1-Math.abs(p-b.t)/.07; if(a<=0) continue;
         c.fillStyle=rgba(o.col||"210,225,255",.25*a); c.fillRect(0,0,W,H);
         for(const [lw,al] of [[6,.35],[2,1]]){ c.strokeStyle=rgba(o.col||"230,240,255",al*a); c.lineWidth=lw; c.shadowColor="#bcd4ff"; c.shadowBlur=16; c.beginPath(); b.pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y)); c.stroke(); } c.shadowBlur=0; } }; },
-    snow:o=>{ const W=innerWidth,H=innerHeight, ds=Array.from({length:Math.min(110,Math.round(W*H/3500))},()=>({x:rnd()*W,y:-rnd()*H*.6,s:1+rnd()*2.5,v:.3+rnd()*.5,ph:rnd()*6}));
+    snow:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, ds=Array.from({length:Math.min(110,Math.round(W*H/3500))},()=>({x:rnd()*W,y:-rnd()*H*.6,s:1+rnd()*2.5,v:.3+rnd()*.5,ph:rnd()*6}));
       return (c,p,f)=>{ c.fillStyle=rgba(o.col||"235,242,255",.85*f); for(const d of ds){ const y=d.y+p*H*1.2*d.v, x=d.x+Math.sin(p*4+d.ph)*20; c.beginPath(); c.arc(x,y,d.s,0,7); c.fill(); } }; },
-    dust:o=>{ const W=innerWidth,H=innerHeight, ds=Array.from({length:Math.min(90,Math.round(W*H/4000))},()=>({x:rnd()*W,y:rnd()*H,s:1+rnd()*2,ph:rnd()*6,vx:(rnd()-.5)*40,vy:-10-rnd()*30}));
+    dust:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, ds=Array.from({length:Math.min(90,Math.round(W*H/4000))},()=>({x:rnd()*W,y:rnd()*H,s:1+rnd()*2,ph:rnd()*6,vx:(rnd()-.5)*40,vy:-10-rnd()*30}));
       return (c,p,f)=>{ c.globalCompositeOperation="lighter"; for(const d of ds){ const a=Math.max(0,Math.sin(p*8+d.ph))*f; c.fillStyle=rgba(o.col||"255,215,120",a); c.beginPath(); c.arc(d.x+d.vx*p,d.y+d.vy*p,d.s,0,7); c.fill(); } c.globalCompositeOperation="source-over"; }; },
-    bubbles:o=>{ const W=innerWidth,H=innerHeight, ds=Array.from({length:Math.min(60,Math.round(W*H/6000))},()=>({x:rnd()*W,y:H+rnd()*H*.4,s:3+rnd()*8,v:.5+rnd()*.7,ph:rnd()*6}));
+    bubbles:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, ds=Array.from({length:Math.min(60,Math.round(W*H/6000))},()=>({x:rnd()*W,y:H+rnd()*H*.4,s:3+rnd()*8,v:.5+rnd()*.7,ph:rnd()*6}));
       return (c,p,f)=>{ c.strokeStyle=rgba(o.col||"190,240,255",.7*f); c.lineWidth=1.2; for(const d of ds){ const y=d.y-p*H*1.3*d.v, x=d.x+Math.sin(p*6+d.ph)*10; c.beginPath(); c.arc(x,y,d.s,0,7); c.stroke(); } }; },
   };
   /* --- mélanges : un par carte ou par lieu. loc = briques sur le lieu ; screen et tint = ultra-légendaires seulement --- */
@@ -1183,6 +1200,8 @@ const FX=(()=>{
     ulqetjor: {loc:[["rays",{col:"255,170,200"}]], screen:[["petals",{col:["255,180,200","255,220,230"]}]], tint:"50,10,30"},
     ulqetyar: {loc:[["rise",{c1:"255,120,30",c2:"120,10,0",h:.5,c3:"255,200,120"}],["burst",{col:["255,120,40","255,200,90"],up:true}]], screen:[["embers",{col:["255,200,90","255,80,20"]}]], tint:"50,10,0"},
     ulhel:    {loc:[["rays",{col:"255,240,200"}],["smoke",{col:"150,190,230"}]], screen:[["snow",{}]], tint:"20,30,50"},
+    promethee:{loc:[["burst",{col:["255,150,50","255,200,90","255,240,200"],up:true,n:36}],["flicker",{col:"255,140,40",y:.7}]]},
+    nike:     {loc:[["rays",{col:"255,215,140"}],["rings",{col:"255,220,150",n:3}]], screen:[["petals",{col:["240,200,120","45,40,48","255,230,170"],thin:true}],["rain",{col:"200,215,240"}],["dust",{col:GOLD}]], tint:"20,25,45"},
     /* lieux, à leur révélation */
     l_ouchy:  {loc:[["rise",{c1:"110,170,220",c2:"20,50,90",h:.25,rings:5}]]},
     l_sousgare:{loc:[["sweep",{col:"255,230,170"}],["smoke",{col:"90,90,100"}]]},
@@ -1208,7 +1227,16 @@ const FX=(()=>{
       if(ultra&&p<.2){ c.fillStyle=`rgba(255,255,255,${(.2-p)*1.1})`; c.fillRect(0,0,W,H); }
     });
   }
-  return { play(key,arg){ try{ if(!ensure()) return; if(REG[key]) REG[key](arg||{}); else if(MIX[key]) mix({...(arg||{}),key}); }catch(e){ (window.__fxErr=window.__fxErr||[]).push(String(e)); } } };
+  /* Ambiance vivante dans l'illustration d'une ultra-légendaire en grand (aperçu, appui long) */
+  function decorate(root){
+    if(reduced()||document.hidden) return;
+    root.querySelectorAll(".full.amb").forEach(el=>{ if(el.querySelector("canvas.ambcv")) return; const M=MIX[el.dataset.vfx]; if(!M||!M.screen) return;
+      const r=el.getBoundingClientRect(); if(!r.width) return; const cv=document.createElement("canvas"), d=Math.min(2,devicePixelRatio||1);
+      cv.className="ambcv"; cv.width=r.width*d; cv.height=r.height*d; el.appendChild(cv);
+      amb.push({cv,ctx:cv.getContext("2d"),dpr:d,w:r.width,h:r.height,t0:performance.now(),gens:M.screen.map(([k,o])=>SCREEN[k]({...o,W:r.width,H:r.height}))});
+      if(!raf) raf=requestAnimationFrame(loop); });
+  }
+  return { decorate(root){ try{ decorate(root); }catch(e){} }, play(key,arg){ try{ if(!ensure()) return; if(REG[key]) REG[key](arg||{}); else if(MIX[key]) mix({...(arg||{}),key}); }catch(e){ (window.__fxErr=window.__fxErr||[]).push(String(e)); } } };
 })();
 /* Effet visuel d'une carte à sa Révélation : réservé aux légendaires et ultra-légendaires qui en ont un (champ vfx). */
 function cardVfx(id,li){ const d=CARDS[id]; if(d&&d.vfx&&(d.r==="L"||d.r==="U")) FX.play(d.vfx,{li,ultra:d.r==="U"}); }
@@ -1445,6 +1473,7 @@ function revealFx(s,li,c){
     case "vritra": S.locs[li].locked=true; note="le lieu est verrouillé"; snd="lock"; break;
     case "yarden": if([0,1,2].every(i=>S.board[s][i].length>0)) buffSelf(4); break;
     case "nyx": { const t=strongest(foes,o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.destroyed++; bury(o,t); if(o==="e") S.killE=(S.killE||0)+1; note=`détruit ${nm(t)}`; snd="void"; } break; }
+    case "nike": { const k=Math.max(0,((S.turnPlays&&S.turnPlays[s])||[]).indexOf(c)); if(k) buffSelf(2*k); break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(6); snd=foes.length?"void":snd; break; }
     case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
       if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else { S.destroyed++; bury(o,t); if(o==="e") S.killE=(S.killE||0)+1; note=`${nm(t)} est détruite`; } snd="void"; } break; }
@@ -1581,6 +1610,7 @@ function aiPlan(){
       if(c.id==="yarden" && !S.board.e[li].length) sc+=3;
       if(c.id==="nemesis") sc+=(diff>0&&diff<12)?5:-6;
       if(c.id==="mouche") sc-=mates;
+      if(c.id==="nike") sc+=plays.length*2-3;
       if(sc>bs){ bs=sc; best={li,cost}; }
     }
     if(best){ plays.push({c,li:best.li}); en-=best.cost; pend[best.li]++; first=false; }
@@ -1599,6 +1629,10 @@ async function endTurn(){
 async function resolveTurn(mine, theirs, animate){
   const wait=ms=>animate?sleep(ms):Promise.resolve();
   S.busy=true; S.sel=null; S.info=null; S.staged=[];
+  /* Prométhée : énergie non dépensée ; Nike : ordre dans lequel chaque joueur a posé ses cartes (l'IA garde Nike pour la fin) */
+  const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0)),0);
+  const unspent={p:Math.max(0,S.energy-spent("p",mine)),e:Math.max(0,S.energyE-spent("e",theirs))};
+  S.turnPlays={p:mine.map(x=>x.c),e:(S.mp?theirs:[...theirs.filter(x=>x.c.id!=="nike"),...theirs.filter(x=>x.c.id==="nike")]).map(x=>x.c)};
   S.hand.p=S.hand.p.filter(c=>!mine.some(x=>x.c===c));
   for(const x of theirs) S.hand.e=S.hand.e.filter(c=>c!==x.c);
   if(mine.length){ S.disc.p=0; if(!(S.mp&&S.mp.replaying)&&!S.tut){ ensureQuests(); qProg("cards12",mine.length); } }
@@ -1650,6 +1684,9 @@ async function resolveTurn(mine, theirs, animate){
   /* Le Tombeau : fin du tour 6, les défaussés reviennent */
   if(S.turn===6&&animate){ const tb=[0,1,2].filter(li=>locIs(li,"tombeau")); if(tb.length){ tb.forEach(li=>FX.play("tombeau_rise",{li})); await wait(700); } }
   if(S.turn===6){ piles(); S.locs.forEach((L,li)=>{ if(locIs(li,"tombeau")) for(const s of ["p","e"]){ let n=0; for(const id of gShuffle(S.discardPile[s].slice())){ if(!resurrect(s,id,li,"discard",{anyLoc:true})) break; n++; } if(n){ log(`Le Tombeau rend ${n} carte${n>1?"s":""} (${who(s)})`); sfx("void"); } } }); }
+  /* Prométhée : l'énergie non dépensée passe au tour suivant (10 maximum) */
+  if(S.turn<6) for(const s of ["p","e"]) if(unspent[s]>0&&S.board[s].some(col=>col.some(c=>live(c)&&c.id==="promethee"))){
+    const k=Math.min(10,unspent[s]); S.bonus[s]+=k; log(`Prométhée garde ${k} énergie en réserve (${who(s)})`); sfx("buff"); if(animate){ const li=S.board[s].findIndex(col=>col.some(c=>live(c)&&c.id==="promethee")); if(li>=0) FX.play("promethee",{li}); } }
   if(S.turn>=2&&S.turn<=4) aiOath();
   render(); await wait(300);
   for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) c.fresh=false;
@@ -1969,7 +2006,8 @@ function art(id,light){
 }
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
-  return `<div class="full ${extra}${d.r==="U"?" holo":""}">${art(id)}<span class="cost">${d.cost}</span>
+  const fx=/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
+  return `<div class="full ${extra}${d.r==="U"?" holo":""}${fx}">${art(id)}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${R.n}</span></div>${d.fx?`<div class="e">${d.fx}</div>`:""}</div>
     <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }
@@ -2038,14 +2076,14 @@ let ulLater=false, deckRename=false;
 function histHTML(){ if(!P.hist||!P.hist.length) return `<section class="sec"><h2>Historique</h2><p class="hint">Aucune partie enregistrée pour l'instant. Les 5 dernières apparaîtront ici.</p></section>`;
   const ago=t=>{ const m=Math.round((Date.now()-t)/6e4); return m<1?"à l'instant":m<60?`il y a ${m} min`:m<1440?`il y a ${Math.round(m/60)} h`:`il y a ${Math.round(m/1440)} j`; };
   return `<section class="sec quests hist"><div class="qhead"><h2>Les 5 dernières parties</h2></div>${P.hist.map(h=>`<div class="hrow ${h.res}"><span class="hmode">${esc(h.mode)}</span><span class="hmain"><span><b>${h.res==="win"?"Victoire":h.res==="lose"?"Défaite":"Égalité"}</b> · ${esc(h.sc)} · ${esc(h.opp)}</span><small>${esc(h.deck)} · ${ago(h.t)}</small></span></div>`).join("")}</section>`; }
-function pruneUL(){ let m=""; for(const u of ULS) if(P.deck.includes(u.id)&&!u.req.every(r=>hasReq(P.deck,r))){ P.deck=P.deck.filter(x=>x!==u.id); m=`${CARDS[u.id].name} a quitté le deck : elle exige ${u.n}.`; } return m; }
+function pruneUL(){ let m=""; for(const u of ULS) if(P.deck.includes(u.id)&&!ulOk(u,P.deck)){ P.deck=P.deck.filter(x=>x!==u.id); m=`${CARDS[u.id].name} a quitté le deck : elle exige ${u.n}.`; } return m; }
 function ulHTML(){
   if(ulLater||screen==="play") return "";
-  const u=ULS.find(u=>REL(u.id)&&!P.owned.includes(u.id)&&u.req.every(r=>hasReq(P.owned,r))); if(!u) return "";
+  const u=ULS.find(u=>REL(u.id)&&!P.owned.includes(u.id)&&ulOk(u,P.owned)); if(!u) return "";
   return `<div class="veil"><div class="result ulpop" role="dialog" aria-label="Ultra-légendaire">
-    <div class="eyebrow">Fusion disponible</div><h2>${CARDS[u.id].name}</h2>
+    <div class="eyebrow">${u.fac?"Ultra-légendaire de faction":"Fusion disponible"}</div><h2>${CARDS[u.id].name}</h2>
     <div class="ulcard">${fullCard(u.id)}</div>
-    <p class="hint">Tu possèdes ${u.n}. Leur fusion ultra-légendaire t'attend.</p>
+    <p class="hint">${u.fac?`Ta collection compte assez de cartes ${FAC[u.fac].n}. ${CARDS[u.id].name} rejoint ta faction.`:`Tu possèdes ${u.n}. Leur fusion ultra-légendaire t'attend.`}</p>
     <button class="primary" data-act="ulclaim" data-id="${u.id}">Réclamer la carte</button><button class="ghost" data-act="ullater">Plus tard</button></div></div>`;
 }
 function fanIds(){
@@ -2463,6 +2501,7 @@ function render(){
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+packOpenHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
   document.body.classList.toggle("hasdock",screen!=="play");
   document.body.classList.toggle("inplay",screen==="play");
+  setTimeout(()=>FX.decorate(app),30);
   translateDOM(app);
   const h=document.querySelector(".handwrap"); if(h) h.scrollLeft=hs;
   music();
@@ -2470,6 +2509,15 @@ function render(){
 }
 
 /* ======= INTERACTIONS ======= */
+/* Inclinaison et reflet qui suivent le doigt sur une légendaire ou ultra-légendaire en grand */
+let tiltEl=null;
+const tiltReset=()=>{ if(tiltEl){ tiltEl.style.setProperty("--rx","0deg"); tiltEl.style.setProperty("--ry","0deg"); tiltEl.style.setProperty("--glow","0"); tiltEl=null; } };
+document.addEventListener("pointermove",e=>{ const el=e.target.closest&&e.target.closest(".full.tilt");
+  if(el!==tiltEl) tiltReset(); if(!el||matchMedia("(prefers-reduced-motion: reduce)").matches) return; tiltEl=el;
+  const r=el.getBoundingClientRect(), x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+  el.style.setProperty("--ry",((x-.5)*20).toFixed(1)+"deg"); el.style.setProperty("--rx",((.5-y)*20).toFixed(1)+"deg");
+  el.style.setProperty("--mx",(x*100).toFixed(0)+"%"); el.style.setProperty("--my",(y*100).toFixed(0)+"%"); el.style.setProperty("--glow","1"); },{passive:true});
+["pointerup","pointercancel"].forEach(t=>document.addEventListener(t,e=>{ if(e.pointerType!=="mouse") tiltReset(); }));
 document.addEventListener("pointerdown", ()=>{ if(!bgmArmed){ bgmArmed=true; music(); } });
 document.addEventListener("visibilitychange", ()=>{ if(document.hidden&&bgm) bgm.pause(); else music(); });
 document.addEventListener("pointerdown", e=>{
@@ -2548,7 +2596,7 @@ document.addEventListener("click", e=>{
     case "toggle": { const id=el.dataset.id;
       const clash=P.deck.find(x=>x!==id&&charOf(x)===charOf(id)&&!(["yarden","yarden_d"].includes(x)&&["yarden","yarden_d"].includes(id)));
       if(P.deck.includes(id)){ P.deck=P.deck.filter(x=>x!==id); deckMsg=pruneUL(); sfx("undo"); }
-      else if(ULof(id)&&!ULof(id).req.every(r=>hasReq(P.deck,r))){ deckMsg=`${CARDS[id].name} exige ${ULof(id).n} dans le deck.`; sfx("debuff"); }
+      else if(ULof(id)&&!ulOk(ULof(id),P.deck)){ deckMsg=`${CARDS[id].name} exige ${ULof(id).n} dans le deck.`; sfx("debuff"); }
       else if(ULof(id)&&P.deck.some(x=>ULof(x))){ deckMsg=`Une seule ultra-légendaire par deck : retire d'abord ${CARDS[P.deck.find(x=>ULof(x))].name}.`; sfx("debuff"); }
       else if(clash){ deckMsg=`Une seule version par personnage : retire d'abord ${CARDS[clash].name}.`; sfx("debuff"); }
       else if(P.deck.length<ECO.deckSize){ P.deck.push(id); deckMsg=""; sfx("select"); }
