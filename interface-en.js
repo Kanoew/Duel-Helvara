@@ -304,6 +304,7 @@
     [/^Dès le (.+)$/, (m,d)=>`From ${d}`],
     [/^Disponible jusqu'au (.+)$/, (m,d)=>`Available until ${d}`],
     [/^Du (.+) au (.+)$/, (m,a,b)=>`From ${a} to ${b}`],
+    [/^Victoire \+(\d+) · égalité \+(\d+) · défaite \+(\d+) CHF$/, (m,w,d,l)=>`Win +${w} · draw +${d} · loss +${l} CHF`],
     [/^Victoire \+(\d+) · égalité \+(\d+) · défaite \+(\d+) CHF · collection (\d+)\/(\d+)$/, (m,w,d,l,a,b)=>`Win +${w} · draw +${d} · loss +${l} CHF · collection ${a}/${b}`],
     [/^Trois cartes au choix chaque jour, à prix fixe : (\d+) CHF la Rare, (\d+) CHF l'Épique\. Les cartes que tu n'as pas passent en priorité\.$/, (m,r,e)=>`Three cards to choose from each day, at a fixed price: ${r} CHF for a Rare, ${e} CHF for an Epic. Cards you don't own come first.`],
     [/^(\d+) CHF · il en manque (\d+)$/, (m,p,n)=>`${p} CHF · ${n} short`],

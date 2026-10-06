@@ -517,11 +517,11 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .dock button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dock button[aria-current]{color:var(--frost);background:var(--lake)}
 .dock button.pulse{color:var(--warm);box-shadow:inset 0 0 0 1px var(--warm);animation:pulse 1.6s ease-in-out infinite}
-body.hasdock{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+body.hasdock .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom))} /* le corps a une hauteur fixe : la marge va sur le contenu */
 @media (min-width:900px){
   .dock{top:0;right:auto;width:104px;grid-template-columns:none;grid-auto-rows:min-content;align-content:center;gap:8px;border-top:0;border-right:1px solid var(--line);padding:12px 8px}
   .dock button{padding:10px 2px;font-size:11.5px}
-  body.hasdock{padding-bottom:24px;padding-left:120px}
+  body.hasdock{padding-left:120px} body.hasdock .wrap{padding-bottom:24px}
 }
 @media (prefers-reduced-motion: reduce){ .dock button.pulse{animation:none} }
 .sheet{width:min(460px,100%);max-height:88vh;overflow:auto;display:flex;flex-direction:column;gap:12px;background:var(--deep);border:1px solid var(--line);border-radius:16px;padding:16px}
@@ -536,6 +536,25 @@ body.hasdock{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 /* le premier écran tient sans défiler : la vitrine rétrécit sur les petits écrans */
 .vitrinewrap .fan{max-width:min(520px,calc((100svh - 390px)*1.4))}
 
+
+/* partie : tout tient sur un écran, le plateau suit la hauteur disponible */
+body.inplay{padding-block:8px 16px}
+body.inplay .wrap{gap:8px}
+body.inplay .status{flex-wrap:nowrap;gap:10px}
+body.inplay .side{--mh:clamp(44px,min(17vw,calc((100dvh - 500px)/4)),96px)}
+body.inplay .loc{min-height:92px}
+.subbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+.subbar .pilesbar{margin:0}
+@media (max-width:480px){ body.inplay .elab{display:none} body.inplay .endbtn{padding:10px 14px} }
+@media (max-height:820px){ body.inplay .hc{width:68px} body.inplay .loc{min-height:84px} body.inplay .info{min-height:0;padding:7px 10px} body.inplay .info .t{font-size:15px} body.inplay .info .m{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden} }
+.collbar{display:flex;flex-direction:column;gap:8px;background:var(--deep);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.collbar .qt{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-size:17px}
+.collbar .qt b{color:var(--warm);font-variant-numeric:tabular-nums}
+.collbar .progress{height:10px;border-radius:5px}
+/* accueil : la vitrine profite de toute la hauteur visible, l'espace restant se répartit autour d'elle */
+body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
+.wrap > .vitrinewrap{margin-block:auto}
+.vitrinewrap .fan{max-width:min(520px,calc((100dvh - 390px)*1.4))}
 </style>
 
 <div class="wrap" id="app"></div>
@@ -1790,9 +1809,11 @@ let sheet=null; /* "quests" ou "settings" : panneau ouvert depuis l'en-tête */
 const questReady=()=>{ if(ensureQuests()) save(); return P.q.list.some(q=>!q.c&&q.p>=QDEF[q.id].n); };
 function header(){
   const ready=questReady();
+  const icons=`<button class="helpbtn icobtn${ready?" dot":""}" data-act="sheet" data-s="quests" aria-label="Quêtes du jour">${ico("book")}</button><button class="helpbtn icobtn" data-act="sheet" data-s="settings" aria-label="Réglages">${ico("gear")}</button><button class="helpbtn" data-act="go" data-to="rules" aria-label="Règles" ${screen==="rules"?'aria-current="page"':""}>?</button>`;
+  if(screen==="play") return `<header class="top"><button class="back" data-act="go" data-to="home">← Accueil</button><div class="topright">${icons}</div></header>`;
   return `<header class="top"><h1 class="brand">Duel d'Helvara<small>Le Sang de Tiamat${season()?` · ${SEASON[season()].sub}`:""}</small></h1>
-    <div class="topright"><button class="helpbtn icobtn${ready?" dot":""}" data-act="sheet" data-s="quests" aria-label="Quêtes du jour">${ico("book")}</button><button class="helpbtn icobtn" data-act="sheet" data-s="settings" aria-label="Réglages">${ico("gear")}</button><button class="helpbtn" data-act="go" data-to="rules" aria-label="Règles" ${screen==="rules"?'aria-current="page"':""}>?</button></div></header>
-    ${screen==="play"?`<div class="navrow"><button class="back" data-act="go" data-to="home">← Accueil</button></div>`:`<button class="idline" data-act="go" data-to="profile" aria-label="Voir mon profil">${avatarHTML("sm")}<span class="idname">${esc(P.name)}</span><span class="idrank">${rankIcon(P.lv,"sm")}<span>${rankName(P.lv)}</span></span><span class="chfchip">${P.chf} <small>CHF</small></span></button>`}`;
+    <div class="topright">${icons}</div></header>
+    <button class="idline" data-act="go" data-to="profile" aria-label="Voir mon profil">${avatarHTML("sm")}<span class="idname">${esc(P.name)}</span><span class="idrank">${rankIcon(P.lv,"sm")}<span>${rankName(P.lv)}</span></span><span class="chfchip">${P.chf} <small>CHF</small></span></button>`;
 }
 /* Menu principal : barre d'icônes en bas sur téléphone, colonne à gauche sur grand écran. */
 function dockHTML(){
@@ -1949,7 +1970,7 @@ function deckHTML(){
 
 /* --- boutique --- */
 function shopHTML(){
-  const owned=P.owned.length, tot=avail().length, lp=lastPack;
+  const av=avail(), owned=av.filter(id=>P.owned.includes(id)).length, tot=av.length, lp=lastPack;
   const missOf=pk=>pk.starter?1:PACK(pk.id).filter(id=>!P.owned.includes(id)&&pk.odds.some(o=>o[0]===CARDS[id].r)).length;
   const tiles=PACKS.filter(pk=>!(pk.starter&&P.starter)&&(inWin(pk.win)||soonWin(pk.win))).sort((a,b)=>(missOf(a)?0:1)-(missOf(b)?0:1)).map(pk=>{
     const miss=pk.starter?0:missOf(pk), done=!pk.starter&&!miss;
@@ -1974,8 +1995,9 @@ function shopHTML(){
   </section>`:""}
   ${stallHTML()}
   <div class="packs">${tiles}</div>
-  <div class="hint">Victoire +${ECO.win} · égalité +${ECO.draw} · défaite +${ECO.loss} CHF · collection ${owned}/${tot}</div>
-  <div class="progress"><i style="width:${Math.round(owned/tot*100)}%"></i></div>`;
+  <section class="collbar"><div class="qt"><span>Collection</span><b>${owned} / ${tot}</b></div>
+    <div class="progress"><i style="width:${Math.round(owned/tot*100)}%"></i></div>
+    <div class="hint">Victoire +${ECO.win} · égalité +${ECO.draw} · défaite +${ECO.loss} CHF</div></section>`;
 }
 
 /* --- ouverture de pack --- */
@@ -2214,12 +2236,11 @@ function gameHTML(){
   return `
   <div class="status">
     <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>
-    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div>énergie${S.disc.p?` · <span style="color:#9fe0b0">prochaine carte −${S.disc.p}</span>`:""}${S.bonus.p?` · <span style="color:#9fe0b0">+${S.bonus.p} au prochain tour</span>`:""}</div>
+    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span>${S.disc.p?` · <span style="color:#9fe0b0">prochaine carte −${S.disc.p}</span>`:""}${S.bonus.p?` · <span style="color:#9fe0b0">+${S.bonus.p} au prochain tour</span>`:""}</div>
     ${oathOK()&&S.oath==null&&!S.busy?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
-    ${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}
     ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn" data-act="end" ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
   </div>
-  ${pilesHTML()}
+  <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${pilesHTML()}</div>
   ${aiOathBar()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.jpg?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
@@ -2261,6 +2282,7 @@ function render(){
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+packOpenHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
   document.body.classList.toggle("hasdock",screen!=="play");
+  document.body.classList.toggle("inplay",screen==="play");
   translateDOM(app);
   const h=document.querySelector(".handwrap"); if(h) h.scrollLeft=hs;
   music();
