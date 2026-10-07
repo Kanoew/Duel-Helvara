@@ -732,6 +732,11 @@ const CARDS = {
   styx:    {name:"Styx", vfx:"styx", cost:4, pow:2, fac:"jugement", r:"L", rel:"2026-11-15", soon:"2026-11-10", fx:"Continu : Nike et Bia ont +3 où qu'elles soient. Tes cartes Jugement ici ne peuvent pas être détruites.", img:"images/styx.jpg"},
   nike:    {name:"Nike", vfx:"nike", cost:3, pow:1, fac:"jugement", r:"U", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : +2 pour chaque autre carte que tu as jouée avant elle ce tour. Exige 8 cartes Jugement dans le deck, Nike comprise.", img:"images/nike.jpg"},
   hel_r:   {name:"Hel, Reine du Réveillon", base:"hel", cost:5, pow:2, fac:"primordial", r:"E", rel:"2026-12-31", soon:"2026-12-26", ex:"nouvelan", fx:"Révélation : ressuscite ici ta carte défaussée la plus chère, avec sa Révélation.", img:"images/hel_r.jpg"},
+  eos_r:   {name:"Éos de Nouvel An", base:"eos", cost:2, pow:1, fac:"jugement", r:"E", rel:"2026-12-31", soon:"2026-12-26", ex:"nouvelan", fx:"Révélation : pioche 1 carte, 2 si Perséphone est de ton côté. Ta prochaine carte coûte 1 de moins.", img:"images/eos_r.jpg"},
+  pele_r:  {name:"Pele du Réveillon", base:"pele", cost:5, pow:3, fac:"primordial", r:"E", rel:"2026-12-31", soon:"2026-12-26", ex:"nouvelan", fx:"Révélation : le feu d'artifice éclate dans les 3 lieux. −2 à la carte adverse la plus forte de chaque lieu.", img:"images/pele_r.jpg"},
+  qetesh_r:{name:"Qetesh du Nouvel An", base:"qetesh", cost:5, pow:2, fac:"desir", r:"E", rel:"2026-12-31", soon:"2026-12-26", ex:"nouvelan", fx:"Révélation : la carte adverse la plus forte ici (5 ou moins) est charmée. +1 à tes autres cartes ici.", img:"images/qetesh_r.jpg"},
+  ulpele_r:{name:"Pele X Jordan du Réveillon", vfx:"ulpele_r", cost:6, pow:4, fac:"primordial", r:"U", rel:"2026-12-31", soon:"2026-12-26", fx:"Révélation : la lave inflige −2 à toutes les cartes adverses, dans les 3 lieux. Exige Pele et Jordan dans le deck.", img:"images/ulpele_r.jpg"},
+  ulqetjor_r:{name:"Qetesh X Jordan du Nouvel An", base:"ulqetjor", vfx:"ulqetjor_r", cost:6, pow:4, fac:"desir", r:"U", rel:"2026-12-31", soon:"2026-12-26", fx:"Continu : tes autres cartes ont +1, dans les 3 lieux. Révélation : charme la carte adverse la plus forte de chaque lieu (3 ou moins). Exige Qetesh du Nouvel An et Jordan dans le deck.", img:"images/ulqetjor_r.jpg"},
   reflet:  {name:"Reflet", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par le Lac Ouchy.", img:"", token:true},
   illusion:{name:"Illusion", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Kitsune.", img:"", token:true},
   lanterne:{name:"Lanterne", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par Dame Joanna.", img:"images/lanterne.jpg?v=7", token:true},
@@ -814,7 +819,8 @@ const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike com
   {id:"ulaph",req:[["aphrodite","aphrodite_n"],"yarden"],n:"Aphrodite et Yarden Weiss"},{id:"ulcal",req:[["calypso","calypso_n"],["jordan","jordan_n"]],n:"Calypso et Jordan"},{id:"ulnem",req:["nemesis",["jordan","jordan_n"]],n:"Nemesis et Jordan"},
   {id:"ulcirce",req:[["nyx","nyx_h"],"circe"],n:"Nyx et Circé"},{id:"uloshun",req:[["nyx","nyx_h"],"oshun"],n:"Nyx et Oshun"},
   {id:"ulqetjor",req:["qetesh",["jordan","jordan_n"]],n:"Qetesh et Jordan"},{id:"ulqetyar",req:["qetesh","yarden"],n:"Qetesh et Yarden Weiss"},
-  {id:"ulhel",req:[["hel","hel_r"],"baldur"],n:"Hel et Baldur"}];
+  {id:"ulhel",req:[["hel","hel_r"],"baldur"],n:"Hel et Baldur"},
+  {id:"ulpele_r",req:[["pele","pele_r"],["jordan","jordan_n"]],n:"Pele et Jordan"},{id:"ulqetjor_r",req:["qetesh_r",["jordan","jordan_n"]],n:"Qetesh du Nouvel An et Jordan"}];
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
 const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, Psyché, Amaterasu, La Mère de Cendre… et la première ultra-légendaire, Yarden X Apsu."},
   {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."},
@@ -848,7 +854,7 @@ function season(){ for(const id of ["nouvelan","halloween","noel"]){ /* le Nouve
 const SEASON={
   halloween:{sub:"Nuit des Citrouilles",who:"Joueur d'Helvara · nuit d'Halloween",eyebrow:"Nuit des Citrouilles · jusqu'au 2 novembre",title:"Le voile est mince à Helvara",hint:"Les citrouilles brûlent sur les quais. Le Pli des Citrouilles cache Dame Joanna, et Morrigan, Nyx, Izzy, Yarden, Arès, Nergal et Médée dans leurs versions d'Halloween.",btn:"Ouvrir le Pli des Citrouilles",win:"Victoire sous la lune rousse",lose:"Les morts ont gagné cette nuit"},
   noel:{sub:"Veillée de l'Étoile",who:"Joueur d'Helvara · veillée de Noël",eyebrow:"Veillée de l'Étoile · jusqu'au 2 janvier",title:"La neige tombe sur Helvara",hint:"Les vignes sont blanches et le lac retient son souffle. Le Pli de l'Étoile cache Aphrodite, Sekhmet, Calypso et Apsu dans leurs versions de Noël.",btn:"Ouvrir le Pli de l'Étoile",win:"Victoire sous l'Étoile",lose:"La nuit d'hiver l'emporte"},
-  nouvelan:{sub:"Nuit du Douzième Coup",who:"Joueur d'Helvara · nuit du Réveillon",eyebrow:"Nuit du Douzième Coup · jusqu'au 18 janvier",title:"Minuit sonne sur Helvara",hint:"La cathédrale compte les coups et les morts écoutent. Le Pli du Douzième Coup cache Hel dans sa version du Réveillon.",btn:"Ouvrir le Pli du Douzième Coup",win:"Victoire au dernier coup",lose:"L'année est partie sans toi"}
+  nouvelan:{sub:"Nuit du Douzième Coup",who:"Joueur d'Helvara · nuit du Réveillon",eyebrow:"Nuit du Douzième Coup · jusqu'au 18 janvier",title:"Minuit sonne sur Helvara",hint:"La cathédrale compte les coups et les morts écoutent. Le Pli du Douzième Coup cache Hel, Éos, Pele et Qetesh dans leurs versions du Réveillon.",btn:"Ouvrir le Pli du Douzième Coup",win:"Victoire au dernier coup",lose:"L'année est partie sans toi"}
 };
 function inWin(w){ if(!w) return true; const d=md(); return w[0]<=w[1]?(d>=w[0]&&d<=w[1]):(d>=w[0]||d<=w[1]); }
 function frDate(m){ const [mm,dd]=m.split("-"); return LANG==="en"?`${MONTHS[+mm-1]} ${+dd}`:`${+dd===1?"1er":+dd} ${MONTHS[+mm-1]}`; }
@@ -1202,6 +1208,8 @@ const FX=(()=>{
     ulcirce:  {loc:[["vortex",{col:["90,200,120","180,120,255","210,255,200"]}]], screen:[["dust",{col:"170,255,190"}]], tint:"15,30,25"},
     uloshun:  {loc:[["rise",{c1:"240,200,90",c2:"120,80,10",rings:5,c3:"255,240,200"}]], screen:[["dust",{col:GOLD}],["rain",{col:"255,215,130"}]], tint:"50,35,0"},
     ulqetjor: {loc:[["rays",{col:"255,170,200"}]], screen:[["petals",{col:["255,180,200","255,220,230"]}]], tint:"50,10,30"},
+    ulpele_r: {loc:[["rise",{c1:"230,70,15",c2:"90,5,0",h:.5,c3:"255,190,100"}],["burst",{col:["255,90,30","255,190,80","255,240,200"],up:true,n:40}],["flicker",{col:"255,140,40",y:.7}]], screen:[["embers",{col:["255,210,100","255,80,20"]}]], tint:"50,10,0"},
+    ulqetjor_r:{loc:[["rays",{col:"255,215,140"}],["sparkle",{col:"255,230,170"}]], screen:[["bubbles",{}]], tint:"45,30,5"},
     ulqetyar: {loc:[["rise",{c1:"255,120,30",c2:"120,10,0",h:.5,c3:"255,200,120"}],["burst",{col:["255,120,40","255,200,90"],up:true}]], screen:[["embers",{col:["255,200,90","255,80,20"]}]], tint:"50,10,0"},
     ulhel:    {loc:[["rays",{col:"255,240,200"}],["smoke",{col:"150,190,230"}]], screen:[["snow",{}]], tint:"20,30,50"},
     styx:     {loc:[["rise",{c1:"60,70,90",c2:"5,8,14",h:.55,c3:"190,150,255",rings:4}],["sparkle",{col:"180,230,220",n:10}]]},
@@ -1371,7 +1379,7 @@ function cardPow(s,li,c){
     if(c.id==="ulqetyar") for(let i=0;i<3;i++){ const f=S.board[s][i].filter(o=>o.rev).map(o=>CARDS[o.id].fac); if(f.includes("desir")&&f.includes("primordial")) p+=3; }
     if(c.id==="yarden_d") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&o.rev&&CARDS[o.id].fac==="primordial"&&!CARDS[o.id].token) p+=2;
   }
-  for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&live(o)&&o.id==="ulqetjor") p+=1;
+  for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&live(o)&&(o.id==="ulqetjor"||o.id==="ulqetjor_r")) p+=1;
   if(locIs(li,"domaine")&&JPARTNERS.has(c.id)) p+=2;
   if(!shielded(s,li)&&!sunlit(s)&&!noWeak(c)&&!(c.id==="baldur"&&!c.neg)) p-=S.board[opp(s)][li].filter(o=>live(o)&&o.id==="hathor").length;
   if(locIs(li,"tour") && d.pow>=5 && !d.token) p+=2;
@@ -1540,6 +1548,10 @@ function revealFx(s,li,c){
     case "biblio": if(S.hand[s].length<S.hand[o].length){ draw(s); note="pioche 1 carte"; } break;
     case "ereshkigal": { const vs=foes.filter(x=>pw(o,li,x)<=3); if(vs.length){ S.board[o][li]=S.board[o][li].filter(x=>!vs.includes(x)); S.destroyed+=vs.length; vs.forEach(x=>bury(o,x)); if(o==="e") S.killE=(S.killE||0)+vs.length; note=`détruit ${vs.length} carte${vs.length>1?"s":""}`; snd="destroy"; } break; }
     case "pele": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li]) if(x!==c&&x.rev&&weaken(side,li,x,2)) n++; if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
+    case "pele_r": { let n=0; for(let i=0;i<3;i++){ const t=strongest(S.board[o][i].filter(x=>x.rev&&!untargetable(s,o,x)),o,i); if(t&&weaken(o,i,t,2)) n++; } if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
+    case "ulpele_r": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,2)) n++; if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
+    case "qetesh_r": { const t=strongest(targets.filter(x=>pw(o,li,x)<=5&&!x.charm),o,li); if(t){ t.charm=s; note=`charme ${nm(t)}`; } let n=0; for(const x of mates){ x.pow+=1; n++; } if(n) note=(note?note+", ":"")+`+1 à ${n} carte${n>1?"s":""}`; if(note) snd="void"; break; }
+    case "ulqetjor_r": { let n=0; for(let i=0;i<3;i++){ const t=strongest(S.board[o][i].filter(x=>x.rev&&!x.charm&&!untargetable(s,o,x)&&pw(o,i,x)<=3),o,i); if(t){ t.charm=s; n++; } } if(n){ note=`charme ${n} carte${n>1?"s":""}`; snd="void"; } break; }
     case "ares": { let n=0; for(const x of targets) if(weaken(o,li,x,1)) n++; if(n){ c.pow+=n; note=`−1 à ${n}, +${n}`; snd="debuff"; } break; }
     case "nergal": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
     case "rusalka": { const t=weakest(targets,o,li); if(t&&pw(o,li,t)<=2&&destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } break; }
@@ -1567,7 +1579,7 @@ function revealFx(s,li,c){
     case "anat": { const t=weakest(mates,s,li); if(t){ const v=pw(s,li,t); if(destroy(s,li,t)){ c.pow+=v; note=`détruit ${nm(t)} (+${v})`; snd="destroy"; } } break; }
     case "bastet": { mates.forEach(x=>x.pow+=2); if(mates.length){ note=`+2 à ${mates.length} carte${mates.length>1?"s":""}`; snd="buff"; } break; }
     case "artemis": { const t=weakest(targets,o,li); if(t&&weaken(o,li,t,2)){ note=`−2 à ${nm(t)}`; snd="debuff"; } if(onSide(s,"izzy")||onSide(s,"izzy_h")) buffSelf(2); break; }
-    case "eos": { const n=onSide(s,"persephone")?2:1; for(let i=0;i<n;i++) draw(s); note=`pioche ${n} carte${n>1?"s":""}`; break; }
+    case "eos": case "eos_r": { const n=onSide(s,"persephone")?2:1; for(let i=0;i<n;i++) draw(s); note=`pioche ${n} carte${n>1?"s":""}`; if(c.id==="eos_r"){ S.disc[s]=Math.max(S.disc[s],1); note+=", prochaine carte −1"; } break; }
     case "thot": { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,2)){ note=`−2 à ${nm(t)}`; snd="debuff"; } break; }
     case "persephone": if(S.locs[li].rev&&!S.locs[li].stopped){ S.locs[li].stopped=true; note="l'effet du lieu s'arrête"; snd="lock"; } break;
     case "skadi": { const pool=[]; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&!shielded(o,i)) pool.push([i,x]);
@@ -1590,7 +1602,7 @@ function revealFx(s,li,c){
 }
 
 /* ======= IA ======= */
-const HITS=["bia","circe","ulcirce","qetesh","poseidon","uloshun","tyr","medee","medee_h","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","susanoo","calypso","chasseur","maree","set","andraste","ulaph","ulnem"];
+const HITS=["bia","circe","ulcirce","qetesh","qetesh_r","pele_r","ulpele_r","ulqetjor_r","poseidon","uloshun","tyr","medee","medee_h","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","susanoo","calypso","chasseur","maree","set","andraste","ulaph","ulnem"];
 const NEEDS_MATES=["oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
 function aiPlan(){
   if(S.tut){ return (TUT.plays[S.turn]||[]).map(([id,li])=>({c:S.hand.e.find(x=>x.id===id),li})).filter(x=>x.c); }

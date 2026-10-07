@@ -145,7 +145,7 @@ Autres réglages selon le type de carte :
 | 1er nov. | Vague de novembre (Nemesis, Anubis, Médée, la Voleuse…), 3 fusions |
 | **15 nov.** (annonce le 10) | **Vague « énergie »** : Prométhée (L, Primordial), Pandore (E, Désir), Athéna (E), Bia (R), Styx (L), **Nike** (U de faction, Jugement) |
 | 1er déc. | Vague de décembre : 17 cartes, 5 fusions, lieux Domaine du Créateur et Tombeau, jetons Mjölnir, Ombre, Pourceau |
-| 31 déc. → 18 janv. | Paquet « Pli du Douzième Coup », Hel Reine du Réveillon |
+| 31 déc. → 18 janv. | Paquet « Pli du Douzième Coup » (annonce le 26 déc.) : Hel Reine du Réveillon, Éos de Nouvel An, Pele du Réveillon, Qetesh du Nouvel An (toutes `ex:"nouvelan"`) + fusions Pele X Jordan du Réveillon (`ulpele_r`) et Qetesh X Jordan du Nouvel An (`ulqetjor_r`, exige `qetesh_r`) |
 
 **Thème de la vague du 15 novembre** :
 - Prométhée garde l'énergie non dépensée (10 maximum).
@@ -158,7 +158,6 @@ Autres réglages selon le type de carte :
 
 ## En attente
 
-- Effets de **Pele du Réveillon** et d'**Éos de Nouvel An** (Jordan les donnera).
 - Musique `audio/accueil_nouvelan.mp3` (optionnelle).
 - Fin octobre : faire le point sur les rangs (série de victoires) et sur Mohini. Surveiller le combo Lip Dentelle → Hel.
 - Mi-novembre : surveiller le deck Jugement « énergie ». Leviers : bonus de Styx à +2, réserve de Prométhée à 6.

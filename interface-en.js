@@ -76,6 +76,7 @@
     [/^pioche 1$/, ()=>"draws 1"],
     [/^le reflux emporte (\d+) cartes?$/, (m,n)=>`the ebb tide takes ${n} ${s(n,"card")}`],
     [/^(\d+) Pourceaux?$/, (m,n)=>`${n} Swine`],
+    [/^charme (\d+) cartes?$/, (m,n)=>`charms ${n} ${s(n,"card")}`],
     [/^charme (.+)$/, (m,a)=>`charms ${a}`],
     [/^empoisonne (.+) et (.+)$/, (m,a,b)=>`poisons ${a} and ${b}`],
     [/^empoisonne (.+)$/, (m,a)=>`poisons ${a}`],
@@ -404,7 +405,7 @@
       SEASON:{
         halloween:{sub:"Pumpkin Night",who:"Player of Helvara · Halloween night",eyebrow:"Pumpkin Night · until November 2",title:"The veil is thin in Helvara",hint:"Pumpkins burn along the quays. The Pumpkin Fold hides Lady Joanna, and Morrigan, Nyx, Izzy, Yarden, Ares, Nergal and Medea in their Halloween versions.",btn:"Open the Pumpkin Fold",win:"Victory under the russet moon",lose:"The dead won tonight"},
         noel:{sub:"Star Vigil",who:"Player of Helvara · Christmas Eve",eyebrow:"Star Vigil · until January 2",title:"Snow falls on Helvara",hint:"The vineyards are white and the lake holds its breath. The Star Fold hides Aphrodite, Sekhmet, Calypso and Apsu in their Christmas versions.",btn:"Open the Star Fold",win:"Victory under the Star",lose:"The winter night prevails"},
-        nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel in her New Year's Eve version.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
+        nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel, Eos, Pele and Qetesh in their New Year's Eve versions.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
       },
       DROPS:{
         nov15:"Prometheus keeps the fire, Pandora opens the box, Athena guides your hand, and Styx watches over her daughters: Bia, and Nike, the first faction ultra-legendary. 8 Judgement cards are enough to get her.",
@@ -412,7 +413,7 @@
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."
       },
-      ULS:{nike:"8 Judgement cards, Nike included",ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur"}
+      ULS:{nike:"8 Judgement cards, Nike included",ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur",ulpele_r:"Pele and Jordan",ulqetjor_r:"Qetesh of the New Year and Jordan"}
     }
   };
 })();
