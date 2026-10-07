@@ -69,6 +69,7 @@ window.HELVARA_EN = {
     athena:{n:"Athena", fx:"On Reveal: put the most expensive of the top 3 cards of your deck into your hand."},
     bia:{fx:"On Reveal: your opponent loses their stored energy. If they had none, −1 to their strongest card here."},
     pandore:{n:"Pandora", fx:"On Reveal: spend all your remaining energy. +1 for each energy spent."},
+    styx:{fx:"Ongoing: Nike and Bia have +3 wherever they are. Your Judgement cards here can't be destroyed."},
     nike:{fx:"On Reveal: +2 for each other card you played before her this turn. Requires 8 Judgement cards in the deck, Nike included."},
     ulya:{fx:"Costs 1 less for each other card in your hand. On Reveal: +1 for each card left in your hand. Requires Yarden Weiss and Apsu in the deck."},
     morrigan_h:{n:"Morrigan, Halloween Witch", fx:"On Reveal: draw 2 cards, then discard the most expensive card in your hand."},

@@ -729,6 +729,7 @@ const CARDS = {
   athena:  {name:"Athéna", cost:2, pow:2, fac:"jugement", r:"E", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : prends en main la plus chère des 3 premières cartes de ton deck.", img:"images/athena.jpg"},
   bia:     {name:"Bia", cost:3, pow:3, fac:"jugement", r:"R", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : l'adversaire perd son énergie conservée. S'il n'en avait pas, −1 à sa carte la plus forte ici.", img:"images/bia.jpg"},
   pandore: {name:"Pandore", cost:3, pow:1, fac:"desir", r:"E", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : dépense toute l'énergie qu'il te reste. +1 par énergie dépensée.", img:"images/pandore.jpg"},
+  styx:    {name:"Styx", vfx:"styx", cost:4, pow:2, fac:"jugement", r:"L", rel:"2026-11-15", soon:"2026-11-10", fx:"Continu : Nike et Bia ont +3 où qu'elles soient. Tes cartes Jugement ici ne peuvent pas être détruites.", img:"images/styx.jpg"},
   nike:    {name:"Nike", vfx:"nike", cost:3, pow:1, fac:"jugement", r:"U", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : +2 pour chaque autre carte que tu as jouée avant elle ce tour. Exige 8 cartes Jugement dans le deck, Nike comprise.", img:"images/nike.jpg"},
   hel_r:   {name:"Hel, Reine du Réveillon", base:"hel", cost:5, pow:2, fac:"primordial", r:"E", rel:"2026-12-31", soon:"2026-12-26", ex:"nouvelan", fx:"Révélation : ressuscite ici ta carte défaussée la plus chère, avec sa Révélation.", img:"images/hel_r.jpg"},
   reflet:  {name:"Reflet", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par le Lac Ouchy.", img:"", token:true},
@@ -817,7 +818,7 @@ const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike com
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
 const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, Psyché, Amaterasu, La Mère de Cendre… et la première ultra-légendaire, Yarden X Apsu."},
   {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."},
-  {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée garde le feu, Pandore ouvre la boîte, Athéna, Bia… et Nike, la première ultra-légendaire de faction : 8 cartes Jugement suffisent pour l'obtenir."},
+  {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée garde le feu, Pandore ouvre la boîte, Athéna guide ta main, et Styx veille sur ses filles : Bia, et Nike, la première ultra-légendaire de faction. 8 cartes Jugement suffisent pour l'obtenir."},
   {id:"dec26",rel:"2026-12-01",soon:"2026-11-26",hint:"Odin, Thor, Hel, Baldur, Hadès, Poséidon, Circé, Qetesh, les gens de Lausanne… cinq nouvelles fusions, le Domaine du Créateur et le Tombeau."}];
 const hasReq=(list,r)=>Array.isArray(r)?r.some(x=>list.includes(x)):list.includes(r);
 const ULof=id=>ULS.find(u=>u.id===id);
@@ -1203,6 +1204,7 @@ const FX=(()=>{
     ulqetjor: {loc:[["rays",{col:"255,170,200"}]], screen:[["petals",{col:["255,180,200","255,220,230"]}]], tint:"50,10,30"},
     ulqetyar: {loc:[["rise",{c1:"255,120,30",c2:"120,10,0",h:.5,c3:"255,200,120"}],["burst",{col:["255,120,40","255,200,90"],up:true}]], screen:[["embers",{col:["255,200,90","255,80,20"]}]], tint:"50,10,0"},
     ulhel:    {loc:[["rays",{col:"255,240,200"}],["smoke",{col:"150,190,230"}]], screen:[["snow",{}]], tint:"20,30,50"},
+    styx:     {loc:[["rise",{c1:"60,70,90",c2:"5,8,14",h:.55,c3:"190,150,255",rings:4}],["sparkle",{col:"180,230,220",n:10}]]},
     promethee:{loc:[["burst",{col:["255,150,50","255,200,90","255,240,200"],up:true,n:36}],["flicker",{col:"255,140,40",y:.7}]]},
     nike:     {loc:[["rays",{col:"255,215,140"}],["rings",{col:"255,220,150",n:3}]], screen:[["petals",{col:["240,200,120","45,40,48","255,230,170"],thin:true}],["rain",{col:"200,215,240"}],["dust",{col:GOLD}]], tint:"20,25,45"},
     /* lieux, à leur révélation */
@@ -1364,6 +1366,7 @@ function cardPow(s,li,c){
     if(c.id==="freya" && hasHere(s,li,"freyr")) p+=4;
     if(c.id==="selene" && S.turn>=5) p+=3;
     if(c.id==="nergal" && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="ereshkigal"))) p+=3; /* continu */
+    if((c.id==="nike"||c.id==="bia") && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="styx"))) p+=3; /* Styx veille sur ses filles */
     if(c.id==="fange") p+=S.discarded||0;
     if(c.id==="ulqetyar") for(let i=0;i<3;i++){ const f=S.board[s][i].filter(o=>o.rev).map(o=>CARDS[o.id].fac); if(f.includes("desir")&&f.includes("primordial")) p+=3; }
     if(c.id==="yarden_d") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&o.rev&&CARDS[o.id].fac==="primordial"&&!CARDS[o.id].token) p+=2;
@@ -1415,7 +1418,9 @@ let SRC=null;
 const baldurSafe=(s,c)=>c.id==="baldur"&&!c.neg&&!(SRC&&(SRC.s===s||SRC.cost<=2));
 const noWeak=c=>((c.id==="ecorche"||c.id==="jordan")&&!c.neg)||c.noweak||c.ward; /* l'Écorché, Jordan, le Tatoueur, Hel X Baldur */
 function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)||baldurSafe(s,c)) return false; c.pow-=n; return true; }
-function destroy(s,li,c){ if(shielded(s,li)||c.ward||baldurSafe(s,c)) return false; S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.destroyed++; bury(s,c); if(s==="e") S.killE=(S.killE||0)+1; return true; }
+/* Styx : les cartes Jugement de son côté, dans son lieu, ne peuvent pas être détruites */
+const styxSafe=(s,li,c)=>CARDS[c.id]&&CARDS[c.id].fac==="jugement"&&S.board[s][li].some(x=>live(x)&&x.id==="styx");
+function destroy(s,li,c){ if(shielded(s,li)||c.ward||baldurSafe(s,c)||styxSafe(s,li,c)) return false; S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.destroyed++; bury(s,c); if(s==="e") S.killE=(S.killE||0)+1; return true; }
 const nm=c=>CARDS[c.id].name;
 /* Cartes qui forment une Fusion avec Jordan (Domaine du Créateur) */
 const JPARTNERS=new Set((()=>{ const out=[]; for(const u of ULS) if(u.req.some(r=>[].concat(r).some(x=>charOf(x)==="jordan"))) for(const r of u.req) for(const x of [].concat(r)) if(charOf(x)!=="jordan") out.push(x); return out; })());
@@ -1679,7 +1684,7 @@ async function resolveTurn(mine, theirs, animate){
     const rifts=[0,1,2].filter(li=>locIs(li,"faille"));
     if(animate&&rifts.length){ rifts.forEach(li=>FX.play("faille_open",{li})); await wait(1150); rifts.forEach(li=>FX.play("faille_close",{li})); }
     S.locs.forEach((L,li)=>{ if(locIs(li,"faille")){
-      for(const s of ["p","e"]){ const arr=S.board[s][li].filter(c=>c.rev&&!(c.id==="uzume"&&!c.neg)&&!baldurSafe(s,c)&&!c.ward); if(!arr.length) continue;
+      for(const s of ["p","e"]){ const arr=S.board[s][li].filter(c=>c.rev&&!(c.id==="uzume"&&!c.neg)&&!baldurSafe(s,c)&&!c.ward&&!styxSafe(s,li,c)); if(!arr.length) continue;
         const w=arr.sort((a,b)=>cardPow(s,li,a)-cardPow(s,li,b))[0];
         if(destroy(s,li,w)){ log(`La Faille détruit ${nm(w)} (${who(s)})`); sfx("destroy"); } }
     }});
