@@ -10,6 +10,9 @@
 
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
+    [/^dépense (\d+) énergie, \+(\d+)$/, (m,a,b)=>`spends ${a} energy, +${b}`],
+    [/^prend (.+) en main$/, (m,a)=>a==="une carte"?"takes a card into hand":`takes ${a} into hand`],
+    [/^l'adversaire perd son énergie conservée$/, ()=>"the opponent loses their stored energy"],
     [/^\+1 à (.+), encre indélébile$/, (m,a)=>`+1 to ${a}, permanent ink`],
     [/^défausse (.+), pioche 2$/, (m,a)=>`discards ${a}, draws 2`],
     [/^\+1 énergie au prochain tour$/, ()=>"+1 energy next turn"],
@@ -404,7 +407,7 @@
         nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel in her New Year's Eve version.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
       },
       DROPS:{
-        nov15:"Prometheus, who keeps the fire in reserve, and Nike, the first faction ultra-legendary: 8 Judgement cards are enough to get her.",
+        nov15:"Prometheus keeps the fire, Pandora opens the box, Athena, Bia… and Nike, the first faction ultra-legendary: 8 Judgement cards are enough to get her.",
         dec26:"Odin, Thor, Hel, Baldur, Hades, Poseidon, Circe, Qetesh, the people of Lausanne… five new fusions, the Creator's Domain and the Tomb.",
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."

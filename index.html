@@ -726,6 +726,9 @@ const CARDS = {
   ulqetyar:{name:"Qetesh X Yarden", vfx:"ulqetyar", cost:6, pow:3, fac:"desir", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Continu : +3 par lieu où tu as à la fois une carte Désir et une carte Primordiale. Exige Qetesh et Yarden Weiss dans le deck.", img:"images/ulqetyar.jpg"},
   ulhel:   {name:"Hel X Baldur", vfx:"ulhel", cost:6, pow:3, fac:"primordial", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ressuscite tes cartes défaussées dans des lieux au hasard, sans Révélation. Elles ne peuvent être ni détruites ni affaiblies. Exige Hel et Baldur dans le deck.", img:"images/ulhel.jpg"},
   promethee:{name:"Prométhée", vfx:"promethee", cost:1, pow:1, fac:"primordial", r:"L", rel:"2026-11-15", soon:"2026-11-10", fx:"Continu : l'énergie que tu ne dépenses pas est conservée au tour suivant (10 maximum).", img:"images/promethee.jpg"},
+  athena:  {name:"Athéna", cost:2, pow:2, fac:"jugement", r:"E", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : prends en main la plus chère des 3 premières cartes de ton deck.", img:"images/athena.jpg"},
+  bia:     {name:"Bia", cost:3, pow:3, fac:"jugement", r:"R", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : l'adversaire perd son énergie conservée. S'il n'en avait pas, −1 à sa carte la plus forte ici.", img:"images/bia.jpg"},
+  pandore: {name:"Pandore", cost:3, pow:1, fac:"desir", r:"E", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : dépense toute l'énergie qu'il te reste. +1 par énergie dépensée.", img:"images/pandore.jpg"},
   nike:    {name:"Nike", vfx:"nike", cost:3, pow:1, fac:"jugement", r:"U", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : +2 pour chaque autre carte que tu as jouée avant elle ce tour. Exige 8 cartes Jugement dans le deck, Nike comprise.", img:"images/nike.jpg"},
   hel_r:   {name:"Hel, Reine du Réveillon", base:"hel", cost:5, pow:2, fac:"primordial", r:"E", rel:"2026-12-31", soon:"2026-12-26", ex:"nouvelan", fx:"Révélation : ressuscite ici ta carte défaussée la plus chère, avec sa Révélation.", img:"images/hel_r.jpg"},
   reflet:  {name:"Reflet", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par le Lac Ouchy.", img:"", token:true},
@@ -814,7 +817,7 @@ const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike com
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
 const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, Psyché, Amaterasu, La Mère de Cendre… et la première ultra-légendaire, Yarden X Apsu."},
   {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."},
-  {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée, qui garde le feu en réserve, et Nike, la première ultra-légendaire de faction : 8 cartes Jugement suffisent pour l'obtenir."},
+  {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée garde le feu, Pandore ouvre la boîte, Athéna, Bia… et Nike, la première ultra-légendaire de faction : 8 cartes Jugement suffisent pour l'obtenir."},
   {id:"dec26",rel:"2026-12-01",soon:"2026-11-26",hint:"Odin, Thor, Hel, Baldur, Hadès, Poséidon, Circé, Qetesh, les gens de Lausanne… cinq nouvelles fusions, le Domaine du Créateur et le Tombeau."}];
 const hasReq=(list,r)=>Array.isArray(r)?r.some(x=>list.includes(x)):list.includes(r);
 const ULof=id=>ULS.find(u=>u.id===id);
@@ -1473,6 +1476,11 @@ function revealFx(s,li,c){
     case "vritra": S.locs[li].locked=true; note="le lieu est verrouillé"; snd="lock"; break;
     case "yarden": if([0,1,2].every(i=>S.board[s][i].length>0)) buffSelf(4); break;
     case "nyx": { const t=strongest(foes,o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.destroyed++; bury(o,t); if(o==="e") S.killE=(S.killE||0)+1; note=`détruit ${nm(t)}`; snd="void"; } break; }
+    case "pandore": { const k=(S.unspent&&S.unspent[s])||0; if(k){ S.unspent[s]=0; buffSelf(k); note=`dépense ${k} énergie, +${k}`; } break; }
+    case "athena": { const top=S.deck[s].slice(0,3); if(top.length&&S.hand[s].length<7){ const t=top.sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; S.deck[s].splice(S.deck[s].indexOf(t),1); S.hand[s].push(t); note=s==="p"?`prend ${nm(t)} en main`:"prend une carte en main"; } break; }
+    case "bia": { const res=(S.bonus[o]||0)>0||((S.unspent&&S.unspent[o])>0&&S.board[o].some(col=>col.some(x=>live(x)&&x.id==="promethee")));
+      if(res){ S.bonus[o]=0; if(S.biaBlock) S.biaBlock[o]=true; note="l'adversaire perd son énergie conservée"; snd="debuff"; }
+      else { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Bia"}); note=`−1 à ${nm(t)}`; snd="debuff"; } } break; }
     case "nike": { const k=Math.max(0,((S.turnPlays&&S.turnPlays[s])||[]).indexOf(c)); if(k) buffSelf(2*k); break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(6); snd=foes.length?"void":snd; break; }
     case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
@@ -1577,7 +1585,7 @@ function revealFx(s,li,c){
 }
 
 /* ======= IA ======= */
-const HITS=["circe","ulcirce","qetesh","poseidon","uloshun","tyr","medee","medee_h","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","susanoo","calypso","chasseur","maree","set","andraste","ulaph","ulnem"];
+const HITS=["bia","circe","ulcirce","qetesh","poseidon","uloshun","tyr","medee","medee_h","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","susanoo","calypso","chasseur","maree","set","andraste","ulaph","ulnem"];
 const NEEDS_MATES=["oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
 function aiPlan(){
   if(S.tut){ return (TUT.plays[S.turn]||[]).map(([id,li])=>({c:S.hand.e.find(x=>x.id===id),li})).filter(x=>x.c); }
@@ -1611,6 +1619,7 @@ function aiPlan(){
       if(c.id==="nemesis") sc+=(diff>0&&diff<12)?5:-6;
       if(c.id==="mouche") sc-=mates;
       if(c.id==="nike") sc+=plays.length*2-3;
+      if(c.id==="pandore") sc+=(en-cost)-2;
       if(sc>bs){ bs=sc; best={li,cost}; }
     }
     if(best){ plays.push({c,li:best.li}); en-=best.cost; pend[best.li]++; first=false; }
@@ -1631,7 +1640,7 @@ async function resolveTurn(mine, theirs, animate){
   S.busy=true; S.sel=null; S.info=null; S.staged=[];
   /* Prométhée : énergie non dépensée ; Nike : ordre dans lequel chaque joueur a posé ses cartes (l'IA garde Nike pour la fin) */
   const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0)),0);
-  const unspent={p:Math.max(0,S.energy-spent("p",mine)),e:Math.max(0,S.energyE-spent("e",theirs))};
+  const unspent=S.unspent={p:Math.max(0,S.energy-spent("p",mine)),e:Math.max(0,S.energyE-spent("e",theirs))}; S.biaBlock={p:false,e:false};
   S.turnPlays={p:mine.map(x=>x.c),e:(S.mp?theirs:[...theirs.filter(x=>x.c.id!=="nike"),...theirs.filter(x=>x.c.id==="nike")]).map(x=>x.c)};
   S.hand.p=S.hand.p.filter(c=>!mine.some(x=>x.c===c));
   for(const x of theirs) S.hand.e=S.hand.e.filter(c=>c!==x.c);
@@ -1685,7 +1694,7 @@ async function resolveTurn(mine, theirs, animate){
   if(S.turn===6&&animate){ const tb=[0,1,2].filter(li=>locIs(li,"tombeau")); if(tb.length){ tb.forEach(li=>FX.play("tombeau_rise",{li})); await wait(700); } }
   if(S.turn===6){ piles(); S.locs.forEach((L,li)=>{ if(locIs(li,"tombeau")) for(const s of ["p","e"]){ let n=0; for(const id of gShuffle(S.discardPile[s].slice())){ if(!resurrect(s,id,li,"discard",{anyLoc:true})) break; n++; } if(n){ log(`Le Tombeau rend ${n} carte${n>1?"s":""} (${who(s)})`); sfx("void"); } } }); }
   /* Prométhée : l'énergie non dépensée passe au tour suivant (10 maximum) */
-  if(S.turn<6) for(const s of ["p","e"]) if(unspent[s]>0&&S.board[s].some(col=>col.some(c=>live(c)&&c.id==="promethee"))){
+  if(S.turn<6) for(const s of ["p","e"]) if(unspent[s]>0&&!S.biaBlock[s]&&S.board[s].some(col=>col.some(c=>live(c)&&c.id==="promethee"))){
     const k=Math.min(10,unspent[s]); S.bonus[s]+=k; log(`Prométhée garde ${k} énergie en réserve (${who(s)})`); sfx("buff"); if(animate){ const li=S.board[s].findIndex(col=>col.some(c=>live(c)&&c.id==="promethee")); if(li>=0) FX.play("promethee",{li}); } }
   if(S.turn>=2&&S.turn<=4) aiOath();
   render(); await wait(300);
