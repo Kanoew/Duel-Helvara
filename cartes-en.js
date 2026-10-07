@@ -146,7 +146,7 @@ window.HELVARA_EN = {
     eos_r:{n:"Eos of the New Year", fx:"On Reveal: draw 1 card, 2 if Persephone is on your side. Your next card costs 1 less."},
     pele_r:{n:"Pele of New Year's Eve", fx:"On Reveal: the fireworks burst in all 3 locations. −2 to the strongest enemy card in each location."},
     qetesh_r:{n:"Qetesh of the New Year", fx:"On Reveal: the strongest enemy card here (5 or less) is charmed. +1 to your other cards here."},
-    ulpele_r:{n:"Pele X Jordan of New Year's Eve", fx:"On Reveal: the lava deals −2 to every enemy card, in all 3 locations. Requires Pele and Jordan in the deck."},
+    ulpele_r:{n:"Pele X Jordan of New Year's Eve", fx:"On Reveal: the lava deals −1 to every enemy card, in all 3 locations. Requires Pele and Jordan in the deck."},
     ulqetjor_r:{n:"Qetesh X Jordan of the New Year", fx:"Ongoing: your other cards have +1, in all 3 locations. On Reveal: charm the strongest enemy card in each location (3 or less). Requires Qetesh of the New Year and Jordan in the deck."},
     reflet:{n:"Reflection", fx:"Token left by Lake Ouchy."},
     illusion:{n:"Illusion", fx:"Token left by Kitsune."},
