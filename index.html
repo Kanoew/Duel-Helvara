@@ -1365,6 +1365,13 @@ function aiDeck(t,full){
   const by=pool.slice().sort((a,b)=>sc[b]-sc[a]); const deck=[];
   for(const [c,n] of [[1,2],[2,3],[3,3],[4,2],[5,1],[6,1]]) by.filter(id=>CARDS[id].cost===c&&!deck.includes(id)).slice(0,n).forEach(id=>deck.push(id));
   for(const id of by){ if(deck.length>=ECO.deckSize) break; if(!deck.includes(id)) deck.push(id); }
+  /* deck à thème : une carte d'une synergie connue amène son partenaire, s'il est permis à ce palier */
+  const inPool=new Set(pool), paired=id=>deck.some(x=>x!==id&&((AI_PREP[x]||[]).includes(id)||(AI_PREP[id]||[]).includes(x)));
+  const weakest=()=>{ let k=-1; deck.forEach((x,i)=>{ if(!paired(x)&&(k<0||sc[x]<sc[deck[k]])) k=i; }); return k; };
+  for(const id of deck.slice()){ const mates=[...(AI_PREP[id]||[]),...(AI_PAY[id]||[]).map(p=>p.a)].filter(x=>inPool.has(x)&&!deck.some(y=>charOf(y)===charOf(x)));
+    if(mates.length&&!paired(id)){ const k=weakest(); if(k>=0&&deck[k]!==id) deck[k]=mates[0]; } }
+  /* palier 4 et plus : une ultra-légendaire si le deck remplit ses conditions */
+  if(t>=4){ for(const u of shuffle(ULS.filter(u=>REL(u.id)))){ if(!ulOk(u,deck)) continue; const need=new Set(u.req.flat()); let k=-1; deck.forEach((x,i)=>{ if(!need.has(x)&&!paired(x)&&CARDS[x].fac!==u.fac&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k<0) deck.forEach((x,i)=>{ if(!need.has(x)&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k>=0){ const was=deck[k]; deck[k]=u.id; if(ulOk(u,deck)) break; deck[k]=was; } } }
   return {deck:deck.slice(0,ECO.deckSize),fac};
 }
 function newGame(){
@@ -1712,51 +1719,100 @@ function revealFx(s,li,c,opts={}){
 const HITS=["bia","circe","ulcirce","qetesh","qetesh_r","pele_r","ulpele_r","ulqetjor_r","poseidon","uloshun","tyr","medee_h","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
 const DESTROYERS=new Set(["anat","anubis","boucher","durga","ereshkigal","esquille","ficelle","izzy_h","lilith","maree","nergal_h","nyx","nyx_h","rusalka","sekhmet","sekhmet_n","troll","ulnem","uloshun","yarden_d"]);
 const NEEDS_MATES=["susanoo","ulaph","oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
-function aiPlan(){
-  if(S.tut){ return (TUT.plays[S.turn]||[]).map(([id,li])=>({c:S.hand.e.find(x=>x.id===id),li})).filter(x=>x.c); }
-  let en=S.energyE, first=true; const plays=[], pend=[0,0,0];
-  const t=S.aiTier||0, noise=[4.5,3.8,3,2.5,1.8,1.2,0.8][t];
-  const diffs=[0,1,2].map(li=>total("p",li)-total("e",li));
-  const focus=[0,1,2].filter(li=>!S.locs[li].locked).sort((a,b)=>diffs[a]-diffs[b]).slice(0,2);
-  const hand=[...S.hand.e].sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost);
-  for(const c of hand){
-    let best=null, bs=-1e9; const d=CARDS[c.id];
-    for(let li=0;li<3;li++){
-      if(S.locs[li].locked||muted("e",li)||S.board.e[li].length+pend[li]>=capOf("e",li)) continue;
-      const cost=costOf("e",c,li,first); if(cost>en) continue;
-      const diff=total("p",li)-total("e",li);
-      let sc=-Math.abs(diff-2)*0.6+Math.random()*noise;
-      if(t>=3 && S.turn>=4 && diff>9) sc-=4;
-      if(t>=4 && focus.includes(li)) sc+=2;
-      const foes=S.board.p[li].filter(x=>x.rev).length, mates=S.board.e[li].filter(x=>x.rev).length;
-      if(HITS.includes(c.id)) sc+=foes?4:-3;
-      if(NEEDS_MATES.includes(c.id)) sc+=mates?3:-3;
-      if(c.id==="aphrodite") sc+=S.board.e[li].some(x=>replayable(x)&&CARDS[x.id].fac==="desir")?3:-3;
-      if(c.id==="messagere") sc+=diff>0?2:-1;
-      if(locIs(li,"cirque")&&S.turn<4) sc+=d.pow<=2?3:-2;
-      if(locIs(li,"encheres")&&d.cost<=3) sc+=1.5;
-      if(locIs(li,"sauvabelin")&&DESTROYERS.has(c.id)) sc-=4;
-      if(locIs(li,"escaliers")&&d.fac==="helvara") sc+=2.5;
-      if((c.id==="hermes"||c.id==="susanoo")&&[0,1,2].some(i=>i!==li&&locIs(i,"flon"))) sc+=2;
-      if(c.id==="vritra") sc+=diff<0?4:-2;
-      if(c.id==="maeve") sc+=diff<0?3:0;
-      if(c.id==="morrigan") sc+=Math.abs(diff)<=2?2:0;
-      if(c.id==="sekhmet") sc+=S.board.p[li].filter(x=>x.rev&&cardPow("p",li,x)<=2).length*2-mates;
-      if(c.id==="freya"&&S.board.e[li].some(x=>x.id==="freyr")) sc+=5;
-      if(c.id==="freyr"&&S.board.e[li].some(x=>x.id==="freya")) sc+=4;
-      if(locIs(li,"tour") && d.pow>=5) sc+=3;
-      if(locIs(li,"sousgare")||locIs(li,"archives")) sc+=1;
-      if(locIs(li,"faille") && S.turn<=4 && d.pow<=2) sc-=3;
-      if(c.id==="yarden" && !S.board.e[li].length) sc+=3;
-      if(c.id==="nemesis") sc+=(diff>0&&diff<12)?5:-6;
-      if(c.id==="mouche") sc-=mates;
-      if(c.id==="nike") sc+=plays.length*2-3;
-      if(c.id==="pandore") sc+=(en-cost)-2;
-      if(sc>bs){ bs=sc; best={li,cost}; }
-    }
-    if(best){ plays.push({c,li:best.li}); en-=best.cost; pend[best.li]++; first=false; }
+/* Synergies connues de l'IA : [carte qui prépare, cartes qui en profitent, 1 si elles doivent partager le lieu] */
+const AI_PAIRS=[["yarden",["apsu","apsu_n","yarden_d"]],["freyr",["freya"],1],["freya",["freyr"],1],["ereshkigal",["nergal"]],["amaterasu",["susanoo"]],["izzy",["artemis"]],
+  ["thot",["costumes"]],["persephone",["eos","eos_r"]],["hecate",["medee","medee_h"]],["styx",["nike","bia"]],["promethee",["pandore"]]];
+const AI_PREP={}, AI_PAY={};
+for(const [a,bs,loc] of AI_PAIRS){ (AI_PREP[a]=AI_PREP[a]||[]).push(...bs); for(const x of bs) (AI_PAY[x]=AI_PAY[x]||[]).push({a,loc:!!loc}); }
+/* Cartes adverses qui visent la plus forte : l'IA évite alors de tout miser sur une seule grosse carte */
+const AI_WARY=new Set(["nyx","nyx_h","durga","oya","ixchel","lilith","anubis","izzy_h","uloshun","ulnem","qetesh","qetesh_r","mohini","thot","medee_h"]);
+/* L'IA compare toutes les combinaisons de sa main qui tiennent dans son énergie (128 au plus). Pour chacune, elle estime
+   la puissance ajoutée dans chaque lieu, puis sa probabilité de gagner 2 lieux sur 3 face à ce que l'adversaire peut encore poser.
+   me : côté joué ("e" par défaut, "p" pour les tests IA contre IA). Le bruit par palier brouille l'estimation des bas rangs. */
+function aiPlan(me="e",tierOv){
+  if(S.tut&&me==="e"){ return (TUT.plays[S.turn]||[]).map(([id,li])=>({c:S.hand.e.find(x=>x.id===id),li})).filter(x=>x.c); }
+  const op=opp(me), t=tierOv!=null?tierOv:(S.aiTier||0), noise=[3,2.4,1.8,1.4,1,.6,.3][t];
+  const en0=me==="e"?S.energyE:S.energy, hand=S.hand[me].slice(0,7);
+  if(!hand.length) return [];
+  const me0=[0,1,2].map(li=>total(me,li)), op0=[0,1,2].map(li=>total(op,li)), diffs=[0,1,2].map(li=>op0[li]-me0[li]);
+  const foesN=[0,1,2].map(li=>S.board[op][li].filter(x=>x.rev).length), matesN=[0,1,2].map(li=>S.board[me][li].filter(x=>x.rev).length);
+  const NZ=new Map(hand.map(c=>[c,[0,1,2].map(()=>(Math.random()*2-1)*noise)]));
+  const onBoard=id=>S.board[me].some(col=>col.some(x=>x.rev&&x.id===id));
+  piles();
+  const seen=[...S.board[op].flat().filter(x=>x.rev).map(x=>x.id),...S.graveyard[op],...S.discardPile[op]];
+  const wary=t>=2&&(seen.some(id=>AI_WARY.has(id))||(S.turn>=5&&S.hand[op].length>=4));
+  /* ce que chaque camp peut encore ajouter : ce tour-ci pour l'adversaire, les tours suivants pour les deux */
+  const open=s=>[0,1,2].map(li=>!S.locs[li].locked&&S.board[s][li].length<capOf(s,li));
+  const share=(s,from)=>{ const o=open(s), n=o.filter(Boolean).length||1; let e=0; for(let k=from;k<=6;k++) e+=k*.8; return o.map(x=>x?e/n:0); };
+  const opFut=share(op,S.turn), meFut=share(me,S.turn+1), sd=3+2.2*(6-S.turn);
+  /* une carte posée dans un lieu : coût, puissance estimée, puissance retirée à l'adversaire, petits ajustements */
+  const place=(c,li,ctx)=>{
+    const d=CARDS[c.id];
+    if(S.locs[li].locked||muted(me,li)||S.board[me][li].length+ctx.pend[li]>=capOf(me,li)) return null;
+    const cost=costOf(me,c,li,ctx.first); if(cost>ctx.en) return null;
+    const diff=diffs[li], foes=foesN[li], mates=matesN[li]+ctx.pend[li];
+    let pow=d.pow+NZ.get(c)[li], hit=0, adj=0;
+    if(locIs(li,"tour")&&d.pow>=5) pow+=2;
+    if(locIs(li,"encheres")) pow+=2;
+    if(locIs(li,"escaliers")&&d.fac==="helvara") pow+=2;
+    if(locIs(li,"domaine")&&JPARTNERS.has(c.id)) pow+=2;
+    if(HITS.includes(c.id)){ if(foes) hit+=2.5; else adj-=1; }
+    if(NEEDS_MATES.includes(c.id)) pow+=mates?2:-1;
+    if(c.id==="aphrodite") pow+=S.board[me][li].some(x=>replayable(x)&&CARDS[x.id].fac==="desir")?3:-2;
+    if(c.id==="messagere"&&diff>0) pow+=3;
+    if(locIs(li,"cirque")&&S.turn<4) pow+=d.pow<=2?2:-2;
+    if(locIs(li,"sauvabelin")&&DESTROYERS.has(c.id)) adj-=4;
+    if((c.id==="hermes"||c.id==="susanoo")&&[0,1,2].some(i=>i!==li&&locIs(i,"flon"))) pow+=1;
+    if(c.id==="vritra") adj+=diff<0?4:-2;
+    if(c.id==="maeve"&&diff<0) pow+=3;
+    if(c.id==="morrigan"&&Math.abs(diff)<=2) adj+=2;
+    if(c.id==="sekhmet"){ hit+=S.board[op][li].filter(x=>x.rev&&cardPow(op,li,x)<=2).reduce((a,x)=>a+cardPow(op,li,x),0); pow-=S.board[me][li].filter(x=>x.rev&&cardPow(me,li,x)<=2).reduce((a,x)=>a+cardPow(me,li,x),0); }
+    /* synergies : la carte qui en profite vaut plus si sa préparatrice est déjà là (ou posée avant elle ce tour) */
+    for(const p of (AI_PAY[c.id]||[])){ const ready=p.loc?(S.board[me][li].some(x=>x.id===p.a)||ctx.plays.some(x=>x.c.id===p.a&&x.li===li)):(onBoard(p.a)||ctx.plays.some(x=>x.c.id===p.a)); if(ready) pow+=3; }
+    if(AI_PREP[c.id]&&hand.some(x=>AI_PREP[c.id].includes(x.id))) adj+=1.5;
+    if(c.id==="brigid"&&hand.some(x=>x!==c&&CARDS[x.id].pow>=5)) adj+=1.5;
+    if(locIs(li,"faille")&&S.turn<=4&&d.pow<=2) pow-=d.pow;
+    if(c.id==="nemesis") adj+=(diff>0&&diff<12)?5:-6;
+    if(c.id==="mouche") pow-=mates;
+    if(c.id==="nike") pow+=ctx.plays.length*2;
+    if(c.id==="pandore") pow+=Math.max(0,ctx.en-cost);
+    if(wary&&d.pow>=6&&!S.board[me][li].length&&!ctx.pend[li]) adj-=1.5;
+    return {cost,pow,hit,adj};
+  };
+  /* ordre de pose : les préparatrices d'abord, Pandore et Nike en dernier, puis les plus chères */
+  const late=c=>c.id==="nike"||c.id==="pandore"?1:0, prepFor=(c,cs)=>(AI_PAY[c.id]||[]).some(p=>cs.some(x=>x.id===p.a))?1:0;
+  const order=cs=>cs.slice().sort((a,b)=>late(a)-late(b)||prepFor(a,cs)-prepFor(b,cs)||CARDS[b.id].cost-CARDS[a.id].cost);
+  const winP=(add,hit)=>{ const p=[0,1,2].map(li=>{ let m=me0[li]+add[li]+meFut[li]-(op0[li]-hit[li]+opFut[li]); if(nemInv(li)) m=-m; return 1/(1+Math.exp(-1.6*m/sd)); });
+    return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
+  /* simulation exacte d'un plan sur une copie de la partie (Révélations comprises), sans son ni journal visibles */
+  const sim=plays=>{ const keep=S, kq=quiet; let out=null;
+    try{ quiet=true; S=structuredClone(keep);
+      for(const {c,li} of plays){ const x=S.hand[me].find(y=>y.uid===c.uid); if(!x) continue; S.hand[me]=S.hand[me].filter(y=>y!==x); S.board[me][li].push(x); reveal(me,li,x); }
+      out={m:[0,1,2].map(li=>total(me,li)),o:[0,1,2].map(li=>total(op,li)),inv:[0,1,2].map(li=>nemInv(li))};
+    }catch(e){ out=null; } finally{ S=keep; quiet=kq; }
+    return out; };
+  const exactP=r=>{ const p=[0,1,2].map(li=>{ let m=r.m[li]+meFut[li]-(r.o[li]+opFut[li]); if(r.inv[li]) m=-m; return 1/(1+Math.exp(-1.6*m/sd)); });
+    return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
+  const cands=[];
+  for(let mask=0;mask<(1<<hand.length);mask++){
+    const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,plays:[],pend:[0,0,0]}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
+    for(const c of cs){ let bp=null;
+      /* chaque carte va là où elle fait le plus monter la probabilité de victoire */
+      for(let li=0;li<3;li++){ const r=place(c,li,ctx); if(!r) continue; add[li]+=r.pow; hit[li]+=r.hit; const v=winP(add,hit)*100+r.adj; add[li]-=r.pow; hit[li]-=r.hit; if(!bp||v>bp.v) bp={...r,li,v}; }
+      if(!bp){ ok=false; break; }
+      ctx.plays.push({c,li:bp.li}); ctx.en-=bp.cost; ctx.pend[bp.li]++; ctx.first=false; add[bp.li]+=bp.pow; hit[bp.li]+=bp.hit; adj+=bp.adj; }
+    if(!ok) continue;
+    let bonus=adj;
+    /* garder une carte pour plus tard : bonus aux tours 2 à 5 si elle attend sa préparation ou le tour 6 */
+    const kept=hand.filter(c=>!cs.includes(c));
+    if(S.turn>=2&&S.turn<=5&&kept.some(k=>(AI_PAY[k.id]||[]).some(p=>onBoard(p.a)||ctx.plays.some(x=>x.c.id===p.a))||(CARDS[k.id].cost>=6&&S.turn===5))) bonus+=3;
+    cands.push({plays:ctx.plays,bonus,est:winP(add,hit)*100+bonus});
   }
-  return plays;
+  /* les meilleures estimations sont rejouées pour de vrai sur une copie : le choix final se fait sur le résultat exact */
+  cands.sort((a,b)=>b.est-a.est);
+  let best=cands[0]||{plays:[]}, bv=-1e9;
+  for(const c of cands.slice(0,t>=4?40:t>=2?12:0)){ const r=sim(c.plays); const v=r?exactP(r)*100+c.bonus+(Math.random()*2-1)*noise*3:c.est; if(v>bv){ bv=v; best=c; } }
+  return best.plays;
 }
 
 /* ======= FIN DE TOUR ======= */
