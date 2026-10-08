@@ -160,11 +160,13 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 | Rare | halo bleu (contour + lueur intérieure) + reflet lent et pâle (9 s) | rien |
 | Épique | halo violet qui pulse + reflet vif toutes les 3,4 s (CSS : main, collection, boutique, grand format, paquets, vitrine) | gerbe d'étincelles de 0,8 s sur le lieu (`epic_<faction>` dans `MIX`) |
 | Légendaire | liseré doré + reflet doré + souffle lent et poussières dans l'illustration | effet `vfx` |
-| Ultra-légendaire | reflet holo + ambiance en boucle | effet `vfx` + cinématique de fusion |
+| Ultra-légendaire | reflet holo + ambiance en boucle | effet `vfx` + cinématique de fusion (vraies fusions) ou effet de pose de faction (Nike) |
 
 - Le liseré est un `outline` (une ombre intérieure passerait sous l'illustration). Plateau (miniatures) : liseré seul, sans animation. Grilles (collection, boutique) : halo épique fixe, pas de reflet sur les rares, souffle des légendaires réservé au grand format. `prefers-reduced-motion` coupe tout.
 - Une carte `.full` doit rester positionnée (`relative` ou `absolute`) : sinon son `overflow:hidden` ne rogne plus le reflet (bug de la vitrine d'accueil).
-- **Cinématique de fusion** : `fusionCine(id, côté)`, appelée dans `resolveTurn()` avant la Révélation d'une ultra-légendaire (1,45 s au plus, un toucher la saute). Les cartes sources viennent de `ULS[].req` (version présente dans le deck du joueur, sinon la première ; pour l'adversaire, la première). Nike : l'emblème du Jugement (SVG `EMB_SVG`) se brise. Locale, jamais jouée pendant une reprise de duel en ligne. Réglage `P.cine` (activé par défaut), dans Réglages.
+- **Cinématique de fusion** : `fusionCine(id, côté)`, appelée dans `resolveTurn()` avant la Révélation d'une ultra-légendaire de **fusion** seulement (entrée `ULS` avec des `req`) : 1,45 s au plus, un toucher la saute. Les cartes sources viennent de `ULS[].req` (version présente dans le deck du joueur, sinon la première ; pour l'adversaire, la première).
+- **Ultra-légendaires de faction** (`ULof(id).fac`) : jamais présentées comme une fusion (`rarN(id)` affiche « Ultra-légendaire de faction »). Leur effet de pose passe par `factionCine(id, côté, lieu)`, qui appelle `FACTION_CINE[id]`. Nike : `nikeCine`, « Les plumes de la Victoire » (une plume dorée par carte posée avant elle ce tour, d'après `S.turnPlays`, compteur +2 par plume, puis ailes et laurier ; ailes à moitié ouvertes et pâles si elle est jouée en premier). Dessin `nike_feathers` dans `FX`, 1,5 s au plus, un toucher la saute. Les futures ultra-légendaires de faction (Helvara, Désir, Primordial) ajouteront leur entrée dans `FACTION_CINE`.
+- Les deux cinématiques sont locales, jamais jouées pendant une reprise de duel en ligne, et suivent le réglage `P.cine` (activé par défaut, dans Réglages). Coupé ou mouvement réduit : Nike affiche seulement son compteur final, 0,8 s. Les miniatures du plateau portent `data-cu` (uid de la carte) pour que les effets les retrouvent.
 
 ## Calendrier du contenu
 
@@ -195,7 +197,6 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 
 ## En attente
 - À faire vérifier par Jordan en jouant (session du 8 octobre) : jonction de boucle des musiques, fondu vers la tension au tour 5, jingles de fin, curseurs de volume sur téléphone, ressenti de la nouvelle IA aux hauts rangs.
-- Emblème de Nike : dessin SVG provisoire (`EMB_SVG`), à remplacer si Jordan fournit une image.
 - Points du brainstorm pas encore traités : débloquer les modes au fur et à mesure (Serment au rang Initié, Blitz après 5 parties, fusions dès la première pièce) ; une piste de partie supplémentaire si besoin.
 
 - Musique `audio/accueil_nouvelan.mp3` (optionnelle).

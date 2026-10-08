@@ -608,8 +608,8 @@ body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
 .cine .res .art{position:absolute;inset:0}
 .cine .res span{position:absolute;left:0;right:0;bottom:0;padding:22px 8px 10px;font-family:var(--display);font-size:15px;text-align:center;background:linear-gradient(transparent,rgba(6,10,18,.94))}
 .cine .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
-.cine .emb{position:absolute;width:min(60vw,240px);aspect-ratio:1;opacity:0;filter:drop-shadow(0 0 18px rgba(150,190,255,.8))}
-.cine .emb svg{position:absolute;inset:0;width:100%;height:100%}
+.fcine{position:fixed;inset:0;z-index:8999;cursor:pointer;background:transparent;touch-action:manipulation}
+.fcount{position:fixed;z-index:9001;transform:translate(-50%,-100%);font-family:var(--display);font-size:26px;font-weight:700;color:#ffd78c;text-shadow:0 0 14px rgba(255,215,140,.85),0 2px 4px #000;pointer-events:none;transition:opacity .2s}
 .cine .skip{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);opacity:.7;pointer-events:none}
 </style>
 
@@ -1201,12 +1201,35 @@ const FX=(()=>{
     items=items.filter(it=>{ const p=(t-it.t0)/it.dur; if(p>=1) return false; try{ ctx.save(); it.draw(ctx,Math.max(0,p)); ctx.restore(); return true; }catch(e){ ctx.restore(); (window.__fxErr=window.__fxErr||[]).push(String(e)); return false; } });
     if(items.length||amb.length) raf=requestAnimationFrame(loop);
   }
-  const add=(dur,draw)=>{ items.push({t0:performance.now(),dur,draw}); if(!raf) raf=requestAnimationFrame(loop); };
+  const add=(dur,draw,tag)=>{ items.push({t0:performance.now(),dur,draw,tag}); if(!raf) raf=requestAnimationFrame(loop); };
   const locEl=li=>document.querySelector(`.loc[data-li="${li}"]`);
   const rect=el=>el&&el.getBoundingClientRect();
   const shake=(el,cls)=>{ if(!el||reduced()) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
   const ease=p=>1-Math.pow(1-p,3);
   const REG={
+    /* Nike, « Les plumes de la Victoire » : une plume dorée par carte jouée avant elle, puis deux ailes et un laurier */
+    nike_feathers({from,to,gap,flight,wingAt,total,pale,li}){
+      const G="255,215,140", J="170,200,255", fe=from.map((f,i)=>({...f,i,cx:(f.x+to.x)/2+(rnd()-.5)*90,cy:Math.min(f.y,to.y)-80-rnd()*70,sp:rnd()*6}));
+      const bz=(q,e)=>[(1-e)*(1-e)*q.x+2*(1-e)*e*q.cx+e*e*to.x,(1-e)*(1-e)*q.y+2*(1-e)*e*q.cy+e*e*to.y];
+      const leaf=(c,x,y,a,l,w)=>{ c.save(); c.translate(x,y); c.rotate(a); c.beginPath(); c.ellipse(l/2,0,l/2,w,0,0,7); c.fill(); c.restore(); };
+      add(total,(c,p)=>{ const t=p*total, r=rect(locEl(li)), fin=Math.max(0,Math.min(1,(total-t)/220));
+        if(r){ c.fillStyle=rgba(J,.14*Math.min(1,t/200)*fin); c.fillRect(r.left,r.top,r.width,r.height); }
+        for(const q of fe){ const k=(t-q.i*gap)/flight; if(k<0||k>1.2) continue; const e=ease(Math.min(1,k)), [x,y]=bz(q,e);
+          for(let j=1;j<=4;j++){ const [tx,ty]=bz(q,ease(Math.max(0,Math.min(1,k)-j*.05))); c.globalAlpha=Math.max(0,.4-j*.08); c.fillStyle=rgba(G,1); c.beginPath(); c.arc(tx,ty,2.4-j*.4,0,7); c.fill(); }
+          if(k<=1){ const [nx,ny]=bz(q,Math.min(1,e+.02)); c.save(); c.translate(x,y); c.rotate(Math.atan2(ny-y,nx-x)+Math.sin(t/90+q.sp)*.3);
+            const g=c.createLinearGradient(-13,0,13,0); g.addColorStop(0,rgba(G,0)); g.addColorStop(.55,rgba("255,242,205",1)); g.addColorStop(1,rgba(G,.95));
+            c.globalAlpha=1; c.fillStyle=g; c.beginPath(); c.ellipse(0,0,13,3.8,0,0,7); c.fill(); c.strokeStyle=rgba("255,250,232",.9); c.lineWidth=.8; c.beginPath(); c.moveTo(-13,0); c.lineTo(13,0); c.stroke(); c.restore(); }
+          else { const a=1-(k-1)/.2, R=26*(k-1)/.2+8, gr=c.createRadialGradient(to.x,to.y,0,to.x,to.y,R); gr.addColorStop(0,rgba("255,245,215",.8*a)); gr.addColorStop(1,rgba(G,0)); c.globalAlpha=1; c.fillStyle=gr; c.fillRect(to.x-R,to.y-R,R*2,R*2); } }
+        c.globalAlpha=1;
+        if(t>=wingAt){ const w=ease(Math.min(1,(t-wingAt)/360))*(pale?.5:1), A=(pale?.45:.9)*fin;
+          c.fillStyle=rgba(G,A);
+          for(const sd of [-1,1]) for(let f=0;f<6;f++){ const th=(-1.15+f*.3)*w, len=to.h*(.34+f*.05)*(.45+.55*w), bx=to.x+sd*to.w*.4, by=to.y-to.h*.08;
+            leaf(c,bx,by,Math.atan2(Math.sin(th),sd*Math.cos(th)),len,4.2-f*.35); }
+          if(!pale){ const lk=Math.min(1,(t-wingAt)/420), R=to.w*.36, cy=to.y-to.h*.5-R*.55, n=Math.floor(9*lk);
+            c.fillStyle=rgba("230,205,120",.95*fin);
+            for(let i=0;i<n;i++) for(const sd of [-1,1]){ const a=Math.PI/2+sd*(.5+i*.27), lx=to.x+Math.cos(a)*R, ly=cy+Math.sin(a)*R*.8; leaf(c,lx,ly,a+sd*Math.PI/2+sd*.5,9,2.6); } } }
+      },"nike_feathers");
+    },
     /* La Faille s'ouvre : fissure brûlante qui court sur le lieu, braises qui s'en échappent */
     faille_open({li}){
       const el=locEl(li); if(!el) return; shake(el,"fxshake");
@@ -1376,41 +1399,58 @@ const FX=(()=>{
       amb.push({cv,ctx:cv.getContext("2d"),dpr:d,w:r.width,h:r.height,t0:performance.now(),gens:M.screen.map(([k,o])=>SCREEN[k]({...o,W:r.width,H:r.height}))});
       if(!raf) raf=requestAnimationFrame(loop); });
   }
-  return { decorate(root){ try{ decorate(root); }catch(e){} }, play(key,arg){ try{ if(!ensure()) return; if(REG[key]) REG[key](arg||{}); else if(MIX[key]) mix({...(arg||{}),key}); }catch(e){ (window.__fxErr=window.__fxErr||[]).push(String(e)); } } };
+  return { stop(tag){ items=items.filter(it=>it.tag!==tag); }, decorate(root){ try{ decorate(root); }catch(e){} }, play(key,arg){ try{ if(!ensure()) return; if(REG[key]) REG[key](arg||{}); else if(MIX[key]) mix({...(arg||{}),key}); }catch(e){ (window.__fxErr=window.__fxErr||[]).push(String(e)); } } };
 })();
 /* Effet visuel d'une carte à sa Révélation : réservé aux légendaires et ultra-légendaires qui en ont un (champ vfx). */
 function cardVfx(id,li){ const d=CARDS[id]; if(!d) return; if(d.vfx&&(d.r==="L"||d.r==="U")) FX.play(d.vfx,{li,ultra:d.r==="U"}); else if(d.r==="E"&&!d.token) FX.play("epic_"+d.fac,{li,epic:true}); }
 /* Cinématique de fusion : les deux cartes sources se percutent et la fusion apparaît (1,5 s au plus, un toucher la saute).
-   Nike, sans cartes sources : l'emblème du Jugement se brise. Locale : elle ne touche ni l'état de la partie ni la synchro en ligne. */
-const EMB_SVG='<svg viewBox="0 0 100 100" fill="none" stroke="#d6e4ff" stroke-width="2.6" stroke-linecap="round"><circle cx="50" cy="50" r="46" stroke-width="3"/><circle cx="50" cy="16" r="3.4"/><path d="M50 19v62M36 84h28M20 30h60"/><path d="M20 30l-9 24h18zM80 30l-9 24h18z"/><path d="M10 54q10 11 19 0M71 54q10 11 19 0"/></svg>';
+   Réservée aux vraies fusions (entrée ULS avec des req). Locale : elle ne touche ni l'état de la partie ni la synchro en ligne. */
 function fusionCine(id,s){
   return new Promise(done=>{
     if(typeof Element.prototype.animate!=="function"||matchMedia("(prefers-reduced-motion: reduce)").matches){ done(); return; }
     const u=ULof(id), dk=(S&&S.blitz&&P.bz&&P.bz.run)?P.bz.run.deck:P.deck;
     const srcs=(u&&u.req||[]).map(r=>{ const ids=[].concat(r); return (s==="p"&&ids.find(x=>dk.includes(x)))||ids[0]; }).filter(x=>CARDS[x]);
-    const nike=srcs.length<2, nm=x=>CARDS[x].name;
-    const ov=document.createElement("div"); ov.className="cine"; ov.setAttribute("aria-hidden","true");
-    ov.innerHTML=(nike?`<div class="emb"><div class="h1" style="position:absolute;inset:0;clip-path:polygon(0 0,52% 0,46% 22%,54% 45%,47% 70%,52% 100%,0 100%)">${EMB_SVG}</div><div class="h2" style="position:absolute;inset:0;clip-path:polygon(52% 0,100% 0,100% 100%,52% 100%,47% 70%,54% 45%,46% 22%)">${EMB_SVG}</div></div>`
-      :srcs.map((x,i)=>`<div class="cc ${i?"r":"l"}" style="left:50%;top:50%">${art(x)}<span>${nm(x)}</span></div>`).join(""))
+    if(srcs.length<2){ done(); return; }
+    const nm=x=>CARDS[x].name, ov=document.createElement("div"); ov.className="cine"; ov.setAttribute("aria-hidden","true");
+    ov.innerHTML=srcs.map((x,i)=>`<div class="cc ${i?"r":"l"}" style="left:50%;top:50%">${art(x)}<span>${nm(x)}</span></div>`).join("")
       +`<div class="res" style="left:50%;top:50%">${art(id)}<span>${nm(id)}</span></div><div class="flash"></div><div class="skip">${trUI("Touche pour passer")}</div>`;
     document.body.appendChild(ov);
     const anims=[], A=(el,kf,o)=>{ if(el) anims.push(el.animate(kf,{fill:"both",...o})); };
-    const T="translate(-50%,-50%)", q=sel=>ov.querySelector(sel);
-    const resAt=nike?650:600;
-    if(nike){
-      A(q(".emb"),[{opacity:0,transform:`${T} scale(.6)`},{opacity:1,transform:`${T} scale(1)`,offset:.3},{opacity:1,transform:`${T} scale(1.06)`,offset:.45},{opacity:0,transform:`${T} scale(1.2)`}],{duration:900,easing:"ease-out"});
-      A(q(".emb .h1"),[{transform:"translate(0,0) rotate(0)"},{transform:"translate(0,0) rotate(0)",offset:.5},{transform:"translate(-22%,6%) rotate(-14deg)"}],{duration:900});
-      A(q(".emb .h2"),[{transform:"translate(0,0) rotate(0)"},{transform:"translate(0,0) rotate(0)",offset:.5},{transform:"translate(22%,6%) rotate(14deg)"}],{duration:900});
-      q(".emb").style.left="50%"; q(".emb").style.top="50%";
-    } else {
-      A(q(".cc.l"),[{transform:`${T} translateX(-72vw) rotate(-9deg)`,opacity:1},{transform:`${T} translateX(-9vw) rotate(0)`,opacity:1,offset:.8},{transform:`${T} translateX(-3vw) scale(1.12)`,opacity:0}],{duration:700,easing:"cubic-bezier(.5,0,.9,.6)"});
-      A(q(".cc.r"),[{transform:`${T} translateX(72vw) rotate(9deg)`,opacity:1},{transform:`${T} translateX(9vw) rotate(0)`,opacity:1,offset:.8},{transform:`${T} translateX(3vw) scale(1.12)`,opacity:0}],{duration:700,easing:"cubic-bezier(.5,0,.9,.6)"});
-    }
+    const T="translate(-50%,-50%)", q=sel=>ov.querySelector(sel), resAt=600;
+    A(q(".cc.l"),[{transform:`${T} translateX(-72vw) rotate(-9deg)`,opacity:1},{transform:`${T} translateX(-9vw) rotate(0)`,opacity:1,offset:.8},{transform:`${T} translateX(-3vw) scale(1.12)`,opacity:0}],{duration:700,easing:"cubic-bezier(.5,0,.9,.6)"});
+    A(q(".cc.r"),[{transform:`${T} translateX(72vw) rotate(9deg)`,opacity:1},{transform:`${T} translateX(9vw) rotate(0)`,opacity:1,offset:.8},{transform:`${T} translateX(3vw) scale(1.12)`,opacity:0}],{duration:700,easing:"cubic-bezier(.5,0,.9,.6)"});
     A(q(".flash"),[{opacity:0},{opacity:.95,offset:.3},{opacity:0}],{duration:420,delay:resAt-150});
     A(q(".res"),[{opacity:0,transform:`${T} scale(.55)`},{opacity:1,transform:`${T} scale(1)`}],{duration:380,delay:resAt,easing:"cubic-bezier(.2,.9,.3,1.2)"});
     A(ov,[{opacity:1},{opacity:0}],{duration:150,delay:1300});
     let over=false; const end=()=>{ if(over) return; over=true; clearTimeout(tm); anims.forEach(a=>{ try{ a.cancel(); }catch(e){} }); ov.remove(); done(); };
     const tm=setTimeout(end,1450); ov.addEventListener("pointerdown",end);
+  });
+}
+/* Ultra-légendaires de faction : pas de fusion, mais un effet de pose propre à chacune (Nike d'abord ; Helvara, Désir et Primordial viendront) */
+const FACTION_CINE={nike:nikeCine};
+function factionCine(id,s,li){ const f=FACTION_CINE[id]; return f?f(id,s,li):Promise.resolve(); }
+/* Nike, « Les plumes de la Victoire » : chaque carte posée avant elle ce tour lâche une plume qui vole vers elle, le compteur monte de 2,
+   puis deux ailes s'ouvrent et un laurier se forme. Jouée en premier : ailes à moitié ouvertes, plus pâles, sans compteur.
+   1,5 s au plus, un toucher la saute. Cinématique coupée ou mouvement réduit : seulement le compteur final, 0,8 s. */
+function nikeCine(id,s,li){
+  return new Promise(done=>{
+    const nk=S.board[s][li].find(c=>c.id===id&&!c.rev)||S.board[s][li].find(c=>c.id===id);
+    const plays=(S.turnPlays&&S.turnPlays[s])||[], k=plays.indexOf(nk), before=k>0?plays.slice(0,k):[], n=before.length;
+    const elOf=c=>c&&document.querySelector(`[data-cu="${c.uid}"]`);
+    const tEl=elOf(nk)||document.querySelector(`.loc[data-li="${li}"]`), tr=tEl&&tEl.getBoundingClientRect();
+    if(!tr||!tr.width){ done(); return; }
+    const to={x:tr.left+tr.width/2,y:tr.top+tr.height/2,w:tr.width,h:tr.height};
+    const counter=v=>{ const d=document.createElement("div"); d.className="fcount"; d.textContent="+"+v; d.style.left=to.x+"px"; d.style.top=(tr.top-4)+"px"; document.body.appendChild(d); return d; };
+    if(P.cine===false||matchMedia("(prefers-reduced-motion: reduce)").matches){ if(n){ const d=counter(2*n); setTimeout(()=>d.remove(),800); } done(); return; }
+    const flight=420, gap=n>1?Math.min(150,560/(n-1)):0, wingAt=n?(n-1)*gap+flight+40:60, total=Math.min(1500,wingAt+700);
+    const from=before.map(c=>{ const r=elOf(c)&&elOf(c).getBoundingClientRect(); return r&&r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:{x:to.x,y:to.y-140}; });
+    FX.play("nike_feathers",{from,to,gap,flight,wingAt,total,pale:!n,li});
+    const ov=document.createElement("div"); ov.className="fcine"; ov.setAttribute("aria-hidden","true"); document.body.appendChild(ov);
+    const cnt=n?counter(0):null; if(cnt) cnt.style.opacity="0";
+    const tms=before.map((_,i)=>setTimeout(()=>{ cnt.textContent="+"+2*(i+1); cnt.style.opacity="1"; if(cnt.animate) cnt.animate([{transform:"translate(-50%,-100%) scale(1.4)"},{transform:"translate(-50%,-100%) scale(1)"}],{duration:220}); sfx("buff"); },i*gap+flight));
+    tms.push(setTimeout(()=>sfx(n?"legend":"reveal"),wingAt));
+    let over=false; const end=()=>{ if(over) return; over=true; tms.forEach(clearTimeout); FX.stop("nike_feathers"); ov.remove(); if(cnt){ cnt.style.transition="opacity .25s"; cnt.style.opacity="0"; setTimeout(()=>cnt.remove(),260); } done(); };
+    tms.push(setTimeout(end,total)); ov.addEventListener("pointerdown",end);
   });
 }
 const shuffle=a=>{ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
@@ -1916,7 +1956,8 @@ async function resolveTurn(mine, theirs, animate){
   for(const [s,x] of queue){
     await wait(560);
     if(!S.board[s][x.li].includes(x.c)) continue;
-    if(animate&&CARDS[x.c.id].r==="U"&&P.cine!==false&&!S.tut&&!(S.mp&&S.mp.replaying)) await fusionCine(x.c.id,s);
+    if(animate&&CARDS[x.c.id].r==="U"&&!S.tut&&!(S.mp&&S.mp.replaying)){ const u=ULof(x.c.id);
+      if(u&&u.fac) await factionCine(x.c.id,s,x.li); else if(u&&u.req.length&&P.cine!==false) await fusionCine(x.c.id,s); }
     { const m=snapPow(); reveal(s,x.li,x.c); medeeHook(s,x.li,x.c); diffPow(m,CARDS[x.c.id].name); } render();
     if(animate) cardVfx(x.c.id,x.li);
   }
@@ -2287,12 +2328,13 @@ function art(id,light){
   return `<div class="art ph" data-mono="${mono}" style="--fc:${FAC[d.fac].c}"></div>`;
 }
 /* Brillance par rareté : r-R liseré fixe, r-E reflet violet qui balaie, r-L reflet doré et souffle dans l'illustration */
+const rarN=id=>{ const u=ULof(id); return u&&u.fac?"Ultra-légendaire de faction":RAR[CARDS[id].r].n; };
 const rc=d=>(d.r==="R"||d.r==="E"||d.r==="L")&&!d.token?` r-${d.r}`:"";
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
   const fx=/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
   return `<div class="full ${extra}${d.r==="U"?" holo":""}${rc(d)}${fx}">${art(id)}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
-    <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${R.n}</span></div>${d.fx?`<div class="e">${d.fx}</div>`:""}</div>
+    <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${d.fx}</div>`:""}</div>
     <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }
 function thumb(id,act){
@@ -2538,7 +2580,7 @@ function fanPickHTML(){
 function zoomHTML(){
   if(!zoomId) return ""; const d=CARDS[zoomId], F=FAC[d.fac], R=RAR[d.r];
   return `<div class="veil" data-act="unzoom"><div class="zoomwrap">${fullCard(zoomId,"big")}
-    <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${R.n}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${d.fx}</p>`:""}
+    <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(zoomId)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${d.fx}</p>`:""}
     <div class="row2"><button class="ghost" data-act="unzoom">Fermer</button>${P.owned.includes(zoomId)&&P.avatar!==zoomId?`<button class="ghost" data-act="avset" data-id="${zoomId}">En faire mon avatar</button>`:""}</div></div></div></div>`;
 }
 
@@ -2604,7 +2646,7 @@ function finishTuto(){
 }
 
 /* --- collection --- */
-function lockedCard(id){ return `<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${RAR[CARDS[id].r].n}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?`Possède ${ULof(id).n}`:CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`; }
+function lockedCard(id){ return `<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?`Possède ${ULof(id).n}`:CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`; }
 function locsHTML(){ return `<section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
     <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
@@ -2615,7 +2657,7 @@ function codexHTML(){
     const have=ids.filter(id=>P.owned.includes(id)).length;
     return `<section class="sec"><h2 style="color:${F.c}">${F.n} · ${have}/${ids.length}</h2>
       <p class="hint">Touche une carte pour l'agrandir.</p>
-      <div class="grid">${ids.map(id=>P.owned.includes(id)?`<button class="zoombtn" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button>`:`<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${RAR[CARDS[id].r].n}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?`Possède ${ULof(id).n}`:CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`).join("")}</div></section>`; }).join("")}
+      <div class="grid">${ids.map(id=>P.owned.includes(id)?`<button class="zoombtn" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button>`:`<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?`Possède ${ULof(id).n}`:CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`).join("")}</div></section>`; }).join("")}
   <section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
     <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
@@ -2645,7 +2687,7 @@ function rulesHTML(){
       <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
       <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
       <li><b>Perdre ses effets</b> : la carte garde sa puissance, mais ses effets Continu et ses bonus ne comptent plus.</li>
-      <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck.</li>
+      <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, exige assez de cartes de sa faction.</li>
       <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
       <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
       <li><b>Ressusciter</b> : une carte défaussée ou détruite revient sur le plateau, révélée, à sa puissance de base, sans déclencher sa Révélation (sauf mention contraire).</li>
@@ -2670,11 +2712,11 @@ function rulesHTML(){
 /* --- partie --- */
 function deltaBadge(v){ return v?`<span class="dlt ${v>0?"up":"down"}">${v>0?"+":"−"}${Math.abs(v)}</span>`:""; }
 function mini(s,li,c,staged){
-  if(!c.rev && !staged && s==="e") return `<button class="mini back${c.fresh?" flip":""}" aria-label="Carte face cachée"><div class="art"></div></button>`;
+  if(!c.rev && !staged && s==="e") return `<button class="mini back${c.fresh?" flip":""}" data-cu="${c.uid}" aria-label="Carte face cachée"><div class="art"></div></button>`;
   const p=staged?CARDS[c.id].pow:cardPow(s,li,c), base=CARDS[c.id].pow;
   const cls=staged?"":p>base?"up":p<base?"down":"";
   const act=(staged?`data-act="unstage" data-uid="${c.uid}"`:`data-act="inspect" data-uid="${c.uid}"`)+` data-lp="c${c.uid}"`;
-  return `<button class="mini${CARDS[c.id].r==="U"?" holo":""}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${staged?"":deltaBadge(p-base)}<span class="pw ${cls}">${p}</span></button>`;
+  return `<button class="mini${CARDS[c.id].r==="U"?" holo":""}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${staged?"":deltaBadge(p-base)}<span class="pw ${cls}">${p}</span></button>`;
 }
 function sideHTML(s,li){
   const items=S.board[s][li].map(c=>mini(s,li,c,s==="p"&&!c.rev));

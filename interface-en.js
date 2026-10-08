@@ -146,7 +146,7 @@
     "Les lieux d'Helvara":"The locations of Helvara", "Trois lieux par partie, révélés aux tours 1, 2 et 3.":"Three locations per game, revealed on turns 1, 2 and 3.",
     "Touche une carte pour l'agrandir.":"Tap a card to enlarge it.", "Ton deck est plein : retire d'abord une carte.":"Your deck is full: remove a card first.",
     "Ta vitrine":"Your showcase", "Cartes affichées":"Displayed cards", "En faire mon avatar":"Make it my avatar", "Choisir un avatar":"Choose an avatar",
-    "Fusion disponible":"Fusion available", "Ultra-légendaire de faction":"Faction ultra-legendary", "Réclamer la carte":"Claim the card", "Ultra-légendaire":"Ultra-legendary",
+    "Fusion disponible":"Fusion available", "Ultra-légendaire de faction":"Faction Ultra-Legendary", "Réclamer la carte":"Claim the card", "Ultra-légendaire":"Ultra-legendary",
     /* boutique */
     "Pack de départ · 12 cartes":"Starter pack · 12 cards", "Tu as déjà toutes les cartes de ces raretés":"You already own every card of these rarities",
     "Collection complète":"Collection complete", "Ouvre d'abord la Première Brûlure":"Open the First Burn first", "Acheter et ouvrir":"Buy and open",
@@ -196,7 +196,7 @@
     "Affaiblir":"Weaken",
     "(−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.":"(−X): the card loses Power. Power can go negative. Eir, Amaterasu, the Silent Flayed One and Jordan, the Creator prevent it.",
     "Perdre ses effets":"Lose its effects", ": la carte garde sa puissance, mais ses effets Continu et ses bonus ne comptent plus.":": the card keeps its Power, but its Ongoing effects and bonuses no longer count.",
-    "Une seule ultra-légendaire par deck.":"Only one ultra-legendary per deck.", "Chaque fusion exige ses deux personnages dans le deck.":"Each fusion requires both of its characters in the deck.",
+    "Une seule ultra-légendaire par deck.":"Only one ultra-legendary per deck.", "Chaque fusion exige ses deux personnages dans le deck.":"Each fusion requires both of its characters in the deck.", "Une ultra-légendaire de faction, comme Nike, exige assez de cartes de sa faction.":"A faction ultra-legendary, like Nike, requires enough cards of its faction.",
     "Condamner":"Seal", ": une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie.":": a slot at the location is closed to the opponent until the end of the game.",
     "Captive":"Captive", ": la carte tombe à 0 tant que sa geôlière reste en jeu.":": the card drops to 0 while its jailer stays in play.",
     "Silence":"Silence", ": l'adversaire ne peut pas jouer dans ce lieu au tour suivant.":": the opponent can't play at this location next turn.",
