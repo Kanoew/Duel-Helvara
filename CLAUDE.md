@@ -137,6 +137,28 @@ Autres réglages selon le type de carte :
 
 ---
 
+## Rareté et brillance
+
+Repère : une commune se lit en une seconde, une épique fait réfléchir. Répartition actuelle (jetons exclus) : 21 communes, 51 rares, 40 épiques (dont 13 variantes saisonnières), 19 légendaires, 13 ultra-légendaires.
+
+- **Rétrogradées en rare (15)** : hathor, bastet, freya, tyr, konohana, nuee, pele, mere, durga, sekhmet, eir, andraste, balor, oshun, athena. Restent épiques malgré la liste initiale : inanna, anat, fange, graffeur, ixchel.
+- **Rétrogradées en commune (5)** : maeve, tefnut, selene, hecate, funambule.
+- Inchangées : variantes saisonnières (`ex`), Jordan, Jordan le Narrateur, Yarden Weiss, légendaires, ultra-légendaires, et les cartes dont l'effet vient d'être refait (aphrodite, susanoo, medee, messagere, dante, boucher).
+- Seule la lettre `r` change, jamais l'effet. Les cartes déjà possédées restent en collection ; les rétrogradées coûtent moins cher à la boutique du jour et rapportent moins en doublon.
+
+Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la main et les miniatures) :
+
+| Rareté | Sur la carte | À la pose |
+|---|---|---|
+| Commune | rien | rien |
+| Rare | liseré bleu fixe | rien |
+| Épique | liseré violet + reflet qui balaie (CSS, main, grand format, paquets, vitrine) | gerbe d'étincelles de 0,8 s sur le lieu (`epic_<faction>` dans `MIX`) |
+| Légendaire | liseré doré + reflet doré + souffle lent et poussières dans l'illustration | effet `vfx` |
+| Ultra-légendaire | reflet holo + ambiance en boucle | effet `vfx` + cinématique de fusion |
+
+- Plateau et grilles (collection, boutique) : liseré fixe seulement, sans animation, pour rester fluide sur téléphone. `prefers-reduced-motion` coupe tout.
+- **Cinématique de fusion** : `fusionCine(id, côté)`, appelée dans `resolveTurn()` avant la Révélation d'une ultra-légendaire (1,45 s au plus, un toucher la saute). Les cartes sources viennent de `ULS[].req` (version présente dans le deck du joueur, sinon la première ; pour l'adversaire, la première). Nike : l'emblème du Jugement (SVG `EMB_SVG`) se brise. Locale, jamais jouée pendant une reprise de duel en ligne. Réglage `P.cine` (activé par défaut), dans Réglages.
+
 ## Calendrier du contenu
 
 | Date | Contenu |

@@ -569,6 +569,37 @@ body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
 .full.holo{box-shadow:0 0 22px rgba(242,198,255,.45);outline:2px solid #f2c6ff;outline-offset:-2px}
 .zoomwrap{padding:14px 10px}
 @media (prefers-reduced-motion: reduce){ .full.tilt{transform:none;transition:none} }
+
+/* Brillance par rareté : commune rien · rare liseré fixe · épique reflet qui balaie · légendaire reflet doré + souffle dans l'illustration */
+.full.r-R,.hc.r-R,.mini.r-R{box-shadow:inset 0 0 0 1px rgba(127,182,230,.5),inset 0 0 9px rgba(127,182,230,.18)}
+.full.r-E,.hc.r-E,.mini.r-E{box-shadow:inset 0 0 0 1px rgba(181,140,240,.6),inset 0 0 12px rgba(181,140,240,.25)}
+.full.r-L,.hc.r-L,.mini.r-L{box-shadow:inset 0 0 0 1px rgba(255,205,110,.7),inset 0 0 14px rgba(255,205,110,.3)}
+.full.r-E::after,.full.r-L::after,.hc.r-E::before,.hc.r-L::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(105deg,transparent 38%,rgba(181,140,240,.45) 50%,transparent 62%);transform:translateX(-120%);animation:rsweep 6s ease-in-out infinite;will-change:transform}
+.full.r-L::after,.hc.r-L::before{background:linear-gradient(105deg,transparent 38%,rgba(255,226,160,.55) 50%,transparent 62%);animation-duration:4.4s}
+@keyframes rsweep{0%,52%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.hc.r-E::before,.hc.r-L::before{z-index:1}
+.full.r-L:not(.locked) .art{animation:lbreath 10s ease-in-out infinite alternate;will-change:transform}
+@keyframes lbreath{from{transform:scale(1) translateY(0)}to{transform:scale(1.045) translateY(-1.2%)}}
+.full .lgp{position:absolute;left:0;right:0;top:0;height:200%;z-index:2;pointer-events:none;opacity:.75;will-change:transform;animation:lrise 14s linear infinite;
+  background-size:100% 50%;background-image:radial-gradient(circle at 18% 22%,rgba(255,230,170,.95) 0 1px,transparent 2px),radial-gradient(circle at 63% 41%,rgba(255,230,170,.8) 0 1.2px,transparent 2.4px),radial-gradient(circle at 82% 12%,rgba(255,230,170,.9) 0 1px,transparent 2px),radial-gradient(circle at 36% 74%,rgba(255,230,170,.8) 0 1.2px,transparent 2.4px),radial-gradient(circle at 74% 88%,rgba(255,230,170,.9) 0 1px,transparent 2px)}
+@keyframes lrise{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+/* Pour rester fluide sur téléphone : le plateau (miniatures) et les grilles (collection, boutique) gardent le liseré fixe, sans animation. Reflets animés : main, grand format, ouverture de paquet, vitrine. */
+.grid .full.r-E::after,.grid .full.r-L::after,.stallgrid .full.r-E::after,.stallgrid .full.r-L::after,.grid .full.r-L .art,.stallgrid .full.r-L .art{display:none;animation:none}
+.grid .full .lgp,.stallgrid .full .lgp{display:none}
+@media (prefers-reduced-motion: reduce){ .full.r-E::after,.full.r-L::after,.hc.r-E::before,.hc.r-L::before,.full.r-L .art,.full .lgp{animation:none} .full.r-E::after,.full.r-L::after,.hc.r-E::before,.hc.r-L::before{transform:translateX(0);opacity:.25} .full .lgp{display:none} }
+/* Cinématique de fusion (ultra-légendaires) */
+.cine{position:fixed;inset:0;z-index:9000;background:rgba(4,8,16,.86);display:grid;place-items:center;overflow:hidden;touch-action:manipulation;cursor:pointer}
+.cine .cc{position:absolute;width:min(34vw,150px);aspect-ratio:2/3;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.3);box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.cine .cc .art{position:absolute;inset:0}
+.cine .cc span{position:absolute;left:0;right:0;bottom:0;padding:16px 6px 6px;font-family:var(--display);font-size:11px;text-align:center;background:linear-gradient(transparent,rgba(6,10,18,.92))}
+.cine .res{position:absolute;width:min(56vw,250px);aspect-ratio:2/3;border-radius:14px;overflow:hidden;opacity:0;box-shadow:0 0 40px rgba(242,198,255,.55);outline:2px solid #f2c6ff;outline-offset:-2px}
+.cine .res .art{position:absolute;inset:0}
+.cine .res span{position:absolute;left:0;right:0;bottom:0;padding:22px 8px 10px;font-family:var(--display);font-size:15px;text-align:center;background:linear-gradient(transparent,rgba(6,10,18,.94))}
+.cine .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.cine .emb{position:absolute;width:min(60vw,240px);aspect-ratio:1;opacity:0;filter:drop-shadow(0 0 18px rgba(150,190,255,.8))}
+.cine .emb svg{position:absolute;inset:0;width:100%;height:100%}
+.cine .skip{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);opacity:.7;pointer-events:none}
 </style>
 
 <div class="wrap" id="app"></div>
@@ -606,14 +637,14 @@ const CARDS = {
   kitsune: {name:"Kitsune", cost:1, pow:1, fac:"desir", r:"C", fx:"Révélation : laisse une Illusion de puissance 2 dans un autre lieu.", img:"images/kitsune.jpg"},
   uzume:   {name:"Ame-no-Uzume", cost:2, pow:3, fac:"desir", r:"R", fx:"Les effets adverses ne peuvent ni la cibler ni la détruire, sauf ceux où « rien ne la protège ».", img:"images/uzume.jpg"},
   freyr:   {name:"Freyr", cost:3, pow:3, fac:"desir", r:"R", fx:"Révélation : +1 énergie au tour suivant. Continu : +2 si Freya est ici.", img:"images/freyr.jpg"},
-  maeve:   {name:"Maeve", cost:3, pow:3, fac:"desir", r:"R", fx:"Révélation : si tu mènes ici, +3.", img:"images/maeve.jpg"},
+  maeve:   {name:"Maeve", cost:3, pow:3, fac:"desir", r:"C", fx:"Révélation : si tu mènes ici, +3.", img:"images/maeve.jpg"},
   izzy:    {name:"Izzy", cost:2, pow:1, fac:"desir", r:"R", fx:"Révélation : prend la puissance de la carte adverse la plus forte ici, si elle est plus haute (6 au maximum).", img:"images/izzy.jpg"},
   devote:  {name:"Dévote de Xochiquetzal", cost:4, pow:6, fac:"desir", r:"C", fx:"", img:"images/devote.jpg"},
-  hathor:  {name:"Hathor", cost:4, pow:3, fac:"desir", r:"E", fx:"Continu : −1 aux cartes adverses ici.", img:"images/hathor.jpg"},
+  hathor:  {name:"Hathor", cost:4, pow:3, fac:"desir", r:"R", fx:"Continu : −1 aux cartes adverses ici.", img:"images/hathor.jpg"},
   ishtar:  {name:"Ishtar", cost:4, pow:3, fac:"desir", r:"E", fx:"Continu : à la fin des tours 1 à 5, −1 à la carte adverse la plus forte ici.", img:"images/ishtar.jpg"},
   anat:    {name:"Anat", cost:4, pow:4, fac:"desir", r:"E", fx:"Révélation : détruit ton autre carte la plus faible ici et gagne sa puissance.", img:"images/anat.jpg"},
-  bastet:  {name:"Bastet", cost:5, pow:4, fac:"desir", r:"E", fx:"Révélation : +2 à tes autres cartes ici.", img:"images/bastet.jpg"},
-  freya:   {name:"Freya", cost:5, pow:5, fac:"desir", r:"E", fx:"Continu : +4 si Freyr est ici.", img:"images/freya.jpg"},
+  bastet:  {name:"Bastet", cost:5, pow:4, fac:"desir", r:"R", fx:"Révélation : +2 à tes autres cartes ici.", img:"images/bastet.jpg"},
+  freya:   {name:"Freya", cost:5, pow:5, fac:"desir", r:"R", fx:"Continu : +4 si Freyr est ici.", img:"images/freya.jpg"},
   /* JUGEMENT */
   artemis: {name:"Artémis", cost:3, pow:3, fac:"jugement", r:"R", fx:"Révélation : −2 à la carte adverse la plus faible ici. +2 si Izzy est de ton côté.", img:"images/artemis.jpg"},
   eos:     {name:"Éos", cost:2, pow:2, fac:"jugement", r:"R", fx:"Révélation : pioche 1 carte, 2 si Perséphone est de ton côté.", img:"images/eos.jpg?v=5"},
@@ -621,11 +652,11 @@ const CARDS = {
   thot:    {name:"Agent de Thot", cost:3, pow:3, fac:"jugement", r:"R", fx:"Révélation : −2 à la carte adverse la plus forte ici.", img:"images/thot.jpg"},
   persephone:{name:"Perséphone", cost:3, pow:3, fac:"jugement", r:"R", fx:"Révélation : l'effet du lieu s'arrête.", img:"images/persephone.jpg"},
   skadi:   {name:"Skadi", cost:3, pow:3, fac:"jugement", r:"R", fx:"Révélation : −3 à une carte adverse au hasard, dans un autre lieu.", img:"images/skadi.jpg"},
-  eir:     {name:"Eir", cost:4, pow:3, fac:"jugement", r:"E", fx:"Continu : tes cartes ici ne peuvent être ni détruites ni affaiblies.", img:"images/eir.jpg?v=5"},
+  eir:     {name:"Eir", cost:4, pow:3, fac:"jugement", r:"R", fx:"Continu : tes cartes ici ne peuvent être ni détruites ni affaiblies.", img:"images/eir.jpg?v=5"},
   ixchel:  {name:"Ixchel", cost:4, pow:4, fac:"jugement", r:"E", fx:"Révélation : −3 à la carte adverse la plus forte, dans n'importe quel lieu.", img:"images/ixchel.jpg?v=5"},
   inanna:  {name:"Inanna", cost:5, pow:5, fac:"jugement", r:"E", fx:"Révélation : toutes les cartes ici reviennent à leur puissance de base, des deux côtés.", img:"images/inanna.jpg?v=5"},
   oya:     {name:"Oya", cost:5, pow:4, fac:"jugement", r:"E", fx:"Révélation : change la carte adverse la plus forte ici en carte de puissance 1, sans effet.", img:"images/oya.jpg?v=5"},
-  sekhmet: {name:"Sekhmet", cost:5, pow:6, fac:"jugement", r:"E", fx:"Révélation : détruit toutes les autres cartes de puissance 2 ou moins ici, des deux côtés.", img:"images/sekhmet.jpg?v=5"},
+  sekhmet: {name:"Sekhmet", cost:5, pow:6, fac:"jugement", r:"R", fx:"Révélation : détruit toutes les autres cartes de puissance 2 ou moins ici, des deux côtés.", img:"images/sekhmet.jpg?v=5"},
   jordan:  {name:"Jordan, le Créateur", cost:1, pow:-1, fac:"primordial", r:"E", fx:"Ne peut pas être affaibli. Révélation : ajoute Yarden Weiss à ta main depuis ton deck.", img:"images/jordan.jpg"},
   jordan_n:{name:"Jordan, le Narrateur", base:"jordan", cost:1, pow:0, fac:"primordial", r:"E", fx:"Révélation : ajoute à ta main, depuis ton deck, une carte qui peut former une Fusion avec Jordan.", img:"images/jordan_n.jpg?v=7"},
   /* --- OCTOBRE 2026 --- */
@@ -634,17 +665,17 @@ const CARDS = {
   tlazol:  {name:"Tlazolteotl", cost:3, pow:2, fac:"desir", r:"R", rel:"2026-10-01", fx:"Révélation : tes cartes affaiblies ici reviennent à leur puissance de base. +2 pour chacune.", img:"images/tlazol.jpg"},
   eris:    {name:"Éris", cost:3, pow:3, fac:"desir", r:"R", rel:"2026-10-01", fx:"Révélation : déplace la carte adverse la plus forte ici vers un autre lieu.", img:"images/eris.jpg"},
   idunn:   {name:"Idunn", cost:2, pow:2, fac:"desir", r:"R", rel:"2026-10-01", fx:"Continu : à la fin des tours 1 à 5, +1 à ta carte la plus faible ici.", img:"images/idunn.jpg"},
-  durga:   {name:"Durga", cost:5, pow:5, fac:"jugement", r:"E", rel:"2026-10-01", fx:"Révélation : détruit la carte adverse la plus forte ici si elle a 7 ou plus. Sinon, +3.", img:"images/durga.jpg"},
+  durga:   {name:"Durga", cost:5, pow:5, fac:"jugement", r:"R", rel:"2026-10-01", fx:"Révélation : détruit la carte adverse la plus forte ici si elle a 7 ou plus. Sinon, +3.", img:"images/durga.jpg"},
   amaterasu:{name:"Amaterasu", cost:5, pow:4, fac:"jugement", r:"E", rel:"2026-10-01", fx:"Continu : tes cartes ne peuvent pas être affaiblies, dans les 3 lieux.", img:"images/amaterasu.jpg"},
-  hecate:  {name:"Hécate", cost:3, pow:2, fac:"jugement", r:"R", rel:"2026-10-01", fx:"Révélation : pioche 2 cartes.", img:"images/hecate.jpg"},
-  selene:  {name:"Sélène", cost:4, pow:4, fac:"jugement", r:"R", rel:"2026-10-01", fx:"Continu : +3 à partir du tour 5, quand la lune se lève.", img:"images/selene.jpg"},
+  hecate:  {name:"Hécate", cost:3, pow:2, fac:"jugement", r:"C", rel:"2026-10-01", fx:"Révélation : pioche 2 cartes.", img:"images/hecate.jpg"},
+  selene:  {name:"Sélène", cost:4, pow:4, fac:"jugement", r:"C", rel:"2026-10-01", fx:"Continu : +3 à partir du tour 5, quand la lune se lève.", img:"images/selene.jpg"},
   ereshkigal:{name:"Ereshkigal", vfx:"ereshkigal", cost:6, pow:7, fac:"primordial", r:"L", rel:"2026-10-01", fx:"Révélation : détruit toutes les cartes adverses ici de puissance 3 ou moins. Rien ne les protège.", img:"images/ereshkigal.jpg"},
-  pele:    {name:"Pele", cost:5, pow:6, fac:"primordial", r:"E", rel:"2026-10-01", fx:"Révélation : la lave inflige −2 à toutes les autres cartes ici, des deux côtés.", img:"images/pele.jpg"},
+  pele:    {name:"Pele", cost:5, pow:6, fac:"primordial", r:"R", rel:"2026-10-01", fx:"Révélation : la lave inflige −2 à toutes les autres cartes ici, des deux côtés.", img:"images/pele.jpg"},
   ares:    {name:"Arès", cost:4, pow:3, fac:"primordial", r:"R", rel:"2026-10-01", fx:"Révélation : −1 à chaque carte adverse ici, et +1 pour chacune.", img:"images/ares.jpg?v=6"},
   nergal:  {name:"Nergal", cost:5, pow:4, fac:"primordial", r:"E", rel:"2026-10-01", fx:"Révélation : −1 à toutes les cartes adverses, dans les 3 lieux. Continu : +3 tant qu'Ereshkigal est de ton côté.", img:"images/nergal.jpg?v=7"},
   rusalka: {name:"Rusalka", cost:2, pow:2, fac:"primordial", r:"C", rel:"2026-10-01", fx:"Révélation : détruit la carte adverse la plus faible ici si elle a 2 ou moins.", img:"images/rusalka.jpg"},
-  mere:    {name:"La Mère de Cendre", cost:5, pow:4, fac:"primordial", r:"E", rel:"2026-10-01", fx:"Révélation : laisse un Cendreux de puissance 2 dans chacun de tes autres lieux.", img:"images/mere.jpg"},
-  nuee:    {name:"La Nuée de Miroirs", cost:4, pow:3, fac:"primordial", r:"E", rel:"2026-10-01", fx:"Révélation : copie la puissance de ta carte la plus forte ici.", img:"images/nuee.jpg"},
+  mere:    {name:"La Mère de Cendre", cost:5, pow:4, fac:"primordial", r:"R", rel:"2026-10-01", fx:"Révélation : laisse un Cendreux de puissance 2 dans chacun de tes autres lieux.", img:"images/mere.jpg"},
+  nuee:    {name:"La Nuée de Miroirs", cost:4, pow:3, fac:"primordial", r:"R", rel:"2026-10-01", fx:"Révélation : copie la puissance de ta carte la plus forte ici.", img:"images/nuee.jpg"},
   charognard:{name:"Le Charognard du M2", cost:2, pow:2, fac:"helvara", r:"C", rel:"2026-10-01", fx:"Révélation : +3 si une carte a été détruite ou défaussée pendant la partie.", img:"images/charognard.jpg"},
   ficelle: {name:"La Ficelle Dévorante", cost:5, pow:4, fac:"helvara", r:"E", rel:"2026-10-01", fx:"Révélation : détruit tes autres cartes ici. +3 pour chacune.", img:"images/ficelle.jpg"},
   ecorche: {name:"L'Écorché Silencieux", cost:3, pow:3, fac:"helvara", r:"R", rel:"2026-10-01", fx:"Ne peut pas être affaibli. Révélation : −2 à une carte adverse au hasard ici.", img:"images/ecorche.jpg"},
@@ -676,15 +707,15 @@ const CARDS = {
   maree:   {name:"Le Seigneur de la marée noire", vfx:"maree", cost:6, pow:6, fac:"primordial", r:"L", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : détruit les cartes adverses de coût 2 ou moins ici.", img:"images/maree.jpg?v=6"},
   brigid:  {name:"Brigid", cost:3, pow:3, fac:"desir", r:"R", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : la prochaine carte que tu révèles gagne +3.", img:"images/brigid.jpg?v=6"},
   lipdentelle:{name:"Lip Dentelle", cost:3, pow:2, fac:"desir", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : défausse la carte la plus chère de ta main et gagne sa puissance.", img:"images/lipdentelle.jpg?v=6"},
-  andraste:{name:"Andraste", cost:4, pow:3, fac:"desir", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : +2 par carte adverse ici.", img:"images/andraste.jpg?v=6"},
+  andraste:{name:"Andraste", cost:4, pow:3, fac:"desir", r:"R", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : +2 par carte adverse ici.", img:"images/andraste.jpg?v=6"},
   aphrodite:{name:"Aphrodite", cost:5, pow:4, fac:"desir", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : rejoue la Révélation de ta carte Désir la plus chère ici.", img:"images/aphrodite.jpg?v=6"},
   calypso: {name:"Calypso", cost:5, pow:4, fac:"desir", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : la carte adverse la plus forte ici devient captive. Sa puissance tombe à 0 tant que Calypso reste en jeu.", img:"images/calypso.jpg?v=6"},
-  tefnut:  {name:"Tefnut", cost:3, pow:3, fac:"jugement", r:"R", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : +1 à tes autres cartes ici.", img:"images/tefnut.jpg?v=6"},
+  tefnut:  {name:"Tefnut", cost:3, pow:3, fac:"jugement", r:"C", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : +1 à tes autres cartes ici.", img:"images/tefnut.jpg?v=6"},
   susanoo: {name:"Susanoo", cost:4, pow:4, fac:"jugement", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : la tempête emporte ta carte la plus faible ici vers un autre lieu, où elle gagne +3. +2 si Amaterasu est de ton côté.", img:"images/susanoo.jpg?v=6"},
   chernobog:{name:"Chernobog", cost:5, pow:5, fac:"jugement", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Continu : les cartes adverses ici ne peuvent pas dépasser leur puissance de base.", img:"images/chernobog.jpg?v=6"},
   bourreau:{name:"Le Bourreau de la brèche", cost:5, pow:3, fac:"jugement", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : condamne une case adverse ici jusqu'à la fin de la partie.", img:"images/bourreau.jpg?v=6"},
   anubis:  {name:"Anubis", vfx:"anubis", cost:5, pow:4, fac:"jugement", r:"L", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : pèse les cœurs. Si l'adversaire mène ici, détruit sa carte la plus forte ici. Sinon, +4.", img:"images/anubis.jpg?v=6"},
-  balor:   {name:"Balor", cost:6, pow:4, fac:"jugement", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : −3 à toutes les cartes adverses ici.", img:"images/balor.jpg?v=6"},
+  balor:   {name:"Balor", cost:6, pow:4, fac:"jugement", r:"R", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : −3 à toutes les cartes adverses ici.", img:"images/balor.jpg?v=6"},
   nemesis: {name:"Nemesis", vfx:"nemesis", cost:6, pow:-5, fac:"jugement", r:"L", rel:"2026-11-01", soon:"2026-10-27", fx:"Continu : dans ce lieu, c'est le joueur avec le moins de puissance qui gagne. Deux Nemesis s'annulent.", img:"images/nemesis.jpg?v=6"},
   ulaph:   {name:"Aphrodite X Yarden", vfx:"ulaph", cost:6, pow:5, fac:"desir", r:"U", rel:"2026-11-01", soon:"2026-10-27", fx:"Révélation : rejoue la Révélation de chacune de tes autres cartes ici. Exige Aphrodite et Yarden Weiss dans le deck.", img:"images/ulaph.jpg?v=6"},
   ulcal:   {name:"Calypso X Jordan", vfx:"ulcal", cost:5, pow:4, fac:"desir", r:"U", rel:"2026-11-01", soon:"2026-10-27", fx:"Continu : tes cartes ici ne peuvent être ni détruites ni affaiblies, et les autres gagnent +2. Exige Calypso et Jordan dans le deck.", img:"images/ulcal.jpg?v=6"},
@@ -692,14 +723,14 @@ const CARDS = {
   /* JETONS */
   /* Faible coût, octobre 2026 */
   hermes:  {name:"Hermès", cost:1, pow:1, fac:"desir", r:"R", fx:"Révélation : déplace ta carte la plus forte ici vers un lieu révélé qu'elle te ferait remporter.", img:"images/hermes.jpg"},
-  konohana:{name:"Konohanasakuya-Hime", cost:1, pow:4, fac:"desir", r:"E", fx:"À la fin du tour qui suit son arrivée, tombe à 0 : la floraison est passée.", img:"images/konohana.jpg"},
+  konohana:{name:"Konohanasakuya-Hime", cost:1, pow:4, fac:"desir", r:"R", fx:"À la fin du tour qui suit son arrivée, tombe à 0 : la floraison est passée.", img:"images/konohana.jpg"},
   mohini:  {name:"Mohini", vfx:"mohini", cost:1, pow:1, fac:"desir", r:"L", fx:"Révélation : la carte adverse la plus forte ici perd ses effets.", img:"images/mohini.jpg"},
   melinoe: {name:"Melinoë", cost:2, pow:2, fac:"primordial", r:"R", fx:"Révélation : défausse une carte au hasard de ta main, puis +3. Main vide : pas de bonus.", img:"images/melinoe.jpg"},
   biblio:  {name:"Le Bibliothécaire des Passages", cost:1, pow:2, fac:"helvara", r:"C", fx:"Révélation : pioche 1 carte si tu as moins de cartes en main que l'adversaire.", img:"images/biblio.jpg"},
   comptable:{name:"Le Comptable du Grand-Pont", cost:1, pow:1, fac:"helvara", r:"R", fx:"Révélation : +1 par autre carte à toi ici.", img:"images/comptable.jpg"},
   relieur: {name:"Le Relieur", cost:2, pow:2, fac:"helvara", r:"R", fx:"Révélation : rend sa puissance de base à ta carte affaiblie la plus faible ici.", img:"images/relieur.jpg"},
-  funambule:{name:"Le Funambule du Belvédère", cost:2, pow:2, fac:"helvara", r:"R", fx:"Révélation : +2 si c'est ta seule carte ici.", img:"images/funambule.jpg"},
-  tyr:     {name:"Týr", cost:2, pow:3, fac:"jugement", r:"E", fx:"Révélation : −1 à chaque carte adverse ici qui a 4 de puissance ou plus.", img:"images/tyr.jpg"},
+  funambule:{name:"Le Funambule du Belvédère", cost:2, pow:2, fac:"helvara", r:"C", fx:"Révélation : +2 si c'est ta seule carte ici.", img:"images/funambule.jpg"},
+  tyr:     {name:"Týr", cost:2, pow:3, fac:"jugement", r:"R", fx:"Révélation : −1 à chaque carte adverse ici qui a 4 de puissance ou plus.", img:"images/tyr.jpg"},
   medee:   {name:"Médée", cost:4, pow:3, fac:"jugement", r:"E", rel:"2026-11-01", soon:"2026-10-27", fx:"Continu : la prochaine carte adverse jouée ici perd 2. Si Hécate est de ton côté, les deux prochaines.", img:"images/medee.jpg"},
   medee_h: {name:"Médée, Mariée Spectrale", base:"medee", cost:5, pow:3, fac:"jugement", r:"E", rel:"2026-10-12", ex:"halloween", fx:"Révélation : empoisonne la carte adverse la plus forte ici : elle perd 1 à la fin de chaque tour, jusqu'à 0. Si Hécate est de ton côté, empoisonne aussi la deuxième.", img:"images/medee_h.jpg"},
   /* Vague de décembre 2026 */
@@ -716,7 +747,7 @@ const CARDS = {
   hades:   {name:"Hadès", vfx:"hades", cost:5, pow:4, fac:"primordial", r:"L", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ressuscite ici ta carte détruite la plus forte, sans Révélation.", img:"images/hades.jpg"},
   circe:   {name:"Circé", cost:5, pow:3, fac:"desir", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : les cartes adverses ici de puissance 3 ou moins deviennent des Pourceaux (puissance 1, sans effet).", img:"images/circe.jpg"},
   qetesh:  {name:"Qetesh", cost:5, pow:3, fac:"desir", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : la carte adverse la plus forte ici (4 ou moins) est charmée. Sa puissance compte pour toi, mais elle reste de son côté.", img:"images/qetesh.jpg"},
-  oshun:   {name:"Oshun", cost:4, pow:3, fac:"desir", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : +1 à toutes tes autres cartes, dans les 3 lieux.", img:"images/oshun.jpg"},
+  oshun:   {name:"Oshun", cost:4, pow:3, fac:"desir", r:"R", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : +1 à toutes tes autres cartes, dans les 3 lieux.", img:"images/oshun.jpg"},
   scathach:{name:"Scáthach", cost:4, pow:3, fac:"jugement", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : laisse une Ombre de Scáthach (puissance −3, sans effet) du côté adverse, dans un autre lieu.", img:"images/scathach.jpg"},
   loviatar:{name:"Loviatar", cost:4, pow:3, fac:"primordial", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ressuscite ici ta dernière carte défaussée. Elle revient malade : sans Révélation et avec −2.", img:"images/loviatar.jpg"},
   baldur:  {name:"Baldur", cost:4, pow:4, fac:"jugement", r:"E", rel:"2026-12-01", soon:"2026-11-26", fx:"Les effets adverses ne peuvent ni le détruire ni l'affaiblir, sauf ceux des cartes de coût 2 ou moins (le gui) et ceux où « rien ne le protège ».", img:"images/baldur.jpg"},
@@ -726,7 +757,7 @@ const CARDS = {
   ulqetyar:{name:"Qetesh X Yarden", vfx:"ulqetyar", cost:6, pow:3, fac:"desir", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Continu : +3 par lieu où tu as à la fois une carte Désir et une carte Primordiale. Exige Qetesh et Yarden Weiss dans le deck.", img:"images/ulqetyar.jpg"},
   ulhel:   {name:"Hel X Baldur", vfx:"ulhel", cost:6, pow:3, fac:"primordial", r:"U", rel:"2026-12-01", soon:"2026-11-26", fx:"Révélation : ressuscite tes cartes défaussées dans des lieux au hasard, sans Révélation. Elles ne peuvent être ni détruites ni affaiblies. Exige Hel et Baldur dans le deck.", img:"images/ulhel.jpg"},
   promethee:{name:"Prométhée", vfx:"promethee", cost:1, pow:1, fac:"primordial", r:"L", rel:"2026-11-15", soon:"2026-11-10", fx:"Continu : l'énergie que tu ne dépenses pas est conservée au tour suivant (10 maximum).", img:"images/promethee.jpg"},
-  athena:  {name:"Athéna", cost:2, pow:2, fac:"jugement", r:"E", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : prends en main la plus chère des 3 premières cartes de ton deck.", img:"images/athena.jpg"},
+  athena:  {name:"Athéna", cost:2, pow:2, fac:"jugement", r:"R", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : prends en main la plus chère des 3 premières cartes de ton deck.", img:"images/athena.jpg"},
   bia:     {name:"Bia", cost:3, pow:3, fac:"jugement", r:"R", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : l'adversaire perd son énergie conservée. S'il n'en avait pas, −1 à sa carte la plus forte ici.", img:"images/bia.jpg"},
   pandore: {name:"Pandore", cost:3, pow:1, fac:"desir", r:"E", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : dépense toute l'énergie qu'il te reste. +1 par énergie dépensée.", img:"images/pandore.jpg"},
   styx:    {name:"Styx", vfx:"styx", cost:4, pow:2, fac:"jugement", r:"L", rel:"2026-11-15", soon:"2026-11-10", fx:"Continu : Nike et Bia ont +3 où qu'elles soient. Tes cartes Jugement ici ne peuvent pas être détruites.", img:"images/styx.jpg"},
@@ -891,7 +922,7 @@ const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","
 
 /* ======= SAUVEGARDE ======= */
 const SAVE_KEY = "duel-helvara-save-v1";
-function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}}; }
+function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, cine:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}}; }
 let migratedNote="";
 const COVERS=["primordial","desir","jugement","helvara"];
 function defDecks(){ return COVERS.map((c,i)=>({name:`Deck ${i+1}`,cover:c,cards:[]})); }
@@ -914,7 +945,7 @@ function clean(p){
   const out={name:(typeof p.name==="string"&&p.name.trim()?p.name.trim().slice(0,24):f.name), chf:num(p.chf,f.chf)+retired*25, w:num(p.w,0), l:num(p.l,0), d:num(p.d,0), owned, deck, sfx:p.sfx!==false,
     lv:Math.min(MAXLV,p.rv===2?num(p.lv,0):migrateLv(num(p.lv,0))), st:num(p.st,0), streak:num(p.streak,0), best:Math.min(MAXLV,p.rv===2?num(p.best,0):migrateLv(num(p.best,0))), rv:2,
     season:(typeof p.season==="string"&&/^\d{4}-\d{2}$/.test(p.season))?p.season:seasonKey(), sw:num(p.sw,0), sl:num(p.sl,0), sd:num(p.sd,0),
-    tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
+    tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, cine:p.cine!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
     bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,5).map(h=>({mode:String(h.mode||"").slice(0,12),res:h.res,opp:String(h.opp||"").slice(0,48),sc:String(h.sc||"").slice(0,12),t:Number(h.t)||0,deck:String(h.deck||"").slice(0,20)})):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
     daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
     q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c}))}:null};
@@ -1229,13 +1260,18 @@ const FX=(()=>{
     l_faille: {loc:[["flicker",{col:"255,80,60",y:.5}],["burst",{col:["255,80,60","255,160,90","255,230,190"],n:20}]]},
     l_archives:{loc:[["burst",{col:["230,210,170","245,235,210"],up:true,n:22}],["flicker",{col:"240,210,150"}]]},
     l_cathedrale:{loc:[["rays",{col:"235,235,255",n:4}],["rings",{col:GOLD,n:2}]]},
+    /* épiques : une brève gerbe d'étincelles sur le lieu, à la couleur de la faction (moins d'une seconde) */
+    epic_helvara:   {loc:[["sparkle",{col:"255,215,140",n:11}],["rings",{col:"255,215,140",n:1}]]},
+    epic_primordial:{loc:[["sparkle",{col:"255,150,100",n:11}],["rings",{col:"255,150,100",n:1}]]},
+    epic_desir:     {loc:[["sparkle",{col:"255,160,205",n:11}],["rings",{col:"255,160,205",n:1}]]},
+    epic_jugement:  {loc:[["sparkle",{col:"175,205,255",n:11}],["rings",{col:"175,205,255",n:1}]]},
     tombeau_rise:{loc:[["smoke",{col:"110,200,170",conv:false,n:16}],["burst",{col:["150,255,210","90,200,170"],up:true,n:30}]]},
   };
-  function mix({key,li,ultra}){
-    const M=MIX[key], el=locEl(li); if(!M||!el) return; const red=reduced();
+  function mix({key,li,ultra,epic}){
+    const M=MIX[key], el=locEl(li); if(!M||!el) return; const red=reduced(); if(epic&&red) return;
     const layers=red?[]:M.loc.map(([k,o])=>LAYER[k](o)), scr=(ultra&&!red&&M.screen)?M.screen.map(([k,o])=>SCREEN[k](o)):[];
     if(ultra||key==="tombeau_rise") shake(el,"fxshake");
-    add(red?450:(ultra?1900:1250),(c,p)=>{ const r=rect(locEl(li)); if(!r) return; const f=p<.15?p/.15:p>.78?(1-p)/.22:1, W=innerWidth, H=innerHeight;
+    add(red?450:(ultra?1900:(epic?800:1250)),(c,p)=>{ const r=rect(locEl(li)); if(!r) return; const f=p<.15?p/.15:p>.78?(1-p)/.22:1, W=innerWidth, H=innerHeight;
       if(ultra&&M.tint){ c.fillStyle=rgba(M.tint,.32*f); c.fillRect(0,0,W,H); }
       if(red){ c.fillStyle=rgba((M.loc[0][1].col&&[].concat(M.loc[0][1].col)[0])||M.loc[0][1].c1||"200,200,255",.3*f); c.fillRect(r.left,r.top,r.width,r.height); return; }
       for(const d of scr) d(c,p,f);
@@ -1256,7 +1292,40 @@ const FX=(()=>{
   return { decorate(root){ try{ decorate(root); }catch(e){} }, play(key,arg){ try{ if(!ensure()) return; if(REG[key]) REG[key](arg||{}); else if(MIX[key]) mix({...(arg||{}),key}); }catch(e){ (window.__fxErr=window.__fxErr||[]).push(String(e)); } } };
 })();
 /* Effet visuel d'une carte à sa Révélation : réservé aux légendaires et ultra-légendaires qui en ont un (champ vfx). */
-function cardVfx(id,li){ const d=CARDS[id]; if(d&&d.vfx&&(d.r==="L"||d.r==="U")) FX.play(d.vfx,{li,ultra:d.r==="U"}); }
+function cardVfx(id,li){ const d=CARDS[id]; if(!d) return; if(d.vfx&&(d.r==="L"||d.r==="U")) FX.play(d.vfx,{li,ultra:d.r==="U"}); else if(d.r==="E"&&!d.token) FX.play("epic_"+d.fac,{li,epic:true}); }
+/* Cinématique de fusion : les deux cartes sources se percutent et la fusion apparaît (1,5 s au plus, un toucher la saute).
+   Nike, sans cartes sources : l'emblème du Jugement se brise. Locale : elle ne touche ni l'état de la partie ni la synchro en ligne. */
+const EMB_SVG='<svg viewBox="0 0 100 100" fill="none" stroke="#d6e4ff" stroke-width="2.6" stroke-linecap="round"><circle cx="50" cy="50" r="46" stroke-width="3"/><circle cx="50" cy="16" r="3.4"/><path d="M50 19v62M36 84h28M20 30h60"/><path d="M20 30l-9 24h18zM80 30l-9 24h18z"/><path d="M10 54q10 11 19 0M71 54q10 11 19 0"/></svg>';
+function fusionCine(id,s){
+  return new Promise(done=>{
+    if(typeof Element.prototype.animate!=="function"||matchMedia("(prefers-reduced-motion: reduce)").matches){ done(); return; }
+    const u=ULof(id), dk=(S&&S.blitz&&P.bz&&P.bz.run)?P.bz.run.deck:P.deck;
+    const srcs=(u&&u.req||[]).map(r=>{ const ids=[].concat(r); return (s==="p"&&ids.find(x=>dk.includes(x)))||ids[0]; }).filter(x=>CARDS[x]);
+    const nike=srcs.length<2, nm=x=>CARDS[x].name;
+    const ov=document.createElement("div"); ov.className="cine"; ov.setAttribute("aria-hidden","true");
+    ov.innerHTML=(nike?`<div class="emb"><div class="h1" style="position:absolute;inset:0;clip-path:polygon(0 0,52% 0,46% 22%,54% 45%,47% 70%,52% 100%,0 100%)">${EMB_SVG}</div><div class="h2" style="position:absolute;inset:0;clip-path:polygon(52% 0,100% 0,100% 100%,52% 100%,47% 70%,54% 45%,46% 22%)">${EMB_SVG}</div></div>`
+      :srcs.map((x,i)=>`<div class="cc ${i?"r":"l"}" style="left:50%;top:50%">${art(x)}<span>${nm(x)}</span></div>`).join(""))
+      +`<div class="res" style="left:50%;top:50%">${art(id)}<span>${nm(id)}</span></div><div class="flash"></div><div class="skip">${trUI("Touche pour passer")}</div>`;
+    document.body.appendChild(ov);
+    const anims=[], A=(el,kf,o)=>{ if(el) anims.push(el.animate(kf,{fill:"both",...o})); };
+    const T="translate(-50%,-50%)", q=sel=>ov.querySelector(sel);
+    const resAt=nike?650:600;
+    if(nike){
+      A(q(".emb"),[{opacity:0,transform:`${T} scale(.6)`},{opacity:1,transform:`${T} scale(1)`,offset:.3},{opacity:1,transform:`${T} scale(1.06)`,offset:.45},{opacity:0,transform:`${T} scale(1.2)`}],{duration:900,easing:"ease-out"});
+      A(q(".emb .h1"),[{transform:"translate(0,0) rotate(0)"},{transform:"translate(0,0) rotate(0)",offset:.5},{transform:"translate(-22%,6%) rotate(-14deg)"}],{duration:900});
+      A(q(".emb .h2"),[{transform:"translate(0,0) rotate(0)"},{transform:"translate(0,0) rotate(0)",offset:.5},{transform:"translate(22%,6%) rotate(14deg)"}],{duration:900});
+      q(".emb").style.left="50%"; q(".emb").style.top="50%";
+    } else {
+      A(q(".cc.l"),[{transform:`${T} translateX(-72vw) rotate(-9deg)`,opacity:1},{transform:`${T} translateX(-9vw) rotate(0)`,opacity:1,offset:.8},{transform:`${T} translateX(-3vw) scale(1.12)`,opacity:0}],{duration:700,easing:"cubic-bezier(.5,0,.9,.6)"});
+      A(q(".cc.r"),[{transform:`${T} translateX(72vw) rotate(9deg)`,opacity:1},{transform:`${T} translateX(9vw) rotate(0)`,opacity:1,offset:.8},{transform:`${T} translateX(3vw) scale(1.12)`,opacity:0}],{duration:700,easing:"cubic-bezier(.5,0,.9,.6)"});
+    }
+    A(q(".flash"),[{opacity:0},{opacity:.95,offset:.3},{opacity:0}],{duration:420,delay:resAt-150});
+    A(q(".res"),[{opacity:0,transform:`${T} scale(.55)`},{opacity:1,transform:`${T} scale(1)`}],{duration:380,delay:resAt,easing:"cubic-bezier(.2,.9,.3,1.2)"});
+    A(ov,[{opacity:1},{opacity:0}],{duration:150,delay:1300});
+    let over=false; const end=()=>{ if(over) return; over=true; clearTimeout(tm); anims.forEach(a=>{ try{ a.cancel(); }catch(e){} }); ov.remove(); done(); };
+    const tm=setTimeout(end,1450); ov.addEventListener("pointerdown",end);
+  });
+}
 const shuffle=a=>{ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 const pickRand=a=>a[Math.floor(Math.random()*a.length)];
 let RNG=Math.random; const rnd=()=>RNG();
@@ -1693,6 +1762,7 @@ async function resolveTurn(mine, theirs, animate){
   for(const [s,x] of queue){
     await wait(560);
     if(!S.board[s][x.li].includes(x.c)) continue;
+    if(animate&&CARDS[x.c.id].r==="U"&&P.cine!==false&&!S.tut&&!(S.mp&&S.mp.replaying)) await fusionCine(x.c.id,s);
     { const m=snapPow(); reveal(s,x.li,x.c); medeeHook(s,x.li,x.c); diffPow(m,CARDS[x.c.id].name); } render();
     if(animate) cardVfx(x.c.id,x.li);
   }
@@ -2061,10 +2131,12 @@ function art(id,light){
   const mono=d.name.replace(/^(L'|Le |La |Les )/,"").charAt(0);
   return `<div class="art ph" data-mono="${mono}" style="--fc:${FAC[d.fac].c}"></div>`;
 }
+/* Brillance par rareté : r-R liseré fixe, r-E reflet violet qui balaie, r-L reflet doré et souffle dans l'illustration */
+const rc=d=>(d.r==="R"||d.r==="E"||d.r==="L")&&!d.token?` r-${d.r}`:"";
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
   const fx=/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
-  return `<div class="full ${extra}${d.r==="U"?" holo":""}${fx}">${art(id)}<span class="cost">${d.cost}</span>
+  return `<div class="full ${extra}${d.r==="U"?" holo":""}${rc(d)}${fx}">${art(id)}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${R.n}</span></div>${d.fx?`<div class="e">${d.fx}</div>`:""}</div>
     <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }
@@ -2101,6 +2173,7 @@ function sheetHTML(){
   const body=sheet==="quests"?questsHTML():`<section class="quests"><div class="qhead"><h2>Réglages</h2></div>
     <div class="setrow"><span>Langue</span><button class="langbtn" data-act="lang" aria-label="${LANG==="fr"?"Switch to English":"Passer en français"}"><span class="${LANG==="fr"?"on":""}">FR</span><span class="${LANG==="en"?"on":""}">EN</span></button></div>
     <div class="setrow"><span>Son</span><span class="footbtns"><button class="toggle" data-act="music" aria-pressed="${P.music}">Musique : ${P.music?"activée":"coupée"}</button><button class="toggle" data-act="sfx" aria-pressed="${P.sfx}">Effets : ${P.sfx?"activés":"coupés"}</button></span></div>
+    <div class="setrow"><span>Cinématique de fusion</span><button class="toggle" data-act="cine" aria-pressed="${P.cine!==false}">${P.cine!==false?"Activée":"Coupée"}</button></div>
     <div class="setrow"><span>Tutoriel</span><button class="toggle" data-act="tuto">Revoir le tutoriel</button></div>
     <div class="setacc hint">${accountHTML()}</div></section>`;
   return `<div class="veil" data-act="sheetclose"><div class="sheet" data-act="sheetin">${body}<button class="ghost" data-act="sheetclose">Fermer</button></div></div>`;
@@ -2437,7 +2510,7 @@ function mini(s,li,c,staged){
   const p=staged?CARDS[c.id].pow:cardPow(s,li,c), base=CARDS[c.id].pow;
   const cls=staged?"":p>base?"up":p<base?"down":"";
   const act=(staged?`data-act="unstage" data-uid="${c.uid}"`:`data-act="inspect" data-uid="${c.uid}"`)+` data-lp="c${c.uid}"`;
-  return `<button class="mini${CARDS[c.id].r==="U"?" holo":""}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${staged?"":deltaBadge(p-base)}<span class="pw ${cls}">${p}</span></button>`;
+  return `<button class="mini${CARDS[c.id].r==="U"?" holo":""}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${staged?"":deltaBadge(p-base)}<span class="pw ${cls}">${p}</span></button>`;
 }
 function sideHTML(s,li){
   const items=S.board[s][li].map(c=>mini(s,li,c,s==="p"&&!c.rev));
@@ -2481,7 +2554,7 @@ function handHTML(){
   return S.hand.p.map(c=>{
     const d=CARDS[c.id], any=[0,1,2].some(li=>canStage(c,li));
     const cheapest=Math.min(...[0,1,2].map(li=>costOf("p",c,li,S.staged.length===0)));
-    return `<button class="hc${d.r==="U"?" holo":""}${S.sel===c.uid?" sel":""}${any||S.busy?"":" no"}${S.tut&&tutReq().some(([id])=>id===c.id)&&!S.staged.some(x=>x.c.id===c.id)?" tutreq":""}" data-act="hand" data-uid="${c.uid}" data-lp="c${c.uid}" aria-label="${d.name}, coût ${d.cost}, puissance ${d.pow}">
+    return `<button class="hc${d.r==="U"?" holo":""}${rc(d)}${S.sel===c.uid?" sel":""}${any||S.busy?"":" no"}${S.tut&&tutReq().some(([id])=>id===c.id)&&!S.staged.some(x=>x.c.id===c.id)?" tutreq":""}" data-act="hand" data-uid="${c.uid}" data-lp="c${c.uid}" aria-label="${d.name}, coût ${d.cost}, puissance ${d.pow}">
       ${art(c.id)}<span class="cost${cheapest<d.cost?" cut":""}">${cheapest}</span><span class="nm">${d.name}</span><span class="pw">${d.pow}</span></button>`;
   }).join("")||`<div class="m" style="color:var(--mist);padding:20px 4px">Main vide.</div>`;
 }
@@ -2609,6 +2682,7 @@ document.addEventListener("click", e=>{
     case "editname": editName=true; sfx("click"); render(); return;
     case "cancelname": editName=false; render(); return;
     case "music": P.music=!P.music; save(); render(); return;
+    case "cine": P.cine=P.cine===false; save(); render(); return;
     case "lang": setLang(LANG==="fr"?"en":"fr"); sfx("click"); render(); return;
     case "glogin": sfx("click"); if(window.helvara) window.helvara.signIn(); return;
     case "glogout": sfx("click"); if(window.helvara&&confirm(trUI("Te déconnecter ? Ta progression reste sur ton compte Google."))) window.helvara.signOut(); return;

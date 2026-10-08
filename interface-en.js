@@ -108,7 +108,7 @@
     "Quêtes du jour":"Daily quests", "Récompense récupérée":"Reward claimed", "Récupérer":"Claim",
     "Progression sauvegardée pour cet appareil.":"Progress saved on this device.", "Progression sauvegardée sur cet appareil.":"Progress saved on this device.",
     "Se connecter avec Google":"Sign in with Google", "pour la retrouver partout.":"to keep it everywhere.", "Se déconnecter":"Sign out",
-    "Revoir le tutoriel":"Replay the tutorial", "Musique : activée":"Music: on", "Musique : coupée":"Music: off", "Effets : activés":"Sound effects: on", "Effets : coupés":"Sound effects: off",
+    "Revoir le tutoriel":"Replay the tutorial", "Cinématique de fusion":"Fusion cinematic", "Activée":"On", "Coupée":"Off", "Touche pour passer":"Tap to skip", "Musique : activée":"Music: on", "Musique : coupée":"Music: off", "Effets : activés":"Sound effects: on", "Effets : coupés":"Sound effects: off",
     "Vitrine : glisse pour faire tourner les cartes":"Showcase: swipe to rotate the cards",
     /* tutoriel */
     "Tutoriel":"Tutorial", "Bienvenue à Helvara":"Welcome to Helvara", "Chaque duel se joue sur":"Each duel is played across", "3 lieux":"3 locations",
