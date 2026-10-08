@@ -206,7 +206,7 @@ pre{background:var(--deep);border:1px solid var(--line);border-radius:10px;paddi
 .vitrinewrap{margin:6px 0 14px}
 .vitrinewrap .fan{touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;max-width:520px;margin:0 auto}
 .fan .fcard{position:absolute;width:40%;top:6%;left:30%;background:none;border:0;padding:0;cursor:pointer;transition:transform .25s ease}
-.fan .fcard .full{position:static;width:100%;box-shadow:0 14px 30px rgba(0,0,0,.55);transform:none}
+.fan .fcard .full{position:relative;width:100%;box-shadow:0 14px 30px rgba(0,0,0,.55);transform:none}
 .fan .fcard:nth-child(1){transform:rotate(-12deg) translateX(-38%);z-index:1}
 .fan .fcard:nth-child(2){z-index:3;top:0;cursor:zoom-in}
 .fan .fcard:nth-child(3){transform:rotate(12deg) translateX(38%);z-index:2}
@@ -571,9 +571,12 @@ body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
 @media (prefers-reduced-motion: reduce){ .full.tilt{transform:none;transition:none} }
 
 /* Brillance par rareté : commune rien · rare liseré fixe · épique reflet qui balaie · légendaire reflet doré + souffle dans l'illustration */
-.full.r-R,.hc.r-R,.mini.r-R{box-shadow:inset 0 0 0 1px rgba(127,182,230,.5),inset 0 0 9px rgba(127,182,230,.18)}
-.full.r-E,.hc.r-E,.mini.r-E{box-shadow:inset 0 0 0 1px rgba(181,140,240,.6),inset 0 0 12px rgba(181,140,240,.25)}
-.full.r-L,.hc.r-L,.mini.r-L{box-shadow:inset 0 0 0 1px rgba(255,205,110,.7),inset 0 0 14px rgba(255,205,110,.3)}
+.full.r-R,.hc.r-R{outline:1.5px solid rgba(127,182,230,.8);outline-offset:-1.5px}
+.full.r-E,.hc.r-E{outline:2px solid rgba(181,140,240,.9);outline-offset:-2px;box-shadow:0 0 14px rgba(181,140,240,.35)}
+.full.r-L,.hc.r-L{outline:2px solid rgba(255,205,110,.95);outline-offset:-2px;box-shadow:0 0 18px rgba(255,205,110,.4)}
+.mini.r-R{outline:1.5px solid rgba(127,182,230,.85);outline-offset:-3.5px}
+.mini.r-E{outline:1.5px solid rgba(181,140,240,.95);outline-offset:-3.5px}
+.mini.r-L{outline:1.5px solid rgba(255,205,110,1);outline-offset:-3.5px}
 .full.r-E::after,.full.r-L::after,.hc.r-E::before,.hc.r-L::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
   background:linear-gradient(105deg,transparent 38%,rgba(181,140,240,.45) 50%,transparent 62%);transform:translateX(-120%);animation:rsweep 6s ease-in-out infinite;will-change:transform}
 .full.r-L::after,.hc.r-L::before{background:linear-gradient(105deg,transparent 38%,rgba(255,226,160,.55) 50%,transparent 62%);animation-duration:4.4s}
@@ -584,9 +587,8 @@ body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
 .full .lgp{position:absolute;left:0;right:0;top:0;height:200%;z-index:2;pointer-events:none;opacity:.75;will-change:transform;animation:lrise 14s linear infinite;
   background-size:100% 50%;background-image:radial-gradient(circle at 18% 22%,rgba(255,230,170,.95) 0 1px,transparent 2px),radial-gradient(circle at 63% 41%,rgba(255,230,170,.8) 0 1.2px,transparent 2.4px),radial-gradient(circle at 82% 12%,rgba(255,230,170,.9) 0 1px,transparent 2px),radial-gradient(circle at 36% 74%,rgba(255,230,170,.8) 0 1.2px,transparent 2.4px),radial-gradient(circle at 74% 88%,rgba(255,230,170,.9) 0 1px,transparent 2px)}
 @keyframes lrise{from{transform:translateY(0)}to{transform:translateY(-50%)}}
-/* Pour rester fluide sur téléphone : le plateau (miniatures) et les grilles (collection, boutique) gardent le liseré fixe, sans animation. Reflets animés : main, grand format, ouverture de paquet, vitrine. */
-.grid .full.r-E::after,.grid .full.r-L::after,.stallgrid .full.r-E::after,.stallgrid .full.r-L::after,.grid .full.r-L .art,.stallgrid .full.r-L .art{display:none;animation:none}
-.grid .full .lgp,.stallgrid .full .lgp{display:none}
+/* Pour rester fluide sur téléphone : le plateau (miniatures) garde le liseré fixe ; dans les grilles, le souffle de l'illustration est réservé au grand format */
+.grid .full.r-L .art,.stallgrid .full.r-L .art{animation:none}
 @media (prefers-reduced-motion: reduce){ .full.r-E::after,.full.r-L::after,.hc.r-E::before,.hc.r-L::before,.full.r-L .art,.full .lgp{animation:none} .full.r-E::after,.full.r-L::after,.hc.r-E::before,.hc.r-L::before{transform:translateX(0);opacity:.25} .full .lgp{display:none} }
 /* Cinématique de fusion (ultra-légendaires) */
 .cine{position:fixed;inset:0;z-index:9000;background:rgba(4,8,16,.86);display:grid;place-items:center;overflow:hidden;touch-action:manipulation;cursor:pointer}
