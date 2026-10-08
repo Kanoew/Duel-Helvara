@@ -643,7 +643,7 @@ const CARDS = {
   vritra:  {name:"Vritra", vfx:"vritra", cost:5, pow:5, fac:"primordial", r:"L", fx:"Révélation : plus personne ne peut jouer ici.", img:"images/vritra.jpg?v=5"},
   yarden:  {name:"Yarden Weiss", cost:5, pow:6, fac:"primordial", r:"E", fx:"Révélation : +4 si tu as des cartes dans les 3 lieux (celles posées ce tour comptent).", img:"images/yarden.jpg?v=5"},
   nyx:     {name:"Nyx", vfx:"nyx", cost:6, pow:5, fac:"primordial", r:"L", fx:"Révélation : détruit la carte adverse la plus forte ici. Rien ne la protège.", img:"images/nyx.jpg?v=5"},
-  apsu:    {name:"Apsu", cost:6, pow:8, fac:"primordial", r:"L", vfx:"apsu", fx:"Révélation : les cartes adverses ici perdent leurs effets. +6 si Yarden Weiss est de ton côté.", img:"images/apsu.jpg?v=5"},
+  apsu:    {name:"Apsu", cost:6, pow:8, fac:"primordial", r:"L", vfx:"apsu", fx:"Révélation : les cartes adverses ici perdent leurs effets. Ce qu'elles ont déjà fait reste acquis. +6 si Yarden Weiss est de ton côté.", img:"images/apsu.jpg?v=5"},
   /* DÉSIR */
   kitsune: {name:"Kitsune", cost:1, pow:1, fac:"desir", r:"C", fx:"Révélation : laisse une Illusion de puissance 2 dans un autre lieu.", img:"images/kitsune.jpg"},
   uzume:   {name:"Ame-no-Uzume", cost:2, pow:3, fac:"desir", r:"R", fx:"Les effets adverses ne peuvent ni la cibler ni la détruire, sauf ceux où « rien ne la protège ».", img:"images/uzume.jpg"},
@@ -702,7 +702,7 @@ const CARDS = {
   aphrodite_n:{name:"Aphrodite, Étoile de Noël", base:"aphrodite", cost:5, pow:4, fac:"desir", r:"E", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : laisse un Reflet d'Aphrodite de puissance 3 dans chacun de tes autres lieux.", img:"images/aphrodite_n.jpg?v=7"},
   sekhmet_n:{name:"Sekhmet, Lionne de l'Hiver", base:"sekhmet", cost:5, pow:4, fac:"jugement", r:"E", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : détruit les cartes adverses de puissance 2 ou moins ici. Les tiennes sont épargnées.", img:"images/sekhmet_n.jpg?v=6"},
   calypso_n:{name:"Calypso, Reine des Glaces", base:"calypso", cost:5, pow:3, fac:"desir", r:"E", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : la carte adverse la plus forte ici devient captive (0 tant que Calypso reste en jeu). +1 par carte adverse ici.", img:"images/calypso_n.jpg?v=6"},
-  apsu_n:  {name:"Apsu, Veillée des Chaînes", base:"apsu", cost:6, pow:7, fac:"primordial", r:"L", vfx:"apsu", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : les cartes adverses ici perdent leurs effets. Ta prochaine carte coûte 2 de moins. +4 si Yarden Weiss est de ton côté.", img:"images/apsu_n.jpg?v=7"},
+  apsu_n:  {name:"Apsu, Veillée des Chaînes", base:"apsu", cost:6, pow:7, fac:"primordial", r:"L", vfx:"apsu", rel:"2026-12-14", soon:"2026-12-09", ex:"noel", fx:"Révélation : les cartes adverses ici perdent leurs effets. Ce qu'elles ont déjà fait reste acquis. Ta prochaine carte coûte 2 de moins. +4 si Yarden Weiss est de ton côté.", img:"images/apsu_n.jpg?v=7"},
   joanna:  {name:"Dame Joanna", cost:2, pow:2, fac:"helvara", r:"E", rel:"2026-10-12", ex:"halloween", fx:"Révélation : laisse une Lanterne de puissance 2 dans chacun de tes autres lieux où tu as déjà une carte.", img:"images/joanna.jpg?v=7"},
   ulji:    {name:"Jordan X Izzy", vfx:"ulji", cost:6, pow:6, fac:"desir", r:"U", rel:"2026-10-01", fx:"Révélation : prend la carte la plus puissante de la main adverse et l'invoque ici, ou dans un autre lieu si c'est plein. Exige Jordan et Izzy dans le deck.", img:"images/ulji.jpg"},
   /* --- NOVEMBRE 2026 --- */
@@ -1462,7 +1462,7 @@ const gPick=a=>a[Math.floor(rnd()*a.length)];
 let quiet=false;
 const mk=id=>({uid:++uidN,id,pow:CARDS[id].pow,rev:false,fresh:false,neg:false,pay:0,mods:[]});
 function snapPow(){ const m=new Map(); for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) m.set(c,c.pow); return m; }
-function diffPow(m,src){ for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) if(m.has(c)&&c.pow!==m.get(c)){ (c.mods=c.mods||[]).push({v:c.pow-m.get(c),src}); } }
+function diffPow(m,src){ for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col){ if(c.reset){ delete c.reset; continue; } if(m.has(c)&&c.pow!==m.get(c)){ (c.mods=c.mods||[]).push({v:c.pow-m.get(c),src}); } } }
 const opp=s=>s==="p"?"e":"p";
 const deckReady=()=>P.deck.length===ECO.deckSize;
 
@@ -1812,7 +1812,7 @@ function revealFx(s,li,c,opts={}){
       if(best){ weaken(o,best[0],best[1],3); note=`−3 à ${nm(best[1])}`; snd="debuff"; } break; }
     case "inanna": { for(const side of [s,o]) for(const x of S.board[side][li]) if(x.rev){ const base=CARDS[x.id].pow; if(base<x.pow&&shielded(side,li)) continue; x.pow=base; }
       note="tout revient à la base"; snd="lock"; break; }
-    case "oya": { const t=strongest(targets.filter(()=>!shielded(o,li)),o,li); if(t){ t.pow=1; t.neg=true; note=`${nm(t)} devient une carte de puissance 1`; snd="debuff"; } break; }
+    case "oya": { const t=strongest(targets.filter(()=>!shielded(o,li)),o,li); if(t){ t.pow=1; t.neg=true; t.mods=[{v:1-CARDS[t.id].pow,src:d.name}]; t.reset=true; note=`${nm(t)} devient une carte de puissance 1`; snd="debuff"; } break; }
     case "sekhmet": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li].slice()) if(x!==c&&x.rev&&pw(side,li,x)<=2&&!(side===o&&untargetable(s,o,x))){ if(destroy(side,li,x)) n++; }
       if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
   }
@@ -2675,7 +2675,7 @@ function rulesHTML(){
       <li>Tu poses tes cartes, l'adversaire pose les siennes face cachée. Tout est révélé en fin de tour, lieu par lieu : dans chaque lieu, le joueur qui mène révèle ses cartes en premier. En cas d'égalité, tes cartes d'abord (en duel, celles de l'hôte).</li>
       <li>4 cartes maximum par joueur et par lieu.</li>
       <li>Au tour 1, avant de poser une carte, tu peux <b>changer ta main</b> une fois : tes cartes repartent dans le deck, qui est mélangé, et tu en pioches autant. Pas en duel entre amis.</li>
-      <li>« Révélation » se déclenche une fois quand la carte se retourne. « Continu » agit tant que la carte est en jeu et n'a pas perdu ses effets.</li>
+      <li>« Révélation » se déclenche une fois quand la carte se retourne. « Continu » agit tant que la carte est en jeu et n'a pas perdu ses effets. Une carte qui perd ses effets garde ce que sa Révélation lui a déjà donné.</li>
       <li>« En jeu » veut dire révélée sur le plateau, de n'importe quel côté.</li>
             <li>À la fin du tour 6, remporte 2 lieux sur 3. En cas d'égalité, la puissance totale départage.</li>
     </ol>
@@ -2686,7 +2686,7 @@ function rulesHTML(){
       <li><b>Défausser</b> : la carte quitte ta main sans être jouée.</li>
       <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
       <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
-      <li><b>Perdre ses effets</b> : la carte garde sa puissance, mais ses effets Continu et ses bonus ne comptent plus.</li>
+      <li><b>Perdre ses effets</b> : la carte garde sa puissance et les bonus déjà gagnés, mais ses effets Continu et de fin de tour ne s'appliquent plus.</li>
       <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, exige assez de cartes de sa faction.</li>
       <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
       <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
@@ -2822,8 +2822,8 @@ function gzHTML(){
   const mods=(c.mods||[]);
   return `<div class="veil" data-act="gzclose"><div class="zoomwrap">${fullCard(c.id,"big",cur)}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m">Coût ${d.cost} · puissance de base ${d.pow}${onBoard?` · actuelle <b>${cur}</b>`:""}</div>${d.fx?`<p>${d.fx}</p>`:""}
-    ${c.neg?`<p style="color:var(--ko)">Cette carte a perdu ses effets.</p>`:""}
-    ${onBoard&&(mods.length||cont)?`<div class="modlist">${mods.map(m=>`<div class="${m.v>0?"up":"down"}">${m.v>0?"+":"−"}${Math.abs(m.v)} · ${esc(m.src)}</div>`).join("")}${cont?`<div class="${cont>0?"up":"down"}">${cont>0?"+":"−"}${Math.abs(cont)} · effets continus et lieu</div>`:""}</div>`:""}
+    ${c.neg?`<p style="color:var(--ko)">Cette carte a perdu ses effets.</p><p class="hint" style="margin-top:-4px">Ses effets Continu et de fin de tour ne s'appliquent plus. Ses bonus déjà gagnés restent.</p>`:""}
+    ${onBoard&&(mods.length||cont)?`<div class="modlist">${mods.map(m=>`<div class="${m.v>0?"up":"down"}">${m.v>0?"+":"−"}${Math.abs(m.v)} · ${esc(m.src)}${c.neg&&m.src===d.name?` <span>(acquis)</span>`:""}</div>`).join("")}${cont?`<div class="${cont>0?"up":"down"}">${cont>0?"+":"−"}${Math.abs(cont)} · effets continus et lieu</div>`:""}</div>`:""}
     <button class="ghost" data-act="gzclose">Fermer</button></div></div></div>`;
 }
 
