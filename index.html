@@ -593,8 +593,10 @@ body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
 .full .lgp{position:absolute;left:0;right:0;top:0;height:200%;z-index:2;pointer-events:none;opacity:.75;will-change:transform;animation:lrise 14s linear infinite;
   background-size:100% 50%;background-image:radial-gradient(circle at 18% 22%,rgba(255,230,170,.95) 0 1px,transparent 2px),radial-gradient(circle at 63% 41%,rgba(255,230,170,.8) 0 1.2px,transparent 2.4px),radial-gradient(circle at 82% 12%,rgba(255,230,170,.9) 0 1px,transparent 2px),radial-gradient(circle at 36% 74%,rgba(255,230,170,.8) 0 1.2px,transparent 2.4px),radial-gradient(circle at 74% 88%,rgba(255,230,170,.9) 0 1px,transparent 2px)}
 @keyframes lrise{from{transform:translateY(0)}to{transform:translateY(-50%)}}
-/* Pour rester fluide sur téléphone : le plateau (miniatures) garde le liseré fixe ; dans les grilles, le souffle de l'illustration est réservé au grand format */
+/* Pour rester fluide sur téléphone : le plateau (miniatures) garde le liseré fixe ; dans les grilles, halo épique fixe, pas de reflet sur les rares, souffle des légendaires réservé au grand format */
 .grid .full.r-L .art,.stallgrid .full.r-L .art{animation:none}
+.grid .full.r-E::before,.stallgrid .full.r-E::before{animation:none;opacity:.8}
+.grid .full.r-R::after,.stallgrid .full.r-R::after{display:none}
 @media (prefers-reduced-motion: reduce){ .full.r-R::after,.full.r-E::after,.full.r-L::after,.hc.r-R::before,.hc.r-E::before,.hc.r-L::before{animation:none;transform:translateX(0);opacity:.25} .full.r-E::before,.hc.r-E::after,.full.r-L .art{animation:none} .full .lgp{display:none} }
 /* Cinématique de fusion (ultra-légendaires) */
 .cine{position:fixed;inset:0;z-index:9000;background:rgba(4,8,16,.86);display:grid;place-items:center;overflow:hidden;touch-action:manipulation;cursor:pointer}

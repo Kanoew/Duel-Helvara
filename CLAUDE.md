@@ -156,7 +156,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 | Légendaire | liseré doré + reflet doré + souffle lent et poussières dans l'illustration | effet `vfx` |
 | Ultra-légendaire | reflet holo + ambiance en boucle | effet `vfx` + cinématique de fusion |
 
-- Le liseré est un `outline` (une ombre intérieure passerait sous l'illustration). Plateau (miniatures) : liseré seul, sans animation. Grilles : le souffle de l'illustration des légendaires est réservé au grand format. `prefers-reduced-motion` coupe tout.
+- Le liseré est un `outline` (une ombre intérieure passerait sous l'illustration). Plateau (miniatures) : liseré seul, sans animation. Grilles (collection, boutique) : halo épique fixe, pas de reflet sur les rares, souffle des légendaires réservé au grand format. `prefers-reduced-motion` coupe tout.
 - Une carte `.full` doit rester positionnée (`relative` ou `absolute`) : sinon son `overflow:hidden` ne rogne plus le reflet (bug de la vitrine d'accueil).
 - **Cinématique de fusion** : `fusionCine(id, côté)`, appelée dans `resolveTurn()` avant la Révélation d'une ultra-légendaire (1,45 s au plus, un toucher la saute). Les cartes sources viennent de `ULS[].req` (version présente dans le deck du joueur, sinon la première ; pour l'adversaire, la première). Nike : l'emblème du Jugement (SVG `EMB_SVG`) se brise. Locale, jamais jouée pendant une reprise de duel en ligne. Réglage `P.cine` (activé par défaut), dans Réglages.
 
