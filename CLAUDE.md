@@ -34,7 +34,7 @@ Réponses en **français**.
 | `images/` | Illustrations des cartes (`<id>.jpg`) |
 | `images/avatars/` | Portraits carrés (`<id>.jpg`) |
 | `images/lieux/`, `images/packs/` | Lieux et paquets |
-| `audio/` | Musiques |
+| `audio/` | Musiques : `accueil*`, `partie`, `partie_2`, `partie_tension` (dès le tour 5), jingles `victoire` et `defaite` |
 
 ---
 
@@ -137,6 +137,12 @@ Autres réglages selon le type de carte :
 
 ---
 
+## IA, quêtes, musique
+
+- **IA (`aiPlan(me="e", palier)`)** : énumère les combinaisons de la main qui tiennent dans l'énergie (128 au plus), estime la probabilité de gagner 2 lieux sur 3, puis rejoue pour de vrai les meilleures sur une copie de la partie (`structuredClone(S)`, son coupé par `quiet`) avant de choisir. Bruit par palier ; simulation complète dès le palier 4 (40 plans au plus). Synergies dans `AI_PAIRS` (préparatrice → cartes qui en profitent). `aiDeck()` amène les partenaires de synergie et, dès le palier 4, une ultra-légendaire si le deck en remplit les conditions. Mesure : le palier 5 gagne environ 58 % contre l'ancienne IA et 65 % contre le palier 0.
+- **Quêtes** : 2 par jour (une petite `small`, une grande), tirées dans `QDEF` parmi celles que le joueur peut remplir (`QOK`). `facwin` et `charwin` portent un paramètre `x` (faction ou personnage). Un changement par jour (`P.q.rr`). Quête de la semaine `WQ` dans `P.wq` (lundi → dimanche). Compteurs seulement si `qLive()` (hors tutoriel, simulation de l'IA et reprise de duel).
+- **Musique** : `music()` choisit la piste (`musicKey()`), fondus par `GainNode` (`mTrack`, `mRamp`, `mStop`), deux lecteurs au plus. `endMusic(res)` : fondu de 1 s, jingle, retour de l'accueil. Volumes `P.vm` (musique, défaut 35) et `P.vs` (effets, défaut 100, bus `sfxBus()`). Pour retirer le silence de fin d'un morceau : `ffmpeg -i in.mp3 -af "areverse,silenceremove=start_periods=1:start_threshold=-45dB,afade=t=in:st=0:d=0.03,areverse" -b:a 192k out.mp3` (le fondu se place pendant l'inversion, sinon tout le morceau devient muet).
+
 ## Rareté et brillance
 
 Repère : une commune se lit en une seconde, une épique fait réfléchir. Répartition actuelle (jetons exclus) : 21 communes, 51 rares, 40 épiques (dont 13 variantes saisonnières), 19 légendaires, 13 ultra-légendaires.
@@ -166,8 +172,9 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 |---|---|
 | 1er oct. 2026 | 1re vague, Yarden X Apsu (1re fusion) |
 | 12 oct. | Halloween : paquet « Pli des Citrouilles » jusqu'au 2 nov., Médée Mariée Spectrale, Izzy Lune de Sang… Trois lieux arrivent : **Le Cirque** (fin du tour 4, les puissances sont mélangées), **Le Bureau des enchères** (cartes jouées +1 de coût et +2) et **Le Tombeau** (avancé depuis décembre). |
-| 1er nov. | Vague de novembre (Nemesis, Anubis, Médée, la Voleuse…), 3 fusions. Effets revus avant sortie : Messagère d'Hécate (Continu : +2 par fin de tour si elle ne mène pas, 6 max), Médée (Continu : la prochaine carte adverse jouée ici perd 2), Aphrodite et Aphrodite X Yarden (rejouent des Révélations), Dante (+1 par destruction ici), Susanoo (déplace sa carte la plus faible, +3) |
+| 1er nov. | Vague de novembre (Nemesis, Anubis, Médée, la Voleuse…), 3 fusions. Coûts revus avant sortie (8 oct.) : Brigid, Tefnut et Dionysos 2/2, Bourreau 3/2, Chernobog 4/4, Médée Mariée Spectrale et Poséidon 4/3, Qetesh 4/2, Seigneur de la marée noire 6/8, Balor 6/5. Effets revus avant sortie : Messagère d'Hécate (Continu : +2 par fin de tour si elle ne mène pas, 6 max), Médée (Continu : la prochaine carte adverse jouée ici perd 2), Aphrodite et Aphrodite X Yarden (rejouent des Révélations), Dante (+1 par destruction ici), Susanoo (déplace sa carte la plus faible, +3) |
 | **15 nov.** (annonce le 10) | **Vague « énergie »** : Prométhée (L, Primordial), Pandore (E, Désir), Athéna (E), Bia (R), Styx (L), **Nike** (U de faction, Jugement) |
+| À fixer | Lieux **Sauvabelin** (aucune destruction possible), **Le Flon** (+2 aux cartes qui y arrivent par un déplacement) et **Les Escaliers du Marché** (+2 aux cartes Helvara). Cachés par `rel:"2099-01-01"` en attendant la date. |
 | 1er déc. | Vague de décembre : 17 cartes, 5 fusions, lieu Domaine du Créateur, jetons Mjölnir, Ombre, Pourceau. Le Boucher de la Riponne détruit désormais sa carte la plus faible et pioche |
 | 31 déc. → 18 janv. | Paquet « Pli du Douzième Coup » (annonce le 26 déc.) : Hel Reine du Réveillon, Éos de Nouvel An, Pele du Réveillon, Qetesh du Nouvel An (toutes `ex:"nouvelan"`) + fusions Pele X Jordan du Réveillon (`ulpele_r`) et Qetesh X Jordan du Nouvel An (`ulqetjor_r`, exige `qetesh_r`) |
 
