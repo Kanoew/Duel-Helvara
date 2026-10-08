@@ -108,7 +108,7 @@
     "Quêtes du jour":"Daily quests", "Récompense récupérée":"Reward claimed", "Récupérer":"Claim",
     "Progression sauvegardée pour cet appareil.":"Progress saved on this device.", "Progression sauvegardée sur cet appareil.":"Progress saved on this device.",
     "Se connecter avec Google":"Sign in with Google", "pour la retrouver partout.":"to keep it everywhere.", "Se déconnecter":"Sign out",
-    "Revoir le tutoriel":"Replay the tutorial", "Cinématique de fusion":"Fusion cinematic", "Activée":"On", "Coupée":"Off", "Touche pour passer":"Tap to skip", "Musique : activée":"Music: on", "Musique : coupée":"Music: off", "Effets : activés":"Sound effects: on", "Effets : coupés":"Sound effects: off",
+    "Revoir le tutoriel":"Replay the tutorial", "Quête de la semaine":"Weekly quest", "Gagne 15 parties cette semaine":"Win 15 games this week", "Jusqu'à dimanche soir":"Until Sunday night", "Tu peux changer une quête par jour.":"You can change one quest per day.", "Cinématique de fusion":"Fusion cinematic", "Activée":"On", "Coupée":"Off", "Touche pour passer":"Tap to skip", "Musique : activée":"Music: on", "Musique : coupée":"Music: off", "Effets : activés":"Sound effects: on", "Effets : coupés":"Sound effects: off",
     "Vitrine : glisse pour faire tourner les cartes":"Showcase: swipe to rotate the cards",
     /* tutoriel */
     "Tutoriel":"Tutorial", "Bienvenue à Helvara":"Welcome to Helvara", "Chaque duel se joue sur":"Each duel is played across", "3 lieux":"3 locations",
@@ -399,7 +399,7 @@
     data:{
       TIERS:["Wanderer","Initiate","Agent","Chosen","Herald","Avatar","Deity of Helvara"],
       MONTHS:["January","February","March","April","May","June","July","August","September","October","November","December"],
-      QDEF:{play3:"Play 3 games",cards12:"Play 12 cards",loc15:"Win a location with 15 Power or more",win3:"Win 3 games",sweep:"Win all 3 locations in one game",kill4:"Destroy or erase 4 enemy cards",power40:"Finish a game with 40 total Power or more"},
+      QDEF:{cheap5:"Play 5 cards that cost 1 or 2",helv4:"Play 4 Helvara cards",move2:"Move 2 cards",disc3:"Discard 3 cards",six6:"Play a 6-cost card on turn 6",oath:"Keep an Oath",fusion:"Play an Ultra-Legendary",blitz1:"Win a Blitz game",facwin:"Win a game with at least 6 {f} cards in your deck",charwin:"Win a game with {c} in play",play3:"Play 3 games",cards12:"Play 12 cards",loc15:"Win a location with 15 Power or more",win3:"Win 3 games",sweep:"Win all 3 locations in one game",kill4:"Destroy or erase 4 enemy cards",power40:"Finish a game with 40 total Power or more"},
       PACKS:{
         brulure:{name:"First Burn",desc:"Your first deck: 12 different cards, including 2 epics, with a playable cost curve. One time only."},
         reflets:{name:"Bundle of Reflections",desc:"Commons and rares. To fill in the basics."},

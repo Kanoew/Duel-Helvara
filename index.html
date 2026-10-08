@@ -927,8 +927,20 @@ const QDEF={
   win3:{t:"Gagne 3 parties",n:3,r:100},
   sweep:{t:"Remporte les 3 lieux dans une même partie",n:1,r:100},
   kill4:{t:"Détruis ou efface 4 cartes adverses",n:4,r:100},
-  power40:{t:"Finis une partie avec 40 de puissance totale ou plus",n:1,r:100}
+  power40:{t:"Finis une partie avec 40 de puissance totale ou plus",n:1,r:100},
+  cheap5:{t:"Pose 5 cartes de coût 1 ou 2",n:5,r:50,small:1},
+  helv4:{t:"Pose 4 cartes Helvara",n:4,r:50,small:1},
+  move2:{t:"Déplace 2 cartes",n:2,r:50,small:1},
+  disc3:{t:"Défausse 3 cartes",n:3,r:50,small:1},
+  six6:{t:"Joue une carte de coût 6 au tour 6",n:1,r:50,small:1},
+  oath:{t:"Tiens un Serment",n:1,r:100},
+  fusion:{t:"Joue une ultra-légendaire",n:1,r:100},
+  blitz1:{t:"Gagne une partie de Blitz",n:1,r:100},
+  facwin:{t:"Gagne une partie avec au moins 6 cartes {f} dans ton deck",n:1,r:100},
+  charwin:{t:"Gagne une partie avec {c} en jeu",n:1,r:100}
 };
+/* Quête de la semaine (du lundi au dimanche) */
+const WQ={t:"Gagne 15 parties cette semaine",n:15,r:250};
 function dayKey(d=new Date()){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function hoursToReset(){ const d=new Date(); return Math.max(1,Math.ceil((new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)-d)/36e5)); }
 const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","sentinelle","pretre","archiviste","ombre","garde","heraut","gardien"];
@@ -961,7 +973,8 @@ function clean(p){
     tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, cine:p.cine!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
     bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,5).map(h=>({mode:String(h.mode||"").slice(0,12),res:h.res,opp:String(h.opp||"").slice(0,48),sc:String(h.sc||"").slice(0,12),t:Number(h.t)||0,deck:String(h.deck||"").slice(0,20)})):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
     daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
-    q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c}))}:null};
+    q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,rr:!!p.q.rr,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c,...(typeof x.x==="string"?{x:x.x.slice(0,24)}:{})}))}:null,
+    wq:(p.wq&&typeof p.wq.wk==="string")?{wk:p.wq.wk.slice(0,10),p:Math.min(WQ.n,num(p.wq.p,0)),c:!!p.wq.c}:null};
   out.deck=[...out.decks[out.di].cards];
   if(retired){ out._migrated=true; migratedNote=`Nouvelle collection : ${retired} carte${retired>1?"s":""} provisoire${retired>1?"s":""} remboursée${retired>1?"s":""} (+${retired*25} CHF).`; }
   return out;
@@ -985,16 +998,40 @@ function claimDaily(){
   P.daily={day:t,n}; P.chf+=gain; save();
   dailyNote=n===7?`7e jour d'affilée : +${gain} CHF !`:`Connexion du jour : +${gain} CHF (jour ${n} sur 7, le 7e rapporte 50 CHF).`;
 }
+/* Une quête n'est proposée que si le joueur a de quoi la remplir */
+const QMOVERS=["hermes","eris","susanoo","set","heimdall"], QDISC=["mendiant","melinoe","odin","lipdentelle","dionysos","morrigan_h"], QCHARS=["yarden","jordan","izzy","apsu"];
+const qFacs=()=>Object.keys(FAC).filter(f=>P.owned.filter(id=>CARDS[id]&&CARDS[id].fac===f).length>=6);
+const qChars=()=>QCHARS.filter(ch=>P.owned.some(id=>CARDS[id]&&charOf(id)===ch));
+const QOK={helv4:()=>P.owned.filter(id=>CARDS[id]&&CARDS[id].fac==="helvara").length>=4, move2:()=>P.owned.some(id=>CARDS[id]&&QMOVERS.includes(charOf(id))),
+  disc3:()=>P.owned.some(id=>QDISC.includes(id)), six6:()=>P.owned.some(id=>CARDS[id]&&CARDS[id].cost>=6), fusion:()=>P.owned.some(id=>CARDS[id]&&CARDS[id].r==="U"),
+  blitz1:()=>!!P.starter, facwin:()=>qFacs().length>0, charwin:()=>qChars().length>0};
+const qOk=id=>!QOK[id]||QOK[id]();
+function mkQuest(id,seed){ const q={id,p:0,c:false};
+  if(id==="facwin"){ const f=qFacs(); q.x=f[seed%f.length]; } if(id==="charwin"){ const ch=qChars(); q.x=ch[seed%ch.length]; } return q; }
+const qText=q=>QDEF[q.id].t.replace("{f}",q.x&&FAC[q.x]?FAC[q.x].n:"").replace("{c}",q.x&&CARDS[q.x]?CARDS[q.x].name:"");
 function ensureQuests(){
   const k=dayKey(); if(P.q&&P.q.day===k&&P.q.list.length===2) return false;
   let s=0; for(const ch of k) s=(s*31+ch.charCodeAt(0))%100003;
-  const sm=Object.keys(QDEF).filter(id=>QDEF[id].small), bg=Object.keys(QDEF).filter(id=>!QDEF[id].small);
-  P.q={day:k,list:[{id:sm[s%sm.length],p:0,c:false},{id:bg[Math.floor(s/7)%bg.length],p:0,c:false}]};
+  const sm=Object.keys(QDEF).filter(id=>QDEF[id].small&&qOk(id)), bg=Object.keys(QDEF).filter(id=>!QDEF[id].small&&qOk(id));
+  P.q={day:k,rr:false,list:[mkQuest(sm[s%sm.length],s),mkQuest(bg[Math.floor(s/7)%bg.length],Math.floor(s/13))]};
   return true;
 }
-function qProg(id,n=1){ if(!P.q) return; for(const q of P.q.list) if(q.id===id&&!q.c) q.p=Math.min(QDEF[id].n,q.p+n); }
+function weekKey(){ const d=new Date(today()+"T12:00:00"); d.setDate(d.getDate()-(d.getDay()+6)%7); return dayKey(d); }
+function ensureWeek(){ const k=weekKey(); if(P.wq&&P.wq.wk===k) return false; P.wq={wk:k,p:0,c:false}; return true; }
+function qProg(id,n=1){ if(!P.q||n<=0) return; for(const q of P.q.list) if(q.id===id&&!q.c) q.p=Math.min(QDEF[id].n,q.p+n); }
+/* Hors tutoriel, hors simulation de l'IA et hors reprise d'un duel en ligne */
+const qLive=()=>!!(P.q&&S&&!S.tut&&!quiet&&!(S.mp&&S.mp.replaying));
+/* Fin de partie gagnée : faction, personnage, Blitz, quête de la semaine */
+function qEnd(res,blitz){
+  if(res!=="win") return; const dk=(blitz&&P.bz&&P.bz.run)?P.bz.run.deck:P.deck;
+  for(const q of P.q.list){ if(q.c) continue;
+    if(q.id==="facwin"&&dk.filter(id=>CARDS[id]&&CARDS[id].fac===q.x).length>=6) q.p=1;
+    if(q.id==="charwin"&&S.board.p.some(col=>col.some(c=>c.rev&&charOf(c.id)===q.x))) q.p=1; }
+  if(blitz) qProg("blitz1");
+  ensureWeek(); if(!P.wq.c) P.wq.p=Math.min(WQ.n,P.wq.p+1);
+}
 let P = clean(lsRead());
-{ const a=checkSeason(), b=ensureQuests(); if(a||b) lsWrite(); }
+{ const a=checkSeason(), b=ensureQuests(), c=ensureWeek(); if(a||b||c) lsWrite(); }
 let packOpen=null, gz=null, lpTimer=null, lpFired=false;
 let storeReady=false, tutoStep=-1, hlStarter=false, avPick=false, zoomId=null, fanPick=null;
 const rankIcon=(lv,cls="")=>`<img class="rkicon ${cls}" src="images/rangs/${tierOf(lv)}.png?v=2" alt="${TIERS[tierOf(lv)]}">`;
@@ -1504,7 +1541,7 @@ const sunlit=s=>S.board[s].some(col=>col.some(x=>live(x)&&x.id==="amaterasu"));
 /* Défausse et cimetière : on garde les cartes (Hel, Hadès, Loviatar, le Tombeau). Les jetons et les Échos disparaissent. */
 const piles=()=>{ S.discardPile=S.discardPile||{p:[],e:[]}; S.graveyard=S.graveyard||{p:[],e:[]}; };
 const real=c=>!CARDS[c.id].token&&!c.echo;
-function discard(s,c){ S.hand[s]=S.hand[s].filter(x=>x!==c); S.discarded=(S.discarded||0)+1; piles(); if(real(c)) S.discardPile[s].push(c.id); }
+function discard(s,c){ if(s==="p"&&qLive()) qProg("disc3"); S.hand[s]=S.hand[s].filter(x=>x!==c); S.discarded=(S.discarded||0)+1; piles(); if(real(c)) S.discardPile[s].push(c.id); }
 function bury(s,c){ piles(); if(real(c)) S.graveyard[s].push(c.id);
   if(c.id==="mjolnir"&&c.thor){ for(const col of S.board[s]) for(const t of col) if(t.uid===c.thor&&live(t)){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Mjölnir"}); log(`Thor récupère Mjölnir : +2 (${who(s)})`); } } }
 /* Ressusciter : la carte revient révélée, à sa puissance de base, sans Révélation (sauf withReveal). */
@@ -1579,7 +1616,7 @@ function revealFx(s,li,c,opts={}){
     case "voleuse": { const t=gPick(S.hand[o]); if(t){ discard(o,t); note=`${who(o)} défausse ${nm(t)}`; snd="void"; } break; }
     case "sansvoix": if(S.turn<6){ (S.mute=S.mute||[]).push({s:o,li,t:S.turn+1}); note="silence au prochain tour"; snd="lock"; } break;
     case "chasseur": { const t=strongest(foes,o,li); if(t&&S.board[s][li].length<capOf(s,li)){ const e=mk(t.id); e.rev=true; e.fresh=true; e.neg=true; e.echo=true; e.pow=Math.max(0,pw(o,li,t))-(locIs(li,"tour")&&CARDS[t.id].pow>=5&&!CARDS[t.id].token?2:0); S.board[s][li].push(e); note=`Écho ${/^[aeiouyéèêâîh]/i.test(nm(t))?"d’":"de "}${nm(t)} (${pw(o,li,t)})`; snd="void"; } break; }
-    case "set": { let n=0; for(const t of targets.slice()){ const sp=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(!sp.length) break; const i=gPick(sp); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); flonHook(i,t); n++; } if(n){ note=`disperse ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
+    case "set": { let n=0; for(const t of targets.slice()){ const sp=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(!sp.length) break; const i=gPick(sp); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); n++; } if(n){ note=`disperse ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
     case "maree": { let n=0; for(const t of targets.filter(x=>CARDS[x.id].cost<=2)) if(destroy(o,li,t)) n++; if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "brigid": S.forge[s]=1; note="la forge s'allume"; snd="buff"; break;
     case "lipdentelle": { const t=S.hand[s].slice().sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; if(t){ discard(s,t); const v=Math.max(0,CARDS[t.id].pow); c.pow+=v; note=`défausse ${nm(t)}, +${v}`; snd="buff"; } break; }
@@ -1587,7 +1624,7 @@ function revealFx(s,li,c,opts={}){
     case "aphrodite": { const t=S.board[s][li].filter(x=>x!==c&&replayable(x)&&CARDS[x.id].fac==="desir").sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost||pw(s,li,b)-pw(s,li,a))[0]; if(t){ replayFx(s,li,t); note=`rejoue ${nm(t)}`; snd="void"; } break; }
     case "calypso": { const t=strongest(targets,o,li); if(t&&!shielded(o,li)&&!sunlit(o)){ t.captive=c.uid; note=`${nm(t)} est captive`; snd="lock"; } break; }
     case "tefnut": { mates.forEach(x=>x.pow+=1); if(mates.length){ note=`+1 à ${mates.length} carte${mates.length>1?"s":""}`; snd="buff"; } break; }
-    case "susanoo": { const t=weakest(mates,s,li); const spots=[0,1,2].filter(i=>i!==li&&S.locs[i].rev&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)); if(t&&spots.length){ const i=gPick(spots); S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t); flonHook(i,t); t.fresh=true; t.pow+=3; (t.mods=t.mods||[]).push({v:3,src:"Susanoo"}); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}, +3`; snd="buff"; } if(onSide(s,"amaterasu")) buffSelf(2); break; }
+    case "susanoo": { const t=weakest(mates,s,li); const spots=[0,1,2].filter(i=>i!==li&&S.locs[i].rev&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)); if(t&&spots.length){ const i=gPick(spots); S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); t.fresh=true; t.pow+=3; (t.mods=t.mods||[]).push({v:3,src:"Susanoo"}); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}, +3`; snd="buff"; } if(onSide(s,"amaterasu")) buffSelf(2); break; }
     case "bourreau": { S.cond=S.cond||{p:[0,0,0],e:[0,0,0]}; if(S.cond[o][li]<4){ S.cond[o][li]++; note="une case adverse est condamnée"; snd="lock"; } break; }
     case "anubis": { if(total(o,li)>total(s,li)){ const t=strongest(targets,o,li); if(t&&destroy(o,li,t)){ note=`le cœur est trop lourd : détruit ${nm(t)}`; snd="destroy"; } } else buffSelf(4); break; }
     case "balor": { let n=0; for(const t of targets) if(weaken(o,li,t,3)) n++; if(n){ note=`−3 à ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
@@ -1614,7 +1651,7 @@ function revealFx(s,li,c,opts={}){
       if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else if(forest(li)){ S.board[o][li].push(t); } else { S.destroyed++; bury(o,t); if(o==="e") S.killE=(S.killE||0)+1; danteHook(li); note=`${nm(t)} est détruite`; } snd="void"; } break; }
     case "psyche": { const t=weakest(mates,s,li)||c; t.pow+=2; note=`+2 à ${nm(t)}`; snd="buff"; break; }
     case "tlazol": { let n=0; for(const x of mates) if(x.pow<CARDS[x.id].pow){ x.pow=CARDS[x.id].pow; n++; } if(n){ c.pow+=2*n; note=`purifie ${n} carte${n>1?"s":""}, +${2*n}`; snd="buff"; } break; }
-    case "eris": { const t=strongest(targets,o,li); const spots=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(t&&spots.length){ const i=gPick(spots); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); flonHook(i,t); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
+    case "eris": { const t=strongest(targets,o,li); const spots=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(t&&spots.length){ const i=gPick(spots); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
     case "durga": { const t=strongest(targets,o,li); if(t&&pw(o,li,t)>=7){ if(destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } } else buffSelf(3); break; }
     case "hecate": draw(s); draw(s); note="pioche 2 cartes"; break;
     case "hermes": { /* ta plus forte carte ici part vers un lieu révélé où elle te fait mener (de préférence un lieu que tu ne menais pas) */
@@ -1624,7 +1661,7 @@ function revealFx(s,li,c,opts={}){
         const wins=leader(i)===s, gap=total(s,i)-total(o,i);
         S.board[s][i]=S.board[s][i].filter(x=>x!==t); S.board[s][li].push(t);
         if(wins&&(!best||(!was&&best.was)||(was===best.was&&gap<best.gap))) best={i,was,gap}; }
-      if(best){ S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][best.i].push(t); flonHook(best.i,t); note=`${nm(t)} part vers ${LOCS[S.locs[best.i].id].name}`; snd="buff"; } break; }
+      if(best){ S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][best.i].push(t); flonHook(best.i,t); if(s==="p"&&qLive()) qProg("move2"); note=`${nm(t)} part vers ${LOCS[S.locs[best.i].id].name}`; snd="buff"; } break; }
     case "konohana": c.bloom=S.turn+1; note="en fleur jusqu'au prochain tour"; break;
     case "mohini": { const t=strongest(targets,o,li); if(t&&!t.neg){ t.neg=true; note=`${nm(t)} perd ses effets`; snd="void"; } break; }
     case "melinoe": { const t=gPick(S.hand[s]); if(t){ discard(s,t); note=`défausse ${nm(t)}`; buffSelf(3); } break; }
@@ -1641,7 +1678,7 @@ function revealFx(s,li,c,opts={}){
     case "odin": { const t=S.hand[s].slice().sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; if(t) discard(s,t); draw(s); draw(s); note=t?`défausse ${nm(t)}, pioche 2`:"pioche 2"; break; }
     case "thor": { const sp=[0,1,2].filter(i=>i!==li&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)); if(sp.length){ const i=gPick(sp); const m=mk("mjolnir"); m.rev=true; m.fresh=true; m.thor=c.uid; S.board[s][i].push(m); note=`Mjölnir → ${LOCS[S.locs[i].id].name}`; snd="destroy"; } break; }
     case "heimdall": { let n=0; const lk=[0,1,2].filter(i=>i!==li&&S.locs[i].locked);
-      for(const t of mates.slice()){ const i=lk.find(i=>S.board[s][i].length<capOf(s,i)); if(i==null) break; S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t); flonHook(i,t); n++; }
+      for(const t of mates.slice()){ const i=lk.find(i=>S.board[s][i].length<capOf(s,i)); if(i==null) break; S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); n++; }
       if(n){ note=`${n} carte${n>1?"s":""} passe${n>1?"nt":""} par le Bifröst`; snd="buff"; } else buffSelf(2); break; }
     case "hel": { const n=resurrectAll(s); if(n){ note=`ressuscite ${n} carte${n>1?"s":""}`; snd="void"; } break; }
     case "ulhel": { const n=resurrectAll(s,{ward:true}); if(n){ note=`ressuscite ${n} carte${n>1?"s":""}, intouchables`; snd="void"; } break; }
@@ -1832,7 +1869,9 @@ async function resolveTurn(mine, theirs, animate){
   S.turnPlays={p:mine.map(x=>x.c),e:(S.mp?theirs:[...theirs.filter(x=>x.c.id!=="nike"),...theirs.filter(x=>x.c.id==="nike")]).map(x=>x.c)};
   S.hand.p=S.hand.p.filter(c=>!mine.some(x=>x.c===c));
   for(const x of theirs) S.hand.e=S.hand.e.filter(c=>c!==x.c);
-  if(mine.length){ S.disc.p=0; if(!(S.mp&&S.mp.replaying)&&!S.tut){ ensureQuests(); qProg("cards12",mine.length); } }
+  if(mine.length){ S.disc.p=0; if(!(S.mp&&S.mp.replaying)&&!S.tut){ ensureQuests(); qProg("cards12",mine.length);
+    const cd=x=>CARDS[x.c.id]; qProg("cheap5",mine.filter(x=>cd(x).cost>=1&&cd(x).cost<=2).length); qProg("helv4",mine.filter(x=>cd(x).fac==="helvara").length);
+    if(S.turn===6&&mine.some(x=>cd(x).cost>=6)) qProg("six6"); if(mine.some(x=>cd(x).r==="U")) qProg("fusion"); } }
   if(theirs.length) S.disc.e=0;
   for(const x of mine) S.board.p[x.li].push(x.c);
   for(const x of theirs) S.board.e[x.li].push(x.c);
@@ -1928,7 +1967,7 @@ function finish(){
   let pw=0,ew=0,pt=0,et=0; const rows=[];
   if(S.blitz){ S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); pt+=a; et+=b; if(w==="p") pw++; else if(w==="e") ew++; rows.push({n:LOCS[L.id].name,a,b,w,inv:nemInv(li)}); });
     const res=pw>ew?"win":ew>pw?"lose":pt>et?"win":et>pt?"lose":"draw"; const r=P.bz.run;
-    ensureQuests(); qProg("play3"); if(res==="win") qProg("win3");
+    ensureQuests(); qProg("play3"); if(res==="win") qProg("win3"); qEnd(res,true);
     if(r&&!r.over){ if(res==="win"){ r.wins++; if(r.wins>=3) bzEndRun(); } else if(res==="lose") bzEndRun(); }
     pushHist("Blitz",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew);
     save(); S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain:r&&r.over?r.gain:0,blitz:true,wins:r?r.wins:0,ended:!r||r.over};
@@ -1941,7 +1980,8 @@ function finish(){
   qProg("play3"); if(res==="win") qProg("win3");
   if(rows.some(r=>r.w==="p"&&r.a>=15)) qProg("loc15");
   if(pw===3) qProg("sweep"); if(pt>=40) qProg("power40"); if(S.killE) qProg("kill4",S.killE);
-  const qDone=P.q.list.filter((q,i)=>!qBefore[i]&&q.p>=QDEF[q.id].n).map(q=>q.id);
+  qEnd(res,false); if(!S.mp&&S.oath!=null&&leader(S.oath)==="p") qProg("oath");
+  const qDone=P.q.list.filter((q,i)=>!qBefore[i]&&q.p>=QDEF[q.id].n).map(q=>qText(q));
   if(S.mp){
     if(res==="win") P.dw++; else if(res==="lose") P.dl++; else P.dd++;
     P.chf+=gain; pushHist("Duel",res,S.mp.oppNick,pw,ew); save(); mpSaveSession(null);
@@ -2234,7 +2274,7 @@ const ICO={
   gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'};
 const ico=k=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
 let sheet=null; /* "quests" ou "settings" : panneau ouvert depuis l'en-tête */
-const questReady=()=>{ if(ensureQuests()) save(); return P.q.list.some(q=>!q.c&&q.p>=QDEF[q.id].n); };
+const questReady=()=>{ const a=ensureQuests(), b=ensureWeek(); if(a||b) save(); return P.q.list.some(q=>!q.c&&q.p>=QDEF[q.id].n)||(!P.wq.c&&P.wq.p>=WQ.n); };
 function header(){
   const ready=questReady();
   const icons=`<button class="helpbtn icobtn${ready?" dot":""}" data-act="sheet" data-s="quests" aria-label="Quêtes du jour">${ico("book")}</button><button class="helpbtn icobtn" data-act="sheet" data-s="settings" aria-label="Réglages">${ico("gear")}</button><button class="helpbtn" data-act="go" data-to="rules" aria-label="Règles" ${screen==="rules"?'aria-current="page"':""}>?</button>`;
@@ -2262,14 +2302,21 @@ function sheetHTML(){
 
 /* --- accueil --- */
 function questsHTML(){
-  if(ensureQuests()) save();
+  { const a=ensureQuests(), b=ensureWeek(); if(a||b) save(); }
   return `<section class="quests"><div class="qhead"><h2>Quêtes du jour</h2><span class="hint">Nouvelles quêtes dans ${hoursToReset()} h</span></div>
     ${P.q.list.map((q,i)=>{ const d=QDEF[q.id], done=q.p>=d.n;
       return `<div class="quest ${q.c?"claimed":""}">
-        <div class="qt"><span>${d.t}</span><span class="qr">+${d.r} CHF</span></div>
+        <div class="qt"><span>${qText(q)}</span><span class="qr">+${d.r} CHF</span></div>
         <div class="qbar"><i style="width:${Math.round(q.p/d.n*100)}%"></i></div>
-        <div class="qfoot"><span class="hint">${q.p} / ${d.n}</span>${q.c?`<span class="hint">Récompense récupérée</span>`:done?`<button class="primary small" data-act="claim" data-i="${i}">Récupérer</button>`:""}</div>
-      </div>`; }).join("")}</section>`;
+        <div class="qfoot"><span class="hint">${q.p} / ${d.n}</span>${q.c?`<span class="hint">Récompense récupérée</span>`:done?`<button class="primary small" data-act="claim" data-i="${i}">Récupérer</button>`:!P.q.rr?`<button class="toggle" data-act="qswap" data-i="${i}">Changer</button>`:""}</div>
+      </div>`; }).join("")}
+    ${P.q.rr?"":`<p class="hint">Tu peux changer une quête par jour.</p>`}
+    <div class="qhead"><h2>Quête de la semaine</h2><span class="hint">Jusqu'à dimanche soir</span></div>
+    <div class="quest ${P.wq.c?"claimed":""}">
+      <div class="qt"><span>${WQ.t}</span><span class="qr">+${WQ.r} CHF</span></div>
+      <div class="qbar"><i style="width:${Math.round(P.wq.p/WQ.n*100)}%"></i></div>
+      <div class="qfoot"><span class="hint">${P.wq.p} / ${WQ.n}</span>${P.wq.c?`<span class="hint">Récompense récupérée</span>`:P.wq.p>=WQ.n?`<button class="primary small" data-act="wclaim">Récupérer</button>`:""}</div>
+    </div></section>`;
 }
 function bannerHTML(){
   const dr=DROPS.filter(x=>today()>=x.soon).pop(); if(!dr) return "";
@@ -2650,7 +2697,7 @@ function resultHTML(){
   return `<div class="veil"><div class="result" role="dialog" aria-label="${t}">
     <h2>${t}</h2>
     ${o.blitz?`<div class="rankline"><b>Blitz · ${o.wins} victoire${o.wins>1?"s":""} sur 3</b><br><span>${o.ended?(o.gain?`Blitz terminé : +${o.gain} CHF`:"Blitz terminé, sans récompense"):o.res==="draw"?"Égalité : le match est à rejouer":`Prochain match contre une IA ${TIERS[BZ.tiers[o.wins]]}`}</span></div>`:`<div class="reward">+${o.gain} CHF</div>`}
-    ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.map(id=>QDEF[id].t).join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
+    ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
     ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
     <div class="rows">${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span><span style="color:var(--me)">${r.a}</span> · <span style="color:var(--foe)">${r.b}</span></span></div>`).join("")}</div>
@@ -2768,6 +2815,9 @@ document.addEventListener("click", e=>{
     case "glogin": sfx("click"); if(window.helvara) window.helvara.signIn(); return;
     case "glogout": sfx("click"); if(window.helvara&&confirm(trUI("Te déconnecter ? Ta progression reste sur ton compte Google."))) window.helvara.signOut(); return;
     case "sfx": P.sfx=!P.sfx; save(); if(P.sfx) SFX.click(); render(); return;
+    case "qswap": { const i=+el.dataset.i, q=P.q&&P.q.list[i]; if(q&&!q.c&&q.p<QDEF[q.id].n&&!P.q.rr){ const small=!!QDEF[q.id].small, other=P.q.list[1-i]&&P.q.list[1-i].id;
+      const opts=Object.keys(QDEF).filter(id=>!!QDEF[id].small===small&&id!==q.id&&id!==other&&qOk(id)); if(opts.length){ P.q.list[i]=mkQuest(pickRand(opts),Math.floor(Math.random()*1e5)); P.q.rr=true; save(); sfx("click"); } } render(); return; }
+    case "wclaim": { if(P.wq&&!P.wq.c&&P.wq.p>=WQ.n){ P.wq.c=true; P.chf+=WQ.r; save(); sfx("coin"); } render(); return; }
     case "claim": { const q=P.q&&P.q.list[+el.dataset.i]; if(q&&!q.c&&q.p>=QDEF[q.id].n){ q.c=true; P.chf+=QDEF[q.id].r; save(); sfx("coin"); } render(); return; }
     case "fanpick": fanPick=P.fan.filter(id=>P.owned.includes(id)); sfx("click"); render(); return;
     case "fantoggle": { const id=el.dataset.id; if(fanPick.includes(id)) fanPick=fanPick.filter(x=>x!==id); else if(fanPick.length<3) fanPick.push(id); sfx("select"); render(); return; }
