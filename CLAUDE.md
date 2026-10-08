@@ -171,10 +171,9 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 | Date | Contenu |
 |---|---|
 | 1er oct. 2026 | 1re vague, Yarden X Apsu (1re fusion) |
-| 12 oct. | Halloween : paquet « Pli des Citrouilles » jusqu'au 2 nov., Médée Mariée Spectrale, Izzy Lune de Sang… Trois lieux arrivent : **Le Cirque** (fin du tour 4, les puissances sont mélangées), **Le Bureau des enchères** (cartes jouées +1 de coût et +2) et **Le Tombeau** (avancé depuis décembre). |
+| 12 oct. | Halloween : paquet « Pli des Citrouilles » jusqu'au 2 nov., Médée Mariée Spectrale, Izzy Lune de Sang… Six lieux arrivent : **Le Cirque** (fin du tour 4, les puissances sont mélangées), **Le Bureau des enchères** (cartes jouées +1 de coût et +2), **Le Tombeau** (avancé depuis décembre), **Sauvabelin** (aucune destruction possible), **Le Flon** (+2 aux cartes qui y arrivent par un déplacement) et **Les Escaliers du Marché** (+2 aux cartes Helvara). |
 | 1er nov. | Vague de novembre (Nemesis, Anubis, Médée, la Voleuse…), 3 fusions. Coûts revus avant sortie (8 oct.) : Brigid, Tefnut et Dionysos 2/2, Bourreau 3/2, Chernobog 4/4, Médée Mariée Spectrale et Poséidon 4/3, Qetesh 4/2, Seigneur de la marée noire 6/8, Balor 6/5. Effets revus avant sortie : Messagère d'Hécate (Continu : +2 par fin de tour si elle ne mène pas, 6 max), Médée (Continu : la prochaine carte adverse jouée ici perd 2), Aphrodite et Aphrodite X Yarden (rejouent des Révélations), Dante (+1 par destruction ici), Susanoo (déplace sa carte la plus faible, +3) |
 | **15 nov.** (annonce le 10) | **Vague « énergie »** : Prométhée (L, Primordial), Pandore (E, Désir), Athéna (E), Bia (R), Styx (L), **Nike** (U de faction, Jugement) |
-| À fixer | Lieux **Sauvabelin** (aucune destruction possible), **Le Flon** (+2 aux cartes qui y arrivent par un déplacement) et **Les Escaliers du Marché** (+2 aux cartes Helvara). Cachés par `rel:"2099-01-01"` en attendant la date. |
 | 1er déc. | Vague de décembre : 17 cartes, 5 fusions, lieu Domaine du Créateur, jetons Mjölnir, Ombre, Pourceau. Le Boucher de la Riponne détruit désormais sa carte la plus faible et pioche |
 | 31 déc. → 18 janv. | Paquet « Pli du Douzième Coup » (annonce le 26 déc.) : Hel Reine du Réveillon, Éos de Nouvel An, Pele du Réveillon, Qetesh du Nouvel An (toutes `ex:"nouvelan"`) + fusions Pele X Jordan du Réveillon (`ulpele_r`) et Qetesh X Jordan du Nouvel An (`ulqetjor_r`, exige `qetesh_r`) |
 
@@ -187,7 +186,17 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 
 ---
 
+## Façon de travailler avec Jordan
+
+- Jordan prépare souvent les changements dans une autre session (brainstorm) et les apporte sous forme de fichier `.md` : le lire, vérifier qu'il est cohérent avec le code (et le dire s'il ne l'est pas), puis l'appliquer.
+- Publier directement sur `main` est la pratique habituelle, sauf si le fichier demande d'attendre sa validation.
+- Toujours tester avant de publier, et lui envoyer des captures quand il s'agit de visuel. Il teste ensuite sur son téléphone (Android, navigateur Brave) et renvoie des captures.
+- Jordan n'est pas développeur : réponses claires, sans jargon, et dire franchement ce qui n'a pas été vérifié.
+
 ## En attente
+- À faire vérifier par Jordan en jouant (session du 8 octobre) : jonction de boucle des musiques, fondu vers la tension au tour 5, jingles de fin, curseurs de volume sur téléphone, ressenti de la nouvelle IA aux hauts rangs.
+- Emblème de Nike : dessin SVG provisoire (`EMB_SVG`), à remplacer si Jordan fournit une image.
+- Points du brainstorm pas encore traités : débloquer les modes au fur et à mesure (Serment au rang Initié, Blitz après 5 parties, fusions dès la première pièce) ; une piste de partie supplémentaire si besoin.
 
 - Musique `audio/accueil_nouvelan.mp3` (optionnelle).
 - Fin octobre : faire le point sur les rangs (série de victoires) et sur Mohini. Surveiller le combo Lip Dentelle → Hel.
