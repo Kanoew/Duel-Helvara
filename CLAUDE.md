@@ -142,7 +142,7 @@ Autres réglages selon le type de carte :
 | Date | Contenu |
 |---|---|
 | 1er oct. 2026 | 1re vague, Yarden X Apsu (1re fusion) |
-| 12 oct. | Halloween : paquet « Pli des Citrouilles » jusqu'au 2 nov., Médée Mariée Spectrale, Izzy Lune de Sang… Trois lieux arrivent : **Le Cirque** (fin du tour 4, les puissances sont mélangées), **Le Bureau des enchères** (cartes jouées +1 de coût et +2) et **Le Tombeau** (avancé depuis décembre). Images à fournir : `images/lieux/cirque.jpg` et `images/lieux/encheres.jpg` (800 × 597). |
+| 12 oct. | Halloween : paquet « Pli des Citrouilles » jusqu'au 2 nov., Médée Mariée Spectrale, Izzy Lune de Sang… Trois lieux arrivent : **Le Cirque** (fin du tour 4, les puissances sont mélangées), **Le Bureau des enchères** (cartes jouées +1 de coût et +2) et **Le Tombeau** (avancé depuis décembre). |
 | 1er nov. | Vague de novembre (Nemesis, Anubis, Médée, la Voleuse…), 3 fusions. Effets revus avant sortie : Messagère d'Hécate (Continu : +2 par fin de tour si elle ne mène pas, 6 max), Médée (Continu : la prochaine carte adverse jouée ici perd 2), Aphrodite et Aphrodite X Yarden (rejouent des Révélations), Dante (+1 par destruction ici), Susanoo (déplace sa carte la plus faible, +3) |
 | **15 nov.** (annonce le 10) | **Vague « énergie »** : Prométhée (L, Primordial), Pandore (E, Désir), Athéna (E), Bia (R), Styx (L), **Nike** (U de faction, Jugement) |
 | 1er déc. | Vague de décembre : 17 cartes, 5 fusions, lieu Domaine du Créateur, jetons Mjölnir, Ombre, Pourceau. Le Boucher de la Riponne détruit désormais sa carte la plus faible et pioche |
