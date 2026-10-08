@@ -168,6 +168,9 @@ window.HELVARA_EN = {
     archives:{n:"Archives of Thoth", fx:"When you play a card here, draw 1 card."},
     cirque:{n:"The Circus", fx:"End of turn 4: the power of every card here is shuffled between both sides."},
     encheres:{n:"The Auction House", fx:"Cards played here cost 1 more and have +2."},
+    sauvabelin:{n:"Sauvabelin", fx:"The forest protects everyone: no card can be destroyed here."},
+    flon:{n:"The Flon", fx:"Cards that arrive here by moving get +2."},
+    escaliers:{n:"The Market Stairs", fx:"Helvara cards have +2 here."},
     cathedrale:{n:"Helvara Cathedral", fx:"The gods are watching: the side with fewer cards here gets +3."}
   }
 };
