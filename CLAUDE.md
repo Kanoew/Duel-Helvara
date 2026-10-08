@@ -15,6 +15,7 @@ Réponses en **français**.
 - **Aucun secret dans le dépôt.** Le code secret Google OAuth reste uniquement dans Supabase. La clé de `config.js` est une clé *publishable* : elle peut rester publique.
 - **Pas de nom ou d'identifiant de modèle d'IA** dans les commits ni dans le code.
 - Messages de commit en français.
+- **Pour changer un effet, modifier en priorité une carte pas encore sortie.**
 - Ne jamais réécrire l'historique ni faire de `push --force` sans accord explicite.
 - **Si un déploiement Pages reste bloqué**, ne pas utiliser « Re-run ». Pousser un commit vide (`git commit --allow-empty -m "Relance de la publication GitHub Pages"`), ce qui crée un nouveau run.
 
@@ -141,10 +142,10 @@ Autres réglages selon le type de carte :
 | Date | Contenu |
 |---|---|
 | 1er oct. 2026 | 1re vague, Yarden X Apsu (1re fusion) |
-| 12 oct. | Halloween : paquet « Pli des Citrouilles » jusqu'au 2 nov., Médée Mariée Spectrale, Izzy Lune de Sang… |
-| 1er nov. | Vague de novembre (Nemesis, Anubis, Médée, la Voleuse…), 3 fusions |
+| 12 oct. | Halloween : paquet « Pli des Citrouilles » jusqu'au 2 nov., Médée Mariée Spectrale, Izzy Lune de Sang… Trois lieux arrivent : **Le Cirque** (fin du tour 4, les puissances sont mélangées), **Le Bureau des enchères** (cartes jouées +1 de coût et +2) et **Le Tombeau** (avancé depuis décembre). Images à fournir : `images/lieux/cirque.jpg` et `images/lieux/encheres.jpg` (800 × 597). |
+| 1er nov. | Vague de novembre (Nemesis, Anubis, Médée, la Voleuse…), 3 fusions. Effets revus avant sortie : Messagère d'Hécate (Continu : +2 par fin de tour si elle ne mène pas, 6 max), Médée (Continu : la prochaine carte adverse jouée ici perd 2), Aphrodite et Aphrodite X Yarden (rejouent des Révélations), Dante (+1 par destruction ici), Susanoo (déplace sa carte la plus faible, +3) |
 | **15 nov.** (annonce le 10) | **Vague « énergie »** : Prométhée (L, Primordial), Pandore (E, Désir), Athéna (E), Bia (R), Styx (L), **Nike** (U de faction, Jugement) |
-| 1er déc. | Vague de décembre : 17 cartes, 5 fusions, lieux Domaine du Créateur et Tombeau, jetons Mjölnir, Ombre, Pourceau |
+| 1er déc. | Vague de décembre : 17 cartes, 5 fusions, lieu Domaine du Créateur, jetons Mjölnir, Ombre, Pourceau. Le Boucher de la Riponne détruit désormais sa carte la plus faible et pioche |
 | 31 déc. → 18 janv. | Paquet « Pli du Douzième Coup » (annonce le 26 déc.) : Hel Reine du Réveillon, Éos de Nouvel An, Pele du Réveillon, Qetesh du Nouvel An (toutes `ex:"nouvelan"`) + fusions Pele X Jordan du Réveillon (`ulpele_r`) et Qetesh X Jordan du Nouvel An (`ulqetjor_r`, exige `qetesh_r`) |
 
 **Thème de la vague du 15 novembre** :
@@ -162,4 +163,5 @@ Autres réglages selon le type de carte :
 - Fin octobre : faire le point sur les rangs (série de victoires) et sur Mohini. Surveiller le combo Lip Dentelle → Hel.
 - Mi-novembre : surveiller le deck Jugement « énergie ». Leviers : bonus de Styx à +2, réserve de Prométhée à 6.
 - Idée en suspens : ranger le journal de partie derrière un bouton.
+- Idée d'effet « Ardeur » pour une future légendaire : « ta carte la plus faible ici est doublée ».
 - Idées de cartes : Kratos et Zélos (autres enfants de Styx) ; une ultra-légendaire de faction pour Helvara, Désir et Primordial.
