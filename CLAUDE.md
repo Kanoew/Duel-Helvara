@@ -151,8 +151,8 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 | Rareté | Sur la carte | À la pose |
 |---|---|---|
 | Commune | rien | rien |
-| Rare | liseré bleu fixe | rien |
-| Épique | liseré violet + reflet qui balaie (CSS : main, collection, boutique, grand format, paquets, vitrine) | gerbe d'étincelles de 0,8 s sur le lieu (`epic_<faction>` dans `MIX`) |
+| Rare | halo bleu (contour + lueur intérieure) + reflet lent et pâle (9 s) | rien |
+| Épique | halo violet qui pulse + reflet vif toutes les 3,4 s (CSS : main, collection, boutique, grand format, paquets, vitrine) | gerbe d'étincelles de 0,8 s sur le lieu (`epic_<faction>` dans `MIX`) |
 | Légendaire | liseré doré + reflet doré + souffle lent et poussières dans l'illustration | effet `vfx` |
 | Ultra-légendaire | reflet holo + ambiance en boucle | effet `vfx` + cinématique de fusion |
 

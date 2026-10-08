@@ -570,18 +570,24 @@ body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
 .zoomwrap{padding:14px 10px}
 @media (prefers-reduced-motion: reduce){ .full.tilt{transform:none;transition:none} }
 
-/* Brillance par rareté : commune rien · rare liseré fixe · épique reflet qui balaie · légendaire reflet doré + souffle dans l'illustration */
-.full.r-R,.hc.r-R{outline:1.5px solid rgba(127,182,230,.8);outline-offset:-1.5px}
-.full.r-E,.hc.r-E{outline:2px solid rgba(181,140,240,.9);outline-offset:-2px;box-shadow:0 0 14px rgba(181,140,240,.35)}
-.full.r-L,.hc.r-L{outline:2px solid rgba(255,205,110,.95);outline-offset:-2px;box-shadow:0 0 18px rgba(255,205,110,.4)}
-.mini.r-R{outline:1.5px solid rgba(127,182,230,.85);outline-offset:-3.5px}
-.mini.r-E{outline:1.5px solid rgba(181,140,240,.95);outline-offset:-3.5px}
-.mini.r-L{outline:1.5px solid rgba(255,205,110,1);outline-offset:-3.5px}
-.full.r-E::after,.full.r-L::after,.hc.r-E::before,.hc.r-L::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
-  background:linear-gradient(105deg,transparent 38%,rgba(181,140,240,.45) 50%,transparent 62%);transform:translateX(-120%);animation:rsweep 6s ease-in-out infinite;will-change:transform}
-.full.r-L::after,.hc.r-L::before{background:linear-gradient(105deg,transparent 38%,rgba(255,226,160,.55) 50%,transparent 62%);animation-duration:4.4s}
+/* Brillance par rareté : commune rien · rare halo bleu + reflet lent · épique halo violet qui pulse + reflet vif · légendaire halo doré + reflet + souffle dans l'illustration */
+.full.r-R,.hc.r-R{outline:2px solid rgba(127,182,230,.95);outline-offset:-2px;box-shadow:0 0 14px rgba(127,182,230,.45)}
+.full.r-E,.hc.r-E{outline:2px solid rgba(196,156,255,1);outline-offset:-2px;box-shadow:0 0 20px rgba(181,140,240,.6)}
+.full.r-L,.hc.r-L{outline:2px solid rgba(255,205,110,1);outline-offset:-2px;box-shadow:0 0 22px rgba(255,205,110,.55)}
+.mini.r-R{outline:2px solid rgba(127,182,230,.95);outline-offset:-4px}
+.mini.r-E{outline:2px solid rgba(196,156,255,1);outline-offset:-4px}
+.mini.r-L{outline:2px solid rgba(255,205,110,1);outline-offset:-4px}
+/* halo intérieur, posé au-dessus de l'illustration : fixe pour le rare, pulsé pour l'épique */
+.full.r-R::before,.full.r-E::before,.hc.r-R::after,.hc.r-E::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;box-shadow:inset 0 0 18px 3px rgba(127,182,230,.5)}
+.full.r-E::before,.hc.r-E::after{box-shadow:inset 0 0 26px 5px rgba(181,140,240,.75);animation:epulse 2.2s ease-in-out infinite alternate;will-change:opacity}
+@keyframes epulse{from{opacity:.35}to{opacity:1}}
+/* reflet qui balaie : lent et pâle pour le rare, vif et fréquent pour l'épique, doré pour la légendaire */
+.full.r-R::after,.full.r-E::after,.full.r-L::after,.hc.r-R::before,.hc.r-E::before,.hc.r-L::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(105deg,transparent 40%,rgba(160,205,245,.3) 50%,transparent 60%);transform:translateX(-120%);animation:rsweep 9s ease-in-out infinite;will-change:transform}
+.full.r-E::after,.hc.r-E::before{background:linear-gradient(105deg,transparent 30%,rgba(205,175,255,.8) 50%,transparent 70%);animation-duration:3.4s}
+.full.r-L::after,.hc.r-L::before{background:linear-gradient(105deg,transparent 34%,rgba(255,226,160,.7) 50%,transparent 66%);animation-duration:3.2s}
 @keyframes rsweep{0%,52%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
-.hc.r-E::before,.hc.r-L::before{z-index:1}
+.hc.r-R::before,.hc.r-E::before,.hc.r-L::before,.hc.r-R::after,.hc.r-E::after{z-index:1}
 .full.r-L:not(.locked) .art{animation:lbreath 10s ease-in-out infinite alternate;will-change:transform}
 @keyframes lbreath{from{transform:scale(1) translateY(0)}to{transform:scale(1.045) translateY(-1.2%)}}
 .full .lgp{position:absolute;left:0;right:0;top:0;height:200%;z-index:2;pointer-events:none;opacity:.75;will-change:transform;animation:lrise 14s linear infinite;
@@ -589,7 +595,7 @@ body.hasdock .wrap{min-height:calc(100dvh - 36px);box-sizing:border-box}
 @keyframes lrise{from{transform:translateY(0)}to{transform:translateY(-50%)}}
 /* Pour rester fluide sur téléphone : le plateau (miniatures) garde le liseré fixe ; dans les grilles, le souffle de l'illustration est réservé au grand format */
 .grid .full.r-L .art,.stallgrid .full.r-L .art{animation:none}
-@media (prefers-reduced-motion: reduce){ .full.r-E::after,.full.r-L::after,.hc.r-E::before,.hc.r-L::before,.full.r-L .art,.full .lgp{animation:none} .full.r-E::after,.full.r-L::after,.hc.r-E::before,.hc.r-L::before{transform:translateX(0);opacity:.25} .full .lgp{display:none} }
+@media (prefers-reduced-motion: reduce){ .full.r-R::after,.full.r-E::after,.full.r-L::after,.hc.r-R::before,.hc.r-E::before,.hc.r-L::before{animation:none;transform:translateX(0);opacity:.25} .full.r-E::before,.hc.r-E::after,.full.r-L .art{animation:none} .full .lgp{display:none} }
 /* Cinématique de fusion (ultra-légendaires) */
 .cine{position:fixed;inset:0;z-index:9000;background:rgba(4,8,16,.86);display:grid;place-items:center;overflow:hidden;touch-action:manipulation;cursor:pointer}
 .cine .cc{position:absolute;width:min(34vw,150px);aspect-ratio:2/3;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.3);box-shadow:0 10px 30px rgba(0,0,0,.6)}
