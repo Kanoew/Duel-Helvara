@@ -204,6 +204,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - À faire vérifier par Jordan en jouant (session du 8 octobre) : jonction de boucle des musiques, fondu vers la tension au tour 5, jingles de fin, curseurs de volume sur téléphone, ressenti de la nouvelle IA aux hauts rangs.
 - Points du brainstorm pas encore traités : débloquer les modes au fur et à mesure (Serment au rang Initié, Blitz après 5 parties, fusions dès la première pièce) ; une piste de partie supplémentaire si besoin.
 
+- **9 cartes Helvara ajoutées le 9 octobre, cachées** (`rel` et `soon` à `2099-01-01`, sans effet) : `reine_sevelin`, `somnambule`, `veilleur_pont`, `couturiere`, `archiviste`, `patronne`, `meute` et les fusions `ulsomnambule` (Somnambule + Reine) et `ularchiviste` (Archiviste + Patronne), avec leurs entrées `ULS`. **Coûts, puissances et raretés sont provisoires.** Quand Jordan donne la date et les effets : remplacer `rel`/`soon`, écrire `fx`, ajouter `vfx` aux fusions, compléter `cartes-en.js` et la bannière `DROPS`.
 - Musique `audio/accueil_nouvelan.mp3` (optionnelle).
 - Fin octobre : faire le point sur les rangs (série de victoires) et sur Mohini. Surveiller le combo Lip Dentelle → Hel.
 - Mi-novembre : surveiller le deck Jugement « énergie ». Leviers : bonus de Styx à +2, réserve de Prométhée à 6.

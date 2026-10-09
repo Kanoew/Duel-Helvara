@@ -801,6 +801,16 @@ const CARDS = {
   qetesh_r:{name:"Qetesh du Nouvel An", base:"qetesh", cost:5, pow:2, fac:"desir", r:"E", rel:"2026-12-31", soon:"2026-12-26", ex:"nouvelan", fx:"Révélation : la carte adverse la plus forte ici (5 ou moins) est charmée. +1 à tes autres cartes ici.", img:"images/qetesh_r.jpg"},
   ulpele_r:{name:"Pele X Jordan du Réveillon", vfx:"ulpele_r", cost:6, pow:4, fac:"primordial", r:"U", rel:"2026-12-31", soon:"2026-12-26", fx:"Révélation : la lave inflige −1 à toutes les cartes adverses, dans les 3 lieux. Exige Pele et Jordan dans le deck.", img:"images/ulpele_r.jpg"},
   ulqetjor_r:{name:"Qetesh X Jordan du Nouvel An", base:"ulqetjor", vfx:"ulqetjor_r", cost:6, pow:4, fac:"desir", r:"U", rel:"2026-12-31", soon:"2026-12-26", fx:"Continu : tes autres cartes ont +1, dans les 3 lieux. Révélation : charme la carte adverse la plus forte de chaque lieu (3 ou moins). Exige Qetesh du Nouvel An et Jordan dans le deck.", img:"images/ulqetjor_r.jpg"},
+  /* Helvara, sans date ni effet pour l'instant : cachées (rel/soon lointains), coûts, puissances et raretés provisoires */
+  reine_sevelin:{name:"La Reine de Sévelin", cost:4, pow:4, fac:"helvara", r:"E", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/reine_sevelin.jpg"},
+  somnambule:{name:"La Somnambule du Flon", cost:2, pow:2, fac:"helvara", r:"R", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/somnambule.jpg"},
+  veilleur_pont:{name:"Le Veilleur du Pont Bessières", cost:2, pow:3, fac:"helvara", r:"R", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/veilleur_pont.jpg"},
+  couturiere:{name:"La Couturière de la Cité", cost:3, pow:3, fac:"helvara", r:"R", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/couturiere.jpg"},
+  archiviste:{name:"L'Archiviste du Sous-Gare", cost:3, pow:3, fac:"helvara", r:"R", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/archiviste.jpg"},
+  patronne:{name:"La Patronne d'Ouchy", cost:3, pow:3, fac:"helvara", r:"R", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/patronne.jpg"},
+  meute:   {name:"La Meute du M2", cost:4, pow:4, fac:"helvara", r:"E", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/meute.jpg"},
+  ulsomnambule:{name:"La Somnambule X La Reine", cost:6, pow:4, fac:"helvara", r:"U", rel:"2099-01-01", soon:"2099-01-01", fx:"Exige La Somnambule du Flon et La Reine de Sévelin dans le deck.", img:"images/ulsomnambule.jpg"},
+  ularchiviste:{name:"L'Archiviste X La Patronne", cost:6, pow:4, fac:"helvara", r:"U", rel:"2099-01-01", soon:"2099-01-01", fx:"Exige L'Archiviste du Sous-Gare et La Patronne d'Ouchy dans le deck.", img:"images/ularchiviste.jpg"},
   reflet:  {name:"Reflet", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par le Lac Ouchy.", img:"", token:true},
   illusion:{name:"Illusion", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Kitsune.", img:"", token:true},
   lanterne:{name:"Lanterne", cost:0, pow:2, fac:"helvara", r:"T", fx:"Jeton laissé par Dame Joanna.", img:"images/lanterne.jpg?v=7", token:true},
@@ -889,7 +899,8 @@ const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike com
   {id:"ulcirce",req:[["nyx","nyx_h"],"circe"],n:"Nyx et Circé"},{id:"uloshun",req:[["nyx","nyx_h"],"oshun"],n:"Nyx et Oshun"},
   {id:"ulqetjor",req:["qetesh",["jordan","jordan_n"]],n:"Qetesh et Jordan"},{id:"ulqetyar",req:["qetesh","yarden"],n:"Qetesh et Yarden Weiss"},
   {id:"ulhel",req:[["hel","hel_r"],"baldur"],n:"Hel et Baldur"},
-  {id:"ulpele_r",req:[["pele","pele_r"],["jordan","jordan_n"]],n:"Pele et Jordan"},{id:"ulqetjor_r",req:["qetesh_r",["jordan","jordan_n"]],n:"Qetesh du Nouvel An et Jordan"}];
+  {id:"ulpele_r",req:[["pele","pele_r"],["jordan","jordan_n"]],n:"Pele et Jordan"},{id:"ulqetjor_r",req:["qetesh_r",["jordan","jordan_n"]],n:"Qetesh du Nouvel An et Jordan"},
+  {id:"ulsomnambule",req:["somnambule","reine_sevelin"],n:"La Somnambule et La Reine"},{id:"ularchiviste",req:["archiviste","patronne"],n:"L'Archiviste et La Patronne"}];
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
 const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, Psyché, Amaterasu, La Mère de Cendre… et la première ultra-légendaire, Yarden X Apsu."},
   {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."},
