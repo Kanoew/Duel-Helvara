@@ -205,6 +205,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - Points du brainstorm pas encore traités : débloquer les modes au fur et à mesure (Serment au rang Initié, Blitz après 5 parties, fusions dès la première pièce) ; une piste de partie supplémentaire si besoin.
 
 - **9 cartes Helvara ajoutées le 9 octobre, cachées** (`rel` et `soon` à `2099-01-01`, sans effet) : `reine_sevelin`, `somnambule`, `veilleur_pont`, `couturiere`, `archiviste`, `patronne`, `meute` et les fusions `ulsomnambule` (Somnambule + Reine) et `ularchiviste` (Archiviste + Patronne), avec leurs entrées `ULS`. **Coûts, puissances et raretés sont provisoires.** Quand Jordan donne la date et les effets : remplacer `rel`/`soon`, écrire `fx`, ajouter `vfx` aux fusions, compléter `cartes-en.js` et la bannière `DROPS`.
+- **13 cartes sans faction, coût ni effet, ajoutées le 9 octobre, cachées** (`rel`/`soon` à `2099-01-01`) : `daji`, `aine`, `rati`, `gaia`, `frigg`, `maat`, `typhon`, `hera`, `pakhet`, `izanami`, `echidna`, `hephaistos`, `cernunnos`. **Faction (devinée d'après les dieux déjà en jeu), coût 3, puissance 3 et rareté épique sont provisoires** : Jordan doit les fixer, avec la date et les effets.
 - Musique `audio/accueil_nouvelan.mp3` (optionnelle).
 - Fin octobre : faire le point sur les rangs (série de victoires) et sur Mohini. Surveiller le combo Lip Dentelle → Hel.
 - Mi-novembre : surveiller le deck Jugement « énergie ». Leviers : bonus de Styx à +2, réserve de Prométhée à 6.

@@ -120,6 +120,7 @@ window.HELVARA_EN = {
     tyr:{n:"Tyr", fx:"On Reveal: −1 to each enemy card here with 4 Power or more."},
     medee:{n:"Medea", fx:"Ongoing: the next enemy card played here loses 2. If Hecate is on your side, the next two."},
     medee_h:{n:"Medea, Spectral Bride", fx:"On Reveal: poison the strongest enemy card here: it loses 1 at the end of each turn, down to 0. If Hecate is on your side, also poison the second strongest."},
+    gaia:{n:"Gaia"}, maat:{n:"Ma'at"}, hera:{n:"Hera"}, hephaistos:{n:"Hephaestus"},
     reine_sevelin:{n:"The Queen of Sévelin"}, somnambule:{n:"The Flon Sleepwalker"}, veilleur_pont:{n:"The Watcher of Pont Bessières"}, couturiere:{n:"The Seamstress of the Cité"},
     archiviste:{n:"The Archivist of the Sous-Gare"}, patronne:{n:"The Proprietress of Ouchy"}, meute:{n:"The M2 Pack"},
     ulsomnambule:{n:"The Sleepwalker X The Queen", fx:"Requires The Flon Sleepwalker and The Queen of Sévelin in the deck."},
