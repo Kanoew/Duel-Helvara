@@ -30,6 +30,7 @@ Réponses en **français**.
 | `interface-en.js` | Traductions anglaises de l'interface (`exact`, `rules` en regex, `NOTES` pour le journal, `DROPS`, `ULS`…) |
 | `cloud.js` + `config.js` | Supabase : sauvegarde, classement, duels en temps réel, connexion Google |
 | `vendor/supabase.js` | Bibliothèque Supabase en local (le CDN est bloqué) |
+| `README.md` | Présentation du jeu sur GitHub (français et anglais), lien de jeu et Discord |
 | `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor |
 | `images/` | Illustrations des cartes (`<id>.jpg`) |
 | `images/avatars/` | Portraits carrés (`<id>.jpg`) |
@@ -125,6 +126,7 @@ Autres réglages selon le type de carte :
   - `LAYER` : briques sur un lieu (`rise`, `burst`, `smoke`, `rays`, `vortex`, `rings`, `chains`, `sweep`, `sparkle`, `flicker`).
   - `SCREEN` : ambiances plein écran, ultra-légendaires seulement (`rain`, `petals`, `embers`, `lightning`, `snow`, `dust`, `bubbles`).
   - Les légendaires et ultra-légendaires en grand s'inclinent sous le doigt (`.full.tilt`). Les ultra-légendaires ont en plus leur ambiance en boucle dans l'illustration.
+- **Discord** : `DISCORD` (lien d'invitation), bouton dans l'en-tête à côté des quêtes, hors écran de partie seulement.
 - **Langue** : `trUI()` et `translateDOM()`. Le texte est écrit en français dans le code, puis traduit à l'affichage.
 
 ---

@@ -105,7 +105,7 @@
     "Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":"Open the First Burn in the shop to get your first deck.",
     "Blitz":"Blitz", "Duel entre amis":"Duel with friends", "Ta partie gratuite du jour t'attend · jusqu'à 300 CHF":"Your free daily game is waiting · up to 300 CHF",
     "Un duel peut être repris":"A duel can be resumed", "Crée un salon":"Create a room", "Partie gratuite du jour":"Free game today", "Réglages":"Settings", "Langue":"Language", "Son":"Sound", "Tutoriel":"Tutorial", "Menu":"Menu", "Crée un salon et partage le code":"Create a room and share the code",
-    "Quêtes du jour":"Daily quests", "Récompense récupérée":"Reward claimed", "Récupérer":"Claim",
+    "Quêtes du jour":"Daily quests", "Discord du jeu":"Game Discord", "Récompense récupérée":"Reward claimed", "Récupérer":"Claim",
     "Progression sauvegardée pour cet appareil.":"Progress saved on this device.", "Progression sauvegardée sur cet appareil.":"Progress saved on this device.",
     "Se connecter avec Google":"Sign in with Google", "pour la retrouver partout.":"to keep it everywhere.", "Se déconnecter":"Sign out",
     "Revoir le tutoriel":"Replay the tutorial", "Volume de la musique":"Music volume", "Volume des effets":"Sound effects volume", "Quête de la semaine":"Weekly quest", "Gagne 15 parties cette semaine":"Win 15 games this week", "Jusqu'à dimanche soir":"Until Sunday night", "Tu peux changer une quête par jour.":"You can change one quest per day.", "Cinématiques":"Cinematics", "Activée":"On", "Coupée":"Off", "Touche pour passer":"Tap to skip", "Musique : activée":"Music: on", "Musique : coupée":"Music: off", "Effets : activés":"Sound effects: on", "Effets : coupés":"Sound effects: off",
