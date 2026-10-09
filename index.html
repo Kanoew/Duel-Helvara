@@ -3084,12 +3084,57 @@ document.addEventListener("pointerdown", e=>{
 });
 ["pointerup","pointercancel","pointerleave"].forEach(t=>document.addEventListener(t,()=>clearTimeout(lpTimer)));
 document.addEventListener("contextmenu", e=>{ if(e.target.closest("[data-lp]")) e.preventDefault(); });
-let fanStart=null, fanSwiped=0;
-document.addEventListener("pointerdown", e=>{ fanStart=e.target.closest(".fan")?{x:e.clientX,y:e.clientY}:null; });
-document.addEventListener("pointerup", e=>{
-  if(!fanStart) return; const dx=e.clientX-fanStart.x, dy=e.clientY-fanStart.y; fanStart=null;
-  if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)){ fanSwiped=Date.now(); fanRotate(dx<0?1:-1); }
-});
+/* Vitrine qui glisse : pendant le geste, les trois cartes suivent le doigt (de leur place vers la suivante) ;
+   au lâcher, elles finissent le trajet en douceur (Web Animations), puis la rotation est enregistrée et l'écran redessiné
+   dans la même position. La carte qui fait le tour passe derrière, plus petite. Mouvement réduit : rotation directe. */
+const FAN_SLOT={"-1":{ty:0,rot:-12,tx:-38,s:1},"0":{ty:-7.14,rot:0,tx:0,s:1},"1":{ty:0,rot:12,tx:38,s:1}}, FAN_MID={ty:-2,rot:0,tx:0,s:.78};
+const fanTf=q=>`translateY(${q.ty}%) rotate(${q.rot}deg) translateX(${q.tx}%) scale(${q.s})`;
+const fanLerp=(a,b,t)=>({ty:a.ty+(b.ty-a.ty)*t,rot:a.rot+(b.rot-a.rot)*t,tx:a.tx+(b.tx-a.tx)*t,s:a.s+(b.s-a.s)*t});
+const fanWrap=(pos,step)=>Math.abs(pos-step)>1;
+function fanAt(pos,step,t){ /* step 1 : les cartes partent vers la gauche ; celle de gauche fait le tour par derrière */
+  if(!fanWrap(pos,step)) return fanLerp(FAN_SLOT[pos],FAN_SLOT[pos-step],t);
+  return t<.5?fanLerp(FAN_SLOT[pos],FAN_MID,t*2):fanLerp(FAN_MID,FAN_SLOT[-pos],(t-.5)*2); }
+function fanZ(pos,step,t){ if(fanWrap(pos,step)) return 0; if(pos-step===0) return t>.5?3:2; if(pos===0) return t>.5?2:3; return 1; }
+const fanOp=(pos,step,t)=>fanWrap(pos,step)?1-.45*Math.sin(Math.PI*t):1;
+function fanSet(d){ for(const c of d.cards){ c.el.style.top="6%"; c.el.style.transition="none"; c.el.style.transform=fanTf(fanAt(c.pos,d.step,d.t)); c.el.style.zIndex=fanZ(c.pos,d.step,d.t); c.el.style.opacity=fanOp(c.pos,d.step,d.t); } }
+function fanGrab(fanEl,x,y){
+  const cards=[...fanEl.querySelectorAll(".fcard")].map(el=>({el,pos:+el.dataset.pos}));
+  if(cards.length!==3||!cards.every(c=>c.pos>=-1&&c.pos<=1)) return null;
+  return {x,y,cards,w:fanEl.offsetWidth||300,step:0,t:0,on:false};
+}
+let fanDrag=null, fanBusy=false, fanSwiped=0;
+function fanFinish(d,commit){
+  fanBusy=true; const t1=commit?1:0, steps=8, dur=Math.max(140,320*Math.abs(t1-d.t));
+  for(const c of d.cards){
+    const fr=[]; for(let i=0;i<=steps;i++){ const t=d.t+(t1-d.t)*i/steps; fr.push({transform:fanTf(fanAt(c.pos,d.step,t)),opacity:fanOp(c.pos,d.step,t)}); }
+    c.el.style.zIndex=fanZ(c.pos,d.step,commit?1:0);
+    c.anim=c.el.animate(fr,{duration:dur,easing:"cubic-bezier(.22,.8,.3,1)",fill:"forwards"});
+  }
+  setTimeout(()=>{ fanBusy=false;
+    if(commit) fanRotate(d.step);
+    else for(const c of d.cards){ if(c.anim) c.anim.cancel(); c.el.style.cssText=""; } },dur+20);
+}
+function fanSlide(step){ /* toucher une carte de côté : même glissement, sans geste */
+  const f=document.querySelector(".fan"), d=f&&!fanBusy&&!matchMedia("(prefers-reduced-motion: reduce)").matches?fanGrab(f,0,0):null;
+  if(!d){ if(!fanBusy) fanRotate(step); return; }
+  d.step=step; d.on=true; fanSet(d); fanFinish(d,true);
+}
+document.addEventListener("pointerdown", e=>{ const f=e.target.closest(".fan"); fanDrag=f&&!fanBusy&&!matchMedia("(prefers-reduced-motion: reduce)").matches?fanGrab(f,e.clientX,e.clientY):null;
+  if(!fanDrag&&f&&!fanBusy) fanDrag={x:e.clientX,y:e.clientY,plain:true}; });
+document.addEventListener("pointermove", e=>{
+  const d=fanDrag; if(!d||d.plain) return; const dx=e.clientX-d.x, dy=e.clientY-d.y;
+  if(!d.on){ if(Math.abs(dy)>12&&Math.abs(dy)>Math.abs(dx)){ fanDrag=null; return; } if(Math.abs(dx)<8) return; d.on=true; }
+  d.step=dx<0?1:-1; d.t=Math.min(1,Math.abs(dx)/(d.w*.45)); fanSet(d);
+},{passive:true});
+function fanRelease(e,cancel){
+  const d=fanDrag; fanDrag=null; if(!d) return;
+  const dx=e.clientX-d.x, dy=e.clientY-d.y, swipe=!cancel&&Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy);
+  if(d.plain){ if(swipe){ fanSwiped=Date.now(); fanRotate(dx<0?1:-1); } return; }
+  if(!d.on) return;
+  fanSwiped=Date.now(); fanFinish(d,swipe||(!cancel&&d.t>.3));
+}
+document.addEventListener("pointerup", e=>fanRelease(e,false));
+document.addEventListener("pointercancel", e=>fanRelease(e,true));
 document.addEventListener("click", e=>{
   if(lpFired){ lpFired=false; e.preventDefault(); e.stopPropagation(); return; }
   if(Date.now()-fanSwiped<400){ fanSwiped=0; e.preventDefault(); return; } /* le clic qui suit un glissement */
@@ -3120,7 +3165,7 @@ document.addEventListener("click", e=>{
     case "fanclose": fanPick=null; render(); return;
     case "fansave": if(fanPick.length===3){ P.fan=[...fanPick]; save(); sfx("buff"); } fanPick=null; render(); return;
     case "zoom": zoomId=el.dataset.id; sfx("select"); render(); return;
-    case "fantap": { const pos=+el.dataset.pos; if(pos===0){ zoomId=el.dataset.id; sfx("select"); render(); } else fanRotate(pos); return; }
+    case "fantap": { const pos=+el.dataset.pos; if(pos===0){ zoomId=el.dataset.id; sfx("select"); render(); } else fanSlide(pos); return; }
     case "unzoom": if(el.classList.contains("veil")&&e.target.closest(".zoominfo")) return; zoomId=null; render(); return;
     case "avpick": avPick=true; sfx("click"); render(); return;
     case "avclose": if(el.classList.contains("veil")&&e.target.closest(".avpanel")) return; avPick=false; render(); return;

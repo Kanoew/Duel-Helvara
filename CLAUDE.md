@@ -126,6 +126,7 @@ Autres réglages selon le type de carte :
   - `LAYER` : briques sur un lieu (`rise`, `burst`, `smoke`, `rays`, `vortex`, `rings`, `chains`, `sweep`, `sparkle`, `flicker`).
   - `SCREEN` : ambiances plein écran, ultra-légendaires seulement (`rain`, `petals`, `embers`, `lightning`, `snow`, `dust`, `bubbles`).
   - Les légendaires et ultra-légendaires en grand s'inclinent sous le doigt (`.full.tilt`). Les ultra-légendaires ont en plus leur ambiance en boucle dans l'illustration.
+- **Vitrine de l'accueil** (`vitrineHTML`, `fanRotate`) : les cartes suivent le doigt pendant le geste (`fanSet`, positions `FAN_SLOT`, la carte qui fait le tour passe derrière par `FAN_MID`), puis finissent le trajet par Web Animations (`fanFinish`) avant que la rotation soit enregistrée ; toucher une carte de côté fait le même glissement (`fanSlide`). Geste trop court : retour en place. Mouvement réduit : rotation directe.
 - **Discord** : `DISCORD` (lien d'invitation), bouton dans l'en-tête à côté des quêtes, hors écran de partie seulement.
 - **Langue** : `trUI()` et `translateDOM()`. Le texte est écrit en français dans le code, puis traduit à l'affichage.
 
