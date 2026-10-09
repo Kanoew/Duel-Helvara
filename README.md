@@ -5,7 +5,7 @@
 🇫🇷 [Français](#-français) · 🇬🇧 [English](#-english)
 
 👉 **Jouer / Play : https://kanoew.github.io/Duel-Helvara/**
-💬 **Discord : https://discord.gg/VsWNcTuhSk**
+💬 **Discord : https://discord.gg/QgxFQGcjGT**
 
 <p align="center">
   <img src="images/readme/accueil.jpg" alt="Accueil" width="30%">
@@ -32,7 +32,7 @@
 3. Pour garder ta progression sur plusieurs appareils, utilise **Se connecter avec Google** en bas de l'accueil
 
 ### Communauté
-Un bug, une idée, un avis sur l'équilibrage d'une carte ? Rejoins le Discord : **https://discord.gg/VsWNcTuhSk**
+Un bug, une idée, un avis sur l'équilibrage d'une carte ? Rejoins le Discord : **https://discord.gg/QgxFQGcjGT**
 Tu peux aussi ouvrir une [issue](https://github.com/Kanoew/Duel-Helvara/issues) ici.
 
 ### Technique
@@ -60,7 +60,7 @@ Voir la [politique de confidentialité](confidentialite.html).
 3. To keep your progress across devices, use **Se connecter avec Google** (sign in with Google) at the bottom of the home screen
 
 ### Community
-Found a bug, have an idea, or feedback on a card's balance? Join the Discord: **https://discord.gg/VsWNcTuhSk**
+Found a bug, have an idea, or feedback on a card's balance? Join the Discord: **https://discord.gg/QgxFQGcjGT**
 You can also open an [issue](https://github.com/Kanoew/Duel-Helvara/issues) here.
 
 ### Tech
