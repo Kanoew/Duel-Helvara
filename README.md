@@ -1,3 +1,5 @@
+<p align="center"><img src="images/readme/banniere.jpg" alt="Duel d'Helvara" width="100%"></p>
+
 # Duel d'Helvara
 
 🇫🇷 [Français](#-français) · 🇬🇧 [English](#-english)
@@ -5,7 +7,11 @@
 👉 **Jouer / Play : https://kanoew.github.io/Duel-Helvara/**
 💬 **Discord : https://discord.gg/VsWNcTuhSk**
 
-<!-- Ajoute ici une capture d'écran : ![Duel d'Helvara](images/NOM_DE_TON_IMAGE.png) -->
+<p align="center">
+  <img src="images/readme/accueil.jpg" alt="Accueil" width="30%">
+  <img src="images/readme/carte.jpg" alt="Une carte ultra-légendaire" width="30%">
+  <img src="images/readme/partie.jpg" alt="Une partie" width="30%">
+</p>
 
 ---
 
