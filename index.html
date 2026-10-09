@@ -994,7 +994,7 @@ function hoursToReset(){ const d=new Date(); return Math.max(1,Math.ceil((new Da
 const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","sentinelle","pretre","archiviste","ombre","garde","heraut","gardien"];
 
 /* ======= SAUVEGARDE ======= */
-const SAVE_KEY = "duel-helvara-save-v1";
+const SAVE_KEY = "duel-helvara-save-v1", OWNER_KEY = "duel-helvara-save-owner";
 function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}}; }
 let migratedNote="";
 const COVERS=["primordial","desir","jugement","helvara"];
@@ -1015,7 +1015,7 @@ function clean(p){
   const retired=rawOwned.filter(id=>RETIRED.includes(id)).length;
   const owned=[...new Set(rawOwned.filter(id=>POOL.includes(id)))];
   const deck=[...new Set(Array.isArray(p.deck)?p.deck:[])].filter(id=>owned.includes(id)).slice(0,ECO.deckSize);
-  const out={name:(typeof p.name==="string"&&p.name.trim()?p.name.trim().slice(0,24):f.name), chf:num(p.chf,f.chf)+retired*25, w:num(p.w,0), l:num(p.l,0), d:num(p.d,0), owned, deck, sfx:p.sfx!==false,
+  const out={at:num(p.at,0), name:(typeof p.name==="string"&&p.name.trim()?p.name.trim().slice(0,24):f.name), chf:num(p.chf,f.chf)+retired*25, w:num(p.w,0), l:num(p.l,0), d:num(p.d,0), owned, deck, sfx:p.sfx!==false,
     lv:Math.min(MAXLV,p.rv===2?num(p.lv,0):migrateLv(num(p.lv,0))), st:num(p.st,0), streak:num(p.streak,0), best:Math.min(MAXLV,p.rv===2?num(p.best,0):migrateLv(num(p.best,0))), rv:2,
     season:(typeof p.season==="string"&&/^\d{4}-\d{2}$/.test(p.season))?p.season:seasonKey(), sw:num(p.sw,0), sl:num(p.sl,0), sd:num(p.sd,0),
     tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, vm:Math.min(100,num(p.vm,35)), vs:Math.min(100,num(p.vs,100)), cine:p.cine!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
@@ -1085,15 +1085,23 @@ let storeReady=false, tutoStep=-1, hlStarter=false, avPick=false, zoomId=null, f
 const rankIcon=(lv,cls="")=>`<img class="rkicon ${cls}" src="images/rangs/${tierOf(lv)}.png?v=2" alt="${TIERS[tierOf(lv)]}">`;
 function avatarHTML(cls=""){ const a=P.avatar&&P.owned.includes(P.avatar)?P.avatar:null; return a?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${a}.jpg?v=7')"></span>`:`<span class="avatar ${cls} empty">${esc(P.name.charAt(0).toUpperCase())}</span>`; }
 let dbDoc=null, store="local", writing=false, again=false, saveTimer=null, lastPack=null;
-function save(){ if(P.decks&&P.decks[P.di]) P.decks[P.di].cards=[...P.deck]; lsWrite(); clearTimeout(saveTimer); saveTimer=setTimeout(flush,500); }
+/* P.at : heure de la dernière modification. Au chargement, la sauvegarde locale l'emporte sur celle du compte
+   si elle est plus récente et appartient au même joueur (OWNER_KEY) : un envoi raté (réseau, téléphone en veille)
+   ne fait plus perdre un achat quand la page est rechargée. Un envoi raté est retenté, et envoyé tout de suite quand la page se cache. */
+let dirty=false, retryMs=3000;
+function save(){ if(P.decks&&P.decks[P.di]) P.decks[P.di].cards=[...P.deck]; P.at=Date.now(); lsWrite(); dirty=true; clearTimeout(saveTimer); saveTimer=setTimeout(flush,500); }
 async function flush(){
   if(!dbDoc) return;
   if(writing){ again=true; return; }
-  writing=true;
-  try{ await dbDoc.set(dataOf()); store="cloud"; } catch(e){ store="local"; }
+  writing=true; dirty=false; clearTimeout(saveTimer);
+  try{ await dbDoc.set(dataOf()); store="cloud"; retryMs=3000; }
+  catch(e){ store="local"; dirty=true; saveTimer=setTimeout(flush,retryMs); retryMs=Math.min(60000,retryMs*2); }
   writing=false;
   if(again){ again=false; flush(); }
 }
+function flushNow(){ if(dirty&&dbDoc) flush(); }
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden) flushNow(); });
+addEventListener("pagehide", flushNow);
 async function initStore(){
   try{
     if(!window.claude || !window.claude.use) { if(P._migrated) save(); return; }
@@ -1102,9 +1110,11 @@ async function initStore(){
     const uid=await user.id(); if(!uid){ if(P._migrated) save(); return; }
     lbUid=uid;
     dbDoc=db.doc("data/users/"+uid+"/save");
-    const snap=await dbDoc.get();
-    if(snap.exists){ migratedNote=""; seasonNote=""; P=clean(snap.data()); const ns=checkSeason()|ensureQuests(); lsWrite(); if(P._migrated||ns) await dbDoc.set(dataOf()); }
+    const snap=await dbDoc.get(), loc=lsRead(); let owner=null; try{ owner=localStorage.getItem(OWNER_KEY); }catch(e){}
+    const cloudAt=snap.exists?Number((snap.data()||{}).at)||0:0, localNewer=owner===uid&&!!loc&&(Number(loc.at)||0)>cloudAt;
+    if(snap.exists&&!localNewer){ migratedNote=""; seasonNote=""; P=clean(snap.data()); const ns=checkSeason()|ensureQuests(); lsWrite(); if(P._migrated||ns) await dbDoc.set(dataOf()); }
     else await dbDoc.set(dataOf());
+    try{ localStorage.setItem(OWNER_KEY,uid); }catch(e){}
     delete P._migrated; store="cloud"; lbInit(db,uid); render();
   }catch(e){ store="local"; if(P._migrated) save(); lbCanWrite=false; try{ const db=await window.claude.use("db"); if(db&&lbUid) lbInit(db,lbUid); }catch(_){ } render(); }
 }
@@ -1193,41 +1203,93 @@ const SFX = {
 };
 function sfx(n){ if(!quiet && P.sfx && SFX[n]) try{ SFX[n](); }catch(e){} }
 /* Musique : accueil (selon la saison), partie (deux morceaux au choix), tension dès le tour 5, jingles de fin.
-   Fondus par Web Audio (GainNode) : sur iPhone, audio.volume est ignoré. Deux lecteurs au plus pendant un fondu.
+   Chaque morceau est décodé une fois puis joué par Web Audio (AudioBufferSourceNode) : la boucle est sans coupure
+   et la lecture ne passe plus par un élément <audio> (source de saccades sur Android). Trois morceaux décodés au plus en mémoire.
+   Fondus par GainNode (sur iPhone, audio.volume est ignoré). Sans Web Audio, repli sur un élément <audio>.
    Le choix du morceau de partie utilise Math.random, jamais le tirage partagé des duels en ligne. */
 const MUSIC={home:"audio/accueil.mp3",play:"audio/partie.mp3",play2:"audio/partie_2.mp3",tension:"audio/partie_tension.mp3",home_halloween:"audio/accueil_halloween.mp3",home_noel:"audio/accueil_noel.mp3",home_nouvelan:"audio/accueil_noel.mp3",
   win:"audio/victoire.mp3",lose:"audio/defaite.mp3"};
-let bgm=null, bgmFade=null, bgmArmed=false, jingle=null, playFor=null, playPick="play";
+/* bgm : morceau en cours ; bgmFade : celui qui s'éteint ; bgmHold : morceau de partie mis en pause pendant le jingle de fin */
+let bgm=null, bgmFade=null, bgmHold=null, bgmArmed=false, jingle=null, playFor=null, playPick="play", endKey=null;
 const mVol=()=>Math.max(0,Math.min(1,(P.vm??35)/100));
+const MBUF=new Map(), MLOOP=new WeakMap();
+/* Bornes de la boucle : on saute le silence du début et de la fin du fichier (jusqu'à 0,3 s), sinon il s'entend à chaque tour */
+function mEdges(b){
+  const n=b.length, lim=Math.min(n>>1,Math.floor(b.sampleRate*.3)), ch=[]; for(let c=0;c<b.numberOfChannels;c++) ch.push(b.getChannelData(c));
+  const loud=i=>ch.some(d=>Math.abs(d[i])>.0015);
+  let a=0; while(a<lim&&!loud(a)) a++; let z=n-1; while(n-1-z<lim&&!loud(z)) z--;
+  return {ls:a/b.sampleRate,le:(z+1)/b.sampleRate};
+}
+function mBuf(key){
+  let p=MBUF.get(key);
+  if(p){ MBUF.delete(key); MBUF.set(key,p); return p; }
+  p=fetch(MUSIC[key]).then(r=>{ if(!r.ok) throw new Error("audio "+r.status); return r.arrayBuffer(); })
+    .then(ab=>new Promise((res,rej)=>AC.decodeAudioData(ab,res,rej))).then(b=>{ MLOOP.set(b,mEdges(b)); return b; });
+  p.catch(()=>{ if(MBUF.get(key)===p) MBUF.delete(key); });
+  MBUF.set(key,p);
+  const busy=new Set([bgm,bgmFade,bgmHold,jingle].filter(Boolean).map(t=>t.key)); busy.add(key);
+  for(const k of [...MBUF.keys()]){ if(MBUF.size<=3) break; if(!busy.has(k)) MBUF.delete(k); }
+  return p;
+}
 function mTrack(key,loop=true){
-  const el=new Audio(MUSIC[key]); el.loop=loop; el.preload="auto"; const t={key,el,g:null}; const c=ac();
-  if(c){ try{ const src=c.createMediaElementSource(el); t.g=c.createGain(); t.g.gain.value=0; src.connect(t.g).connect(c.destination); }catch(e){ t.g=null; } }
-  if(!t.g) el.volume=0; return t; }
-function mRamp(t,v,dur){ if(t.g&&AC){ const now=AC.currentTime; t.g.gain.cancelScheduledValues(now); t.g.gain.setValueAtTime(t.g.gain.value,now); t.g.gain.linearRampToValueAtTime(v,now+Math.max(.02,dur)); } else t.el.volume=v; }
-function mStop(t,dur){ if(!t) return; mRamp(t,0,dur); setTimeout(()=>{ t.el.pause(); t.el.removeAttribute("src"); },dur*1000+80); }
+  const c=ac(), t={key,loop,g:null,el:null,src:null,buf:null,off:0,t0:0,on:false,want:false,dead:false,onend:null,onfail:null};
+  if(c){
+    t.g=c.createGain(); t.g.gain.value=0; t.g.connect(c.destination);
+    mBuf(key).then(b=>{ t.buf=b; if(t.want&&!t.dead) mStart(t); }).catch(()=>{ if(!t.dead) (t.onfail||t.onend||(()=>{}))(); });
+  } else {
+    t.el=new Audio(MUSIC[key]); t.el.loop=loop; t.el.preload="auto"; t.el.volume=0; t.el.onended=()=>{ if(t.onend) t.onend(); };
+  }
+  return t;
+}
+function mStart(t){
+  if(t.on||t.dead||!t.buf) return;
+  const s=AC.createBufferSource(), d=t.buf.duration, off=t.loop?t.off%d:Math.min(t.off,d);
+  s.buffer=t.buf; s.loop=t.loop; s.connect(t.g);
+  if(t.loop){ const e=MLOOP.get(t.buf); if(e&&e.le>e.ls){ s.loopStart=e.ls; s.loopEnd=e.le; } }
+  s.onended=()=>{ if(t.src!==s) return; t.src=null; t.on=false; if(!t.loop&&t.onend) t.onend(); };
+  s.start(0,off); t.src=s; t.t0=AC.currentTime-off; t.on=true;
+}
+function mPlay(t){ if(t.el){ return t.el.play(); } t.want=true; mStart(t); return Promise.resolve(); }
+function mPause(t){
+  t.want=false; if(t.el){ t.el.pause(); return; }
+  if(!t.on) return; let pos=AC.currentTime-t.t0; const e=t.loop&&MLOOP.get(t.buf);
+  if(e&&e.le>e.ls&&pos>e.le) pos=e.ls+(pos-e.ls)%(e.le-e.ls); t.off=pos; const s=t.src; t.src=null; t.on=false; try{ s.stop(); }catch(e){}
+}
+const mPaused=t=>t.el?t.el.paused:!t.want;
+function mRamp(t,v,dur){ if(t.g&&AC){ const now=AC.currentTime; t.g.gain.cancelScheduledValues(now); t.g.gain.setValueAtTime(t.g.gain.value,now); t.g.gain.linearRampToValueAtTime(v,now+Math.max(.02,dur)); } else if(t.el) t.el.volume=v; }
+function mStop(t,dur){ if(!t) return; mRamp(t,0,dur);
+  setTimeout(()=>{ mPause(t); t.dead=true; if(t.g) try{ t.g.disconnect(); }catch(e){} if(t.el) t.el.removeAttribute("src"); },dur*1000+80); }
 function musicKey(){
-  if(screen==="play"&&S&&!S.over){ if(playFor!==S){ playFor=S; playPick=Math.random()<.5?"play":"play2"; } return S.turn>=5?"tension":playPick; }
+  if(screen==="play"&&S){
+    if(playFor!==S){ playFor=S; playPick=Math.random()<.5?"play":"play2"; }
+    if(S.over) return endKey||playPick; /* écran de fin : le morceau de la partie reprend après le jingle */
+    return S.turn>=5?"tension":playPick; }
   const se=season(); return se?"home_"+se:"home"; }
 function music(){
-  if(!P.music||!bgmArmed||document.hidden){ if(bgm) bgm.el.pause(); if(jingle){ mStop(jingle,.05); jingle=null; } return; }
+  if(!P.music||!bgmArmed||document.hidden){ if(bgm) mPause(bgm); if(jingle){ mStop(jingle,.05); jingle=null; } return; }
   if(jingle) return;
   const key=musicKey();
+  if(AC&&screen==="play"&&S&&!S.over&&S.turn===4) mBuf("tension").catch(()=>{}); /* prêt pour le tour 5 */
   if(!bgm||bgm.key!==key){
     const old=bgm, cross=!!old&&key==="tension";
-    if(bgmFade){ bgmFade.el.pause(); bgmFade=null; } /* jamais plus de deux lecteurs */
+    if(bgmFade){ mStop(bgmFade,0); bgmFade=null; } /* jamais plus de deux morceaux */
     if(old){ mStop(old,cross?2:.8); bgmFade=old; }
-    bgm=mTrack(key); bgm.el.play().catch(()=>{}); mRamp(bgm,mVol(),cross?2:.8);
-  } else if(bgm.el.paused){ bgm.el.play().catch(()=>{}); mRamp(bgm,mVol(),.5); }
+    if(bgmHold&&bgmHold.key===key){ bgm=bgmHold; bgmHold=null; mPlay(bgm).catch(()=>{}); mRamp(bgm,mVol(),2.5); }
+    else { if(bgmHold){ mStop(bgmHold,0); bgmHold=null; } bgm=mTrack(key); mPlay(bgm).catch(()=>{}); mRamp(bgm,mVol(),cross?2:.8); }
+  } else if(mPaused(bgm)){ mPlay(bgm).catch(()=>{}); mRamp(bgm,mVol(),.5); }
 }
-/* Fin de partie : fondu de sortie d'une seconde, jingle de victoire ou de défaite, puis l'accueil revient en fondu */
+/* Fin de partie : le morceau de la partie s'efface en une seconde (mis en pause, pas arrêté), jingle de victoire ou de défaite,
+   puis le même morceau reprend là où il s'était arrêté, en fondu. L'accueil ne revient qu'en quittant l'écran de partie. */
 function endMusic(res){
   const k=res==="win"?"win":res==="lose"?"lose":null;
+  endKey=bgm?bgm.key:(bgmHold?bgmHold.key:playPick);
   if(!k||!P.music||!bgmArmed||document.hidden){ sfx(k||"draw"); return; }
-  if(bgm){ mStop(bgm,1); bgm=null; }
+  if(bgm){ const h=bgm; bgm=null; if(bgmHold&&bgmHold!==h) mStop(bgmHold,0); bgmHold=h; mRamp(h,0,1); setTimeout(()=>{ if(bgmHold===h) mPause(h); },1080); }
   const j=mTrack(k,false); jingle=j; let done=false;
-  const back=()=>{ if(done) return; done=true; if(jingle===j){ mStop(j,.3); jingle=null; } music(); };
-  setTimeout(()=>{ if(jingle!==j) return; j.el.play().then(()=>mRamp(j,Math.min(1,mVol()*1.4),.05)).catch(()=>{ sfx(k); back(); }); },1000);
-  j.el.onended=back; setTimeout(back,9000);
+  const back=()=>{ if(done) return; done=true; if(jingle===j){ mStop(j,1.2); jingle=null; } music(); };
+  j.onend=back; j.onfail=()=>{ sfx(k); back(); };
+  setTimeout(()=>{ if(jingle!==j) return; mPlay(j).then(()=>mRamp(j,Math.min(1,mVol()*1.4),.05)).catch(j.onfail); },1000);
+  setTimeout(back,9000);
 }
 
 /* ======= ÉTAT DE PARTIE ======= */
@@ -3007,7 +3069,7 @@ document.addEventListener("input", e=>{ const k=e.target&&e.target.dataset&&e.ta
   const b=document.querySelector(`[data-volv="${k}"]`); if(b) b.textContent=P[k];
   if(k==="vm"&&bgm) mRamp(bgm,mVol(),.1); if(k==="vs"&&SFXG) SFXG.gain.value=P.vs/100; });
 document.addEventListener("change", e=>{ if(e.target&&e.target.dataset&&e.target.dataset.vol){ save(); if(e.target.dataset.vol==="vs") sfx("click"); } });
-document.addEventListener("visibilitychange", ()=>{ if(document.hidden&&bgm) bgm.el.pause(); else music(); });
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden&&bgm) mPause(bgm); else music(); });
 document.addEventListener("pointerdown", e=>{
   lpFired=false; /* sur téléphone, un appui long n'est suivi d'aucun clic : le prochain toucher repart de zéro */
   const el=e.target.closest("[data-lp]"); if(!el) return;

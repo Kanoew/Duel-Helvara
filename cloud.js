@@ -68,7 +68,7 @@
   auth.signOut = async () => {
     await sb.auth.signOut().catch(() => {});
     // La progression reste sur le compte Google ; l'appareil repart d'une partie vierge.
-    try { localStorage.removeItem("duel-helvara-save-v1"); localStorage.removeItem("duel-helvara-mp"); } catch(e) {}
+    try { localStorage.removeItem("duel-helvara-save-v1"); localStorage.removeItem("duel-helvara-mp"); localStorage.removeItem("duel-helvara-save-owner"); } catch(e) {}
     location.replace(home());
   };
 
