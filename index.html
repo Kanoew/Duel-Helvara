@@ -2397,6 +2397,9 @@ function blitzHTML(){
 }
 
 /* ======= DUEL ENTRE AMIS ======= */
+/* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
+   À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
+const BUILD="alpha-0.1", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let room=null, roomTried=false, myMp=null, mpMsg="";
 const mpTok=()=>Math.random().toString(36).slice(2,10);
@@ -2406,17 +2409,59 @@ async function initRoom(){
   try{ if(window.claude&&window.claude.use) room=await window.claude.use("room"); }catch(e){ room=null; }
   roomTried=true;
   if(room){ room.presence({lb:lbMe()}).catch(()=>{}); }
-  if(room) room.onPeers(()=>{ mpTick(); if(screen==="board") render(); }, e=>{ mpMsg="Connexion au salon perdue. Recharge la page."; render(); });
+  if(room) room.onPeers(()=>{ mqTick(); mpTick(); if(screen==="board") render(); }, e=>{ mpMsg="Connexion au salon perdue. Recharge la page."; render(); });
   render();
 }
 function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(room) room.presence({mp:myMp}).catch(()=>{}); }
 function mpClear(){ myMp=null; mpMsg=""; if(room) room.presence({mp:null}).catch(()=>{}); }
-function mpBase(role,code){ return {v:1,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck]}; }
+function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck]}; }
 function mpCreate(){ if(!room||!deckReady()) return; myMp=null; mpPush(mpBase("host",MP_PLACES[Math.floor(Math.random()*MP_PLACES.length)]+"-"+(1000+Math.floor(Math.random()*9000)))); sfx("click"); render(); }
 function mpJoin(){
   const i=document.getElementById("mp-code"); const code=(i&&i.value||"").trim().toUpperCase().replace(/\s+/g,"");
   if(!/^[A-Z]+-\d{4}$/.test(code)){ mpMsg="Le code ressemble à OUCHY-4821."; render(); return; }
-  if(!room||!deckReady()) return; mpMsg=""; myMp=null; mpPush(mpBase("guest",code)); sfx("click"); render();
+  mpJoinCode(code);
+}
+function mpJoinCode(code){ if(!room||!deckReady()) return; mpMsg=""; myMp=null; mpPush(mpBase("guest",code)); sfx("click"); render(); }
+
+/* ======= EN LIGNE (ALPHA) : file d'attente sans code =======
+   Chaque joueur qui cherche publie q={tok,ver,at} dans la présence du salon commun. Les jetons de même version
+   (hors cet onglet, hors ce compte, hors joueurs déjà appariés) sont triés : 0 avec 1, 2 avec 3… Le plus petit des deux
+   crée un salon normal (mpCreate) et publie q.room et q.with ; l'autre voit q.with = son jeton et rejoint ce code
+   (mpJoinCode). Ensuite tout se passe comme un salon avec code. 90 s sans adversaire : la recherche s'arrête. */
+const MQ_WAIT=90000, MQ_STALE=15000;
+let mq=null; /* {tok, t0, timer, room, with, since} */
+function mqPub(extra){ if(room&&mq) room.presence({q:{tok:mq.tok,ver:BUILD,at:mq.t0,...(extra||{})}}).catch(()=>{}); }
+function mqStart(){
+  if(!room||!deckReady()||mq||myMp) return;
+  mpMsg=""; mq={tok:mpTok(),t0:Date.now(),room:null,with:null,since:0};
+  mq.timer=setTimeout(()=>{ if(mq&&!mq.room) mqStop("Personne en ligne pour l'instant. Invite un ami avec un code de salon."); },MQ_WAIT);
+  mq.iv=setInterval(mqTick,2000); mqPub(); sfx("click"); render(); mqTick();
+}
+function mqStop(msg){ if(mq){ clearTimeout(mq.timer); clearInterval(mq.iv); } mq=null; if(room) room.presence({q:null}).catch(()=>{}); if(msg!==undefined) mpMsg=msg; if(screen==="duel") render(); }
+const mqOthers=()=>room?room.peers().filter(p=>!p.sameTab&&!p.isMe&&p.presence&&p.presence.q&&typeof p.presence.q.tok==="string"):[];
+const mqOnline=()=>room?new Set(room.peers().map((p,i)=>p.by||"k"+i)).size:0;
+function mqTick(){
+  if(!mq||!room) return;
+  /* je suis l'hôte d'un appariement : la partie a commencé, ou l'autre ne vient pas */
+  if(mq.room){
+    if(myMp&&myMp.g){ mqStop(""); return; }
+    const guestHere=room.peers().some(p=>!p.sameTab&&p.presence&&p.presence.mp&&p.presence.mp.code===mq.room&&p.presence.mp.role==="guest");
+    const stillQueued=mqOthers().some(p=>p.presence.q.tok===mq.with);
+    if(!guestHere&&(!stillQueued||Date.now()-mq.since>MQ_STALE)){ mpClear(); mq.room=null; mq.with=null; mqPub(); }
+    else return;
+  }
+  const others=mqOthers(), same=others.filter(p=>p.presence.q.ver===BUILD);
+  /* invité par quelqu'un : on rejoint son salon */
+  const inv=same.find(p=>p.presence.q.with===mq.tok&&typeof p.presence.q.room==="string"&&/^[A-Z]+-\d{4}$/.test(p.presence.q.room));
+  if(inv){ const code=inv.presence.q.room; mqStop(""); mpJoinCode(code); return; }
+  const free=same.filter(p=>!p.presence.q.with).map(p=>p.presence.q.tok);
+  const toks=[...new Set([...free,mq.tok])].sort(), i=toks.indexOf(mq.tok);
+  if(i%2===0&&i+1<toks.length){
+    mpCreate(); if(!myMp) return;
+    mq.room=myMp.code; mq.with=toks[i+1]; mq.since=Date.now(); mqPub({room:mq.room,with:mq.with}); return;
+  }
+  mq.verWarn=!same.length&&others.some(p=>p.presence.q.ver!==BUILD);
+  if(screen==="duel") render();
 }
 function mpOpp(){
   if(!room||!myMp) return null;
@@ -2437,6 +2482,8 @@ function mpNewMatch(om){
 function mpTick(){
   if(!myMp){ if(screen==="duel") render(); return; }
   const o=mpOpp(), om=o&&o.presence.mp;
+  /* versions différentes : jamais de nouveau match (la partie se désynchroniserait) */
+  if(om&&om.ver!==BUILD&&!(S&&S.mp&&S.mp.g===myMp.g&&myMp.g)){ if(mpMsg!==MP_VER_MSG){ mpMsg=MP_VER_MSG; } if(screen==="duel") render(); return; }
   if(myMp.role==="host"&&om&&validDeck(om.deck)){
     if(!myMp.g){ mpNewMatch(om); return; }
     if(S&&S.mp&&S.over&&myMp.again===myMp.g&&om.again===myMp.g){ mpNewMatch(om); return; }
@@ -2499,6 +2546,15 @@ function mpResume(){
   S={mp:{resuming:true,g:s.mp.g,oppNick:s.oppNick}, over:null};
   screen="duel"; render(); mpTick();
 }
+function onlineHTML(){
+  const banner=`<p class="notice">Alpha : les parties en ligne sont en test, des bugs et des remises à zéro sont possibles.</p>`;
+  if(mq) return `<section class="sec mpbox"><h2>En ligne (Alpha)</h2>${banner}
+    <p><span>Recherche d'un adversaire…</span> <span class="hint">${mqOnline()} joueur${mqOnline()>1?"s":""} en ligne</span></p>
+    ${mq.verWarn?`<p style="color:var(--warm)">${esc(MP_VER_MSG)}</p>`:""}
+    <button class="ghost" data-act="mqcancel">Annuler</button></section>`;
+  return `<section class="sec mpbox"><h2>En ligne (Alpha)</h2>${banner}
+    <button class="primary" data-act="mqstart">Chercher un adversaire (Alpha)</button></section>`;
+}
 function duelHTML(){
   const s=mpSession();
   const invite=`<section class="sec"><h2>Inviter un ami</h2><ol class="rules">
@@ -2516,10 +2572,10 @@ function duelHTML(){
       <button class="primary" data-act="mpcreate">Créer un salon</button>
       <div class="mpjoin"><input id="mp-code" class="mpinput" maxlength="12" placeholder="OUCHY-4821" autocomplete="off" aria-label="Code du salon"><button class="ghost" data-act="mpjoin">Rejoindre</button></div>
       ${mpMsg?`<p style="color:var(--warm)">${esc(mpMsg)}</p>`:""}
-    </section>${invite}`;
+    </section>${onlineHTML()}${invite}`;
   }
   const o=mpOpp(), om=o&&o.presence.mp;
-  const status=myMp.role==="host"?(om?`${esc(safeNick(om.nick))} arrive, la partie commence…`:"En attente d'un adversaire. Envoie-lui le code."):
+  const status=mpMsg===MP_VER_MSG?esc(MP_VER_MSG):mq&&mq.room?"Adversaire trouvé, connexion au salon…":myMp.role==="host"?(om?`${esc(safeNick(om.nick))} arrive, la partie commence…`:"En attente d'un adversaire. Envoie-lui le code."):
     mpRoomFull()?"Ce salon est déjà complet.":om?`Connecté à ${esc(safeNick(om.nick))}. La partie commence…`:"Salon introuvable pour l'instant. Vérifie le code, ou attends que ton ami le crée.";
   return `<section class="sec mpbox"><h2>Salon</h2>
     <div class="mpcode">${esc(myMp.code)}</div>
@@ -3182,9 +3238,11 @@ document.addEventListener("click", e=>{
     case "deckpick": { const i=+el.dataset.i; if(i===P.di) return; P.decks[P.di].cards=[...P.deck]; P.di=i; P.deck=[...P.decks[i].cards].filter(id=>P.owned.includes(id)); deckMsg=pruneUL(); deckRename=false; save(); sfx("select"); render(); return; }
     case "deckrename": deckRename=true; render(); { const i=document.getElementById("deck-input"); if(i){ i.focus(); i.select(); } } return;
     case "deckcover": { const D=P.decks[P.di]; D.cover=COVERS[(COVERS.indexOf(D.cover)+1)%COVERS.length]; save(); sfx("click"); render(); return; }
-    case "mpcreate": mpCreate(); return;
-    case "mpjoin": mpJoin(); return;
-    case "mpcancel": mpClear(); render(); return;
+    case "mpcreate": mqStop(); mpCreate(); return;
+    case "mpjoin": mqStop(); mpJoin(); return;
+    case "mpcancel": mqStop(); mpClear(); render(); return;
+    case "mqstart": mqStart(); return;
+    case "mqcancel": mqStop(""); sfx("click"); return;
     case "mpresume": mpResume(); return;
     case "mpforget": mpSaveSession(null); render(); return;
     case "mpcopy": { const t=myMp&&myMp.code; const old=el.textContent; navigator.clipboard.writeText(t).then(()=>{ el.textContent=trUI("Copié"); setTimeout(()=>{ el.textContent=old; },1500); }).catch(()=>{}); return; }
