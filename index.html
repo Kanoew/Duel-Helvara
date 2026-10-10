@@ -937,12 +937,12 @@ const today=()=>window.__today||dayKey();
 const REL=id=>!CARDS[id].rel||today()>=CARDS[id].rel;
 const avail=()=>POOL.filter(REL);
 const PACK=(ex)=>POOL.filter(id=>REL(id)&&CARDS[id].r!=="U"&&(!CARDS[id].ex||CARDS[id].ex===ex));
-const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike comprise"},{id:"ulya",req:["yarden",["apsu","apsu_n"]],n:"Yarden Weiss et Apsu"},{id:"ulji",req:[["jordan","jordan_n"],["izzy","izzy_h"]],n:"Jordan et Izzy"},
-  {id:"ulaph",req:[["aphrodite","aphrodite_n"],"yarden"],n:"Aphrodite et Yarden Weiss"},{id:"ulcal",req:[["calypso","calypso_n"],["jordan","jordan_n"]],n:"Calypso et Jordan"},{id:"ulnem",req:["nemesis",["jordan","jordan_n"]],n:"Nemesis et Jordan"},
-  {id:"ulcirce",req:[["nyx","nyx_h"],"circe"],n:"Nyx et Circé"},{id:"uloshun",req:[["nyx","nyx_h"],"oshun"],n:"Nyx et Oshun"},
+const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike comprise"},{id:"ulya",req:["yarden","apsu"],n:"Yarden Weiss et Apsu"},{id:"ulji",req:[["jordan","jordan_n"],"izzy"],n:"Jordan et Izzy"},
+  {id:"ulaph",req:["aphrodite","yarden"],n:"Aphrodite et Yarden Weiss"},{id:"ulcal",req:["calypso",["jordan","jordan_n"]],n:"Calypso et Jordan"},{id:"ulnem",req:["nemesis",["jordan","jordan_n"]],n:"Nemesis et Jordan"},
+  {id:"ulcirce",req:["nyx","circe"],n:"Nyx et Circé"},{id:"uloshun",req:["nyx","oshun"],n:"Nyx et Oshun"},
   {id:"ulqetjor",req:["qetesh",["jordan","jordan_n"]],n:"Qetesh et Jordan"},{id:"ulqetyar",req:["qetesh","yarden"],n:"Qetesh et Yarden Weiss"},
-  {id:"ulhel",req:[["hel","hel_r"],"baldur"],n:"Hel et Baldur"},
-  {id:"ulpele_r",req:[["pele","pele_r"],["jordan","jordan_n"]],n:"Pele et Jordan"},{id:"ulqetjor_r",req:["qetesh_r",["jordan","jordan_n"]],n:"Qetesh du Nouvel An et Jordan"},
+  {id:"ulhel",req:["hel","baldur"],n:"Hel et Baldur"},
+  {id:"ulpele_r",req:["pele_r",["jordan","jordan_n"]],n:"Pele et Jordan"},{id:"ulqetjor_r",req:["qetesh_r",["jordan","jordan_n"]],n:"Qetesh du Nouvel An et Jordan"},
   {id:"ulsomnambule",req:["somnambule","reine_sevelin"],n:"La Somnambule et La Reine"},{id:"ularchiviste",req:["archiviste","patronne"],n:"L'Archiviste et La Patronne"},
   {id:"nike_v",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike de la Saint-Valentin comprise"},{id:"ulqetjor_v",req:["qetesh_v",["jordan","jordan_n"]],n:"Qetesh de la Saint-Valentin et Jordan"},
   {id:"ulprombia",req:["promethee","bia"],n:"Prométhée et Bia"},{id:"ulheradio",req:["hera","dionysos"],n:"Héra et Dionysos"},{id:"ulposathe",req:["poseidon","athena"],n:"Poséidon et Athéna"},
