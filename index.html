@@ -3106,12 +3106,15 @@ function render(){
   if(screen==="codex") screen="deck"; /* Deck et Collection ne font plus qu'un */
   const body = screen==="play"?gameHTML():screen==="profile"?profileHTML():screen==="deck"?deckHTML():screen==="shop"?shopHTML():screen==="codex"?codexHTML():screen==="rules"?rulesHTML():screen==="duel"?duelHTML():screen==="blitz"?blitzHTML():screen==="board"?boardHTML():screen==="hist"?histHTML():homeHTML();
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
+  /* le code de salon en cours de saisie survit aux redessins (le salon commun en provoque à chaque arrivée ou départ) */
+  const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+packOpenHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
   document.body.classList.toggle("hasdock",screen!=="play");
   document.body.classList.toggle("inplay",screen==="play");
   setTimeout(()=>FX.decorate(app),30);
   translateDOM(app);
   const h=document.querySelector(".handwrap"); if(h) h.scrollLeft=hs;
+  if(mpKeep){ const i=document.getElementById("mp-code"); if(i){ i.value=mpKeep.v; if(mpKeep.f){ i.focus(); try{ i.setSelectionRange(mpKeep.s,mpKeep.e); }catch(e){} } } }
   music();
   if(editName){ const i=document.getElementById("name-input"); if(i && document.activeElement!==i){ i.focus(); i.select(); } }
 }
