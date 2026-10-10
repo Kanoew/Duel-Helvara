@@ -148,6 +148,8 @@ Autres réglages selon le type de carte :
 
 - **Sauvegarde** : `save()` écrit tout de suite en local (avec `P.at`, heure de la modification) puis envoie au compte 0,5 s plus tard (`flush`). Un envoi raté est retenté (3 s, puis jusqu'à 60 s) et renvoyé dès que la page se cache. Au chargement (`initStore`), la sauvegarde locale l'emporte sur celle du compte seulement si elle est plus récente **et** appartient au même joueur (`OWNER_KEY` = `duel-helvara-save-owner`) ; sinon le compte gagne. Corrige le bug du 9 octobre (booster perdu et CHF rendus après un retour arrière : l'envoi au compte avait échoué et la vieille sauvegarde en ligne écrasait la locale).
 
+- **Classement** : table `board` (une ligne par joueur, chacun n'écrit que la sienne). `lbPublish()` envoie la ligne après chaque partie classée contre l'IA, au chargement, et après un changement de pseudo ou d'avatar ; un envoi raté est retenté (5 s, puis jusqu'à 2 min) et renvoyé au retour au premier plan. L'affichage (`boardHTML`) mélange la table et la présence en direct du salon (« en ligne »). `cloud.js` relit la table au retour au premier plan et toutes les 60 s. Corrigé le 10 octobre : avant, un seul envoi raté (session expirée au réveil du téléphone) coupait les mises à jour jusqu'au rechargement ; le relais hérité des artefacts (`lbRelay`, qui écrivait la ligne des autres) a été retiré.
+
 ## Rareté et brillance
 
 Repère : une commune se lit en une seconde, une épique fait réfléchir. Répartition actuelle (jetons exclus) : 21 communes, 51 rares, 40 épiques (dont 13 variantes saisonnières), 19 légendaires, 13 ultra-légendaires.

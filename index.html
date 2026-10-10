@@ -1135,13 +1135,16 @@ function lbClean(x){ if(!x||typeof x!=="object") return null; const n=v=>Number.
 async function lbInit(db,uid){ lbDb=db; lbUid=uid;
   try{ lbUnsub=db.collection("board").onSnapshot(q=>{ lbRows=q.docs.map(d=>({id:d.id,...lbClean(d.data())})).filter(r=>r.nick); if(screen==="board"||screen==="home") render(); },()=>{}); }catch(e){}
   lbPublish(); }
-function lbPublish(){ const me=lbMe(); if(room) room.presence({lb:me}).catch(()=>{}); if(lbDb&&lbUid&&lbCanWrite) lbDb.doc("board/"+lbUid).set({...me,at:Date.now()}).catch(e=>{ if(e&&(e.code==="permission_denied"||e.code==="not_granted"||e.code==="forbidden")) lbCanWrite=false; }); }
-const lbRelayed={};
-function lbRelay(){ if(!room||!lbDb||!lbCanWrite) return;
-  for(const p of room.peers()){ if(p.isMe) continue; const raw=p.presence&&p.presence.lb; const id=p.by||(raw&&typeof raw.uid==="string"?raw.uid:null); if(!raw||!id||!/^[\w-]{4,80}$/.test(id)) continue;
-    const r=lbClean(raw); if(!r) continue; const key=JSON.stringify([r.lv,r.st,r.sw,r.sl,r.season,r.nick,r.av]); if(lbRelayed[id]===key) continue;
-    const cur=lbRows.find(x=>x.id===id); if(cur&&JSON.stringify([cur.lv,cur.st,cur.sw,cur.sl,cur.season,cur.nick,cur.av])===key){ lbRelayed[id]=key; continue; }
-    lbRelayed[id]=key; lbDb.doc("board/"+id).set({...r,uid:id,at:Date.now()}).catch(()=>{}); } }
+/* Ligne du joueur dans le classement. Un envoi raté (réseau, session expirée au réveil du téléphone) n'arrête plus
+   le classement pour toute la visite : il est retenté (5 s, puis jusqu'à 2 min) et renvoyé quand la page revient au premier plan.
+   (L'ancien relais hérité des artefacts, qui écrivait la ligne des autres joueurs, est retiré : Supabase ne le permet pas.) */
+let lbRetry=null, lbWait=5000, lbDirty=false;
+function lbPublish(){ const me=lbMe(); if(room) room.presence({lb:me}).catch(()=>{});
+  if(!lbDb||!lbUid) return; clearTimeout(lbRetry); lbDirty=true;
+  lbDb.doc("board/"+lbUid).set({...me,at:Date.now()}).then(()=>{ lbDirty=false; lbWait=5000; },e=>{
+    if(e&&e.code==="not_granted"){ lbCanWrite=false; return; }
+    lbRetry=setTimeout(lbPublish,lbWait); lbWait=Math.min(120000,lbWait*2); }); }
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden&&lbDirty) lbPublish(); });
 function lbOnline(){ const m={}; if(room) for(const p of room.peers()){ const raw=p.presence&&p.presence.lb; const id=p.by||(raw&&raw.uid); if(raw&&id) m[id]=lbClean(raw); } return m; }
 function lbCount(){ return lbRows.filter(r=>r.season===seasonKey()&&r.id!==lbUid&&(r.lv||r.st||r.sw||r.sl||r.best)).length+1; }
 function boardHTML(){
@@ -2403,7 +2406,7 @@ async function initRoom(){
   try{ if(window.claude&&window.claude.use) room=await window.claude.use("room"); }catch(e){ room=null; }
   roomTried=true;
   if(room){ room.presence({lb:lbMe()}).catch(()=>{}); }
-  if(room) room.onPeers(()=>{ lbRelay(); mpTick(); if(screen==="board") render(); }, e=>{ mpMsg="Connexion au salon perdue. Recharge la page."; render(); });
+  if(room) room.onPeers(()=>{ mpTick(); if(screen==="board") render(); }, e=>{ mpMsg="Connexion au salon perdue. Recharge la page."; render(); });
   render();
 }
 function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(room) room.presence({mp:myMp}).catch(()=>{}); }
@@ -3169,7 +3172,7 @@ document.addEventListener("click", e=>{
     case "unzoom": if(el.classList.contains("veil")&&e.target.closest(".zoominfo")) return; zoomId=null; render(); return;
     case "avpick": avPick=true; sfx("click"); render(); return;
     case "avclose": if(el.classList.contains("veil")&&e.target.closest(".avpanel")) return; avPick=false; render(); return;
-    case "avset": P.avatar=el.dataset.id; avPick=false; zoomId=null; save(); sfx("buff"); render(); return;
+    case "avset": P.avatar=el.dataset.id; avPick=false; zoomId=null; save(); lbPublish(); sfx("buff"); render(); return;
     case "stallbuy": stallBuy(el.dataset.id); return;
     case "bzstart": bzStart(); return;
     case "bzpick": bzPick(el.dataset.id); return;
@@ -3237,7 +3240,7 @@ document.addEventListener("submit", e=>{
   if(e.target.id!=="nameform") return;
   e.preventDefault();
   const v=document.getElementById("name-input").value.trim().slice(0,24);
-  if(v){ P.name=v; save(); sfx("buff"); }
+  if(v){ P.name=v; save(); lbPublish(); sfx("buff"); }
   editName=false; render();
 });
 document.addEventListener("keydown", e=>{

@@ -119,7 +119,12 @@
             })
             .subscribe(status => { if(status === "SUBSCRIBED") load(); });
           load();
-          return () => { live = false; sb.removeChannel(ch); };
+          // Filet de sécurité : sur téléphone, la connexion en direct se coupe en arrière-plan.
+          // On relit la table au retour au premier plan, et toutes les 60 s tant que la page est visible.
+          const onVis = () => { if(!document.hidden) load(); };
+          document.addEventListener("visibilitychange", onVis);
+          const tick = setInterval(() => { if(!document.hidden) load(); }, 60000);
+          return () => { live = false; clearInterval(tick); document.removeEventListener("visibilitychange", onVis); sb.removeChannel(ch); };
         }
       };
     }
