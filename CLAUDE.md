@@ -185,6 +185,15 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
   - **Égalité** (2,4 s) : un front bleu et un front violet se heurtent au centre. Son `ecdraw`.
   - Le titre suit la saison (`SEASON[se].win/lose`), le sous-titre donne les lieux et, en cas de départage, la puissance totale. Les sons se posent sous les jingles de fin, ils ne les remplacent pas. Les miniatures du plateau portent `data-cu` (uid de la carte) pour que les effets les retrouvent.
 
+## Légal et données (11 octobre)
+
+- Pages : `confidentialite.html`, `conditions.html` (conditions + mentions légales), `credits.html`, liées depuis Réglages. `LICENSE` : tous droits réservés, sauf `vendor/` (MIT) et `fonts/` (OFL).
+- **Aucune requête vers un site tiers** au chargement (polices dans `fonts/`, plus de Google Fonts). Ne pas en réintroduire sans mettre à jour la page de confidentialité.
+- Réglages : « Exporter mes données » (`gexport`) et « Supprimer mon compte » (`gdelete` → `helvara.deleteAccount()` dans `cloud.js` → fonction SQL `delete_my_account()` de `supabase.sql`, puis `window.__wiped` empêche toute réécriture locale avant le rechargement).
+- Les pseudos et avatars venant de la base sont échappés (`esc`) ou filtrés (`POOL.includes`) partout ; garder ce réflexe pour tout nouvel affichage.
+- Durées annoncées : 12 mois (anonyme), 24 mois (Google) ; appliquées par `nettoyage.sql` (bloc 3), à lancer ou planifier par Jordan.
+- Pas d'adresse e-mail de contact publique : les demandes passent par les issues GitHub. Ne jamais y mettre l'e-mail personnel.
+
 ## Calendrier du contenu
 
 | Date | Contenu |

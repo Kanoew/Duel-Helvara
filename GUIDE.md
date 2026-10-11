@@ -74,3 +74,10 @@ Ne mets jamais le code secret dans le dépôt : il va uniquement dans Supabase.
 - `config.js` contient l'adresse et la clé publique du projet Supabase.
 - `vendor/supabase.js` est la bibliothèque Supabase (version 2.117.2), incluse pour ne dépendre d'aucun autre site.
 - `index.html` : chargement de ces trois fichiers, bouton de connexion Google en bas de l'accueil, textes d'invitation adaptés. Le reste du jeu est identique.
+
+## Mise à jour du 11 octobre : suppression de compte et conservation
+
+- Relance **`supabase.sql`** (SQL Editor → Run) : il ajoute la fonction `delete_my_account()`, utilisée par le bouton « Supprimer mon compte » du jeu. Sans elle, le bouton affiche une erreur.
+- Lance de temps en temps le bloc 3 de **`nettoyage.sql`** (ou planifie-le avec pg_cron, le script l'explique) : il applique les durées annoncées dans la page de confidentialité (12 mois pour les comptes anonymes, 24 mois pour les comptes Google).
+- Écran de consentement Google : renseigne le lien de la politique de confidentialité (`https://kanoew.github.io/Duel-Helvara/confidentialite.html`) et celui des conditions (`.../conditions.html`).
+- Supabase → Authentication → Rate Limits : limite les connexions anonymes par heure et par adresse IP.

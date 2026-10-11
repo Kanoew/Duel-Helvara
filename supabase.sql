@@ -46,3 +46,17 @@ alter table public.board add constraint board_taille check (pg_column_size(data)
 do $$ begin
   alter publication supabase_realtime add table public.board;
 exception when duplicate_object then null; end $$;
+
+-- Suppression de compte, appelée par le bouton « Supprimer mon compte » du jeu (Réglages).
+-- Efface l'utilisateur ; ses lignes saves et board partent avec lui (on delete cascade).
+-- Chacun ne peut supprimer que son propre compte : la fonction lit auth.uid(), jamais un paramètre.
+create or replace function public.delete_my_account()
+returns void
+language sql
+security definer
+set search_path = public, auth
+as $$
+  delete from auth.users where id = auth.uid();
+$$;
+revoke all on function public.delete_my_account() from public, anon;
+grant execute on function public.delete_my_account() to authenticated;

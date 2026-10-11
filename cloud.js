@@ -11,6 +11,10 @@
 
   // État de connexion lu par le pied de page du jeu.
   const auth = window.helvara = { ready:false, google:false, email:null, error:null, signIn(){}, signOut(){} };
+  const LOCAL_KEYS = ["duel-helvara-save-v1", "duel-helvara-mp", "duel-helvara-save-owner"];
+  const wipeLocal = () => { window.__wiped = true; try { LOCAL_KEYS.forEach(k => localStorage.removeItem(k)); } catch(e) {} };
+  // Hors ligne : « supprimer mon compte » efface la copie locale.
+  auth.deleteAccount = async () => { wipeLocal(); location.replace(home()); return { ok:true }; };
 
   if(!cfg.supabaseUrl || !cfg.supabaseKey || !window.supabase){
     auth.ready = true; auth.error = "Supabase n'est pas configuré : le jeu tourne hors ligne.";
@@ -63,6 +67,17 @@
       try { sessionStorage.removeItem(LINK_FLAG); } catch(e) {}
     }
     await sb.auth.signInWithOAuth({ provider:"google", options:{ redirectTo: home() } });
+  };
+
+  // Supprime le compte (fonction delete_my_account de supabase.sql), puis repart d'une partie vierge.
+  auth.deleteAccount = async () => {
+    await sessionP;
+    const r = await sb.rpc("delete_my_account");
+    if(r.error) return { ok:false, error:r.error.message };
+    wipeLocal();
+    await sb.auth.signOut().catch(() => {});
+    location.replace(home());
+    return { ok:true };
   };
 
   auth.signOut = async () => {

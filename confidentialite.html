@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Confidentialité · Duel d'Helvara</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Manrope:wght@400;600&display=swap">
+<link rel="stylesheet" href="fonts/fonts.css">
 <style>
 :root{color-scheme:dark;--ink:#0a0e16;--text:#d9e2f0;--mute:#8fa0bb;--line:#2a3a57;--gold:#c9a96e}
 body{margin:0;background:var(--ink);color:var(--text);font:16px/1.65 Manrope,system-ui,sans-serif}
@@ -9,31 +9,62 @@ main{max-width:680px;margin:0 auto;padding:40px 16px 64px}
 h1,h2{font-family:Marcellus,serif;font-weight:400;color:var(--gold)}
 h1{font-size:2rem;margin:0 0 4px}h2{font-size:1.25rem;margin:32px 0 8px;border-top:1px solid var(--line);padding-top:24px}
 p,li{color:var(--text)}.mute{color:var(--mute)}a{color:var(--gold)}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{color:var(--gold);font-weight:600}
+.nav{margin-top:40px;display:flex;flex-wrap:wrap;gap:8px 20px}
 </style></head><body><main>
 <h1>Confidentialité</h1>
-<p class="mute">Duel d'Helvara · mise à jour le 3 octobre 2026</p>
+<p class="mute">Duel d'Helvara · mise à jour le 11 octobre 2026</p>
 
-<p>Duel d'Helvara est un jeu de cartes gratuit, fait par un particulier, sans publicité ni achat réel. Cette page explique quelles données le jeu garde, et pourquoi.</p>
+<p>Duel d'Helvara est un jeu de cartes gratuit, fait par un particulier (Kanoew), sans publicité ni achat réel. Cette page explique quelles données le jeu garde, pourquoi, pendant combien de temps, et comment les supprimer.</p>
 
 <h2>Ce qui est enregistré</h2>
+<table>
+<tr><th>Donnée</th><th>Pourquoi</th><th>Qui peut la voir</th></tr>
+<tr><td><b>Un identifiant de compte</b> (aléatoire). Dès que tu ouvres le jeu, un compte « anonyme » est créé, lié à ton appareil.</td><td>Sauvegarder ta partie.</td><td>Lui-même est visible dans le classement et pour les joueurs connectés (voir plus bas), mais il ne révèle rien sur toi.</td></tr>
+<tr><td><b>Ta progression</b> : cartes, decks, monnaie du jeu, rang, quêtes, historique des parties.</td><td>Te la rendre à chaque visite.</td><td>Toi seul.</td></tr>
+<tr><td><b>Ta fiche de classement</b> : le pseudo que tu choisis, ton avatar (une illustration de carte), ton rang et tes statistiques de saison.</td><td>Afficher le classement.</td><td>Tous les joueurs.</td></tr>
+<tr><td><b>Si tu te connectes avec Google</b> : ton adresse e-mail et l'identifiant Google de ton compte.</td><td>Retrouver ta partie sur un autre appareil.</td><td>Toi seul. Ton adresse n'est jamais montrée aux autres joueurs. Le jeu ne reçoit ni tes contacts, ni ton Drive, ni tes e-mails.</td></tr>
+</table>
+<p>Le jeu n'utilise ni cookie publicitaire, ni outil de mesure d'audience. Choisis un pseudo qui ne permet pas de t'identifier : il est public.</p>
+
+<h2>Le salon en direct</h2>
+<p>Tous les joueurs connectés au même moment partagent un salon commun, qui sert à afficher la pastille « en ligne » et à organiser les duels. Dans ce salon, les autres joueurs connectés peuvent voir ta fiche de classement (pseudo, avatar, rang, statistiques) et ton identifiant de compte. Quand tu crées ou rejoins un duel, ou que tu lances une recherche d'adversaire, ton deck et un code de salon y sont aussi publiés le temps de la partie. Les parties se déroulent sans chat : aucun message libre n'est échangé.</p>
+
+<h2>Combien de temps</h2>
 <ul>
-  <li><b>Ta progression</b> : cartes, decks, monnaie du jeu, rang, quêtes et historique des parties.</li>
-  <li><b>Ta fiche de classement</b> : le pseudo que tu choisis dans le jeu, ton avatar et tes statistiques de saison. Elle est visible par tous les joueurs.</li>
-  <li><b>Si tu te connectes avec Google</b> : ton adresse e-mail et un identifiant Google, uniquement pour te reconnaître d'un appareil à l'autre. Ton adresse n'est jamais montrée aux autres joueurs.</li>
-  <li><b>Pendant un duel entre amis</b> : ton pseudo, ton avatar et ton deck sont transmis à ton adversaire le temps de la partie.</li>
+  <li>Compte anonyme (sans Google) : supprimé après 12 mois sans connexion.</li>
+  <li>Compte Google : gardé tant que tu ne le supprimes pas, et supprimé après 24 mois sans connexion.</li>
+  <li>Dans tous les cas, tu peux supprimer ton compte quand tu veux (voir plus bas).</li>
+  <li>La copie gardée dans ton navigateur reste jusqu'à ce que tu effaces les données du site.</li>
 </ul>
 
-<h2>Ce qui n'est pas fait</h2>
+<h2>Où sont les données, et qui y a accès</h2>
 <ul>
-  <li>Aucune donnée n'est vendue, louée ni utilisée pour de la publicité.</li>
-  <li>Le jeu ne demande accès ni à tes contacts, ni à ton Drive, ni à tes e-mails : seulement ton nom de compte et ton adresse.</li>
+  <li><a href="https://supabase.com/privacy">Supabase</a> héberge la base de données et gère les comptes.</li>
+  <li><a href="https://policies.google.com/privacy">Google</a> n'intervient que si tu choisis « Se connecter avec Google ».</li>
+  <li><a href="https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement">GitHub Pages</a> héberge le site : GitHub voit, comme tout hébergeur, l'adresse IP des visiteurs.</li>
+  <li>Les polices et les musiques sont servies par le site lui-même : aucune requête n'est envoyée à Google Fonts ni à un réseau publicitaire.</li>
+  <li>Le bouton Discord ouvre un autre site, avec sa propre politique : rien n'y est transmis depuis le jeu.</li>
 </ul>
+<p>Ces prestataires peuvent traiter des données hors de l'Union européenne, avec les garanties prévues par leurs propres conditions. Rien n'est vendu, loué ni utilisé pour de la publicité.</p>
 
-<h2>Où sont les données</h2>
-<p>Les données sont hébergées par <a href="https://supabase.com/privacy">Supabase</a>, et le site par <a href="https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement">GitHub Pages</a>. Ton navigateur garde aussi une copie de ta progression sur ton appareil.</p>
+<h2>Stockage dans ton navigateur</h2>
+<p>Le jeu garde dans ton navigateur (stockage local, pas de cookie de suivi) : ta progression, ta langue, tes réglages de son et la session de connexion. C'est nécessaire au fonctionnement, donc sans bandeau de consentement.</p>
 
-<h2>Supprimer tes données</h2>
-<p>Tu peux demander la suppression de ton compte et de ta progression en ouvrant une demande sur <a href="https://github.com/Kanoew/Duel-Helvara/issues">la page du projet</a>. Ta progression locale disparaît si tu effaces les données du site dans ton navigateur.</p>
+<h2>Tes droits : voir, exporter, supprimer</h2>
+<ul>
+  <li><b>Exporter</b> : dans le jeu, Réglages → « Exporter mes données » télécharge ta progression dans un fichier.</li>
+  <li><b>Supprimer</b> : dans le jeu, Réglages → « Supprimer mon compte » efface ton compte, ta progression et ta fiche de classement, tout de suite et sans retour possible.</li>
+  <li><b>Corriger</b> : tu peux changer ton pseudo et ton avatar à tout moment dans Profil.</li>
+  <li><b>Une autre demande</b> (accès, opposition, pseudo d'un autre joueur à signaler) : ouvre une demande sur <a href="https://github.com/Kanoew/Duel-Helvara/issues">la page du projet</a>, sans y mettre de donnée personnelle. Je te répondrai là.</li>
+</ul>
+<p>Tu peux aussi saisir la <a href="https://www.cnil.fr/">CNIL</a> si tu estimes que tes droits ne sont pas respectés.</p>
 
-<p style="margin-top:40px"><a href="./">← Retour au jeu</a></p>
+<h2>Âge</h2>
+<p>Le jeu s'adresse aux joueurs de 15 ans et plus. En dessous, demande l'accord d'un parent avant de jouer ou de te connecter avec Google.</p>
+
+<h2>Monnaie du jeu</h2>
+<p>La monnaie du jeu (« CHF ») se gagne en jouant. Elle n'a aucune valeur réelle, ne s'achète pas et ne se vend pas.</p>
+
+<p class="nav"><a href="./">← Retour au jeu</a><a href="confidentialite.html">Confidentialité</a><a href="conditions.html">Conditions et mentions légales</a><a href="credits.html">Crédits</a></p>
 </main></body></html>

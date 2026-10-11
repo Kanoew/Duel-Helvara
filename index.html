@@ -1,8 +1,8 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Duel d'Helvara</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Marcellus+SC&family=Manrope:wght@400;500;600;700&display=swap">
+<link rel="preload" href="fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/marcellus-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
 <style>
 :root{
   color-scheme: dark;
@@ -528,6 +528,7 @@ body.hasdock .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom))} /* l
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)}
 .setrow > span:first-child{color:var(--mist);font-size:13px}
 .setacc{line-height:1.7}
+.setacc.legal a{color:var(--gold,#c9a96e)}
 .modes{grid-template-columns:repeat(2,minmax(0,1fr))}
 .modes .qcard{padding:10px 12px}
 .modes .qcard .t{font-size:16px}
@@ -1125,7 +1126,7 @@ let dbDoc=null, store="local", writing=false, again=false, saveTimer=null, lastP
    si elle est plus récente et appartient au même joueur (OWNER_KEY) : un envoi raté (réseau, téléphone en veille)
    ne fait plus perdre un achat quand la page est rechargée. Un envoi raté est retenté, et envoyé tout de suite quand la page se cache. */
 let dirty=false, retryMs=3000;
-function save(){ if(P.decks&&P.decks[P.di]) P.decks[P.di].cards=[...P.deck]; P.at=Date.now(); lsWrite(); dirty=true; clearTimeout(saveTimer); saveTimer=setTimeout(flush,500); }
+function save(){ if(window.__wiped) return; if(P.decks&&P.decks[P.di]) P.decks[P.di].cards=[...P.deck]; P.at=Date.now(); lsWrite(); dirty=true; clearTimeout(saveTimer); saveTimer=setTimeout(flush,500); }
 async function flush(){
   if(!dbDoc) return;
   if(writing){ again=true; return; }
@@ -1135,7 +1136,7 @@ async function flush(){
   writing=false;
   if(again){ again=false; flush(); }
 }
-function flushNow(){ if(dirty&&dbDoc) flush(); }
+function flushNow(){ if(!window.__wiped&&dirty&&dbDoc) flush(); }
 document.addEventListener("visibilitychange", ()=>{ if(document.hidden) flushNow(); });
 addEventListener("pagehide", flushNow);
 async function initStore(){
@@ -2682,7 +2683,9 @@ function sheetHTML(){
     <div class="setrow"><span>Volume des effets</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vs??100}" data-vol="vs" aria-label="Volume des effets"><b data-volv="vs">${P.vs??100}</b></span></div>
     <div class="setrow"><span>Cinématiques</span><button class="toggle" data-act="cine" aria-pressed="${P.cine!==false}">${P.cine!==false?"Activée":"Coupée"}</button></div>
     <div class="setrow"><span>Tutoriel</span><button class="toggle" data-act="tuto">Revoir le tutoriel</button></div>
-    <div class="setacc hint">${accountHTML()}</div></section>`;
+    <div class="setacc hint">${accountHTML()}</div>
+    <div class="setrow"><span>Mes données</span><span class="footbtns"><button class="toggle" data-act="gexport">Exporter mes données</button><button class="toggle" data-act="gdelete">Supprimer mon compte</button></span></div>
+    <div class="setacc hint legal"><a href="confidentialite.html" target="_blank" rel="noopener">Confidentialité</a> · <a href="conditions.html" target="_blank" rel="noopener">Conditions et mentions légales</a> · <a href="credits.html" target="_blank" rel="noopener">Crédits</a></div></section>`;
   return `<div class="veil" data-act="sheetclose"><div class="sheet" data-act="sheetin">${body}<button class="ghost" data-act="sheetclose">Fermer</button></div></div>`;
 }
 
@@ -3251,6 +3254,8 @@ document.addEventListener("click", e=>{
     case "music": P.music=!P.music; save(); render(); return;
     case "cine": P.cine=P.cine===false; save(); render(); return;
     case "lang": setLang(LANG==="fr"?"en":"fr"); sfx("click"); render(); return;
+    case "gexport": { sfx("click"); try{ const blob=new Blob([JSON.stringify({exporte_le:new Date().toISOString(),jeu:dataOf()},null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="duel-helvara-mes-donnees.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); }catch(e){} return; }
+    case "gdelete": { sfx("click"); if(!confirm(trUI("Supprimer définitivement ton compte, ta progression et ta fiche de classement ? Cette action est irréversible.")))return; const h=window.helvara; if(!h||!h.deleteAccount)return; h.deleteAccount().then(r=>{ if(r&&!r.ok) alert(trUI("La suppression n'a pas pu aboutir. Réessaie plus tard.")); }); return; }
     case "glogin": sfx("click"); if(window.helvara) window.helvara.signIn(); return;
     case "glogout": sfx("click"); if(window.helvara&&confirm(trUI("Te déconnecter ? Ta progression reste sur ton compte Google."))) window.helvara.signOut(); return;
     case "sfx": P.sfx=!P.sfx; save(); if(P.sfx) SFX.click(); render(); return;
