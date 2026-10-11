@@ -29,6 +29,8 @@ drop policy if exists "board: modif perso"    on public.board;
 create policy "saves: lecture perso" on public.saves for select to authenticated using (auth.uid() = user_id);
 create policy "saves: ajout perso"   on public.saves for insert to authenticated with check (auth.uid() = user_id);
 create policy "saves: modif perso"   on public.saves for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "saves: suppression perso" on public.saves;
+create policy "saves: suppression perso" on public.saves for delete to authenticated using (auth.uid() = user_id);
 
 create policy "board: lecture libre" on public.board for select to anon, authenticated using (true);
 create policy "board: ajout perso"   on public.board for insert to authenticated with check (auth.uid() = user_id);

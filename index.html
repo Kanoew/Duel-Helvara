@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; font-src 'self'; connect-src 'self' blob: data: https://ehjtyfmbbhzgesxthkdg.supabase.co wss://ehjtyfmbbhzgesxthkdg.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Duel d'Helvara</title>
 <link rel="preload" href="fonts/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/marcellus-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -340,12 +340,40 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .packcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%}
 .packshow.many .packcards{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
 .pcell{display:flex;flex-direction:column;align-items:center;gap:6px}
-.pcell .full{width:100%;animation:reveal .55s ease both;animation-delay:var(--d)}
-.pcell .badge{animation:fadein .3s ease both;animation-delay:calc(var(--d) + .4s)}
+.pcell{perspective:900px}
+.pcell .full{width:100%}
+/* ouverture : la carte arrive dos visible, puis se retourne (Commune/Rare : gerbe dorée ; Épique et plus : sceau brisé) */
+.p3d{position:relative;width:100%;transform-style:preserve-3d;transform:rotateY(0deg)}
+.pface{width:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.pfront{transform:rotateY(180deg)}
+.pback{position:absolute;inset:0;border-radius:12px;transform:rotateY(0deg);border:1px solid rgba(255,255,255,.1);
+  background:repeating-linear-gradient(135deg,#1c2238 0 6px,#161b2d 6px 12px);display:grid;place-items:center}
+.pback::after{content:"";width:40%;aspect-ratio:1;border:1px solid var(--primordial);transform:rotate(45deg);opacity:.5}
+.pcell.anim-flip .p3d,.pcell.anim-seal .p3d{animation:pflip .6s cubic-bezier(.4,0,.2,1) both;animation-delay:var(--d)}
+.pcell.anim-seal .p3d{animation-delay:calc(var(--d) + .5s)}
+@keyframes pflip{0%{transform:rotateY(0deg) scale(.96)}60%{transform:rotateY(150deg) scale(1.06)}100%{transform:rotateY(180deg) scale(1)}}
+.pglow{position:absolute;inset:-20%;border-radius:50%;pointer-events:none;z-index:4;opacity:0;
+  background:radial-gradient(circle,rgba(219,168,98,.5),transparent 65%);animation:pglow .7s ease-out both;animation-delay:calc(var(--d) + .25s)}
+@keyframes pglow{0%{opacity:0;transform:scale(.3)}40%{opacity:1}100%{opacity:0;transform:scale(1.6)}}
+.pspark{position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;background:var(--warm);opacity:0;pointer-events:none;z-index:5;
+  box-shadow:0 0 6px rgba(219,168,98,.7);animation:pspark .8s ease-out both;animation-delay:calc(var(--d) + .2s)}
+@keyframes pspark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0)}}
+.pseal{position:absolute;inset:0;display:grid;place-items:center;z-index:6;pointer-events:none;animation:pseal .55s ease-out both;animation-delay:var(--d)}
+.pseal .ring{width:min(80%,100px);aspect-ratio:1;border:2px solid var(--primordial);border-radius:50%;position:relative;display:grid;place-items:center;
+  box-shadow:0 0 18px rgba(143,116,220,.45),inset 0 0 18px rgba(143,116,220,.2);animation:psealspin 6s linear infinite}
+.pseal .ring::before{content:"";position:absolute;inset:8px;border:1px dashed rgba(143,116,220,.55);border-radius:50%}
+.pseal svg{width:46%;height:46%;stroke:var(--primordial);fill:none;stroke-width:3;filter:drop-shadow(0 0 6px rgba(143,116,220,.8))}
+@keyframes psealspin{to{transform:rotate(360deg)}}
+@keyframes pseal{0%{opacity:1;transform:scale(1)}40%{opacity:1;transform:scale(1.2);filter:brightness(1.6) hue-rotate(-25deg)}100%{opacity:0;transform:scale(2.2)}}
+.pfrag{position:absolute;left:50%;top:50%;width:14px;height:3px;border-radius:2px;background:var(--primordial);opacity:0;pointer-events:none;z-index:7;
+  box-shadow:0 0 6px rgba(143,116,220,.6);animation:pfrag .65s ease-out both;animation-delay:calc(var(--d) + .05s)}
+@keyframes pfrag{0%{opacity:1;transform:translate(0,0) rotate(0deg)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) rotate(var(--rot))}}
+.pcell .badge{animation:fadein .3s ease both;animation-delay:calc(var(--d) + .6s)}
+.pcell.anim-seal .badge{animation-delay:calc(var(--d) + 1.1s)}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
 .packshow.many .full .band .e{display:none}
 .packshow:not(.many) .packcards{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-@media (prefers-reduced-motion: reduce){ .packburst,.pcell .full,.pcell .badge,.hc.tutreq{animation:none} }
+@media (prefers-reduced-motion: reduce){ .packburst,.pcell .badge,.hc.tutreq{animation:none} .p3d{animation:none!important;transform:rotateY(180deg)!important} .pseal,.pfrag,.pspark,.pglow{display:none!important} }
 /* vitrine */
 .fangrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
 .fanopt{position:relative;background:none;border:0;padding:0;cursor:pointer;border-radius:8px}
@@ -393,6 +421,43 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .hmain{display:flex;flex-direction:column;min-width:0}
 .hmain small{color:var(--mist);font-size:11.5px}
 .hrow.win b{color:#9fe0b0}.hrow.lose b{color:var(--ko)}
+/* historique étendu */
+.histpage .hfilter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.histpage .hfilter button{font-size:11px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--frost);cursor:pointer}
+.histpage .hfilter button[aria-pressed="true"]{background:var(--lake);border-color:var(--lake);color:#fff}
+.hcard{border:1px solid var(--line);border-radius:12px;background:rgba(17,24,39,.6);overflow:hidden;margin-bottom:8px}
+.hcard.win{border-left:3px solid #9fe0b0}.hcard.lose{border-left:3px solid var(--ko)}.hcard.draw{border-left:3px solid var(--mist)}
+.hsummary{display:flex;align-items:center;gap:10px;padding:10px 12px;-webkit-tap-highlight-color:transparent}
+.hsummary[data-act]{cursor:pointer}
+.hres{font-family:var(--display);font-size:14px;min-width:70px}
+.hres.win{color:#9fe0b0}.hres.lose{color:var(--ko)}.hres.draw{color:var(--mist)}
+.hinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.hinfo .htop{font-size:13px;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.hmode-tag{font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:1px 7px;color:var(--mist)}
+.hinfo .hbot{font-size:11.5px;color:var(--mist);display:flex;gap:6px;flex-wrap:wrap}
+.hinfo .hbot span+span::before{content:"· ";margin-right:2px}
+.hchev{color:var(--mist);font-size:18px;transition:transform .2s;flex-shrink:0}
+.hcard.open .hchev{transform:rotate(180deg)}
+.hdetail{display:none;padding:0 12px 12px;border-top:1px solid var(--line)}
+.hcard.open .hdetail{display:block}
+.hlocs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 8px}
+.hloc{text-align:center;padding:8px 4px;border-radius:8px;background:rgba(17,24,39,.5);border:1px solid var(--line)}
+.hloc.won{border-color:rgba(159,224,176,.3);background:rgba(159,224,176,.06)}
+.hloc.lost{border-color:rgba(255,100,100,.2);background:rgba(255,100,100,.04)}
+.hloc .ln{font-size:11px;color:var(--frost);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hloc .lsc{font-family:var(--display);font-size:15px}
+.hloc .lsc .me{color:var(--me)}.hloc .lsc .foe{color:var(--foe)}
+.hdeck{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.hdeck .mini{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid var(--line)}
+.hdeck .mini img{width:100%;height:100%;object-fit:cover}
+.hgain{font-size:12px;color:var(--warm);margin-top:6px}
+.hrank{font-size:12px;color:var(--mist);margin-top:2px}
+.hempty{text-align:center;padding:30px 20px;color:var(--mist)}
+.hstats{display:flex;gap:14px;margin:8px 0 14px;flex-wrap:wrap}
+.hstats .hs{text-align:center;min-width:50px}
+.hstats .hs .v{font-family:var(--display);font-size:18px}
+.hstats .hs .k{font-size:10.5px;color:var(--mist);text-transform:uppercase;letter-spacing:.05em}
+.hstats .hs.win .v{color:#9fe0b0}.hstats .hs.lose .v{color:var(--ko)}
 .lb{display:flex;flex-direction:column;gap:6px}
 .lbrow{display:flex;align-items:center;gap:10px;background:rgba(17,24,39,.78);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
 .lbrow.me{border-color:var(--warm)}
@@ -1031,6 +1096,7 @@ function hoursToReset(){ const d=new Date(); return Math.max(1,Math.ceil((new Da
 const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","sentinelle","pretre","archiviste","ombre","garde","heraut","gardien"];
 
 /* ======= SAUVEGARDE ======= */
+const HIST_MAX=20;
 const SAVE_KEY = "duel-helvara-save-v1", OWNER_KEY = "duel-helvara-save-owner";
 function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}}; }
 let migratedNote="";
@@ -1040,7 +1106,21 @@ function cleanDecks(arr,owned,deck){ const d=defDecks();
   if(Array.isArray(arr)) arr.slice(0,4).forEach((x,i)=>{ if(!x||typeof x!=="object") return; d[i].name=typeof x.name==="string"&&x.name.trim()?x.name.trim().slice(0,20):d[i].name; d[i].cover=COVERS.includes(x.cover)?x.cover:d[i].cover; d[i].cards=[...new Set(Array.isArray(x.cards)?x.cards:[])].filter(id=>owned.includes(id)).slice(0,ECO.deckSize); });
   else d[0].cards=[...deck];
   return d; }
-function pushHist(mode,res,opp,pw,ew){ P.hist=[{mode,res,opp,sc:`${pw}–${ew}`,t:Date.now(),deck:mode==="Blitz"?"Deck de Blitz":(P.decks&&P.decks[P.di]?P.decks[P.di].name:"")},...(P.hist||[])].slice(0,5); }
+/* historique : 20 parties, avec le détail par lieu, le deck, le gain et (contre l'IA) le rang atteint */
+function pushHist(mode,res,opp,pw,ew,x={}){
+  const locs=S&&S.locs?S.locs.map((L,li)=>({id:L.id,p:total("p",li),e:total("e",li),w:leader(li)})):[];
+  const cards=S&&S.blitz&&P.bz&&P.bz.run?P.bz.run.deck:P.deck;
+  P.hist=[{mode,res,opp,sc:`${pw}–${ew}`,t:Date.now(),deck:mode==="Blitz"?"Deck de Blitz":(P.decks&&P.decks[P.di]?P.decks[P.di].name:""),
+    locs,cards:[...(cards||[])].slice(0,12),gain:x.gain|0,pt:locs.reduce((a,l)=>a+l.p,0),et:locs.reduce((a,l)=>a+l.e,0),lv:x.lv==null?null:x.lv},...(P.hist||[])].slice(0,HIST_MAX);
+}
+function cleanHist(h){
+  const n=(v,max)=>Math.min(max,Math.max(0,Number(v)|0));
+  const o={mode:String(h.mode||"").slice(0,12),res:h.res,opp:String(h.opp||"").slice(0,48),sc:String(h.sc||"").slice(0,12),t:Number(h.t)||0,deck:String(h.deck||"").slice(0,20)};
+  if(Array.isArray(h.locs)) o.locs=h.locs.filter(l=>l&&typeof l.id==="string"&&LOCS[l.id]).slice(0,3).map(l=>({id:l.id,p:Math.max(-999,Math.min(999,Number(l.p)|0)),e:Math.max(-999,Math.min(999,Number(l.e)|0)),w:l.w==="p"||l.w==="e"?l.w:null}));
+  if(Array.isArray(h.cards)) o.cards=h.cards.filter(id=>typeof id==="string"&&POOL.includes(id)).slice(0,12);
+  o.gain=n(h.gain,9999); o.pt=n(h.pt,9999); o.et=n(h.et,9999); o.lv=h.lv==null?null:n(h.lv,MAXLV);
+  return o;
+}
 function cleanBz(b){ if(!b||typeof b!=="object") return {day:"",used:false,run:null};
   const ok=a=>Array.isArray(a)?a.filter(id=>POOL.includes(id)&&CARDS[id].r!=="U"):[];
   const r=b.run&&typeof b.run==="object"?{deck:ok(b.run.deck).slice(0,12),opts:ok(b.run.opts).slice(0,4),wins:Math.min(3,Math.max(0,b.run.wins|0)),over:!!b.run.over,gain:Math.max(0,b.run.gain|0)}:null;
@@ -1056,7 +1136,7 @@ function clean(p){
     lv:Math.min(MAXLV,p.rv===2?num(p.lv,0):migrateLv(num(p.lv,0))), st:num(p.st,0), streak:num(p.streak,0), best:Math.min(MAXLV,p.rv===2?num(p.best,0):migrateLv(num(p.best,0))), rv:2,
     season:(typeof p.season==="string"&&/^\d{4}-\d{2}$/.test(p.season))?p.season:seasonKey(), sw:num(p.sw,0), sl:num(p.sl,0), sd:num(p.sd,0),
     tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, vm:Math.min(100,num(p.vm,35)), vs:Math.min(100,num(p.vs,100)), cine:p.cine!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
-    bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,5).map(h=>({mode:String(h.mode||"").slice(0,12),res:h.res,opp:String(h.opp||"").slice(0,48),sc:String(h.sc||"").slice(0,12),t:Number(h.t)||0,deck:String(h.deck||"").slice(0,20)})):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
+    bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,HIST_MAX).map(cleanHist):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
     daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
     q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,rr:!!p.q.rr,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c,...(typeof x.x==="string"?{x:x.x.slice(0,24)}:{})}))}:null,
     wq:(p.wq&&typeof p.wq.wk==="string")?{wk:p.wq.wk.slice(0,10),p:Math.min(WQ.n,num(p.wq.p,0)),c:!!p.wq.c}:null};
@@ -2308,7 +2388,7 @@ function finish(){
   const qDone=P.q.list.filter((q,i)=>!qBefore[i]&&q.p>=QDEF[q.id].n).map(q=>qText(q));
   if(S.mp){
     if(res==="win") P.dw++; else if(res==="lose") P.dl++; else P.dd++;
-    P.chf+=gain; pushHist("Duel",res,S.mp.oppNick,pw,ew); save(); mpSaveSession(null);
+    P.chf+=gain; pushHist("Duel",res,S.mp.oppNick,pw,ew,{gain}); save(); mpSaveSession(null);
     S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,qDone,mp:true};
     endCine(S.over); endMusic(res); setTimeout(()=>sfx("coin"),700);
     render(); return;
@@ -2316,7 +2396,7 @@ function finish(){
   if(res==="win") P.sw++; else if(res==="lose") P.sl++; else P.sd++;
   const oath=S.oath!=null?(leader(S.oath)==="p"?"kept":"broken"):null;
   const rk=applyRank(res,oath,S.oath!=null&&S.oath===S.aiOath);
-  P.chf+=gain; pushHist("IA",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew); save(); lbPublish();
+  P.chf+=gain; pushHist("IA",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew,{gain,lv:P.lv}); save(); lbPublish();
   S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,rk,qDone};
   if(rk.up) setTimeout(()=>sfx("legend"),900);
   endCine(S.over); endMusic(res); setTimeout(()=>sfx("coin"),700);
@@ -2720,9 +2800,46 @@ function bannerHTML(){
 function seasonBarHTML(){ const se=season(); if(!se) return ""; const T=SEASON[se];
   return `<div class="seasonbar ${se}"><div><div class="eyebrow">${T.eyebrow}</div><b>${T.title}</b><div class="hint">${T.hint}</div></div>${P.starter?`<button class="primary small" data-act="go" data-to="shop">${T.btn}</button>`:""}</div>`; }
 let ulLater=false, deckRename=false;
-function histHTML(){ if(!P.hist||!P.hist.length) return `<section class="sec"><h2>Historique</h2><p class="hint">Aucune partie enregistrée pour l'instant. Les 5 dernières apparaîtront ici.</p></section>`;
+let histFilter="all", histOpen=new Set();
+function histHTML(){
+  const back=`<button class="ghost small" data-act="go" data-to="profile">← Profil</button>`;
+  if(!P.hist||!P.hist.length) return `<div class="histpage"><section class="sec">${back}<h2>Historique des matchs</h2>
+    <div class="hempty"><p>Aucune partie enregistrée pour l'instant.</p><p>Tes 20 dernières parties apparaîtront ici.</p></div></section></div>`;
   const ago=t=>{ const m=Math.round((Date.now()-t)/6e4); return m<1?"à l'instant":m<60?`il y a ${m} min`:m<1440?`il y a ${Math.round(m/60)} h`:`il y a ${Math.round(m/1440)} j`; };
-  return `<section class="sec quests hist"><div class="qhead"><h2>Les 5 dernières parties</h2></div>${P.hist.map(h=>`<div class="hrow ${h.res}"><span class="hmode">${esc(h.mode)}</span><span class="hmain"><span><b>${h.res==="win"?"Victoire":h.res==="lose"?"Défaite":"Égalité"}</b> · ${esc(h.sc)} · ${esc(h.opp)}</span><small>${esc(h.deck)} · ${ago(h.t)}</small></span></div>`).join("")}</section>`; }
+  const dateStr=t=>new Date(t).toLocaleDateString(LANG==="en"?"en-GB":"fr-CH",{day:"numeric",month:"short",year:"numeric"});
+  const list=histFilter==="all"?P.hist:P.hist.filter(h=>h.mode===histFilter);
+  const cnt=r=>P.hist.filter(h=>h.res===r).length, wins=cnt("win");
+  const modes=[...new Set(P.hist.map(h=>h.mode))];
+  return `<div class="histpage"><section class="sec">${back}
+    <h2>Historique des matchs</h2>
+    <div class="hstats">
+      <div class="hs win"><div class="v">${wins}</div><div class="k">Victoires</div></div>
+      <div class="hs lose"><div class="v">${cnt("lose")}</div><div class="k">Défaites</div></div>
+      <div class="hs"><div class="v">${cnt("draw")}</div><div class="k">Égalités</div></div>
+      <div class="hs"><div class="v">${Math.round(wins/P.hist.length*100)} %</div><div class="k">Victoires en %</div></div>
+    </div>
+    ${modes.length>1?`<div class="hfilter"><button data-act="hfilt" data-f="all" aria-pressed="${histFilter==="all"}">Tout</button>${modes.map(m=>`<button data-act="hfilt" data-f="${esc(m)}" aria-pressed="${histFilter===m}">${esc(m)}</button>`).join("")}</div>`:""}
+    ${list.length?list.map(h=>{
+      const hasLocs=h.locs&&h.locs.length, hasCards=h.cards&&h.cards.length, more=hasLocs||hasCards, open=more&&histOpen.has(h.t);
+      return `<div class="hcard ${h.res} ${open?"open":""}">
+        <div class="hsummary" ${more?`data-act="htoggle" data-t="${h.t}" role="button" aria-expanded="${!!open}"`:""}>
+          <span class="hres ${h.res}">${h.res==="win"?"Victoire":h.res==="lose"?"Défaite":"Égalité"}</span>
+          <span class="hinfo">
+            <span class="htop"><span class="hmode-tag">${esc(h.mode)}</span><b>${esc(h.sc)}</b><span>${esc(h.opp)}</span></span>
+            <span class="hbot">${h.deck?`<span>${esc(h.deck)}</span>`:""}<span>${dateStr(h.t)}</span><span>${ago(h.t)}</span></span>
+          </span>
+          ${more?`<span class="hchev" aria-hidden="true">▾</span>`:""}
+        </div>
+        ${more?`<div class="hdetail">
+          ${hasLocs?`<div class="hlocs">${h.locs.map(l=>`<div class="hloc ${l.w==="p"?"won":l.w==="e"?"lost":""}"><div class="ln">${esc(LOCS[l.id].name)}</div><div class="lsc"><span class="me">${l.p}</span> – <span class="foe">${l.e}</span></div></div>`).join("")}</div>`:""}
+          ${h.pt||h.et?`<div class="hrank"><span>Puissance totale :</span> ${h.pt} – ${h.et}${h.lv!=null?` · <span>Rang :</span> ${rankName(h.lv)}`:""}</div>`:""}
+          ${h.gain?`<div class="hgain">+${h.gain} CHF</div>`:""}
+          ${hasCards?`<div class="hdeck">${h.cards.filter(id=>CARDS[id]).map(id=>`<div class="mini" title="${esc(CARDS[id].name)}"><img src="images/avatars/${id}.jpg" alt="${esc(CARDS[id].name)}" loading="lazy"></div>`).join("")}</div>`:""}
+        </div>`:""}
+      </div>`;
+    }).join(""):`<p class="hint">Aucune partie pour ce filtre.</p>`}
+  </section></div>`;
+}
 function pruneUL(){ let m=""; for(const u of ULS) if(P.deck.includes(u.id)&&!ulOk(u,P.deck)){ P.deck=P.deck.filter(x=>x!==u.id); m=`${CARDS[u.id].name} a quitté le deck : elle exige ${u.n}.`; } return m; }
 function ulHTML(){
   if(ulLater||screen==="play") return "";
@@ -2795,7 +2912,7 @@ function profileHTML(){
       </div>
       <div class="hint">Ces chiffres comptent les parties classées de la saison.<br>Depuis le début : ${played?`${P.w} V · ${P.l} D · ${P.d} É`:"aucune partie"} · Duels entre amis : ${P.dw} V · ${P.dl} D · ${P.dd} É · Collection : ${P.owned.length}/${avail().length} cartes.</div>
     </section>
-    ${histHTML()}`;
+    <section class="sec"><button class="toggle" data-act="go" data-to="hist">Historique complet des matchs →</button></section>`;
 }
 
 /* --- deck --- */
@@ -2868,10 +2985,18 @@ function shopHTML(){
 /* --- ouverture de pack --- */
 function packOpenHTML(){
   if(!packOpen) return ""; const many=packOpen.res.length>3;
+  /* positions des éclats : calculées à partir de l'index (pas de hasard), pour qu'un nouveau rendu ne les déplace pas */
+  const fan=(n,k,min,span)=>Array.from({length:n},(_,i)=>{ const a=(i/n)*Math.PI*2+k, d=min+((i*37+k*53)%100)/100*span; return [Math.round(Math.cos(a)*d),Math.round(Math.sin(a)*d)]; });
   return `<div class="veil packveil"><div class="packshow ${many?"many":""}">
     <div class="packburst" style="background-image:url('${packOpen.img}')"></div>
     <h2>${esc(packOpen.name)}</h2>
-    <div class="packcards">${packOpen.res.map((r,k)=>`<div class="pcell" style="--d:${(0.6+k*(many?.12:.45)).toFixed(2)}s">${fullCard(r.id,CARDS[r.id].r==="L"&&r.isNew?"legend":"")}<span class="badge ${r.isNew?"new":"dup"}">${r.isNew?"Nouvelle":`Doublon · +${r.v} CHF`}</span></div>`).join("")}</div>
+    <div class="packcards">${packOpen.res.map((r,k)=>{
+      const rar=CARDS[r.id].r, seal=rar==="E"||rar==="L"||rar==="U";
+      const fx=seal
+        ? `<div class="pseal"><div class="ring"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 L36 20 L20 36 L4 20 Z M20 12 L28 20 L20 28 L12 20 Z"/><circle cx="20" cy="20" r="2.5"/></svg></div></div>`+fan(10,k,60,80).map(([x,y],i)=>`<i class="pfrag" style="--sx:${x}px;--sy:${y}px;--rot:${180+(i*67)%360}deg"></i>`).join("")
+        : `<div class="pglow"></div>`+fan(12,k,50,40).map(([x,y])=>`<i class="pspark" style="--sx:${x}px;--sy:${y}px"></i>`).join("");
+      return `<div class="pcell ${seal?"anim-seal":"anim-flip"}" style="--d:${(0.6+k*(many?.12:.45)).toFixed(2)}s"><div class="p3d"><div class="pface pfront">${fullCard(r.id,rar==="L"&&r.isNew?"legend":"")}</div><div class="pface pback" aria-hidden="true"></div>${fx}</div><span class="badge ${r.isNew?"new":"dup"}">${r.isNew?"Nouvelle":`Doublon · +${r.v} CHF`}</span></div>`;
+    }).join("")}</div>
     <button class="primary" data-act="packclose">Continuer</button></div></div>`;
 }
 
@@ -3254,6 +3379,8 @@ document.addEventListener("click", e=>{
     case "music": P.music=!P.music; save(); render(); return;
     case "cine": P.cine=P.cine===false; save(); render(); return;
     case "lang": setLang(LANG==="fr"?"en":"fr"); sfx("click"); render(); return;
+    case "htoggle": { const t=+el.dataset.t; if(histOpen.has(t)) histOpen.delete(t); else histOpen.add(t); render(); return; }
+    case "hfilt": histFilter=el.dataset.f||"all"; sfx("click"); render(); return;
     case "gexport": { sfx("click"); try{ const blob=new Blob([JSON.stringify({exporte_le:new Date().toISOString(),jeu:dataOf()},null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="duel-helvara-mes-donnees.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); }catch(e){} return; }
     case "gdelete": { sfx("click"); if(!confirm(trUI("Supprimer définitivement ton compte, ta progression et ta fiche de classement ? Cette action est irréversible.")))return; const h=window.helvara; if(!h||!h.deleteAccount)return; h.deleteAccount().then(r=>{ if(r&&!r.ok) alert(trUI("La suppression n'a pas pu aboutir. Réessaie plus tard.")); }); return; }
     case "glogin": sfx("click"); if(window.helvara) window.helvara.signIn(); return;

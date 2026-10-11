@@ -195,6 +195,10 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - Contact public (accord de Jordan, 11 octobre) : une seule adresse dédiée, celle des pages légales. C'est la seule adresse autorisée dans le dépôt ; ne jamais écrire son adresse personnelle principale, et garder l'adresse noreply pour les commits.
 - Pages légales en deux langues : `confidentialite.html`/`privacy.html`, `conditions.html`/`terms.html`, `credits.html`/`credits-en.html`. Les modifier toutes les deux ensemble. Supabase est en Irlande (eu-west-1) ; images et musiques générées par IA (musiques via Gemini).
 
+- **CSP** : balise `<meta http-equiv="Content-Security-Policy">` dans `index.html` (dans le premier `<head>`, celui de la ligne 1 : un meta placé après est ignoré). Autorise `'self'`, `'unsafe-inline'` (le jeu est un seul fichier avec script et styles intégrés), et seulement le projet Supabase pour `connect-src`. Tout nouveau service externe (API, police, image distante) doit être ajouté à cette liste, sinon il sera bloqué. À vérifier en vrai : connexion Google et salon en direct.
+- **Historique** : 20 parties (`HIST_MAX`), détail par lieu, cartes, gain, rang ; écran `hist` depuis le profil ; assaini au chargement par `cleanHist`.
+- **Ouverture de paquet** : `packOpenHTML()`, retournement de la carte (Commune/Rare : gerbe dorée) ou sceau brisé (Épique et plus), sans hasard (positions déduites de l'index), coupé par `prefers-reduced-motion`.
+
 ## Calendrier du contenu
 
 | Date | Contenu |

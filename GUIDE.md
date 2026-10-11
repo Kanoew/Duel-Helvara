@@ -81,3 +81,5 @@ Ne mets jamais le code secret dans le dépôt : il va uniquement dans Supabase.
 - Lance de temps en temps le bloc 3 de **`nettoyage.sql`** (ou planifie-le avec pg_cron, le script l'explique) : il applique les durées annoncées dans la page de confidentialité (12 mois pour les comptes anonymes, 24 mois pour les comptes Google).
 - Écran de consentement Google : renseigne le lien de la politique de confidentialité (`https://kanoew.github.io/Duel-Helvara/confidentialite.html`) et celui des conditions (`.../conditions.html`).
 - Supabase → Authentication → Rate Limits : limite les connexions anonymes par heure et par adresse IP.
+
+- Relance `supabase.sql` une fois de plus : il ajoute la règle « supprimer sa propre sauvegarde » (policy DELETE sur `saves`), cohérente avec le classement. Sans danger, comme d'habitude.
