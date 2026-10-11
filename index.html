@@ -2685,7 +2685,7 @@ function sheetHTML(){
     <div class="setrow"><span>Tutoriel</span><button class="toggle" data-act="tuto">Revoir le tutoriel</button></div>
     <div class="setacc hint">${accountHTML()}</div>
     <div class="setrow"><span>Mes données</span><span class="footbtns"><button class="toggle" data-act="gexport">Exporter mes données</button><button class="toggle" data-act="gdelete">Supprimer mon compte</button></span></div>
-    <div class="setacc hint legal"><a href="confidentialite.html" target="_blank" rel="noopener">Confidentialité</a> · <a href="conditions.html" target="_blank" rel="noopener">Conditions et mentions légales</a> · <a href="credits.html" target="_blank" rel="noopener">Crédits</a></div></section>`;
+    <div class="setacc hint legal"><a href="${LANG==='en'?'privacy.html':'confidentialite.html'}" target="_blank" rel="noopener">Confidentialité</a> · <a href="${LANG==='en'?'terms.html':'conditions.html'}" target="_blank" rel="noopener">Conditions et mentions légales</a> · <a href="${LANG==='en'?'credits-en.html':'credits.html'}" target="_blank" rel="noopener">Crédits</a></div></section>`;
   return `<div class="veil" data-act="sheetclose"><div class="sheet" data-act="sheetin">${body}<button class="ghost" data-act="sheetclose">Fermer</button></div></div>`;
 }
 

@@ -67,4 +67,4 @@ You can also open an [issue](https://github.com/Kanoew/Duel-Helvara/issues) here
 Web game in HTML/JavaScript, hosted on GitHub Pages. Saves, leaderboard and duel rooms run on Supabase.
 
 ### Privacy
-See the [privacy policy](confidentialite.html), the [terms and legal notice](conditions.html) and the [credits](credits.html) (in French). Code and content: all rights reserved (see `LICENSE`).
+See the [privacy policy](privacy.html), the [terms and legal notice](terms.html) and the [credits](credits-en.html). Code and content: all rights reserved (see `LICENSE`).

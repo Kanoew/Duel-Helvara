@@ -187,12 +187,13 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 
 ## Légal et données (11 octobre)
 
-- Pages : `confidentialite.html`, `conditions.html` (conditions + mentions légales), `credits.html`, liées depuis Réglages. `LICENSE` : tous droits réservés, sauf `vendor/` (MIT) et `fonts/` (OFL).
+- Pages (liées depuis Réglages, selon la langue) : `LICENSE` : tous droits réservés, sauf `vendor/` (MIT) et `fonts/` (OFL).
 - **Aucune requête vers un site tiers** au chargement (polices dans `fonts/`, plus de Google Fonts). Ne pas en réintroduire sans mettre à jour la page de confidentialité.
 - Réglages : « Exporter mes données » (`gexport`) et « Supprimer mon compte » (`gdelete` → `helvara.deleteAccount()` dans `cloud.js` → fonction SQL `delete_my_account()` de `supabase.sql`, puis `window.__wiped` empêche toute réécriture locale avant le rechargement).
 - Les pseudos et avatars venant de la base sont échappés (`esc`) ou filtrés (`POOL.includes`) partout ; garder ce réflexe pour tout nouvel affichage.
 - Durées annoncées : 12 mois (anonyme), 24 mois (Google) ; appliquées par `nettoyage.sql` (bloc 3), à lancer ou planifier par Jordan.
-- Pas d'adresse e-mail de contact publique : les demandes passent par les issues GitHub. Ne jamais y mettre l'e-mail personnel.
+- Contact public (accord de Jordan, 11 octobre) : une seule adresse dédiée, celle des pages légales. C'est la seule adresse autorisée dans le dépôt ; ne jamais écrire son adresse personnelle principale, et garder l'adresse noreply pour les commits.
+- Pages légales en deux langues : `confidentialite.html`/`privacy.html`, `conditions.html`/`terms.html`, `credits.html`/`credits-en.html`. Les modifier toutes les deux ensemble. Supabase est en Irlande (eu-west-1) ; images et musiques générées par IA (musiques via Gemini).
 
 ## Calendrier du contenu
 
