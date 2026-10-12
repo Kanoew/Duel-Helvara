@@ -121,6 +121,8 @@ window.HELVARA_EN = {
     medee:{n:"Medea", fx:"Ongoing: the next enemy card played here loses 2. If Hecate is on your side, the next two."},
     medee_h:{n:"Medea, Spectral Bride", fx:"On Reveal: poison the strongest enemy card here: it loses 1 at the end of each turn, down to 0. If Hecate is on your side, also poison the second strongest."},
     eros:{n:"Eros"}, apollon:{n:"Apollo"}, cronos:{n:"Cronus"}, herakles:{n:"Heracles"}, anahita:{n:"Anahita"},
+    effigie:{n:"The Effigy"}, reflet_noir:{n:"The Black Reflection"}, enfant:{n:"The Child Without School"},
+    ananke:{n:"Ananke", fx:"Fate: can be neither destroyed, nor moved, nor weakened. On Reveal: her Power becomes equal to the enemy total Power here, +1. Requires 8 Primordial cards in the deck, Ananke included."},
     possedee:{n:"The Possessed"}, musicien:{n:"The Musician"}, voyante:{n:"The Seer"}, penitente:{n:"The Penitent"},
     gaia:{n:"Gaia"}, maat:{n:"Ma'at"}, hera:{n:"Hera"}, hephaistos:{n:"Hephaestus"},
     reine_sevelin:{n:"The Queen of Sévelin"}, somnambule:{n:"The Flon Sleepwalker"}, veilleur_pont:{n:"The Watcher of Pont Bessières"}, couturiere:{n:"The Seamstress of the Cité"},

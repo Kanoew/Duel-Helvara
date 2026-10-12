@@ -10,6 +10,7 @@
 
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
+    [/^prend la puissance adverse \((\d+)\), \+1$/, (m,n)=>`takes the enemy Power (${n}), +1`],
     [/^dépense (\d+) énergie, \+(\d+)$/, (m,a,b)=>`spends ${a} energy, +${b}`],
     [/^prend (.+) en main$/, (m,a)=>a==="une carte"?"takes a card into hand":`takes ${a} into hand`],
     [/^l'adversaire perd son énergie conservée$/, ()=>"the opponent loses their stored energy"],
@@ -431,7 +432,7 @@
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."
       },
-      ULS:{nike:"8 Judgement cards, Nike included",ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur",ulpele_r:"Pele and Jordan",ulqetjor_r:"Qetesh of the New Year and Jordan",ulsomnambule:"The Sleepwalker and The Queen",ularchiviste:"The Archivist and The Proprietress",nike_v:"8 Judgement cards, Nike of Valentine's Day included",ulqetjor_v:"Qetesh of Valentine's Day and Jordan",ulprombia:"Prometheus and Bia",ulheradio:"Hera and Dionysus",ulposathe:"Poseidon and Athena",ulnikebia:"Nike and Bia",ulmaatset:"Ma'at and Set",ulprompan:"Prometheus and Pandora",ulinaere:"Inanna and Ereshkigal",ulnikejor_v:"Nike of Valentine's Day and Jordan",ulaphares:"Aphrodite and Ares",ultyphgaia:"Typhon and Gaia",ularesathe:"Ares and Athena",ulbaldere:"Baldur and Ereshkigal",ulbaldfrigg:"Baldur and Frigg",ulsusama:"Susanoo and Amaterasu",ulcircal:"Circe and Calypso",uloshoya:"Oshun and Oya",ulhadper:"Hades and Persephone"}
+      ULS:{nike:"8 Judgement cards, Nike included",ananke:"8 Primordial cards, Ananke included",ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur",ulpele_r:"Pele and Jordan",ulqetjor_r:"Qetesh of the New Year and Jordan",ulsomnambule:"The Sleepwalker and The Queen",ularchiviste:"The Archivist and The Proprietress",nike_v:"8 Judgement cards, Nike of Valentine's Day included",ulqetjor_v:"Qetesh of Valentine's Day and Jordan",ulprombia:"Prometheus and Bia",ulheradio:"Hera and Dionysus",ulposathe:"Poseidon and Athena",ulnikebia:"Nike and Bia",ulmaatset:"Ma'at and Set",ulprompan:"Prometheus and Pandora",ulinaere:"Inanna and Ereshkigal",ulnikejor_v:"Nike of Valentine's Day and Jordan",ulaphares:"Aphrodite and Ares",ultyphgaia:"Typhon and Gaia",ularesathe:"Ares and Athena",ulbaldere:"Baldur and Ereshkigal",ulbaldfrigg:"Baldur and Frigg",ulsusama:"Susanoo and Amaterasu",ulcircal:"Circe and Calypso",uloshoya:"Oshun and Oya",ulhadper:"Hades and Persephone"}
     }
   };
 })();
