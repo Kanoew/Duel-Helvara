@@ -1338,22 +1338,23 @@ async function lbInit(db,uid){ lbDb=db; lbUid=uid;
    le classement pour toute la visite : il est retenté (5 s, puis jusqu'à 2 min) et renvoyé quand la page revient au premier plan.
    (L'ancien relais hérité des artefacts, qui écrivait la ligne des autres joueurs, est retiré : Supabase ne le permet pas.) */
 let lbRetry=null, lbWait=5000, lbDirty=false;
-function lbPublish(){ const me=lbMe(); if(room) room.presence({lb:me}).catch(()=>{});
+function lbPublish(){ const me=lbMe(); if(room) room.presence({lb:{uid:lbUid||null}}).catch(()=>{});
   if(!lbDb||!lbUid) return; clearTimeout(lbRetry); lbDirty=true;
   lbDb.doc("board/"+lbUid).set({...me,at:Date.now()}).then(()=>{ lbDirty=false; lbWait=5000; },e=>{
     if(e&&e.code==="not_granted"){ lbCanWrite=false; return; }
     lbRetry=setTimeout(lbPublish,lbWait); lbWait=Math.min(120000,lbWait*2); }); }
 document.addEventListener("visibilitychange", ()=>{ if(!document.hidden&&lbDirty) lbPublish(); });
-function lbOnline(){ const m={}; if(room) for(const p of room.peers()){ const raw=p.presence&&p.presence.lb; const id=p.by||(raw&&raw.uid); if(raw&&id) m[id]=lbClean(raw); } return m; }
+/* Joueurs en ligne : seul l'identifiant compte. Les chiffres du classement ne viennent QUE de la table (la présence est déclarée par le navigateur, donc falsifiable). */
+function lbOnline(){ const m={}; if(room) for(const p of room.peers()){ const raw=p.presence&&p.presence.lb; const id=p.by||(raw&&raw.uid); if(raw&&typeof id==="string") m[id]=true; } return m; }
 function lbCount(){ return lbRows.filter(r=>r.season===seasonKey()&&r.id!==lbUid&&(r.lv||r.st||r.sw||r.sl||r.best)).length+1; }
 function boardHTML(){
-  const on=lbOnline(), map={}; for(const r of lbRows) map[r.id]=r; for(const [id,r] of Object.entries(on)) map[id]={...map[id],...r,id};
+  const on=lbOnline(), map={}; for(const r of lbRows) map[r.id]=r;
   if(lbUid) map[lbUid]={...lbClean(lbMe()),id:lbUid};
   const k=LB_SEASON(); const all=Object.values(map).filter(r=>r&&r.nick&&(r.id===lbUid||r.lv||r.st||r.sw||r.sl||r.best));
   const cur=all.filter(r=>r.season===k).sort((a,b)=>b.lv-a.lv||b.st-a.st||b.sw-a.sw), old=all.filter(r=>r.season!==k);
   const row=(r,i)=>`<div class="lbrow ${r.id===lbUid?"me":""}"><span class="lbn">${i+1}</span>${r.av?`<span class="avatar sm" style="background-image:url('images/avatars/${r.av}.jpg?v=7')"></span>`:`<span class="avatar sm empty">${esc(r.nick.charAt(0).toUpperCase())}</span>`}<span class="lbmain"><b>${esc(r.nick)}${r.id===lbUid?" (toi)":""}</b>${on[r.id]?`<i class="lbon">en ligne</i>`:""}<small>${rankName(r.lv)} · ${r.sw} V · ${r.sl} D</small></span>${rankIcon(r.lv,"sm")}</div>`;
   return `<section class="sec"><h2>Classement · ${seasonLabel()}</h2>
-    <p class="hint">Les joueurs en ligne apparaissent en direct. Les autres gardent le dernier rang enregistré.${store!=="cloud"?" Ta progression n'est pas sauvegardée sur ton compte : tu apparais quand tu es en ligne.":""}</p>
+    <p class="hint">Le classement vient des comptes enregistrés. « en ligne » signale les joueurs connectés en ce moment.${store!=="cloud"?" Ta progression n'est pas sauvegardée sur ton compte : tu n'apparais pas dans le classement des autres.":""}</p>
     <div class="lb">${cur.map(row).join("")||`<p class="hint">Personne n'a encore joué cette saison.</p>`}</div></section>
     ${old.length?`<section class="sec"><h2>Pas encore vus cette saison</h2><div class="lb old">${old.map((r,i)=>row(r,i)).join("")}</div></section>`:""}`;
 }
@@ -2612,7 +2613,7 @@ function mpSaveSession(s){ try{ if(s){ s.at=Date.now(); localStorage.setItem(MP_
 async function initRoom(){
   try{ if(window.claude&&window.claude.use) room=await window.claude.use("room"); }catch(e){ room=null; }
   roomTried=true;
-  if(room){ room.presence({lb:lbMe()}).catch(()=>{}); }
+  if(room){ room.presence({lb:{uid:lbUid||null}}).catch(()=>{}); }
   if(room) room.onPeers(()=>{ mqTick(); mpTick(); if(screen==="board") render(); }, e=>{ mpMsg="Connexion au salon perdue. Recharge la page."; render(); });
   render();
 }

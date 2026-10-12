@@ -156,8 +156,8 @@
     "Voilà tes 100 CHF. Achète la":"Here are your 100 CHF. Buy the", ": 12 cartes pour construire ton premier deck.":": 12 cards to build your first deck.",
     "Échoppe du jour":"Daily stall", "Déjà à toi":"Already yours", "Nouvelle":"New", "Voir mon deck":"View my deck", "Ajouter à mon deck":"Add to my deck",
     /* classement */
-    "en ligne":"online", "Les joueurs en ligne apparaissent en direct. Les autres gardent le dernier rang enregistré.":"Online players appear live. Others keep their last recorded rank.",
-    "Ta progression n'est pas sauvegardée sur ton compte : tu apparais quand tu es en ligne.":"Your progress isn't saved to your account: you appear while you are online.",
+    "en ligne":"online", "Le classement vient des comptes enregistrés. « en ligne » signale les joueurs connectés en ce moment.":"The leaderboard comes from saved accounts. “online” marks the players connected right now.",
+    "Ta progression n'est pas sauvegardée sur ton compte : tu n'apparais pas dans le classement des autres.":"Your progress isn't saved to your account: you don't appear in other players' leaderboard.",
     "Personne n'a encore joué cette saison.":"No one has played this season yet.", "Pas encore vus cette saison":"Not seen yet this season",
     /* duel */
     "Chacun joue avec son deck. Les duels rapportent des CHF et comptent pour les quêtes, mais pas pour le rang.":"Each player uses their own deck. Duels earn CHF and count for quests, but not for rank.",

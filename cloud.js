@@ -109,6 +109,18 @@
           return { exists: !!data, data: () => data ? data.data : undefined };
         },
         async set(obj){
+          if(table === "board"){
+            /* Classement : le jeu ne l'écrit plus lui-même. La fonction board_submit (classement-securise.sql) tourne côté
+               serveur, lit l'identité dans la connexion et ne retient que des changements plausibles. */
+            const n = v => Number.isFinite(v) ? Math.floor(v) : null;
+            const r = await sb.rpc("board_submit", { p_nick: obj.nick ?? null, p_av: obj.av ?? null, p_lv: n(obj.lv), p_st: n(obj.st),
+              p_best: n(obj.best), p_sw: n(obj.sw), p_sl: n(obj.sl), p_season: obj.season ?? null, p_rv: 2 });
+            if(!r.error) return;
+            /* Transition : tant que classement-securise.sql n'a pas été lancé dans Supabase, la fonction n'existe pas.
+               On écrit alors comme avant (la règle d'écriture directe est encore en place). */
+            const e = r.error, missing = e.code === "PGRST202" || e.code === "42883" || r.status === 404 || /could not find the function/i.test(e.message || "");
+            if(!missing) throw fail(e);
+          }
           const { error } = await sb.from(table).upsert({ user_id:id, data:obj, updated_at:new Date().toISOString() });
           if(error) throw fail(error);
         }

@@ -9,7 +9,7 @@ create table if not exists public.saves (
   updated_at timestamptz not null default now()
 );
 
--- Classement : tout le monde lit, chacun n'écrit que sa propre ligne.
+-- Classement : tout le monde lit ; personne n écrit directement (voir classement-securise.sql).
 create table if not exists public.board (
   user_id    uuid primary key references auth.users(id) on delete cascade,
   data       jsonb not null,
@@ -33,8 +33,8 @@ drop policy if exists "saves: suppression perso" on public.saves;
 create policy "saves: suppression perso" on public.saves for delete to authenticated using (auth.uid() = user_id);
 
 create policy "board: lecture libre" on public.board for select to anon, authenticated using (true);
-create policy "board: ajout perso"   on public.board for insert to authenticated with check (auth.uid() = user_id);
-create policy "board: modif perso"   on public.board for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+-- Écriture dans board : plus de droit direct pour les joueurs (ils pourraient s'écrire de fausses victoires).
+-- Le jeu passe par la fonction board_submit, créée par classement-securise.sql (à lancer juste après ce script).
 drop policy if exists "board: suppression perso" on public.board;
 create policy "board: suppression perso" on public.board for delete to authenticated using (auth.uid() = user_id);
 
