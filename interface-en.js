@@ -103,7 +103,7 @@
     /* en-tête, menus */
     "Le Sang de Tiamat":"The Blood of Tiamat", "Accueil":"Home", "Collection":"Collection", "Boutique":"Shop", "Classement":"Rankings",
     "← Accueil":"← Home", "Règles":"Rules", "Voir mon profil":"View my profile", "Fermer":"Close", "Annuler":"Cancel", "Enregistrer":"Save",
-    "OK":"OK", "Valider":"Confirm", "Continuer":"Continue", "Terminer":"Finish", "Plus tard":"Later", "Changer":"Change",
+    "Passer":"Skip", "Ouvrir le paquet":"Open the pack", "Ouverture du paquet":"Pack opening", "Carte":"Card", "face cachée":"face down", "Choisis une carte":"Pick a card", "Touche le paquet":"Tap the pack", "Touche pour continuer":"Tap to continue", "Paquet terminé":"Pack complete", "Nouvelle":"New", "Doublon":"Duplicate", "Doublons":"Duplicates", "Ouvrir un autre paquet":"Open another pack", "Il manque":"Missing", "Paquet indisponible":"Pack unavailable", "Ultra Légendaire":"Ultra Legendary", "OK":"OK", "Valider":"Confirm", "Continuer":"Continue", "Terminer":"Finish", "Plus tard":"Later", "Changer":"Change",
     /* accueil */
     "Nouveau":"New", "Bientôt disponible":"Coming soon", "Voir la collection":"View the collection",
     "Glisse pour faire tourner":"Swipe to rotate", "Choisir mes cartes":"Choose my cards", "Jouer":"Play",

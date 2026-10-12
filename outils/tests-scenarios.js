@@ -87,6 +87,29 @@ async function inPage() {
     T("Prométhée + Pandore : énergie gardée comptée au tour 3 (5)", e3 === 5, e3);
     T("Prométhée + Pandore : +2 par énergie dépensée (2 restantes → 4)", pd.pow === 4, pd.pow);
     T("Prométhée + Pandore : l'énergie dépensée n'est pas gardée une 2e fois", S.energy === 4, S.energy); }
+  /* 7. Ouverture de paquet « Le Tirage » : vrai achat, Passer, fermeture, rachat */
+  { const tick = ms => new Promise(r => setTimeout(r, ms)), until = async (f, ms = 8000) => { const t0 = Date.now(); while(Date.now() - t0 < ms){ if(f()) return true; await tick(40); } return false; };
+    const $ = s => document.querySelector(s);
+    P.starter = true; P.chf = 1000; P.owned = P.owned.slice(0, 5); const n0 = P.owned.length, chf0 = P.chf; quiet = true; buyPack("breche");
+    T("Ouverture : l'achat ouvre le calque avec les 3 cartes du paquet", !!$("#tirage") && document.querySelectorAll(".t-slot").length === 3 && lastPack && lastPack.res.length === 3, "");
+    T("Ouverture : les cartes sont déjà dans la collection avant l'animation", P.owned.length >= n0 && P.chf <= chf0 - 300 + lastPack.refund, `CHF ${chf0} → ${P.chf}`);
+    $(".t-pack").click(); await until(() => /choisis|pick/i.test($(".t-status").textContent));
+    T("Ouverture : le paquet distribue les cartes face cachée", !document.querySelector(".t-fan").hidden && document.querySelectorAll(".t-slot.open").length === 0, "");
+    T("Ouverture : le dos trahit la rareté (classe de halo selon la rareté de chaque carte)", [...document.querySelectorAll(".t-slot")].every((e, i) => e.classList.contains("h-" + CARDS[lastPack.res[i].id].r) || !"RELU".includes(CARDS[lastPack.res[i].id].r)), "");
+    $(".t-skip").click(); await until(() => !$(".t-end").hidden);
+    T("Ouverture : Passer retourne toutes les cartes et propose la suite", document.querySelectorAll(".t-slot.open").length === 3 && $(".t-skip").hidden && [...document.querySelectorAll(".t-end button")].some(b => /autre paquet|another pack/i.test(b.textContent)), "");
+    const chf1 = P.chf; $("[data-t=again]").click(); await tick(200);
+    T("Ouverture : « Ouvrir un autre paquet » rachète le paquet et rouvre le calque", !!$("#tirage") && document.querySelectorAll(".t-slot").length === 3 && P.chf <= chf1 - 300 + lastPack.refund, `CHF ${chf1} → ${P.chf}`);
+    $(".t-skip").click(); await until(() => !$(".t-end").hidden); $("[data-t=close]").click(); await tick(100);
+    T("Ouverture : Continuer ferme le calque et libère l'état", !$("#tirage") && packOpen === null, "");
+    /* l'animation gère une Ultra Légendaire (pas encore dans les paquets) : tension longue puis récompense qui attend le toucher */
+    ouvrirTirage({ res: [{ id: "ulya", isNew: true }], name: "Essai", img: "images/packs/breche.jpg", pid: "breche", price: 300 });
+    $(".t-pack").click(); await until(() => /choisis|pick/i.test($(".t-status").textContent));
+    const t0 = Date.now(); document.querySelector(".t-slot").click();
+    const waiting = await until(() => /touche pour|tap to/i.test($(".t-status").textContent), 9000), dt = Date.now() - t0;
+    T("Ouverture : une Ultra attend le toucher après 3,6 s environ (attente 0,8 + tension 2,3 + révélation 0,55)", waiting && dt > 3200 && dt < 5200, dt + " ms");
+    $(".t-skip").click(); await until(() => !$(".t-end").hidden); $("[data-t=close]").click(); await tick(60);
+  }
   /* Rappels des séries précédentes */
   fresh(); S.turn = 6; S.energy = 12; { const n = card("nemesis"); S.hand.p = [n]; const a = canStage(n, 0); S.turn = 5; T("Nemesis : injouable au tour 6, jouable au tour 5", !a && canStage(n, 0), ""); }
   fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }

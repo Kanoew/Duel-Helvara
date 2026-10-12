@@ -12,9 +12,14 @@ function starterRoll(){
   }
   return [...STARTER];
 }
+/* Un paquet peut-il être acheté maintenant ? (même règle pour le bouton de la boutique et « Ouvrir un autre paquet ») */
+function packBuyable(pk){
+  if(!pk) return false;
+  if(!pk.starter&&!PACK(pk.id).some(id=>!P.owned.includes(id)&&pk.odds.some(o=>o[0]===CARDS[id].r))) return false;
+  return !(P.chf<pk.price||(pk.starter&&P.starter)||!inWin(pk.win)||(!pk.starter&&!P.starter));
+}
 function buyPack(pid){
-  const pk=PACKS.find(x=>x.id===pid); if(pk&&!pk.starter&&!PACK(pk.id).some(id=>!P.owned.includes(id)&&pk.odds.some(o=>o[0]===CARDS[id].r))) return;
-  if(!pk||P.chf<pk.price||(pk.starter&&P.starter)||!inWin(pk.win)||(!pk.starter&&!P.starter)) return;
+  const pk=PACKS.find(x=>x.id===pid); if(!packBuyable(pk)) return;
   P.chf-=pk.price;
   let got;
   if(pk.starter){ got=starterRoll(); P.starter=true; hlStarter=false; }
@@ -35,12 +40,9 @@ function buyPack(pid){
   }
   if(pk.starter && P.deck.length<ECO.deckSize){ const pick=[...new Set([...P.deck,...got])].filter(id=>P.owned.includes(id)); P.deck=pick.slice(0,ECO.deckSize); }
   P.chf+=refund; lastPack={res,refund,name:pk.name,pid}; packOpen={res,name:pk.name,img:pk.img};
-  save(); sfx("pack");
-  if(res.some(r=>r.isNew&&CARDS[r.id].r==="L")) sfx("legend"); else if(res.some(r=>r.isNew)) sfx("rare");
-  if(refund) setTimeout(()=>sfx("coin"),1300);
+  save();
   render();
-  const el=document.querySelector(`.packtile[data-pid="${pid}"] .pack`); if(el){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
-  const op=document.querySelector(".opened"); if(op) op.scrollIntoView({behavior:"smooth",block:"start"});
+  ouvrirTirage({res,name:pk.name,img:pk.img,pid,price:pk.price}); /* js/ouverture.js : « Le Tirage » (les sons sont joués pendant l'animation) */
 }
 
 

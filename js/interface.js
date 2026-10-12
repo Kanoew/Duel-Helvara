@@ -323,23 +323,6 @@ function shopHTML(){
 }
 
 /* --- ouverture de pack --- */
-function packOpenHTML(){
-  if(!packOpen) return ""; const many=packOpen.res.length>3;
-  /* positions des éclats : calculées à partir de l'index (pas de hasard), pour qu'un nouveau rendu ne les déplace pas */
-  const fan=(n,k,min,span)=>Array.from({length:n},(_,i)=>{ const a=(i/n)*Math.PI*2+k, d=min+((i*37+k*53)%100)/100*span; return [Math.round(Math.cos(a)*d),Math.round(Math.sin(a)*d)]; });
-  return `<div class="veil packveil"><div class="packshow ${many?"many":""}">
-    <div class="packburst" style="background-image:url('${packOpen.img}')"></div>
-    <h2>${esc(packOpen.name)}</h2>
-    <div class="packcards">${packOpen.res.map((r,k)=>{
-      const rar=CARDS[r.id].r, seal=rar==="E"||rar==="L"||rar==="U";
-      const fx=seal
-        ? `<div class="pseal"><div class="ring"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 L36 20 L20 36 L4 20 Z M20 12 L28 20 L20 28 L12 20 Z"/><circle cx="20" cy="20" r="2.5"/></svg></div></div>`+fan(10,k,60,80).map(([x,y],i)=>`<i class="pfrag" style="--sx:${x}px;--sy:${y}px;--rot:${180+(i*67)%360}deg"></i>`).join("")
-        : `<div class="pglow"></div>`+fan(12,k,50,40).map(([x,y])=>`<i class="pspark" style="--sx:${x}px;--sy:${y}px"></i>`).join("");
-      return `<div class="pcell ${seal?"anim-seal":"anim-flip"}" style="--d:${(0.6+k*(many?.12:.45)).toFixed(2)}s"><div class="p3d"><div class="pface pfront">${fullCard(r.id,rar==="L"&&r.isNew?"legend":"")}</div><div class="pface pback" aria-hidden="true"></div>${fx}</div><span class="badge ${r.isNew?"new":"dup"}">${r.isNew?"Nouvelle":`Doublon · +${r.v} CHF`}</span></div>`;
-    }).join("")}</div>
-    <button class="primary" data-act="packclose">Continuer</button></div></div>`;
-}
-
 /* --- vitrine de l'accueil --- */
 function fanPickHTML(){
   if(!fanPick) return "";
@@ -635,7 +618,7 @@ function render(){
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
   /* le code de salon en cours de saisie survit aux redessins (le salon commun en provoque à chaque arrivée ou départ) */
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
-  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+packOpenHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
+  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
   document.body.classList.toggle("hasdock",screen!=="play");
   document.body.classList.toggle("inplay",screen==="play");
   setTimeout(()=>FX.decorate(app),30);
@@ -791,7 +774,6 @@ document.addEventListener("click", e=>{
     case "dismiss": if(!P.dis.includes(el.dataset.id)) P.dis.push(el.dataset.id); save(); render(); return;
     case "ulclaim": { const id=el.dataset.id; if(ULof(id)&&!P.owned.includes(id)&&ulEarned(ULof(id))){ P.owned.push(id); save(); sfx("legend"); } zoomId=id; render(); return; }
     case "ullater": ulLater=true; render(); return;
-    case "packclose": packOpen=null; render(); return;
     case "tutoplay": tutoStep=-1; sfx("click"); startTutorial(); return;
     case "tutodone": finishTuto(); return;
     case "tuto": sheet=null; sfx("click"); startTutorial(); return;
