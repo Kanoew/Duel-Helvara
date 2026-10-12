@@ -1326,35 +1326,40 @@ function accountHTML(){
 }
 
 /* ======= CLASSEMENT ======= */
-let lbDb=null, lbUid=null, lbRows=[], lbUnsub=null, lbCanWrite=true;
+let lbDb=null, lbUid=null, lbRows=[], lbCanWrite=true;
 const LB_SEASON=()=>seasonKey();
 function lbMe(){ return {nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,lv:P.lv,st:P.st,best:P.best,sw:P.sw,sl:P.sl,season:P.season,uid:lbUid||null,rv:2}; }
 function lbClean(x){ if(!x||typeof x!=="object") return null; const n=v=>Number.isFinite(v)?Math.max(0,Math.min(999,Math.floor(v))):0;
   return {nick:(typeof x.nick==="string"&&x.nick.trim()?x.nick.trim().slice(0,24):"Joueur"),av:POOL.includes(x.av)?x.av:null,lv:Math.min(MAXLV,x.rv===2?n(x.lv):migrateLv(n(x.lv))),st:n(x.st),best:Math.min(MAXLV,x.rv===2?n(x.best):migrateLv(n(x.best))),sw:n(x.sw),sl:n(x.sl),season:typeof x.season==="string"?x.season.slice(0,7):"",at:Number(x.at)||0}; }
-async function lbInit(db,uid){ lbDb=db; lbUid=uid;
-  try{ lbUnsub=db.collection("board").onSnapshot(q=>{ lbRows=q.docs.map(d=>({id:d.id,...lbClean(d.data())})).filter(r=>r.nick); if(screen==="board"||screen==="home") render(); },()=>{}); }catch(e){}
-  lbPublish(); }
+/* Lecture du classement : les 100 meilleurs de la saison (et quelques joueurs du mois précédent) + ta ligne, triés par la base.
+   Pas de temps réel ni de relecture toutes les minutes : on relit au chargement, en revenant au premier plan et en ouvrant
+   l'accueil ou le classement (au plus une fois toutes les 30 s). */
+let lbAt=0, lbBusy=false;
+async function lbRefresh(force){
+  if(!lbDb||!lbDb.boardTop||lbBusy||document.hidden) return; if(!force&&Date.now()-lbAt<30000) return;
+  lbBusy=true;
+  try{ const rows=await lbDb.boardTop(seasonKey()); lbRows=rows.map(r=>({id:r.id,...lbClean(r.data)})).filter(r=>r.nick); lbAt=Date.now(); if(screen==="board"||screen==="home") render(); }
+  catch(e){} finally{ lbBusy=false; } }
+async function lbInit(db,uid){ lbDb=db; lbUid=uid; lbRefresh(true); lbPublish(); }
 /* Ligne du joueur dans le classement. Un envoi raté (réseau, session expirée au réveil du téléphone) n'arrête plus
    le classement pour toute la visite : il est retenté (5 s, puis jusqu'à 2 min) et renvoyé quand la page revient au premier plan.
    (L'ancien relais hérité des artefacts, qui écrivait la ligne des autres joueurs, est retiré : Supabase ne le permet pas.) */
 let lbRetry=null, lbWait=5000, lbDirty=false;
-function lbPublish(){ const me=lbMe(); if(room) room.presence({lb:{uid:lbUid||null}}).catch(()=>{});
+function lbPublish(){ const me=lbMe();
   if(!lbDb||!lbUid) return; clearTimeout(lbRetry); lbDirty=true;
   lbDb.doc("board/"+lbUid).set({...me,at:Date.now()}).then(()=>{ lbDirty=false; lbWait=5000; },e=>{
     if(e&&e.code==="not_granted"){ lbCanWrite=false; return; }
     lbRetry=setTimeout(lbPublish,lbWait); lbWait=Math.min(120000,lbWait*2); }); }
-document.addEventListener("visibilitychange", ()=>{ if(!document.hidden&&lbDirty) lbPublish(); });
-/* Joueurs en ligne : seul l'identifiant compte. Les chiffres du classement ne viennent QUE de la table (la présence est déclarée par le navigateur, donc falsifiable). */
-function lbOnline(){ const m={}; if(room) for(const p of room.peers()){ const raw=p.presence&&p.presence.lb; const id=p.by||(raw&&raw.uid); if(raw&&typeof id==="string") m[id]=true; } return m; }
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden) return; if(lbDirty) lbPublish(); if(screen==="board"||screen==="home") lbRefresh(); });
 function lbCount(){ return lbRows.filter(r=>r.season===seasonKey()&&r.id!==lbUid&&(r.lv||r.st||r.sw||r.sl||r.best)).length+1; }
 function boardHTML(){
-  const on=lbOnline(), map={}; for(const r of lbRows) map[r.id]=r;
+  const map={}; for(const r of lbRows) map[r.id]=r; const act=r=>r.id!==lbUid&&r.at&&Date.now()-r.at<6e5;
   if(lbUid) map[lbUid]={...lbClean(lbMe()),id:lbUid};
   const k=LB_SEASON(); const all=Object.values(map).filter(r=>r&&r.nick&&(r.id===lbUid||r.lv||r.st||r.sw||r.sl||r.best));
   const cur=all.filter(r=>r.season===k).sort((a,b)=>b.lv-a.lv||b.st-a.st||b.sw-a.sw), old=all.filter(r=>r.season!==k);
-  const row=(r,i)=>`<div class="lbrow ${r.id===lbUid?"me":""}"><span class="lbn">${i+1}</span>${r.av?`<span class="avatar sm" style="background-image:url('images/avatars/${r.av}.jpg?v=7')"></span>`:`<span class="avatar sm empty">${esc(r.nick.charAt(0).toUpperCase())}</span>`}<span class="lbmain"><b>${esc(r.nick)}${r.id===lbUid?" (toi)":""}</b>${on[r.id]?`<i class="lbon">en ligne</i>`:""}<small>${rankName(r.lv)} · ${r.sw} V · ${r.sl} D</small></span>${rankIcon(r.lv,"sm")}</div>`;
+  const row=(r,i)=>`<div class="lbrow ${r.id===lbUid?"me":""}"><span class="lbn">${i+1}</span>${r.av?`<span class="avatar sm" style="background-image:url('images/avatars/${r.av}.jpg?v=7')"></span>`:`<span class="avatar sm empty">${esc(r.nick.charAt(0).toUpperCase())}</span>`}<span class="lbmain"><b>${esc(r.nick)}${r.id===lbUid?" (toi)":""}</b>${act(r)?`<i class="lbon">actif</i>`:""}<small>${rankName(r.lv)} · ${r.sw} V · ${r.sl} D</small></span>${rankIcon(r.lv,"sm")}</div>`;
   return `<section class="sec"><h2>Classement · ${seasonLabel()}</h2>
-    <p class="hint">Le classement vient des comptes enregistrés. « en ligne » signale les joueurs connectés en ce moment.${store!=="cloud"?" Ta progression n'est pas sauvegardée sur ton compte : tu n'apparais pas dans le classement des autres.":""}</p>
+    <p class="hint">Les 100 meilleurs de la saison. « actif » signale les joueurs vus ces 10 dernières minutes.${store!=="cloud"?" Ta progression n'est pas sauvegardée sur ton compte : tu n'apparais pas dans le classement des autres.":""}</p>
     <div class="lb">${cur.map(row).join("")||`<p class="hint">Personne n'a encore joué cette saison.</p>`}</div></section>
     ${old.length?`<section class="sec"><h2>Pas encore vus cette saison</h2><div class="lb old">${old.map((r,i)=>row(r,i)).join("")}</div></section>`:""}`;
 }
@@ -2606,27 +2611,49 @@ function blitzHTML(){
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
 const BUILD="alpha-0.2", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
-let room=null, roomTried=false, myMp=null, mpMsg="";
+let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 const mpTok=()=>Math.random().toString(36).slice(2,10);
 function mpSession(){ try{ const s=JSON.parse(localStorage.getItem(MP_KEY)); return s&&s.mp&&Date.now()-s.at<3*36e5?s:null; }catch(e){ return null; } }
 function mpSaveSession(s){ try{ if(s){ s.at=Date.now(); localStorage.setItem(MP_KEY,JSON.stringify(s)); } else localStorage.removeItem(MP_KEY); }catch(e){} }
-async function initRoom(){
-  try{ if(window.claude&&window.claude.use) room=await window.claude.use("room"); }catch(e){ room=null; }
-  roomTried=true;
-  if(room){ room.presence({lb:{uid:lbUid||null}}).catch(()=>{}); }
-  if(room) room.onPeers(()=>{ mqTick(); mpTick(); if(screen==="board") render(); }, e=>{ mpMsg="Connexion au salon perdue. Recharge la page."; render(); });
-  render();
+/* Temps réel : plus de salon commun où tout le monde voit tout le monde. On ne se connecte que pour un duel :
+   un canal par code de salon (« roomC », deux joueurs), et le canal de la file d'attente (« roomQ ») seulement
+   pendant une recherche. Un joueur qui joue contre l'IA n'ouvre aucune connexion en direct. */
+const rtReady=()=>!!(window.claude&&window.claude.use), rtTok={c:0,q:0}, MP_CODE=/^[A-Z]+-\d{4}$/;
+const RT_FAIL="Le salon en direct est injoignable pour l'instant. Vérifie ta connexion internet, puis réessaie.";
+async function rtOpen(kind,name){
+  const cur=kind==="c"?roomC:roomQ; if(cur&&cur.name===name) return cur;
+  rtClose(kind); const t=rtTok[kind];
+  let r=null; try{ r=await window.claude.use("room:"+name); }catch(e){ r=null; }
+  if(!r) return null;
+  if(t!==rtTok[kind]){ if(r.leave) r.leave(); return null; } /* fermé pendant la connexion */
+  r.name=name;
+  r.onPeers(()=>{ mqTick(); mpTick(); }, e=>{ mpMsg="Connexion au salon perdue. Recharge la page."; render(); });
+  if(kind==="c") roomC=r; else roomQ=r;
+  return r;
 }
-function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(room) room.presence({mp:myMp}).catch(()=>{}); }
-function mpClear(){ myMp=null; mpMsg=""; if(room) room.presence({mp:null}).catch(()=>{}); }
+function rtClose(kind){ rtTok[kind]++; const r=kind==="c"?roomC:roomQ; if(kind==="c") roomC=null; else roomQ=null; if(r&&r.leave) r.leave(); }
+function initRoom(){ roomTried=true; render(); }
+function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(roomC) roomC.presence({mp:myMp}).catch(()=>{}); }
+function mpClear(){ myMp=null; mpMsg=""; rtClose("c"); }
 function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck]}; }
-function mpCreate(){ if(!room||!deckReady()) return; myMp=null; mpPush(mpBase("host",MP_PLACES[Math.floor(Math.random()*MP_PLACES.length)]+"-"+(1000+Math.floor(Math.random()*9000)))); sfx("click"); render(); }
+async function mpCreate(){
+  if(!rtReady()||!deckReady()||mpConn) return; myMp=null; mpMsg=""; mpConn=true; render();
+  const code=MP_PLACES[Math.floor(Math.random()*MP_PLACES.length)]+"-"+(1000+Math.floor(Math.random()*9000));
+  const r=await rtOpen("c","helvara-room-"+code); mpConn=false;
+  if(!r){ mpMsg=RT_FAIL; render(); return; }
+  mpPush(mpBase("host",code)); sfx("click"); render();
+}
 function mpJoin(){
   const i=document.getElementById("mp-code"); const code=(i&&i.value||"").trim().toUpperCase().replace(/\s+/g,"");
   if(!/^[A-Z]+-\d{4}$/.test(code)){ mpMsg="Le code ressemble à OUCHY-4821."; render(); return; }
   mpJoinCode(code);
 }
-function mpJoinCode(code){ if(!room||!deckReady()) return; mpMsg=""; myMp=null; mpPush(mpBase("guest",code)); sfx("click"); render(); }
+async function mpJoinCode(code){
+  if(!rtReady()||!deckReady()||mpConn||!MP_CODE.test(code||"")) return false; mpMsg=""; myMp=null; mpConn=true; render();
+  const r=await rtOpen("c","helvara-room-"+code); mpConn=false;
+  if(!r){ mpMsg=RT_FAIL; render(); return false; }
+  mpPush(mpBase("guest",code)); sfx("click"); render(); return true;
+}
 
 /* ======= EN LIGNE (ALPHA) : file d'attente sans code =======
    Chaque joueur qui cherche publie q={tok,ver,at} dans la présence du salon commun. Les jetons de même version
@@ -2635,22 +2662,26 @@ function mpJoinCode(code){ if(!room||!deckReady()) return; mpMsg=""; myMp=null; 
    (mpJoinCode). Ensuite tout se passe comme un salon avec code. 90 s sans adversaire : la recherche s'arrête. */
 const MQ_WAIT=90000, MQ_STALE=15000;
 let mq=null; /* {tok, t0, timer, room, with, since} */
-function mqPub(extra){ if(room&&mq) room.presence({q:{tok:mq.tok,ver:BUILD,at:mq.t0,...(extra||{})}}).catch(()=>{}); }
-function mqStart(){
-  if(!room||!deckReady()||mq||myMp) return;
-  mpMsg=""; mq={tok:mpTok(),t0:Date.now(),room:null,with:null,since:0};
-  mq.timer=setTimeout(()=>{ if(mq&&!mq.room) mqStop("Personne en ligne pour l'instant. Invite un ami avec un code de salon."); },MQ_WAIT);
-  mq.iv=setInterval(mqTick,2000); mqPub(); sfx("click"); render(); mqTick();
+function mqPub(extra){ if(roomQ&&mq) roomQ.presence({q:{tok:mq.tok,ver:BUILD,at:mq.t0,...(extra||{})}}).catch(()=>{}); }
+async function mqStart(){
+  if(!rtReady()||!deckReady()||mq||myMp||mpConn) return;
+  mpMsg=""; const me=mq={tok:mpTok(),t0:Date.now(),room:null,with:null,since:0,ready:false}; render();
+  const r=await rtOpen("q","helvara-queue");
+  if(mq!==me) return; /* annulé pendant la connexion */
+  if(!r){ mq=null; mpMsg=RT_FAIL; render(); return; }
+  me.ready=true;
+  me.timer=setTimeout(()=>{ if(mq===me&&!me.room) mqStop("Personne en recherche pour l'instant. Invite un ami avec un code de salon."); },MQ_WAIT);
+  me.iv=setInterval(mqTick,2000); mqPub(); sfx("click"); render(); mqTick();
 }
-function mqStop(msg){ if(mq){ clearTimeout(mq.timer); clearInterval(mq.iv); } mq=null; if(room) room.presence({q:null}).catch(()=>{}); if(msg!==undefined) mpMsg=msg; if(screen==="duel") render(); }
-const mqOthers=()=>room?room.peers().filter(p=>!p.sameTab&&!p.isMe&&p.presence&&p.presence.q&&typeof p.presence.q.tok==="string"):[];
-const mqOnline=()=>room?new Set(room.peers().map((p,i)=>p.by||"k"+i)).size:0;
+function mqStop(msg){ if(mq){ clearTimeout(mq.timer); clearInterval(mq.iv); } mq=null; rtClose("q"); if(msg!==undefined) mpMsg=msg; if(screen==="duel") render(); }
+const mqOthers=()=>roomQ?roomQ.peers().filter(p=>!p.sameTab&&!p.isMe&&p.presence&&p.presence.q&&typeof p.presence.q.tok==="string"):[];
+const mqOnline=()=>roomQ?new Set(roomQ.peers().map((p,i)=>p.by||"k"+i)).size:0;
 function mqTick(){
-  if(!mq||!room) return;
+  if(!mq||!mq.ready) return;
   /* je suis l'hôte d'un appariement : la partie a commencé, ou l'autre ne vient pas */
   if(mq.room){
     if(myMp&&myMp.g){ mqStop(""); return; }
-    const guestHere=room.peers().some(p=>!p.sameTab&&p.presence&&p.presence.mp&&p.presence.mp.code===mq.room&&p.presence.mp.role==="guest");
+    const guestHere=!!roomC&&roomC.peers().some(p=>!p.sameTab&&p.presence&&p.presence.mp&&p.presence.mp.code===mq.room&&p.presence.mp.role==="guest");
     const stillQueued=mqOthers().some(p=>p.presence.q.tok===mq.with);
     if(!guestHere&&(!stillQueued||Date.now()-mq.since>MQ_STALE)){ mpClear(); mq.room=null; mq.with=null; mqPub(); }
     else return;
@@ -2658,24 +2689,25 @@ function mqTick(){
   const others=mqOthers(), same=others.filter(p=>p.presence.q.ver===BUILD);
   /* invité par quelqu'un : on rejoint son salon */
   const inv=same.find(p=>p.presence.q.with===mq.tok&&typeof p.presence.q.room==="string"&&/^[A-Z]+-\d{4}$/.test(p.presence.q.room));
-  if(inv){ const code=inv.presence.q.room; mqStop(""); mpJoinCode(code); return; }
+  /* on rejoint son salon d'abord, et on ne quitte la file qu'une fois dedans (sinon l'hôte croit que tu es parti) */
+  if(inv){ if(mq.joining) return; mq.joining=true; const me=mq; mpJoinCode(inv.presence.q.room).then(ok=>{ if(ok&&mq===me) mqStop(""); else if(mq===me) me.joining=false; }); return; }
   const free=same.filter(p=>!p.presence.q.with).map(p=>p.presence.q.tok);
   const toks=[...new Set([...free,mq.tok])].sort(), i=toks.indexOf(mq.tok);
   if(i%2===0&&i+1<toks.length){
-    mpCreate(); if(!myMp) return;
-    mq.room=myMp.code; mq.with=toks[i+1]; mq.since=Date.now(); mqPub({room:mq.room,with:mq.with}); return;
+    if(mq.busy) return; mq.busy=true; const me=mq, mate=toks[i+1];
+    mpCreate().then(()=>{ me.busy=false; if(mq!==me||!myMp) return; me.room=myMp.code; me.with=mate; me.since=Date.now(); mqPub({room:me.room,with:me.with}); }); return;
   }
   mq.verWarn=!same.length&&others.some(p=>p.presence.q.ver!==BUILD);
   if(screen==="duel") render();
 }
 function mpOpp(){
-  if(!room||!myMp) return null;
+  if(!roomC||!myMp) return null;
   const other=myMp.role==="host"?"guest":"host";
-  const list=room.peers().filter(p=>!p.sameTab&&p.presence&&p.presence.mp&&typeof p.presence.mp==="object"&&p.presence.mp.code===myMp.code&&p.presence.mp.role===other);
+  const list=roomC.peers().filter(p=>!p.sameTab&&p.presence&&p.presence.mp&&typeof p.presence.mp==="object"&&p.presence.mp.code===myMp.code&&p.presence.mp.role===other);
   if(myMp.role==="host") return myMp.oppTok?(list.find(p=>p.presence.mp.tok===myMp.oppTok)||null):(list.find(p=>validDeck(p.presence.mp.deck))||null);
   return list.find(p=>p.presence.mp.oppTok===myMp.tok)||list.find(p=>!p.presence.mp.oppTok)||null;
 }
-function mpRoomFull(){ if(!room||!myMp||myMp.role!=="guest") return false; return room.peers().some(p=>!p.sameTab&&p.presence&&p.presence.mp&&p.presence.mp.code===myMp.code&&p.presence.mp.role==="host"&&p.presence.mp.oppTok&&p.presence.mp.oppTok!==myMp.tok); }
+function mpRoomFull(){ if(!roomC||!myMp||myMp.role!=="guest") return false; return roomC.peers().some(p=>!p.sameTab&&p.presence&&p.presence.mp&&p.presence.mp.code===myMp.code&&p.presence.mp.role==="host"&&p.presence.mp.oppTok&&p.presence.mp.oppTok!==myMp.tok); }
 const validDeck=d=>Array.isArray(d)&&d.length===12&&new Set(d).size===12&&d.every(id=>POOL.includes(id));
 const safeNick=n=>(typeof n==="string"&&n.trim()?n.trim().slice(0,24):"Adversaire");
 function mpNewMatch(om){
@@ -2745,8 +2777,10 @@ function mpTryResolve(){
   S.mp.locked=false; S.mp.oppLocked=false;
   resolveTurn(S.staged.slice(), mapPlays("e",om.hist[S.turn]), true);
 }
-function mpResume(){
-  const s=mpSession(); if(!s||!room) return;
+async function mpResume(){
+  const s=mpSession(); if(!s||!rtReady()||mpConn||!MP_CODE.test(s.mp.code||"")) return; mpConn=true; mpMsg=""; render();
+  const r=await rtOpen("c","helvara-room-"+s.mp.code); mpConn=false;
+  if(!r){ mpMsg=RT_FAIL; render(); return; }
   myMp=null; mpPush(s.mp);
   S={mp:{resuming:true,g:s.mp.g,oppNick:s.oppNick}, over:null};
   screen="duel"; render(); mpTick();
@@ -2754,7 +2788,7 @@ function mpResume(){
 function onlineHTML(){
   const banner=`<p class="notice">Alpha : les parties en ligne sont en test, des bugs et des remises à zéro sont possibles.</p>`;
   if(mq) return `<section class="sec mpbox"><h2>En ligne (Alpha)</h2>${banner}
-    <p><span>Recherche d'un adversaire…</span> <span class="hint">${mqOnline()} joueur${mqOnline()>1?"s":""} en ligne</span></p>
+    <p><span>Recherche d'un adversaire…</span> <span class="hint">${mqOnline()} joueur${mqOnline()>1?"s":""} en recherche</span></p>
     ${mq.verWarn?`<p style="color:var(--warm)">${esc(MP_VER_MSG)}</p>`:""}
     <button class="ghost" data-act="mqcancel">Annuler</button></section>`;
   return `<section class="sec mpbox"><h2>En ligne (Alpha)</h2>${banner}
@@ -2767,13 +2801,14 @@ function duelHTML(){
     <li>Il peut jouer tout de suite. En se connectant avec <b>Google</b> (bas de l'accueil), il retrouve sa progression sur tous ses appareils.</li>
     <li>Il ouvre le lien, construit son deck, puis rejoint ton salon avec le code.</li></ol></section>`;
   if(!roomTried) return `<section class="sec"><h2>Duel entre amis</h2><p class="hint">Connexion au salon…</p></section>`;
-  if(!room) return `<section class="sec"><h2>Duel entre amis</h2><p>Le salon en direct est injoignable pour l'instant. Vérifie ta connexion internet, puis recharge la page.</p></section>${invite}`;
+  if(!rtReady()) return `<section class="sec"><h2>Duel entre amis</h2><p>Le salon en direct est injoignable pour l'instant. Vérifie ta connexion internet, puis recharge la page.</p></section>${invite}`;
   if(S&&S.mp&&S.mp.resuming) return `<section class="sec mpbox"><h2>Reconnexion</h2><p>Retour dans le salon <b class="mpcode">${esc(myMp.code)}</b>. En attente de ${esc(S.mp.oppNick)}…</p><button class="ghost" data-act="mpquit">Abandonner le duel</button></section>`;
   if(!deckReady()) return `<section class="sec"><h2>Duel entre amis</h2><p>Complète d'abord ton deck de 12 cartes.</p><button class="primary" data-act="go" data-to="deck">Aller au deck</button></section>`;
   if(!myMp){
     return `<section class="sec mpbox"><h2>Duel entre amis</h2>
       <p class="hint">Chacun joue avec son deck. Les duels rapportent des CHF et comptent pour les quêtes, mais pas pour le rang.</p>
       ${s?`<div class="notice">Un duel contre ${esc(s.oppNick||"un ami")} peut être repris. <span class="row2" style="margin-top:8px;display:flex"><button class="primary" data-act="mpresume">Reprendre</button><button class="ghost" data-act="mpforget">Oublier</button></span></div>`:""}
+      ${mpConn?`<p class="hint">Connexion au salon…</p>`:""}
       <button class="primary" data-act="mpcreate">Créer un salon</button>
       <div class="mpjoin"><input id="mp-code" class="mpinput" maxlength="12" placeholder="OUCHY-4821" autocomplete="off" aria-label="Code du salon"><button class="ghost" data-act="mpjoin">Rejoindre</button></div>
       ${mpMsg?`<p style="color:var(--warm)">${esc(mpMsg)}</p>`:""}
@@ -3500,7 +3535,7 @@ document.addEventListener("click", e=>{
     case "sheet": sheet=sheet===el.dataset.s?null:el.dataset.s; sfx("click"); render(); return;
     case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; sheet=null; render(); return;
     case "sheetin": return;
-    case "go": { const to=el.dataset.to; sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
+    case "go": { const to=el.dataset.to; if(to==="board"||to==="home") lbRefresh(); sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
     case "play": sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;

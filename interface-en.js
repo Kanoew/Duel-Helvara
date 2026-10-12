@@ -156,12 +156,12 @@
     "Voilà tes 100 CHF. Achète la":"Here are your 100 CHF. Buy the", ": 12 cartes pour construire ton premier deck.":": 12 cards to build your first deck.",
     "Échoppe du jour":"Daily stall", "Déjà à toi":"Already yours", "Nouvelle":"New", "Voir mon deck":"View my deck", "Ajouter à mon deck":"Add to my deck",
     /* classement */
-    "en ligne":"online", "Le classement vient des comptes enregistrés. « en ligne » signale les joueurs connectés en ce moment.":"The leaderboard comes from saved accounts. “online” marks the players connected right now.",
+    "actif":"active", "Les 100 meilleurs de la saison. « actif » signale les joueurs vus ces 10 dernières minutes.":"The season's top 100. “active” marks players seen in the last 10 minutes.",
     "Ta progression n'est pas sauvegardée sur ton compte : tu n'apparais pas dans le classement des autres.":"Your progress isn't saved to your account: you don't appear in other players' leaderboard.",
     "Personne n'a encore joué cette saison.":"No one has played this season yet.", "Pas encore vus cette saison":"Not seen yet this season",
     /* duel */
     "Chacun joue avec son deck. Les duels rapportent des CHF et comptent pour les quêtes, mais pas pour le rang.":"Each player uses their own deck. Duels earn CHF and count for quests, but not for rank.",
-    "Créer un salon":"Create a room", "En ligne (Alpha)":"Online (Alpha)", "Chercher un adversaire (Alpha)":"Find an opponent (Alpha)", "Recherche d'un adversaire…":"Looking for an opponent…", "Alpha : les parties en ligne sont en test, des bugs et des remises à zéro sont possibles.":"Alpha: online games are being tested, bugs and resets may happen.", "Personne en ligne pour l'instant. Invite un ami avec un code de salon.":"Nobody online right now. Invite a friend with a room code.", "Version différente : recharge la page":"Different version: reload the page", "Adversaire trouvé, connexion au salon…":"Opponent found, joining the room…", "Rejoindre":"Join", "Code du salon":"Room code", "Inviter un ami":"Invite a friend",
+    "Créer un salon":"Create a room", "En ligne (Alpha)":"Online (Alpha)", "Chercher un adversaire (Alpha)":"Find an opponent (Alpha)", "Recherche d'un adversaire…":"Looking for an opponent…", "Alpha : les parties en ligne sont en test, des bugs et des remises à zéro sont possibles.":"Alpha: online games are being tested, bugs and resets may happen.", "Personne en recherche pour l'instant. Invite un ami avec un code de salon.":"Nobody is searching right now. Invite a friend with a room code.", "Le salon en direct est injoignable pour l'instant. Vérifie ta connexion internet, puis réessaie.":"The live room can't be reached right now. Check your internet connection, then try again.", "Version différente : recharge la page":"Different version: reload the page", "Adversaire trouvé, connexion au salon…":"Opponent found, joining the room…", "Rejoindre":"Join", "Code du salon":"Room code", "Inviter un ami":"Invite a friend",
     "Envoie-lui l'adresse de cette page.":"Send them this page's address.", "Il peut jouer tout de suite. En se connectant avec":"They can play right away. By signing in with",
     "Google":"Google", "(bas de l'accueil), il retrouve sa progression sur tous ses appareils.":"(bottom of the home screen), they keep their progress on all their devices.",
     "Il ouvre le lien, construit son deck, puis rejoint ton salon avec le code.":"They open the link, build their deck, then join your room with the code.",
@@ -374,7 +374,7 @@
     [/^(.+) · Vasseur \(paiement\)$/, (m,a)=>`${a} · Vasseur (payment)`],
     [/^⚖ Serment sur (.+) \?$/, (m,a)=>`⚖ Oath on ${a}?`],
     [/^Tu remportes (\d) lieux sur 3\. (.+)$/, (m,n,r)=>`You win ${n} locations out of 3. ${exact[r]||r}`],
-    [/^(\d+) joueurs? en ligne$/, (m,n)=>`${n} player${n==="1"?"":"s"} online`],
+    [/^(\d+) joueurs? en recherche$/, (m,n)=>`${n} player${n==="1"?"":"s"} searching`],
     [/^(\d) lieux? contre (\d)(?: · départage à la puissance totale (-?\d+) contre (-?\d+))?$/, (m,a,b,x,y)=>`${a} ${s(a,"location")} to ${b}${x?` · decided on total Power ${x} to ${y}`:""}`],
     [/^Quête accomplie : (.+)\. Récupère ta récompense à l'accueil\.$/, (m,a)=>`Quest complete: ${a}. Claim your reward on the home screen.`],
     /* journal */

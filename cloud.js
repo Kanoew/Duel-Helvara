@@ -126,43 +126,26 @@
         }
       };
     },
-    collection(name){
-      if(name !== "board") throw new Error("Collection inconnue : " + name);
-      return {
-        onSnapshot(cb, onErr){
-          const rows = new Map(); let live = true;
-          const emit = () => { if(live) cb({ docs: [...rows].map(([id, d]) => ({ id, data: () => d })) }); };
-          const load = async () => {
-            let res; try { res = await sb.from("board").select("user_id,data").order("updated_at", { ascending:false }).limit(1000); } catch(e) { onErr && onErr(e); return; }
-            const { data, error } = res;
-            if(error){ onErr && onErr(fail(error)); return; }
-            rows.clear(); for(const r of data) rows.set(r.user_id, r.data); emit();
-          };
-          const ch = sb.channel("helvara-board")
-            .on("postgres_changes", { event:"*", schema:"public", table:"board" }, m => {
-              if(m.eventType === "DELETE"){ if(m.old && m.old.user_id) rows.delete(m.old.user_id); }
-              else if(m.new && m.new.user_id) rows.set(m.new.user_id, m.new.data);
-              emit();
-            })
-            .subscribe(status => { if(status === "SUBSCRIBED") load(); });
-          load();
-          // Filet de sécurité : sur téléphone, la connexion en direct se coupe en arrière-plan.
-          // On relit la table au retour au premier plan, et toutes les 60 s tant que la page est visible.
-          const onVis = () => { if(!document.hidden) load(); };
-          document.addEventListener("visibilitychange", onVis);
-          const tick = setInterval(() => { if(!document.hidden) load(); }, 60000);
-          return () => { live = false; clearInterval(tick); document.removeEventListener("visibilitychange", onVis); sb.removeChannel(ch); };
-        }
-      };
+    /* Classement : les 100 meilleurs de la saison (+ quelques joueurs du mois d'avant) et ta ligne, triés par la base.
+       Fonction board_top (classement-allege.sql). Tant qu'elle n'existe pas, on lit les 200 dernières lignes mises à jour. */
+    async boardTop(season){
+      let res = await sb.rpc("board_top", { p_limit:100, p_season: season || null });
+      if(res.error){
+        const e = res.error;
+        if(!(e.code === "PGRST202" || e.code === "42883" || res.status === 404 || /could not find the function/i.test(e.message || ""))) throw fail(e);
+        res = await sb.from("board").select("user_id,data").order("updated_at", { ascending:false }).limit(200);
+        if(res.error) throw fail(res.error);
+      }
+      return (res.data || []).map(r => ({ id:r.user_id, data:r.data }));
     }
   };
 
   /* ---------- Salon des duels (présence en temps réel) ---------- */
-  async function makeRoom(){
+  async function makeRoom(name){
     const s = await sessionP;
     const uid = s && s.user ? s.user.id : null;
     const key = "t" + Math.random().toString(36).slice(2, 10);
-    const ch = sb.channel("helvara-salon", { config:{ presence:{ key } } });
+    const ch = sb.channel(name, { config:{ presence:{ key } } });
     let state = {}, list = [], onPeers = null, onErr = null, joined = false, errTimer = null;
 
     const rebuild = () => {
@@ -191,16 +174,18 @@
     return {
       presence(patch){ state = Object.assign({}, state, patch); return joined ? ch.track({ uid, p:state }) : Promise.resolve(); },
       peers(){ return list; },
-      onPeers(cb, err){ onPeers = cb; onErr = err; if(list.length) cb(); }
+      onPeers(cb, err){ onPeers = cb; onErr = err; if(list.length) cb(); },
+      leave(){ onPeers = null; onErr = null; clearTimeout(errTimer); try { sb.removeChannel(ch); } catch(e) {} }
     };
   }
 
-  let roomP = null;
   window.claude = {
     async use(name){
       if(name === "db") return (await sessionP) ? db : null;
       if(name === "user") return (await sessionP) ? { id: async () => ((await sessionP) || {}).user?.id || null } : null;
-      if(name === "room") return roomP || (roomP = makeRoom().catch(() => { roomP = null; return null; }));
+      /* « room:<nom du canal> » : un canal de présence à part (salon avec code, file d'attente). Le jeu l'ouvre seulement
+         quand il en a besoin, et le ferme avec leave(). */
+      if(typeof name === "string" && name.startsWith("room:") && /^[A-Za-z0-9_-]{3,64}$/.test(name.slice(5))) return makeRoom("helvara-" + name.slice(5).replace(/^helvara-/, "")).catch(() => null);
       return null;
     }
   };
