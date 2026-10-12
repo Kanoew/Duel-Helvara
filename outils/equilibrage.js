@@ -143,7 +143,7 @@ async function newWorker(browser, port, k) {
   const page = await ctx.newPage(); const errors = [];
   page.on("pageerror", e => errors.push("pageerror: " + e.message));
   page.on("console", m => { if (m.type() === "error" && !/Failed to load resource|supabase/i.test(m.text())) errors.push("console: " + m.text().slice(0, 200)); });
-  await page.route("**/vendor/supabase.js", r => r.fulfill({ contentType: "text/javascript", body: "window.supabase=undefined" }));
+  await page.route("**/vendor/supabase.js*", r => r.fulfill({ contentType: "text/javascript", body: "window.supabase=undefined" }));
   await page.addInitScript(d => { window.__today = d; }, OPT.date);
   await page.goto(`http://127.0.0.1:${port}/index.html`); await page.waitForFunction(() => typeof newGame === "function" && typeof aiPlan === "function");
   page.setDefaultTimeout(180000);

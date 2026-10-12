@@ -25,7 +25,15 @@ Réponses en **français**.
 
 | Fichier | Rôle |
 |---|---|
-| `index.html` | Tout le jeu : données, moteur, IA, interface, CSS, effets visuels |
+| `index.html` | Coquille de la page (en-tête, CSP, balises qui chargent les fichiers ci-dessous, avec `?v=<empreinte>`) |
+| `jeu.css` | Tous les styles du jeu (à la racine : ses `url("images/…")` sont relatifs à la page) |
+| `js/cartes.js` | Données : `CARDS`, `LOCS`, `FAC`, `RAR` |
+| `js/langue-profil.js` | Langue (`trUI`, `translateDOM`), `ULS` (fusions), `DROPS`, rangs, sauvegarde, journal des factions, classement |
+| `js/sons-effets.js` | Sons, effets visuels (`FX`, `MIX`), cinématiques (fusion, faction, fin de partie) |
+| `js/moteur.js` | Moteur de partie (`newGame`, `startTurn`, `cardPow`, `revealFx`, `resolveTurn`, `finish`), IA (`aiDeck`, `aiPlan`) |
+| `js/boutique-modes.js` | Boutique, échoppe du jour, Blitz, duels entre amis, file d'attente en ligne |
+| `js/interface.js` | Rendu des écrans (`render`, `gameHTML`…), interactions (clics), démarrage |
+| `outils/versions.js` | Met à jour les `?v=` d'`index.html` (**à lancer après toute modification d'un .js ou .css du jeu**) |
 | `cartes-en.js` | Traductions anglaises des cartes, lieux, factions et raretés (`window.HELVARA_EN`) |
 | `interface-en.js` | Traductions anglaises de l'interface (`exact`, `rules` en regex, `NOTES` pour le journal, `DROPS`, `ULS`…) |
 | `cloud.js` + `config.js` | Supabase : sauvegarde, classement, duels en temps réel, connexion Google |
@@ -66,7 +74,7 @@ await sharp(src).extract({left,top,width:c,height:c}).resize(256,256).jpeg({qual
 
 Toujours regarder l'avatar obtenu (le visage doit être centré, ni trop serré ni trop large) et corriger le recadrage si besoin.
 
-### 2. Les données, dans l'objet `CARDS` de `index.html`
+### 2. Les données, dans l'objet `CARDS` de `js/cartes.js`
 
 ```js
 athena:  {name:"Athéna", cost:2, pow:2, fac:"jugement", r:"E", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : …", img:"images/athena.jpg"},
@@ -105,12 +113,16 @@ Autres réglages selon le type de carte :
 
 - Tester dans Chromium avec Playwright (préinstallé, voir plus bas). Simuler une date avec `window.__today='2026-11-20'` dans un `addInitScript`.
 - Vérifier l'effet, puis lancer quelques parties complètes (aucune erreur dans la console).
-- Commit en français, puis `git push origin main`.
+- `node outils/versions.js` (empreintes des fichiers), puis commit en français, puis `git push origin main`.
 - Vérifier le déploiement : `gh api "repos/Kanoew/Duel-Helvara/actions/runs?per_page=1"`.
 
 ---
 
-## Repères du moteur (`index.html`)
+## Repères du moteur (`js/moteur.js`, sauf mention)
+
+- **Découpage de `index.html` (12 octobre 2026, audit étape 6)** : l'ancien fichier unique (372 Ko) est coupé en fichiers **sans aucun changement de code**. Les `js/*.js` sont des scripts classiques chargés dans l'ordre d'`index.html` : ils partagent la même portée globale (un `const`, un `let` ou une `function` d'un fichier est visible des suivants). **L'ordre des balises compte** : ne pas le changer. Vérifié le jour du découpage : le texte des fichiers est le script d'origine à l'octet près, le DOM de 37 écrans (FR et EN, saison Halloween) est identique à celui de l'ancienne version, et 600 parties IA contre IA avec la même graine donnent exactement les mêmes résultats.
+- **Après toute modification** d'un fichier `.js` ou `.css` : `node outils/versions.js` (sinon un navigateur peut garder un ancien fichier en cache et le mélanger avec un nouveau) ; `node outils/versions.js --verifier` contrôle sans rien changer.
+- **Tests** : le faux Supabase se branche avec `page.route("**/vendor/supabase.js*", …)` (avec l'étoile finale : l'adresse porte maintenant `?v=…`).
 
 - **État d'une partie `S`** :
   - `board[s][li]` : cartes sur le plateau, avec `s` = `"p"` (toi) ou `"e"` (adversaire) et `li` = 0, 1 ou 2 ;
@@ -157,7 +169,7 @@ Autres réglages selon le type de carte :
 - **Classement sécurisé (12 octobre, audit étape 1)** : les joueurs n'ont plus aucun droit d'écriture sur `board` (policies insert/update retirées, `revoke`). `lbPublish()` → `doc("board/…").set()` de `cloud.js` appelle la fonction SQL `board_submit` (fichier `classement-securise.sql`, à coller dans Supabase par Jordan, après `supabase.sql`) : `security definer`, identité = `auth.uid()`, 1 partie/minute (réserve de 10, 200/jour), au plus +4 étoiles par victoire, compteurs jamais en baisse, pseudo et avatar nettoyés, changement de saison recalculé comme `checkSeason()`. Une annonce trop forte est **réduite** à ce qui est plausible (pas de refus : le reste se rattrape aux parties suivantes). Table privée `board_guard` (réserve et plafond du jour). **Transition** : si la fonction n'existe pas encore (`PGRST202`), `cloud.js` écrit comme avant ; après le SQL, un refus ne bascule jamais sur l'écriture directe. `supabase.sql` ne recrée plus les droits d'écriture. **La présence du salon ne porte plus de chiffres** (`lb:{uid}`) et `boardHTML` n'en tire que « en ligne » : avant, un joueur pouvait y diffuser de faux rangs, même sous le pseudo d'un autre. Les joueurs sans compte enregistré n'apparaissent donc plus chez les autres. Reste falsifiable : le serveur ne peut pas savoir si une partie a vraiment eu lieu (un script patient peut envoyer ~1 victoire par minute par compte), paquets et collection sont tirés dans le navigateur.
 - **Lecture du classement allégée (12 octobre, audit étape 2)** : `lbRefresh()` appelle `boardTop` (`cloud.js`) → fonction SQL `board_top` (`classement-allege.sql`, à coller dans Supabase après `classement-securise.sql`) : 100 meilleurs de la saison + 30 du mois précédent + ta ligne, triés par la base (index `board_rang_idx`). Relecture au chargement, au retour au premier plan et en ouvrant l'accueil ou le classement, au plus toutes les 30 s ; **plus de temps réel ni de relecture toutes les 60 s** (l'ancien `collection().onSnapshot` est supprimé). Le badge « en ligne » est devenu « actif » (ligne mise à jour par le serveur dans les 10 dernières minutes). Tant que `board_top` n'existe pas, `cloud.js` lit les 200 dernières lignes.
 - **Comptes fantômes** : `comptes-fantomes.sql` (tâche pg_cron `helvara-fantomes`, chaque nuit à 3 h 30 UTC) supprime les comptes anonymes sans aucune partie terminée et inactifs depuis 14 jours. Ne pas relancer `nettoyage.sql` en entier pour ça (le bloc 2 vide les anonymes du classement). Protection anti-robot (captcha) : pas encore intégrée au jeu (voir la proposition faite à Jordan : un service tiers, donc page de confidentialité et CSP à mettre à jour).
-- **Duels en ligne** (section « DUEL ENTRE AMIS » de `index.html`) : un canal de présence Supabase **par code de salon** (`helvara-room-<CODE>`, ouvert seulement pour un duel : `roomC`, `rtOpen("c",…)`) et un canal de **file d'attente** `helvara-queue` (`roomQ`, ouvert seulement pendant la recherche). Plus aucune connexion en direct pour qui joue contre l'IA ou regarde le classement (le salon commun `helvara-salon` est supprimé : tout le monde y recevait la présence de tout le monde). Déroulement identique chez les deux joueurs (lockstep, tirage partagé). Salon avec code : `mpCreate`, `mpJoin` → `mpJoinCode(code)` (async : ouvrent le canal puis publient). `cloud.js` : `claude.use("room:<canal>")` renvoie un salon avec `leave()`. L'invité rejoint le salon avant de quitter la file (sinon l'hôte croit qu'il est parti). **`BUILD`** (ex. `alpha-0.1`) est publié dans `mpBase()` et dans la file : deux versions différentes ne lancent jamais de match (« Version différente : recharge la page »). **Changer `BUILD` à chaque modification qui touche au déroulement d'une partie.**
+- **Duels en ligne** (section « DUEL ENTRE AMIS » de `js/boutique-modes.js`) : un canal de présence Supabase **par code de salon** (`helvara-room-<CODE>`, ouvert seulement pour un duel : `roomC`, `rtOpen("c",…)`) et un canal de **file d'attente** `helvara-queue` (`roomQ`, ouvert seulement pendant la recherche). Plus aucune connexion en direct pour qui joue contre l'IA ou regarde le classement (le salon commun `helvara-salon` est supprimé : tout le monde y recevait la présence de tout le monde). Déroulement identique chez les deux joueurs (lockstep, tirage partagé). Salon avec code : `mpCreate`, `mpJoin` → `mpJoinCode(code)` (async : ouvrent le canal puis publient). `cloud.js` : `claude.use("room:<canal>")` renvoie un salon avec `leave()`. L'invité rejoint le salon avant de quitter la file (sinon l'hôte croit qu'il est parti). **`BUILD`** (ex. `alpha-0.1`) est publié dans `mpBase()` et dans la file : deux versions différentes ne lancent jamais de match (« Version différente : recharge la page »). **Changer `BUILD` à chaque modification qui touche au déroulement d'une partie.**
 - **En ligne (Alpha)**, appariement sans code : `mqStart` publie `q={tok,ver,at}` dans `helvara-queue` ; `mqTick` trie les jetons de même version (hors cet onglet, ce compte et les joueurs déjà appariés) et apparie 0-1, 2-3… Le plus petit crée un salon (`mpCreate`) et publie `q.room` + `q.with` ; l'autre rejoint (`mpJoinCode`). Puis `q` est vidé. Hôte sans invité au bout de 15 s : il relance la recherche. 90 s sans adversaire : arrêt et message. Mêmes règles que le salon : CHF et quêtes, pas de rang.
 
 **Règle des fusions (Jordan, 10 octobre)** : une fusion de base n'exige que les cartes de base ; une variante saisonnière n'ouvre pas la fusion de base. Une fusion saisonnière (`ulqetjor_r`, `ulpele_r`, `ulqetjor_v`…) exige la variante. Jordan et Jordan le Narrateur restent interchangeables. Il faut donc être là pendant la saison. Dans `ULS`, ne mettre une variante dans un `req` que si la fusion est elle-même saisonnière.
@@ -202,7 +214,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - Contact public (accord de Jordan, 11 octobre) : une seule adresse dédiée, celle des pages légales. C'est la seule adresse autorisée dans le dépôt ; ne jamais écrire son adresse personnelle principale, et garder l'adresse noreply pour les commits.
 - Pages légales en deux langues : `confidentialite.html`/`privacy.html`, `conditions.html`/`terms.html`, `credits.html`/`credits-en.html`. Les modifier toutes les deux ensemble. Supabase est en Irlande (eu-west-1) ; images et musiques générées par IA (musiques via Gemini).
 
-- **CSP** : balise `<meta http-equiv="Content-Security-Policy">` dans `index.html` (dans le premier `<head>`, celui de la ligne 1 : un meta placé après est ignoré). Autorise `'self'`, `'unsafe-inline'` (le jeu est un seul fichier avec script et styles intégrés), et seulement le projet Supabase pour `connect-src`. Tout nouveau service externe (API, police, image distante) doit être ajouté à cette liste, sinon il sera bloqué. À vérifier en vrai : connexion Google et salon en direct.
+- **CSP** : balise `<meta http-equiv="Content-Security-Policy">` dans `index.html` (dans le premier `<head>`, celui de la ligne 1 : un meta placé après est ignoré). Autorise `'self'`, `'unsafe-inline'` (le jeu charge ses fichiers `js/` et `jeu.css` depuis le site lui-même, mais l'interface écrit encore des attributs `style` en ligne ; `script-src 'unsafe-inline'` n'est plus nécessaire à ce jour, à resserrer une fois testé en vrai), et seulement le projet Supabase pour `connect-src`. Tout nouveau service externe (API, police, image distante) doit être ajouté à cette liste, sinon il sera bloqué. À vérifier en vrai : connexion Google et salon en direct.
 - **Historique** : 20 parties (`HIST_MAX`), détail par lieu, cartes, gain, rang ; écran `hist` depuis le profil ; assaini au chargement par `cleanHist`.
 - **Ouverture de paquet** : `packOpenHTML()`, retournement de la carte (Commune/Rare : gerbe dorée) ou sceau brisé (Épique et plus), sans hasard (positions déduites de l'index), coupé par `prefers-reduced-motion`.
 
