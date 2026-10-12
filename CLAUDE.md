@@ -253,6 +253,9 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 ## Filtres de la collection (12 octobre 2026)
 
 L'écran Collection (= constructeur de deck, `deckHTML`) a 4 rangées de puces qui se **combinent** : faction (`deckFilter`), coût 0 à 6+ (`costFilter`), rareté C/R/E/L/Ultra (`rarFilter`), possession Toutes/Possédées/Manquantes (`ownFilter`). `collMatch(id)` est le seul prédicat ; compteur « N cartes affichées » et bouton « Réinitialiser les filtres » dès qu'un filtre est actif ; sur téléphone les rangées défilent en largeur (une ligne chacune). Les filtres vivent le temps de la session (variables d'`sons-effets.js`). Testés dans `outils/tests-scenarios.js`.
+## Accueil : bandeau de saison → paquet d'édition (12 octobre 2026)
+
+Le bouton du bandeau de saison (« Ouvrir le Pli des Citrouilles », de l'Étoile, du Douzième Coup) ne mène plus à la boutique en vrac : `data-act="seasonpack"` (`data-pid` = identifiant de la saison = identifiant du paquet d'édition, donc **toute future saison/paquet d'édition marche sans code en plus** si son id de `SEASON` est celui de son paquet) ouvre la boutique avec **le paquet en tête de liste et surligné** (`packFocus`, remis à zéro par le menu). Testé dans `outils/tests-scenarios.js` et aux 4 dates (Halloween, hors saison, Noël, Nouvel An).
 
 ## Décors saisonniers de l'accueil
 

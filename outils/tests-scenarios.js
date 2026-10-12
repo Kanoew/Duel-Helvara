@@ -177,6 +177,18 @@ async function inPage() {
     T("Filtres : « Réinitialiser les filtres » remet tout à zéro", shown() === avail() && !$("[data-act=freset]") && costFilter === "all" && rarFilter === "all" && ownFilter === "all" && deckFilter === "all", "");
     window.render = () => {}; screen = "home";
   }
+  /* 10. Accueil : le bandeau de saison mène au paquet d'édition, en tête de la boutique et surligné */
+  { const $ = x => document.querySelector(x), se = season();
+    P.starter = true; P.tuto = true; tutoStep = -1; P.chf = 500; P.owned = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)).slice(0, 5);
+    window.render = realRender; screen = "home"; packFocus = null; render();
+    const btn = $("[data-act=seasonpack]"); T("Accueil : le bandeau de saison propose d'ouvrir le paquet d'édition (saison « " + se + " »)", !!se && !!btn && btn.dataset.pid === se, se);
+    if(btn){ btn.click(); const first = $(".packtile");
+      T("Accueil : le bouton de saison ouvre la boutique avec le paquet d'édition en tête", screen === "shop" && first && first.dataset.pid === se, first && first.dataset.pid);
+      T("Accueil : le paquet d'édition est surligné", !!first && first.classList.contains("hl"), "");
+      const go = $("[data-act=go][data-to=shop]"); go.click();
+      T("Accueil : le menu Boutique retire le surlignage", !$(".packtile.hl") || $(".packtile.hl").dataset.pid === "brulure", ""); }
+    window.render = () => {}; screen = "home"; packFocus = null;
+  }
   /* Rappels des séries précédentes */
   fresh(); S.turn = 6; S.energy = 12; { const n = card("nemesis"); S.hand.p = [n]; const a = canStage(n, 0); S.turn = 5; T("Nemesis : injouable au tour 6, jouable au tour 5", !a && canStage(n, 0), ""); }
   fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }
