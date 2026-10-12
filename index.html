@@ -65,9 +65,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-grad
 @keyframes nudge{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 @media (prefers-reduced-motion:reduce){ .tutbar .nudge{animation:none} }
 .mods{display:flex;flex-wrap:wrap;gap:2px 12px;color:#9fe0b0;font-size:12.5px;margin-top:-4px}
+.fb{margin-top:2px;display:flex;flex-direction:column;gap:6px;align-items:center;font-size:12.5px;color:var(--mist)}
+.fb.done{margin:2px 0}.fbbtns{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.fbb{background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--mist)}
+.fbb:hover{border-color:var(--me);color:var(--frost)}
+.fbsel{width:100%;background:var(--deep);color:var(--frost);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit}
 .linkbtn{background:none;border:0;padding:0;color:var(--me);text-decoration:underline;cursor:pointer;font-size:inherit}
 /* la main reste toujours entièrement visible : si le reste de l'écran est trop haut, elle se colle au bas de la fenêtre */
-.handdock{position:sticky;bottom:0;z-index:6;display:flex;flex-direction:column;gap:8px;padding:6px 0 calc(4px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--ink) 82%,transparent)}
+.handdock{position:sticky;bottom:0;z-index:3;display:flex;flex-direction:column;gap:8px;padding:6px 0 calc(4px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--ink) 82%,transparent)}
 
 /* board */
 .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -1198,7 +1203,15 @@ function cleanDecks(arr,owned,deck){ const d=defDecks();
   else d[0].cards=[...deck];
   return d; }
 /* historique : 20 parties, avec le détail par lieu, le deck, le gain et (contre l'IA) le rang atteint */
+/* Statistiques anonymes de cartes : pour chaque carte que tu as jouée, le résultat de la partie, le mode et le lieu.
+   Ni identifiant de compte ni pseudo ne partent avec (voir la page de confidentialité). Pas pour le tutoriel ni les reprises de duel. */
+function statsSend(mode,res){
+  if(!qLive()||!lbDb||!lbDb.stats||!S||!Array.isArray(S.played)||!S.played.length) return;
+  const m=mode==="Blitz"?"blitz":mode==="Duel"?"duel":"ia"; const r=res==="win"||res==="lose"||res==="draw"?res:null; if(!r) return;
+  lbDb.stats(m,r,S.played.slice(0,20)).catch(()=>{});
+}
 function pushHist(mode,res,opp,pw,ew,x={}){
+  statsSend(mode,res);
   fjCount(S&&S.blitz&&P.bz&&P.bz.run?P.bz.run.deck:P.deck);
   const locs=S&&S.locs?S.locs.map((L,li)=>({id:L.id,p:total("p",li),e:total("e",li),w:leader(li)})):[];
   const cards=S&&S.blitz&&P.bz&&P.bz.run?P.bz.run.deck:P.deck;
@@ -2380,7 +2393,7 @@ async function resolveTurn(mine, theirs, animate){
     const cd=x=>CARDS[x.c.id]; qProg("cheap5",mine.filter(x=>cd(x).cost>=1&&cd(x).cost<=2).length); qProg("helv4",mine.filter(x=>cd(x).fac==="helvara").length);
     if(S.turn===6&&mine.some(x=>cd(x).cost>=6)) qProg("six6"); if(mine.some(x=>cd(x).r==="U")) qProg("fusion"); } }
   if(theirs.length) S.disc.e=0;
-  for(const x of mine) S.board.p[x.li].push(x.c);
+  for(const x of mine){ S.board.p[x.li].push(x.c); if(!CARDS[x.c.id].token) (S.played=S.played||[]).push([x.c.id,S.locs[x.li].id]); }
   for(const x of theirs) S.board.e[x.li].push(x.c);
   render();
   const dflt=(!S.mp||S.mp.meHost)?"p":"e", queue=[];
@@ -2667,7 +2680,7 @@ async function mpJoinCode(code){
 }
 
 /* ======= EN LIGNE (ALPHA) : file d'attente sans code =======
-   Chaque joueur qui cherche publie q={tok,ver,at} dans la présence du salon commun. Les jetons de même version
+   Chaque joueur qui cherche publie q={tok,ver,at} dans la présence du canal de recherche (helvara-queue). Les jetons de même version
    (hors cet onglet, hors ce compte, hors joueurs déjà appariés) sont triés : 0 avec 1, 2 avec 3… Le plus petit des deux
    crée un salon normal (mpCreate) et publie q.room et q.with ; l'autre voit q.with = son jeton et rejoint ce code
    (mpJoinCode). Ensuite tout se passe comme un salon avec code. 90 s sans adversaire : la recherche s'arrête. */
@@ -3378,6 +3391,24 @@ function handHTML(){
       ${art(c.id)}<span class="cost${cheapest<d.cost?" cut":""}">${cheapest}</span><span class="nm">${d.name}</span><span class="pw">${d.pow}</span></button>`;
   }).join("")||`<div class="m" style="color:var(--mist);padding:20px 4px">Main vide.</div>`;
 }
+/* Retour facultatif et discret en fin de partie : 👍 / 👎 / « Une carte m'a paru injuste » (puis on choisit la carte). */
+function fbCards(){
+  const ids=new Set(); for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) ids.add(c.id);
+  for(const s of ["p","e"]) for(const id of ((S.graveyard&&S.graveyard[s])||[])) ids.add(id);
+  for(const [id] of (S.played||[])) ids.add(id);
+  return [...ids].filter(id=>CARDS[id]&&!CARDS[id].token).sort((a,b)=>CARDS[a].name.localeCompare(CARDS[b].name,"fr"));
+}
+function fbHTML(o){
+  if(o.tut||!S||S.tut||!lbDb||!lbDb.feedback) return "";
+  if(o.fb==="sent") return `<p class="fb done">Merci pour ton retour 🖤</p>`;
+  if(o.fb==="pick") return `<div class="fb"><label class="fbl" for="fb-card">Quelle carte t'a paru injuste ?</label><select id="fb-card" class="fbsel">${fbCards().map(id=>`<option value="${id}">${esc(CARDS[id].name)}</option>`).join("")}</select><div class="row2"><button class="primary small" data-act="fbsend">Envoyer</button><button class="ghost small" data-act="fbcancel">Annuler</button></div></div>`;
+  return `<div class="fb"><span class="fbl">Cette partie t'a plu ?</span><span class="fbbtns"><button class="fbb" data-act="fbup" aria-label="J'ai aimé">👍</button><button class="fbb" data-act="fbdown" aria-label="Je n'ai pas aimé">👎</button><button class="fbb" data-act="fbpick">Une carte m'a paru injuste</button></span></div>`;
+}
+function fbSend(kind,card){
+  if(!S||!S.over||S.over.fb==="sent"||!lbDb||!lbDb.feedback) return;
+  const mode=S.mp?"duel":S.blitz?"blitz":"ia"; S.over.fb="sent"; sfx("click"); render();
+  lbDb.feedback(kind,card||null,mode,BUILD).catch(()=>{});
+}
 function resultHTML(){
   const o=S.over; if(!o||o.closed||o.hold) return "";
   if(o.tut) return `<div class="veil"><div class="result" role="dialog" aria-label="Tutoriel terminé">
@@ -3393,6 +3424,7 @@ function resultHTML(){
     ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
     <div class="rows">${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span><span style="color:var(--me)">${r.a}</span> · <span style="color:var(--foe)">${r.b}</span></span></div>`).join("")}</div>
+    ${fbHTML(o)}
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
     <div class="row2"><button class="ghost" data-act="mpquit">Quitter le salon</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.blitz?`<button class="primary" data-act="go" data-to="blitz">${o.ended?"Voir le bilan":"Continuer le Blitz"}</button><div class="row2"><button class="ghost" data-act="close">Voir le plateau</button></div>`:`<button class="primary" data-act="play">Rejouer</button>
     <div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`}
@@ -3591,6 +3623,11 @@ document.addEventListener("click", e=>{
     case "mpcreate": mqStop(); mpCreate(); return;
     case "mpjoin": mqStop(); mpJoin(); return;
     case "mpcancel": mqStop(); mpClear(); render(); return;
+    case "fbup": fbSend("up"); return;
+    case "fbdown": fbSend("down"); return;
+    case "fbpick": if(S&&S.over){ S.over.fb="pick"; sfx("click"); render(); } return;
+    case "fbcancel": if(S&&S.over){ S.over.fb=null; render(); } return;
+    case "fbsend": { const sel=document.getElementById("fb-card"); if(sel&&sel.value) fbSend("unfair",sel.value); return; }
     case "playhelp": if(S){ S.help=!S.help; sfx("click"); render(); } return;
     case "mqstart": mqStart(); return;
     case "mqcancel": mqStop(""); sfx("click"); return;

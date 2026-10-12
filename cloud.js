@@ -126,6 +126,15 @@
         }
       };
     },
+    /* Retours des joueurs et statistiques de cartes (retours-stats.sql) : anonymes, envoyés en fin de partie, sans nouvel essai. */
+    async feedback(kind, card, mode, build){
+      const r = await sb.rpc("feedback_submit", { p_kind:kind, p_card:card || null, p_mode:mode || null, p_build:build || null });
+      if(r.error) throw fail(r.error);
+    },
+    async stats(mode, result, plays){
+      const r = await sb.rpc("stats_submit", { p_mode:mode, p_result:result, p_plays:plays });
+      if(r.error) throw fail(r.error);
+    },
     /* Classement : les 100 meilleurs de la saison (+ quelques joueurs du mois d'avant) et ta ligne, triés par la base.
        Fonction board_top (classement-allege.sql). Tant qu'elle n'existe pas, on lit les 200 dernières lignes mises à jour. */
     async boardTop(season){

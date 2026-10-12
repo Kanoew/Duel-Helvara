@@ -218,6 +218,14 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - **En-tête sur une ligne** : « Tour / énergie / Serment / Fin du tour » ne passent jamais à la ligne (`nowrap`, bouton limité à 46 % de la largeur). « prochaine carte −N » et « +N au prochain tour » ont leur propre ligne (`.mods`).
 - **Tutoriel** : « Fin du tour » est grisé (`.endbtn.wait`, `aria-disabled`) tant que l'étape n'est pas faite ; le toucher affiche dans l'encadré « Pas encore : pose d'abord <carte> (<lieu>)… » (`S.nudge`, remis à zéro à chaque tour).
 
+## Retours des joueurs et statistiques de cartes (12 octobre, audit étape 4)
+
+- **SQL** : `retours-stats.sql` (à coller dans Supabase après `classement-securise.sql`) : tables `card_stats` (jour, carte, mode `ia|blitz|duel`, lieu, résultat, compteur), `feedback` (type `up|down|unfair`, carte, mode, version) et `usage_guard` (limiteur de rythme par compte, sans contenu). **Aucun identifiant de compte ni pseudo dans `card_stats` et `feedback`** : elles sont anonymes (donc non supprimables une par une). Les joueurs n'ont aucun droit direct dessus : fonctions `stats_submit` (1 partie/45 s, réserve de 5, 150/jour) et `feedback_submit` (1/20 s, réserve de 3, 30/jour, 3000/heure au total).
+- **Jeu** : `S.played` (carte, lieu) est rempli dans `resolveTurn()` ; `statsSend()` (début de `pushHist`, donc fin de partie IA, Blitz ou duel ; jamais tutoriel, simulation ni reprise : `qLive()`) appelle `db.stats` ; `fbHTML()`/`fbSend()` affichent dans le panneau de résultat « Cette partie t'a plu ? 👍 👎 Une carte m'a paru injuste » (liste des cartes vues dans la partie), une seule réponse par partie, appelant `db.feedback`. Envoi sans nouvel essai (les statistiques sont au mieux). Rien n'est envoyé sans compte enregistré (`lbDb`).
+- **Lecture par Jordan** : vues `v_taux_victoire_cartes` (avec écart à la moyenne), `v_taux_victoire_par_mode`, `v_taux_victoire_par_lieu`, `v_cartes_signalees`, `v_retours_par_jour`, dans Supabase → Table Editor → schéma `public` (les cartes y sont désignées par leur identifiant).
+- **Confidentialité** : `confidentialite.html` et `privacy.html` mises à jour (retours, statistiques, compteur technique, canaux en direct à la place du salon commun, comptes anonymes sans partie supprimés après 14 jours).
+- **Piège corrigé** : la main collante (`.handdock`) est sous les voiles (`z-index` 3 contre 5) ; avec 6 elle passait par-dessus le panneau de résultat.
+
 ## Décors saisonniers de l'accueil
 
 - `seasonDeco("fan"|"bar")` : Halloween = toiles d'araignée dans les coins de la vitrine (derrière les cartes), araignée qui se balance (devant), deux citrouilles qui luisent posées sur le bandeau de saison ; Noël = guirlande lumineuse sur la vitrine et houx sur le bandeau ; Nouvel An = guirlande dorée. Dessins SVG intégrés, animations par transform/opacité, coupées par `prefers-reduced-motion`.
