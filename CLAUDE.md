@@ -211,6 +211,13 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - **Grilles** (collection, codex) : `content-visibility:auto` sur chaque carte (hors écran = ni dessinée ni décodée), pas de reflet, de poussières ni de holo animé, pas de flou sur les cartes « Bientôt ». Illustrations réduites `images/mini/<fichier>.jpg` (360 × 540, qualité 78) via `gridArt(()=>…)` qui active `ART_MINI` pendant le rendu. **Chaque nouvelle carte doit aussi avoir sa miniature** (`sharp(src).resize(360,540,{fit:'cover'}).jpeg({quality:78,mozjpeg:true})`), sinon la grille affichera une case vide.
 - Mesure de référence (Chromium, téléphone simulé, processeur ralenti ×6) : accueil 60 images/s, collection au repos 60, défilement ~47.
 
+## Écran de partie sur téléphone (12 octobre, audit étape 3 ; testé en 390 × 844 et 360 × 740)
+
+- **La main reste entièrement visible** : `.handdock` (encadré d'info + main) est `position:sticky; bottom:0` ; si le reste de l'écran est trop haut, la main se colle au bas de la fenêtre au lieu d'être coupée.
+- **Encadré « À toi, … »** (`infoHTML`, cas sans sélection) : affiché seulement pendant les 3 premières parties (`P.w+P.l+P.d<3`, jamais pendant le tutoriel qui a son encadré « Partie guidée »), ou à la demande : le bouton **« ? » en partie** bascule `S.help` (il ne quitte plus la partie ; le lien « Règles complètes » de l'encadré ouvre l'écran des règles). Sans contenu, la boîte `.info` n'est pas rendue.
+- **En-tête sur une ligne** : « Tour / énergie / Serment / Fin du tour » ne passent jamais à la ligne (`nowrap`, bouton limité à 46 % de la largeur). « prochaine carte −N » et « +N au prochain tour » ont leur propre ligne (`.mods`).
+- **Tutoriel** : « Fin du tour » est grisé (`.endbtn.wait`, `aria-disabled`) tant que l'étape n'est pas faite ; le toucher affiche dans l'encadré « Pas encore : pose d'abord <carte> (<lieu>)… » (`S.nudge`, remis à zéro à chaque tour).
+
 ## Décors saisonniers de l'accueil
 
 - `seasonDeco("fan"|"bar")` : Halloween = toiles d'araignée dans les coins de la vitrine (derrière les cartes), araignée qui se balance (devant), deux citrouilles qui luisent posées sur le bandeau de saison ; Noël = guirlande lumineuse sur la vitrine et houx sur le bandeau ; Nouvel An = guirlande dorée. Dessins SVG intégrés, animations par transform/opacité, coupées par `prefers-reduced-motion`.

@@ -60,6 +60,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-grad
 .hex.spent{background:#3a3325;color:var(--warm)}
 .endbtn{margin-left:auto;background:var(--me);color:#06121b;border:0;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;letter-spacing:.02em}
 .endbtn:disabled{background:var(--lake);color:var(--mist);cursor:default}
+.endbtn.wait{background:var(--lake);color:var(--mist)}
+.tutbar .nudge{color:var(--warm);animation:nudge .45s}
+@keyframes nudge{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){ .tutbar .nudge{animation:none} }
+.mods{display:flex;flex-wrap:wrap;gap:2px 12px;color:#9fe0b0;font-size:12.5px;margin-top:-4px}
+.linkbtn{background:none;border:0;padding:0;color:var(--me);text-decoration:underline;cursor:pointer;font-size:inherit}
+/* la main reste toujours entièrement visible : si le reste de l'écran est trop haut, elle se colle au bas de la fenêtre */
+.handdock{position:sticky;bottom:0;z-index:6;display:flex;flex-direction:column;gap:8px;padding:6px 0 calc(4px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--ink) 82%,transparent)}
 
 /* board */
 .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -648,7 +656,10 @@ body.inplay .side{--mh:clamp(44px,min(17vw,calc((100dvh - 500px)/4)),96px)}
 body.inplay .loc{min-height:92px}
 .subbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
 .subbar .pilesbar{margin:0}
-@media (max-width:480px){ body.inplay .elab{display:none} body.inplay .endbtn{padding:10px 14px} }
+body.inplay .turn{white-space:nowrap}
+body.inplay .endbtn{white-space:nowrap;flex:none;max-width:46vw;overflow:hidden;text-overflow:ellipsis}
+body.inplay .oathchip{white-space:nowrap}
+@media (max-width:480px){ body.inplay .elab{display:none} body.inplay .endbtn{padding:10px 14px} body.inplay .status{gap:8px} body.inplay .turn{font-size:16px} body.inplay .oathchip{padding-inline:10px} }
 @media (max-height:820px){ body.inplay .hc{width:68px} body.inplay .loc{min-height:84px} body.inplay .info{min-height:0;padding:7px 10px} body.inplay .info .t{font-size:15px} body.inplay .info .m{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden} }
 .collbar{display:flex;flex-direction:column;gap:8px;background:var(--deep);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .collbar .qt{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-size:17px}
@@ -2352,13 +2363,13 @@ function aiPlan(me="e",tierOv){
 async function endTurn(){
   if(S.busy||S.over) return;
   if(S.mp) return mpLock();
-  if(S.tut&&!tutDone()) return;
+  if(S.tut&&!tutDone()){ S.nudge=true; sfx("debuff"); render(); return; }
   const mine=S.staged.slice();
   await resolveTurn(mine, aiPlan(), true);
 }
 async function resolveTurn(mine, theirs, animate){
   const wait=ms=>animate?sleep(ms):Promise.resolve();
-  S.busy=true; S.sel=null; S.info=null; S.staged=[];
+  S.busy=true; S.sel=null; S.info=null; S.staged=[]; S.nudge=false;
   /* Prométhée : énergie non dépensée ; Nike : ordre dans lequel chaque joueur a posé ses cartes (l'IA garde Nike pour la fin) */
   const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0)),0);
   const unspent=S.unspent={p:Math.max(0,S.energy-spent("p",mine)),e:Math.max(0,S.energyE-spent("e",theirs))}; S.biaBlock={p:false,e:false};
@@ -2867,7 +2878,7 @@ const questReady=()=>{ const a=ensureQuests(), b=ensureWeek(); if(a||b) save(); 
 function header(){
   const ready=questReady();
   const icons=`<button class="helpbtn icobtn${ready?" dot":""}" data-act="sheet" data-s="quests" aria-label="Quêtes du jour">${ico("book")}</button><button class="helpbtn icobtn" data-act="sheet" data-s="settings" aria-label="Réglages">${ico("gear")}</button><button class="helpbtn" data-act="go" data-to="rules" aria-label="Règles" ${screen==="rules"?'aria-current="page"':""}>?</button>`;
-  if(screen==="play") return `<header class="top"><button class="back" data-act="go" data-to="home">← Accueil</button><div class="topright">${icons}</div></header>`;
+  if(screen==="play") return `<header class="top"><button class="back" data-act="go" data-to="home">← Accueil</button><div class="topright">${icons.replace('data-act="go" data-to="rules" aria-label="Règles" >?','data-act="playhelp" aria-label="Règles" aria-pressed="'+(S&&S.help?"true":"false")+'">?')}</div></header>`;
   /* Discord : hors partie seulement, pour ne pas quitter un duel d'un toucher */
   const discord=`<a class="helpbtn icobtn" href="${DISCORD}" target="_blank" rel="noopener" aria-label="Discord du jeu">${ico("discord")}</a>`;
   return `<header class="top"><h1 class="brand">Duel d'Helvara<small>Le Sang de Tiamat</small>${season()?`<small class="ssub">${SEASON[season()].sub}</small>`:""}</h1>
@@ -3236,7 +3247,8 @@ const tutReq=()=>S&&S.tut&&TUT.steps[S.turn]?TUT.steps[S.turn].req:[];
 const tutDone=()=>tutReq().every(([id,li])=>S.staged.some(x=>x.c.id===id&&x.li===li));
 function tutBarHTML(){
   if(!S||!S.tut||S.over) return ""; const st=TUT.steps[S.turn]; if(!st) return "";
-  return `<div class="tutbar"><div class="eyebrow">Partie guidée · tour ${S.turn}/6</div><p>${st.t}</p>${tutDone()?`<p class="ok">C'est bon : touche <b>Fin du tour</b>.</p>`:""}</div>`;
+  const todo=tutReq().filter(([id,li])=>!S.staged.some(x=>x.c.id===id&&x.li===li)).map(([id,li])=>`<b>${CARDS[id].name}</b> (<i>${LOCS[S.locs[li].id].name}</i>`);
+  return `<div class="tutbar"><div class="eyebrow">Partie guidée · tour ${S.turn}/6</div><p>${st.t}</p>${tutDone()?`<p class="ok">C'est bon : touche <b>Fin du tour</b>.</p>`:S.nudge?`<p class="nudge">Pas encore : pose d'abord ${todo.join("), puis ")}), puis touche <b>Fin du tour</b>.</p>`:""}</div>`;
 }
 function finishTuto(){
   const first=!P.tuto; tutoStep=-1; if(S&&S.tut){ S=null; }
@@ -3354,7 +3366,9 @@ function infoHTML(){
   if(loc!=null){ const L=S.locs[loc];
     return L.rev?`<div><div class="t">${LOCS[L.id].name}</div><div class="m">${L.stopped?"Effet arrêté par Perséphone. ":""}${LOCS[L.id].fx}${L.locked?" Vritra a verrouillé ce lieu : plus personne ne peut y jouer.":""}</div></div>`
                :`<div><div class="t">Lieu inconnu</div><div class="m">Il sera révélé au début du tour ${loc+1}.</div></div>`; }
-  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre.</div></div>`;
+  /* Aide générale : les 3 premières parties (jamais pendant le tutoriel, qui a son propre encadré), ou à la demande avec le « ? » */
+  if(!(S.help||(!S.tut&&P.w+P.l+P.d<3))) return "";
+  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
 }
 function handHTML(){
   return S.hand.p.map(c=>{
@@ -3390,17 +3404,18 @@ function gameHTML(){
   return `
   <div class="status">
     <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>
-    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span>${S.disc.p?` · <span style="color:#9fe0b0">prochaine carte −${S.disc.p}</span>`:""}${S.bonus.p?` · <span style="color:#9fe0b0">+${S.bonus.p} au prochain tour</span>`:""}</div>
+    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span></div>
     ${oathOK()&&S.oath==null&&!S.busy?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
-    ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn" data-act="end" ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
+    ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
   </div>
+  ${S.disc.p||S.bonus.p?`<div class="mods">${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
   <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${pilesHTML()}</div>
   ${aiOathBar()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.jpg?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
-  <div class="info">${S.oathMode&&oathOK()&&S.oath==null?oathHTML():infoHTML()}</div>
-  <div class="handwrap"><div class="hand">${handHTML()}</div></div>
+  <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&S.oath==null?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
+  <div class="handwrap"><div class="hand">${handHTML()}</div></div></div>
   <div class="log" aria-live="polite">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>
   ${resultHTML()}${gzHTML()}`;
 }
@@ -3576,6 +3591,7 @@ document.addEventListener("click", e=>{
     case "mpcreate": mqStop(); mpCreate(); return;
     case "mpjoin": mqStop(); mpJoin(); return;
     case "mpcancel": mqStop(); mpClear(); render(); return;
+    case "playhelp": if(S){ S.help=!S.help; sfx("click"); render(); } return;
     case "mqstart": mqStart(); return;
     case "mqcancel": mqStop(""); sfx("click"); return;
     case "mpresume": mpResume(); return;
