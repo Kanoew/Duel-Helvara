@@ -178,7 +178,7 @@ function ulHTML(){
   return `<div class="veil"><div class="result ulpop" role="dialog" aria-label="Ultra-légendaire">
     <div class="eyebrow">${u.fac?"Ultra-légendaire de faction":"Fusion disponible"}</div><h2>${CARDS[u.id].name}</h2>
     <div class="ulcard">${fullCard(u.id)}</div>
-    <p class="hint">${u.quest?`Ton journal est complet : ${u.quest.n} parties ${u.quest.k==="nikev"?"avec Nike pendant la Saint-Valentin":`avec la faction ${FAC[u.fac].n}`}. ${CARDS[u.id].name} rejoint ta faction.`:u.fac?`Ta collection compte assez de cartes ${FAC[u.fac].n}. ${CARDS[u.id].name} rejoint ta faction.`:`Tu possèdes ${u.n}. Leur fusion ultra-légendaire t'attend.`}</p>
+    <p class="hint">${u.quest?`Ton journal est complet : ${u.quest.n} parties ${u.quest.k==="nikev"?"avec Nike pendant la Saint-Valentin":`avec la faction ${FAC[u.fac].n}`}. ${CARDS[u.id].name} rejoint ta faction.`:u.fac?`Ta collection compte assez de cartes ${FAC[u.fac].n}. ${CARDS[u.id].name} rejoint ta faction.`:`Tu possédais déjà ${u.n} : leur fusion ultra-légendaire t'attend.`}</p>
     <button class="primary" data-act="ulclaim" data-id="${u.id}">Réclamer la carte</button><button class="ghost" data-act="ullater">Plus tard</button></div></div>`;
 }
 function fanIds(){
@@ -293,9 +293,9 @@ function deckHTML(){
 /* --- boutique --- */
 function shopHTML(){
   const av=avail(), owned=av.filter(id=>P.owned.includes(id)).length, tot=av.length, lp=lastPack;
-  const missOf=pk=>pk.starter?1:PACK(pk.id).filter(id=>!P.owned.includes(id)&&pk.odds.some(o=>o[0]===CARDS[id].r)).length;
+  const missOf=pk=>pk.starter?1:packMissing(pk).length+ulPool(pk).length;
   const tiles=PACKS.filter(pk=>!(pk.starter&&P.starter)&&(inWin(pk.win)||soonWin(pk.win))).sort((a,b)=>(missOf(a)?0:1)-(missOf(b)?0:1)).map(pk=>{
-    const miss=pk.starter?0:missOf(pk), done=!pk.starter&&!miss;
+    const miss=pk.starter?0:missOf(pk), done=!pk.starter&&!miss, missN=pk.starter?0:packMissing(pk).length, ulN=pk.starter?0:ulPool(pk).length;
     const open=inWin(pk.win), gate=!pk.starter&&!P.starter, lack=pk.price-P.chf, ok=lack<=0&&open&&!gate&&!done;
     return `<article class="packtile ${done?"done":""} ${pk.starter?"starter":""} ${pk.starter&&hlStarter?"hl":""}" data-pid="${pk.id}">
       <div class="pack" role="img" aria-label="${pk.name}" style="background-image:url('${pk.img}')"></div>
@@ -303,8 +303,9 @@ function shopHTML(){
         <div class="eyebrow">${pk.starter?"Pack de départ · 12 cartes":pk.win?`Édition limitée · ${pk.n} cartes`:`${pk.n} cartes`}</div>
         <h3 class="pname2">${pk.name}</h3>
         <p class="pdesc">${pk.desc}</p>
-        ${pk.odds?`<div class="odds">${pk.odds.map(([r,w])=>`<span style="color:${RAR[r].c}">${w} %</span><span>${RAR[r].n} · doublon +${ECO.dup[r]}</span>`).join("")}</div>
-        <div class="hint">${miss?`${miss} carte${miss>1?"s":""} de ces raretés à trouver · au moins une nouvelle par pack`:"Tu as déjà toutes les cartes de ces raretés"}</div>`:""}
+        ${pk.odds?`<div class="odds">${pk.odds.map(([r,w])=>`<span style="color:${RAR[r].c}">${w} %</span><span>${RAR[r].n} · doublon +${ECO.dup[r]}</span>`).join("")}${pk.ul?`<span style="color:${RAR.U.c}">${pk.ul} %</span><span>${RAR.U.n} · par paquet</span>`:""}</div>
+        <div class="hint">${missN?`${missN} carte${missN>1?"s":""} de ces raretés à trouver · au moins une nouvelle par pack`:ulN?"Tu as déjà toutes les cartes de ces raretés : une fusion peut encore sortir":"Tu as déjà toutes les cartes de ces raretés"}${missN&&ulN?` · ${ulN} fusion${ulN>1?"s":""} à trouver`:""}</div>
+        ${pk.pity?`<div class="hint">Garantie : une fusion à la ${pk.pity}e ouverture${(P.pity||0)>0?` · prochaine garantie dans ${Math.max(1,pk.pity-(P.pity||0))} ouverture${pk.pity-(P.pity||0)>1?"s":""}`:""}</div>`:""}`:""}
         <div class="buyrow"><span class="price">${pk.price} CHF</span>
           <button class="primary" data-act="buy" data-pid="${pk.id}" ${ok?"":"disabled"}>${done?"Collection complète":!open?`Dès le ${frDate(pk.win[0])}`:gate?"Ouvre d'abord la Première Brûlure":lack>0?`Il manque ${lack} CHF`:"Acheter et ouvrir"}</button></div>
         ${pk.win?`<div class="hint">${open?"Disponible jusqu'au ":"Du "+frDate(pk.win[0])+" au "}${frDate(pk.win[1])}</div>`:""}
@@ -447,6 +448,7 @@ function rulesHTML(){
       <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
       <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
       <li><b>Perdre ses effets</b> : la carte garde sa puissance et les bonus déjà gagnés, mais ses effets Continu et de fin de tour ne s'appliquent plus.</li>
+      <li><b>Les fusions sortent des paquets.</b> 1 % par paquet à 100 CHF, 2 % à 200 CHF, 4 % à 300 CHF (garantie à la 10e ouverture), 5 % pour les paquets d'édition. Aucune fusion ne se gagne plus en réunissant ses cartes.</li>
       <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, se gagne dans le Journal des factions (50 parties jouées avec 8 cartes de sa faction) et exige 8 cartes de sa faction dans le deck.</li>
       <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
       <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>

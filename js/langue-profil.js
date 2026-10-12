@@ -82,27 +82,30 @@ function fjCount(deck){
   for(const f of Object.keys(FAC)) if(deck.filter(id=>CARDS[id]&&CARDS[id].fac===f).length>=FJ_MIN) P.fj[f]=fjGet(f)+1;
   if(inWin(VALENTIN)&&deck.some(id=>CARDS[id]&&charOf(id)==="nike")) P.fj.nikev=fjGet("nikev")+1;
 }
-/* Une ultra-légendaire se réclame quand sa quête est remplie (faction) ou quand on possède ses sources (fusion) */
-const ulEarned=u=>u.quest?fjGet(u.quest.k)>=u.quest.n:ulOk(u,P.owned);
+/* Une ultra-légendaire de faction se réclame quand sa quête est remplie. Une fusion ne se gagne plus en réunissant ses sources : elle sort des paquets
+   (boutique-modes.js, 1 à 5 % par paquet). Seules les fusions que le joueur pouvait déjà réclamer le 12 octobre 2026 (P.ulk, figé au premier chargement) restent réclamables. */
+const ulEarned=u=>u.quest?fjGet(u.quest.k)>=u.quest.n:((P.ulk||[]).includes(u.id)&&ulOk(u,P.owned));
 /* Une ultra-légendaire de fusion exige ses cartes ; une ultra-légendaire de faction exige assez de cartes de sa faction (elle comprise). */
 const ulOk=(u,list)=>u.fac?list.filter(x=>x!==u.id&&CARDS[x]&&CARDS[x].fac===u.fac).length>=u.min-1:u.req.every(r=>hasReq(list,r));
 const charOf=id=>CARDS[id].base||id;
 const OCT_REL="2026-10-01";
-const ECO = {win:50, draw:20, loss:10, deckSize:12, tuto:100, dup:{D:10,C:10,R:20,E:40,L:80}};
+const ECO = {win:50, draw:20, loss:10, deckSize:12, tuto:100, dup:{D:10,C:10,R:20,E:40,L:80,U:150}};
+/* Chance (en % par paquet) qu'un paquet d'édition contienne une fusion ultra-légendaire : un peu plus que le paquet à 300 CHF (pas de garantie, édition courte). */
+const UL_SEASON=5;
 const PACKS = [
   {id:"brulure", name:"Première Brûlure", img:"images/packs/brulure.jpg", price:100, n:12, starter:true,
    desc:"Ton premier deck : 12 cartes différentes, dont 2 épiques, avec une courbe de coûts jouable. Une seule fois."},
-  {id:"reflets", name:"Liasse des Reflets", img:"images/pack.jpg", price:100, n:3, odds:[["C",70],["R",30]],
+  {id:"reflets", name:"Liasse des Reflets", img:"images/pack.jpg", price:100, n:3, odds:[["C",70],["R",30]], ul:1,
    desc:"Communes et rares. Pour compléter les bases."},
-  {id:"voile", name:"Cachet du Voile", img:"images/packs/voile.jpg", price:200, n:3, odds:[["C",50],["R",35],["E",15]],
+  {id:"voile", name:"Cachet du Voile", img:"images/packs/voile.jpg", price:200, n:3, odds:[["C",50],["R",35],["E",15]], ul:2,
    desc:"Les épiques entrent en jeu."},
-  {id:"breche", name:"Brèche du Sceau", img:"images/packs/breche.jpg", price:300, n:3, odds:[["C",40],["R",33],["E",20],["L",7]],
+  {id:"breche", name:"Brèche du Sceau", img:"images/packs/breche.jpg", price:300, n:3, odds:[["C",40],["R",33],["E",20],["L",7]], ul:4, pity:10,
    desc:"Tout peut en sortir, légendaires comprises."},
-  {id:"halloween", name:"Pli des Citrouilles", img:"images/packs/halloween.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], win:["10-12","11-02"],
+  {id:"halloween", name:"Pli des Citrouilles", img:"images/packs/halloween.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["10-12","11-02"],
    desc:"Édition d'Halloween. Plus d'épiques et de légendaires que partout ailleurs."},
-  {id:"noel", name:"Pli de l'Étoile", img:"images/packs/noel.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], win:["12-14","01-02"],
+  {id:"noel", name:"Pli de l'Étoile", img:"images/packs/noel.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["12-14","01-02"],
    desc:"Édition de Noël. Plus d'épiques et de légendaires que partout ailleurs."},
-  {id:"nouvelan", name:"Pli du Douzième Coup", img:"images/packs/nouvelan.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], win:["12-31","01-18"],
+  {id:"nouvelan", name:"Pli du Douzième Coup", img:"images/packs/nouvelan.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["12-31","01-18"],
    desc:"Édition du Nouvel An. Plus d'épiques et de légendaires que partout ailleurs."}
 ];
 const md=()=>today().slice(5);
@@ -209,6 +212,8 @@ function clean(p){
     daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
     q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,rr:!!p.q.rr,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c,...(typeof x.x==="string"?{x:x.x.slice(0,24)}:{})}))}:null,
     fj:Object.fromEntries(FJ_KEYS.map(k=>[k,Math.min(9999,num(p.fj&&p.fj[k],0))])),
+    pity:Math.min(99,num(p.pity,0)),
+    ulk:Array.isArray(p.ulk)?p.ulk.filter(id=>ULof(id)&&!ULof(id).quest):ULS.filter(u=>!u.quest&&!u.fac&&u.req.length&&REL(u.id)&&!owned.includes(u.id)&&u.req.every(r=>hasReq(owned,r))).map(u=>u.id),
     wq:(p.wq&&typeof p.wq.wk==="string")?{wk:p.wq.wk.slice(0,10),p:Math.min(WQ.n,num(p.wq.p,0)),c:!!p.wq.c}:null};
   out.deck=[...out.decks[out.di].cards];
   if(retired){ out._migrated=true; migratedNote=`Nouvelle collection : ${retired} carte${retired>1?"s":""} provisoire${retired>1?"s":""} remboursée${retired>1?"s":""} (+${retired*25} CHF).`; }
