@@ -452,6 +452,12 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .hmain{display:flex;flex-direction:column;min-width:0}
 .hmain small{color:var(--mist);font-size:11.5px}
 .hrow.win b{color:#9fe0b0}.hrow.lose b{color:var(--ko)}
+.journal .fjrow{margin:10px 0}
+.fjtop{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
+.fjtop span{color:var(--mist);font-variant-numeric:tabular-nums}
+.fjbar{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:5px 0 3px}
+.fjbar i{display:block;height:100%;border-radius:inherit}
+.fjrow small{color:var(--mist);font-size:11.5px}
 /* historique étendu */
 .histpage .hfilter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .histpage .hfilter button{font-size:11px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--frost);cursor:pointer}
@@ -1040,14 +1046,14 @@ const today=()=>window.__today||dayKey();
 const REL=id=>!CARDS[id].rel||today()>=CARDS[id].rel;
 const avail=()=>POOL.filter(REL);
 const PACK=(ex)=>POOL.filter(id=>REL(id)&&CARDS[id].r!=="U"&&(!CARDS[id].ex||CARDS[id].ex===ex));
-const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike comprise"},{id:"ulya",req:["yarden","apsu"],n:"Yarden Weiss et Apsu"},{id:"ulji",req:[["jordan","jordan_n"],"izzy"],n:"Jordan et Izzy"},
+const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike comprise",quest:{k:"jugement",n:50}},{id:"ulya",req:["yarden","apsu"],n:"Yarden Weiss et Apsu"},{id:"ulji",req:[["jordan","jordan_n"],"izzy"],n:"Jordan et Izzy"},
   {id:"ulaph",req:["aphrodite","yarden"],n:"Aphrodite et Yarden Weiss"},{id:"ulcal",req:["calypso",["jordan","jordan_n"]],n:"Calypso et Jordan"},{id:"ulnem",req:["nemesis",["jordan","jordan_n"]],n:"Nemesis et Jordan"},
   {id:"ulcirce",req:["nyx","circe"],n:"Nyx et Circé"},{id:"uloshun",req:["nyx","oshun"],n:"Nyx et Oshun"},
   {id:"ulqetjor",req:["qetesh",["jordan","jordan_n"]],n:"Qetesh et Jordan"},{id:"ulqetyar",req:["qetesh","yarden"],n:"Qetesh et Yarden Weiss"},
   {id:"ulhel",req:["hel","baldur"],n:"Hel et Baldur"},
   {id:"ulpele_r",req:["pele_r",["jordan","jordan_n"]],n:"Pele et Jordan"},{id:"ulqetjor_r",req:["qetesh_r",["jordan","jordan_n"]],n:"Qetesh du Nouvel An et Jordan"},
   {id:"ulsomnambule",req:["somnambule","reine_sevelin"],n:"La Somnambule et La Reine"},{id:"ularchiviste",req:["archiviste","patronne"],n:"L'Archiviste et La Patronne"},
-  {id:"nike_v",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike de la Saint-Valentin comprise"},{id:"ulqetjor_v",req:["qetesh_v",["jordan","jordan_n"]],n:"Qetesh de la Saint-Valentin et Jordan"},
+  {id:"nike_v",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike de la Saint-Valentin comprise",quest:{k:"nikev",n:25}},{id:"ulqetjor_v",req:["qetesh_v",["jordan","jordan_n"]],n:"Qetesh de la Saint-Valentin et Jordan"},
   {id:"ulprombia",req:["promethee","bia"],n:"Prométhée et Bia"},{id:"ulheradio",req:["hera","dionysos"],n:"Héra et Dionysos"},{id:"ulposathe",req:["poseidon","athena"],n:"Poséidon et Athéna"},
   {id:"ulnikebia",req:["nike","bia"],n:"Nike et Bia"},{id:"ulmaatset",req:["maat","set"],n:"Mā‘at et Set"},{id:"ulprompan",req:["promethee","pandore"],n:"Prométhée et Pandore"},
   {id:"ulinaere",req:["inanna","ereshkigal"],n:"Inanna et Ereshkigal"},{id:"ulnikejor_v",req:["nike_v",["jordan","jordan_n"]],n:"Nike de la Saint-Valentin et Jordan"},
@@ -1057,10 +1063,24 @@ const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike com
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
 const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, Psyché, Amaterasu, La Mère de Cendre… et la première ultra-légendaire, Yarden X Apsu."},
   {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."},
-  {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée garde le feu, Pandore ouvre la boîte, Athéna guide ta main, et Styx veille sur ses filles : Bia, et Nike, la première ultra-légendaire de faction. 8 cartes Jugement suffisent pour l'obtenir."},
+  {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée garde le feu, Pandore ouvre la boîte, Athéna guide ta main, et Styx veille sur ses filles : Bia, et Nike, la première ultra-légendaire de faction. Elle se gagne en jouant 50 parties avec 8 cartes Jugement : le Journal des factions compte déjà."},
   {id:"dec26",rel:"2026-12-01",soon:"2026-11-26",hint:"Odin, Thor, Hel, Baldur, Hadès, Poséidon, Circé, Qetesh, les gens de Lausanne… cinq nouvelles fusions, le Domaine du Créateur."}];
 const hasReq=(list,r)=>Array.isArray(r)?r.some(x=>list.includes(x)):list.includes(r);
 const ULof=id=>ULS.find(u=>u.id===id);
+/* Journal des factions : les ultra-légendaires de faction se gagnent en jouant.
+   Une partie compte pour une faction si le deck joué contient au moins 8 cartes de cette faction (IA classée, Blitz, duel ; jamais le tutoriel).
+   Nike de la Saint-Valentin : parties jouées avec Nike (ou sa variante) dans le deck pendant la Saint-Valentin. */
+const FJ_KEYS=["helvara","primordial","desir","jugement","nikev"], FJ_MIN=8;
+const VALENTIN=["02-01","02-20"]; /* fenêtre de la Saint-Valentin pour le journal (à caler sur le futur paquet) */
+const fjGet=k=>(P.fj&&P.fj[k])|0;
+function fjCount(deck){
+  if(!qLive()||!Array.isArray(deck)) return;
+  P.fj=P.fj||{};
+  for(const f of Object.keys(FAC)) if(deck.filter(id=>CARDS[id]&&CARDS[id].fac===f).length>=FJ_MIN) P.fj[f]=fjGet(f)+1;
+  if(inWin(VALENTIN)&&deck.some(id=>CARDS[id]&&charOf(id)==="nike")) P.fj.nikev=fjGet("nikev")+1;
+}
+/* Une ultra-légendaire se réclame quand sa quête est remplie (faction) ou quand on possède ses sources (fusion) */
+const ulEarned=u=>u.quest?fjGet(u.quest.k)>=u.quest.n:ulOk(u,P.owned);
 /* Une ultra-légendaire de fusion exige ses cartes ; une ultra-légendaire de faction exige assez de cartes de sa faction (elle comprise). */
 const ulOk=(u,list)=>u.fac?list.filter(x=>x!==u.id&&CARDS[x]&&CARDS[x].fac===u.fac).length>=u.min-1:u.req.every(r=>hasReq(list,r));
 const charOf=id=>CARDS[id].base||id;
@@ -1145,6 +1165,7 @@ function cleanDecks(arr,owned,deck){ const d=defDecks();
   return d; }
 /* historique : 20 parties, avec le détail par lieu, le deck, le gain et (contre l'IA) le rang atteint */
 function pushHist(mode,res,opp,pw,ew,x={}){
+  fjCount(S&&S.blitz&&P.bz&&P.bz.run?P.bz.run.deck:P.deck);
   const locs=S&&S.locs?S.locs.map((L,li)=>({id:L.id,p:total("p",li),e:total("e",li),w:leader(li)})):[];
   const cards=S&&S.blitz&&P.bz&&P.bz.run?P.bz.run.deck:P.deck;
   P.hist=[{mode,res,opp,sc:`${pw}–${ew}`,t:Date.now(),deck:mode==="Blitz"?"Deck de Blitz":(P.decks&&P.decks[P.di]?P.decks[P.di].name:""),
@@ -1176,6 +1197,7 @@ function clean(p){
     bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,HIST_MAX).map(cleanHist):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
     daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
     q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,rr:!!p.q.rr,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c,...(typeof x.x==="string"?{x:x.x.slice(0,24)}:{})}))}:null,
+    fj:Object.fromEntries(FJ_KEYS.map(k=>[k,Math.min(9999,num(p.fj&&p.fj[k],0))])),
     wq:(p.wq&&typeof p.wq.wk==="string")?{wk:p.wq.wk.slice(0,10),p:Math.min(WQ.n,num(p.wq.p,0)),c:!!p.wq.c}:null};
   out.deck=[...out.decks[out.di].cards];
   if(retired){ out._migrated=true; migratedNote=`Nouvelle collection : ${retired} carte${retired>1?"s":""} provisoire${retired>1?"s":""} remboursée${retired>1?"s":""} (+${retired*25} CHF).`; }
@@ -2912,11 +2934,11 @@ function histHTML(){
 function pruneUL(){ let m=""; for(const u of ULS) if(P.deck.includes(u.id)&&!ulOk(u,P.deck)){ P.deck=P.deck.filter(x=>x!==u.id); m=`${CARDS[u.id].name} a quitté le deck : elle exige ${u.n}.`; } return m; }
 function ulHTML(){
   if(ulLater||screen==="play") return "";
-  const u=ULS.find(u=>REL(u.id)&&!P.owned.includes(u.id)&&ulOk(u,P.owned)); if(!u) return "";
+  const u=ULS.find(u=>REL(u.id)&&!P.owned.includes(u.id)&&ulEarned(u)); if(!u) return "";
   return `<div class="veil"><div class="result ulpop" role="dialog" aria-label="Ultra-légendaire">
     <div class="eyebrow">${u.fac?"Ultra-légendaire de faction":"Fusion disponible"}</div><h2>${CARDS[u.id].name}</h2>
     <div class="ulcard">${fullCard(u.id)}</div>
-    <p class="hint">${u.fac?`Ta collection compte assez de cartes ${FAC[u.fac].n}. ${CARDS[u.id].name} rejoint ta faction.`:`Tu possèdes ${u.n}. Leur fusion ultra-légendaire t'attend.`}</p>
+    <p class="hint">${u.quest?`Ton journal est complet : ${u.quest.n} parties ${u.quest.k==="nikev"?"avec Nike pendant la Saint-Valentin":`avec la faction ${FAC[u.fac].n}`}. ${CARDS[u.id].name} rejoint ta faction.`:u.fac?`Ta collection compte assez de cartes ${FAC[u.fac].n}. ${CARDS[u.id].name} rejoint ta faction.`:`Tu possèdes ${u.n}. Leur fusion ultra-légendaire t'attend.`}</p>
     <button class="primary" data-act="ulclaim" data-id="${u.id}">Réclamer la carte</button><button class="ghost" data-act="ullater">Plus tard</button></div></div>`;
 }
 function fanIds(){
@@ -2957,6 +2979,15 @@ function homeHTML(){
 }
 
 /* --- profil --- */
+function journalHTML(){
+  const rows=Object.entries(FAC).map(([k,F])=>{ const u=ULS.find(x=>x.quest&&x.quest.k===k), n=u?u.quest.n:50, v=Math.min(fjGet(k),n);
+    const goal=u&&SHOWN(u.id)?(P.owned.includes(u.id)?`${CARDS[u.id].name} · obtenue`:`Récompense : ${CARDS[u.id].name}`):"Récompense : une ultra-légendaire, bientôt";
+    return `<div class="fjrow"><div class="fjtop"><b style="color:${F.c}">${F.n}</b><span>${u&&SHOWN(u.id)?`${v}/${n}`:`${fjGet(k)} partie${fjGet(k)>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${Math.round(v/n*100)}%;background:${F.c}"></i></div><small>${goal}</small></div>`; });
+  const nv=ULof("nike_v");
+  if(nv&&SHOWN(nv.id)){ const v=Math.min(fjGet("nikev"),nv.quest.n);
+    rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:#f2a7c8">Saint-Valentin · avec Nike</b><span>${v}/${nv.quest.n}</span></div><div class="fjbar"><i style="width:${Math.round(v/nv.quest.n*100)}%;background:#f2a7c8"></i></div><small>${P.owned.includes(nv.id)?`${CARDS[nv.id].name} · obtenue`:`Récompense : ${CARDS[nv.id].name}`}</small></div>`); }
+  return `<section class="sec journal"><h2>Journal des factions</h2><p class="hint">Une partie compte quand ton deck contient au moins 8 cartes d'une faction (IA, Blitz et duels).</p>${rows.join("")}</section>`;
+}
 function profileHTML(){
   const played=P.w+P.l+P.d;
   const nameBlock = editName
@@ -2981,7 +3012,7 @@ function profileHTML(){
       </div>
       <div class="hint">Ces chiffres comptent les parties classées de la saison.<br>Depuis le début : ${played?`${P.w} V · ${P.l} D · ${P.d} É`:"aucune partie"} · Duels entre amis : ${P.dw} V · ${P.dl} D · ${P.dd} É · Collection : ${P.owned.length}/${avail().length} cartes.</div>
     </section>
-    <section class="sec"><button class="toggle" data-act="go" data-to="hist">Historique complet des matchs →</button></section>`;
+    ${journalHTML()}<section class="sec"><button class="toggle" data-act="go" data-to="hist">Historique complet des matchs →</button></section>`;
 }
 
 /* --- deck --- */
@@ -3151,7 +3182,7 @@ function finishTuto(){
 }
 
 /* --- collection --- */
-function lockedCard(id){ return `<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?`Possède ${ULof(id).n}`:CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`; }
+function lockedCard(id){ return `<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?(ULof(id).quest?`Journal des factions : ${Math.min(fjGet(ULof(id).quest.k),ULof(id).quest.n)}/${ULof(id).quest.n} parties`:`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`; }
 function locsHTML(){ return `<section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
     <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
@@ -3162,7 +3193,7 @@ function codexHTML(){
     const have=ids.filter(id=>P.owned.includes(id)).length;
     return `<section class="sec"><h2 style="color:${F.c}">${F.n} · ${have}/${ids.length}</h2>
       <p class="hint">Touche une carte pour l'agrandir.</p>
-      <div class="grid">${gridArt(()=>ids.map(id=>P.owned.includes(id)?`<button class="zoombtn" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button>`:`<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?`Possède ${ULof(id).n}`:CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`).join(""))}</div></section>`; }).join("")}
+      <div class="grid">${gridArt(()=>ids.map(id=>P.owned.includes(id)?`<button class="zoombtn" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button>`:`<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?(ULof(id).quest?`Journal des factions : ${Math.min(fjGet(ULof(id).quest.k),ULof(id).quest.n)}/${ULof(id).quest.n} parties`:`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`).join(""))}</div></section>`; }).join("")}
   <section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
     <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
@@ -3192,7 +3223,7 @@ function rulesHTML(){
       <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
       <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
       <li><b>Perdre ses effets</b> : la carte garde sa puissance et les bonus déjà gagnés, mais ses effets Continu et de fin de tour ne s'appliquent plus.</li>
-      <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, exige assez de cartes de sa faction.</li>
+      <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, se gagne dans le Journal des factions (50 parties jouées avec 8 cartes de sa faction) et exige 8 cartes de sa faction dans le deck.</li>
       <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
       <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
       <li><b>Ressusciter</b> : une carte défaussée ou détruite revient sur le plateau, révélée, à sa puissance de base, sans déclencher sa Révélation (sauf mention contraire).</li>
@@ -3489,7 +3520,7 @@ document.addEventListener("click", e=>{
     case "mpagain": if(S&&S.mp){ S.mp.wantAgain=true; mpPush({again:myMp.g}); sfx("click"); render(); mpTick(); } return;
     case "mpquit": mpClear(); mpSaveSession(null); if(S&&S.mp) S=null; screen="home"; render(); window.scrollTo(0,0); return;
     case "dismiss": if(!P.dis.includes(el.dataset.id)) P.dis.push(el.dataset.id); save(); render(); return;
-    case "ulclaim": { const id=el.dataset.id; if(ULof(id)&&!P.owned.includes(id)){ P.owned.push(id); save(); sfx("legend"); } zoomId=id; render(); return; }
+    case "ulclaim": { const id=el.dataset.id; if(ULof(id)&&!P.owned.includes(id)&&ulEarned(ULof(id))){ P.owned.push(id); save(); sfx("legend"); } zoomId=id; render(); return; }
     case "ullater": ulLater=true; render(); return;
     case "packclose": packOpen=null; render(); return;
     case "tutoplay": tutoStep=-1; sfx("click"); startTutorial(); return;

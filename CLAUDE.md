@@ -213,6 +213,13 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - `seasonDeco("fan"|"bar")` : Halloween = toiles d'araignée dans les coins de la vitrine (derrière les cartes), araignée qui se balance (devant), deux citrouilles qui luisent posées sur le bandeau de saison ; Noël = guirlande lumineuse sur la vitrine et houx sur le bandeau ; Nouvel An = guirlande dorée. Dessins SVG intégrés, animations par transform/opacité, coupées par `prefers-reduced-motion`.
 - En-tête : le nom de la saison est une 2e ligne sous « Le Sang de Tiamat » (`small.ssub`), les boutons restent à droite (`.top` en `nowrap`).
 
+## Journal des factions (12 octobre)
+
+- Les ultra-légendaires de faction se **gagnent en jouant**, pas en collectionnant : entrée `ULS` avec `quest:{k,n}` (`nike` : `jugement`, 50 ; `nike_v` : `nikev`, 25). `ulEarned(u)` décide du déblocage (fenêtre `ulHTML`, bouton `ulclaim`) ; `ulOk(u,deck)` reste la règle de deck (8 cartes de la faction).
+- Compteurs `P.fj` (`helvara`, `primordial`, `desir`, `jugement`, `nikev`), incrémentés par `fjCount(deck)` au début de `pushHist` (fin de partie IA, Blitz ou duel, jamais tutoriel, simulation ni reprise : `qLive()`). Une partie compte pour une faction si le deck a au moins `FJ_MIN` = 8 cartes de cette faction. Une partie de 12 cartes ne peut compter que pour une faction.
+- `nikev` : parties avec Nike (ou sa variante, `charOf`) dans le deck pendant `VALENTIN` = 1er → 20 février (**à caler sur le futur paquet de la Saint-Valentin**).
+- Écran : section « Journal des factions » du profil (`journalHTML`) ; la récompense n'est nommée qu'à partir de sa date d'annonce (`SHOWN`). Futures ultra-légendaires de faction : ajouter `quest:{k:"<faction>",n:50}` à leur entrée `ULS`.
+
 ## Calendrier du contenu
 
 | Date | Contenu |
@@ -229,7 +236,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - Pandore la dépense (+1 de puissance par énergie).
 - Bia coupe la réserve adverse.
 - Styx donne +3 à Nike et à Bia, et rend ses cartes Jugement indestructibles dans son lieu.
-- Nike : +2 par carte jouée avant elle ce tour. Elle se débloque avec 7 autres cartes Jugement en collection, et se joue avec 8 cartes Jugement dans le deck, elle comprise.
+- Nike : +2 par carte jouée avant elle ce tour. Elle se **gagne dans le Journal des factions** (50 parties jouées avec au moins 8 cartes Jugement, décision de Jordan du 12 octobre ; avant : 7 autres cartes Jugement en collection), et se joue avec 8 cartes Jugement dans le deck, elle comprise.
 
 ---
 

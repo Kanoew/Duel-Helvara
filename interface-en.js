@@ -198,7 +198,8 @@
     "Affaiblir":"Weaken",
     "(−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.":"(−X): the card loses Power. Power can go negative. Eir, Amaterasu, the Silent Flayed One and Jordan, the Creator prevent it.",
     "Perdre ses effets":"Lose its effects", ": la carte garde sa puissance et les bonus déjà gagnés, mais ses effets Continu et de fin de tour ne s'appliquent plus.":": the card keeps its Power and the bonuses it already gained, but its Ongoing and end-of-turn effects no longer apply.", "Ses effets Continu et de fin de tour ne s'appliquent plus. Ses bonus déjà gagnés restent.":"Its Ongoing and end-of-turn effects no longer apply. The bonuses it already gained stay.", "(acquis)":"(kept)",
-    "Une seule ultra-légendaire par deck.":"Only one ultra-legendary per deck.", "Chaque fusion exige ses deux personnages dans le deck.":"Each fusion requires both of its characters in the deck.", "Une ultra-légendaire de faction, comme Nike, exige assez de cartes de sa faction.":"A faction ultra-legendary, like Nike, requires enough cards of its faction.",
+    "Une seule ultra-légendaire par deck.":"Only one ultra-legendary per deck.", "Chaque fusion exige ses deux personnages dans le deck.":"Each fusion requires both of its characters in the deck.", "Une ultra-légendaire de faction, comme Nike, se gagne dans le Journal des factions (50 parties jouées avec 8 cartes de sa faction) et exige 8 cartes de sa faction dans le deck.":"A faction ultra-legendary, like Nike, is earned in the Faction journal (50 games played with 8 cards of its faction) and requires 8 cards of its faction in the deck.",
+    "Journal des factions":"Faction journal", "Une partie compte quand ton deck contient au moins 8 cartes d'une faction (IA, Blitz et duels).":"A game counts when your deck holds at least 8 cards of a faction (AI, Blitz and duels).", "Récompense : une ultra-légendaire, bientôt":"Reward: an ultra-legendary, coming soon", "Saint-Valentin · avec Nike":"Valentine's Day · with Nike",
     "Condamner":"Seal", ": une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie.":": a slot at the location is closed to the opponent until the end of the game.",
     "Captive":"Captive", ": la carte tombe à 0 tant que sa geôlière reste en jeu.":": the card drops to 0 while its jailer stays in play.",
     "Silence":"Silence", ": l'adversaire ne peut pas jouer dans ce lieu au tour suivant.":": the opponent can't play at this location next turn.",
@@ -297,6 +298,12 @@
     [/^Une seule version par personnage : retire d'abord (.+)\.$/, (m,a)=>`Only one version per character: remove ${a} first.`],
     [/^Choisis les 3 cartes affichées sur l'accueil · (\d)\/3\. La première choisie passe au centre\.$/, (m,n)=>`Choose the 3 cards shown on the home screen · ${n}/3. The first one chosen goes in the centre.`],
     [/^Chaque carte de ta collection débloque son portrait · (\d+)\/(\d+)$/, (m,a,b)=>`Each card in your collection unlocks its portrait · ${a}/${b}`],
+    [/^(\d+) parties?$/, (m,n)=>`${n} game${n==="1"?"":"s"}`],
+    [/^Récompense : (.+)$/, (m,n)=>`Reward: ${n}`],
+    [/^(.+) · obtenue$/, (m,n)=>`${n} · obtained`],
+    [/^Journal des factions : (\d+)\/(\d+) parties$/, (m,a,b)=>`Faction journal: ${a}/${b} games`],
+    [/^Ton journal est complet : (\d+) parties avec la faction (.+)\. (.+) rejoint ta faction\.$/, (m,n,f,c)=>`Your journal is complete: ${n} games with the ${({Jugement:"Judgement","Désir":"Desire"})[f]||f} faction. ${c} joins your faction.`],
+    [/^Ton journal est complet : (\d+) parties avec Nike pendant la Saint-Valentin\. (.+) rejoint ta faction\.$/, (m,n,c)=>`Your journal is complete: ${n} games with Nike during Valentine's Day. ${c} joins your faction.`],
     [/^Ta collection compte assez de cartes (.+)\. (.+) rejoint ta faction\.$/, (m,f,n)=>`Your collection holds enough ${({Jugement:"Judgement","Désir":"Desire"})[f]||f} cards. ${n} joins your faction.`],
     [/^Prométhée garde (\d+) énergie en réserve \((.+)\)$/, (m,k,w)=>`Prometheus keeps ${k} energy in reserve (${w==="L'adversaire"?'the opponent':w})`],
     [/^Tu possèdes (.+)\. Leur fusion ultra-légendaire t'attend\.$/, (m,a)=>`You own ${a}. Their ultra-legendary fusion awaits.`],
@@ -419,7 +426,7 @@
         nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel, Eos, Pele and Qetesh in their New Year's Eve versions.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
       },
       DROPS:{
-        nov15:"Prometheus keeps the fire, Pandora opens the box, Athena guides your hand, and Styx watches over her daughters: Bia, and Nike, the first faction ultra-legendary. 8 Judgement cards are enough to get her.",
+        nov15:"Prometheus keeps the fire, Pandora opens the box, Athena guides your hand, and Styx watches over her daughters: Bia, and Nike, the first faction ultra-legendary. She is earned by playing 50 games with 8 Judgement cards: the Faction journal is already counting.",
         dec26:"Odin, Thor, Hel, Baldur, Hades, Poseidon, Circe, Qetesh, the people of Lausanne… five new fusions and the Creator's Domain.",
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."
