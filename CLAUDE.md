@@ -34,6 +34,7 @@ Réponses en **français**.
 | `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor |
 | `images/` | Illustrations des cartes (`<id>.jpg`) |
 | `images/avatars/` | Portraits carrés (`<id>.jpg`) |
+| `images/mini/` | Illustrations réduites pour les grilles (360 × 540) |
 | `images/lieux/`, `images/packs/` | Lieux et paquets |
 | `audio/` | Musiques : `accueil*`, `partie`, `partie_2`, `partie_tension` (dès le tour 5), jingles `victoire` et `defaite` |
 
@@ -49,6 +50,8 @@ Réponses en **français**.
 | Avatar | 256 × 256, JPEG qualité 85, **recadré à la main sur le visage** | `images/avatars/<id>.jpg` |
 
 L'avatar sert de portrait au joueur, mais aussi de **miniature sur le plateau**. Il est donc obligatoire.
+
+Troisième image, générée à partir de la carte : `images/mini/<id>.jpg` (360 × 540, qualité 78), utilisée par la collection.
 
 - Autres formats : lieu en 800 × 597 dans `images/lieux/`, paquet en 600 × 894 dans `images/packs/`.
 - Les images envoyées dans le chat arrivent en pleine résolution. Vérifier leur taille réelle avant de calculer le recadrage : l'aperçu affiché est souvent plus petit.
@@ -198,6 +201,17 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - **CSP** : balise `<meta http-equiv="Content-Security-Policy">` dans `index.html` (dans le premier `<head>`, celui de la ligne 1 : un meta placé après est ignoré). Autorise `'self'`, `'unsafe-inline'` (le jeu est un seul fichier avec script et styles intégrés), et seulement le projet Supabase pour `connect-src`. Tout nouveau service externe (API, police, image distante) doit être ajouté à cette liste, sinon il sera bloqué. À vérifier en vrai : connexion Google et salon en direct.
 - **Historique** : 20 parties (`HIST_MAX`), détail par lieu, cartes, gain, rang ; écran `hist` depuis le profil ; assaini au chargement par `cleanHist`.
 - **Ouverture de paquet** : `packOpenHTML()`, retournement de la carte (Commune/Rare : gerbe dorée) ou sceau brisé (Épique et plus), sans hasard (positions déduites de l'index), coupé par `prefers-reduced-motion`.
+
+## Performances sur téléphone (12 octobre)
+
+- **Particules saisonnières** (`html[data-season] body::after`) : animées par `transform` (calque déplacé), jamais par `background-position` (qui repeignait tout l'écran à chaque image : l'accueil tombait de 60 à 45 images/s pendant Halloween).
+- **Grilles** (collection, codex) : `content-visibility:auto` sur chaque carte (hors écran = ni dessinée ni décodée), pas de reflet, de poussières ni de holo animé, pas de flou sur les cartes « Bientôt ». Illustrations réduites `images/mini/<fichier>.jpg` (360 × 540, qualité 78) via `gridArt(()=>…)` qui active `ART_MINI` pendant le rendu. **Chaque nouvelle carte doit aussi avoir sa miniature** (`sharp(src).resize(360,540,{fit:'cover'}).jpeg({quality:78,mozjpeg:true})`), sinon la grille affichera une case vide.
+- Mesure de référence (Chromium, téléphone simulé, processeur ralenti ×6) : accueil 60 images/s, collection au repos 60, défilement ~47.
+
+## Décors saisonniers de l'accueil
+
+- `seasonDeco("fan"|"bar")` : Halloween = toiles d'araignée dans les coins de la vitrine (derrière les cartes), araignée qui se balance (devant), deux citrouilles qui luisent posées sur le bandeau de saison ; Noël = guirlande lumineuse sur la vitrine et houx sur le bandeau ; Nouvel An = guirlande dorée. Dessins SVG intégrés, animations par transform/opacité, coupées par `prefers-reduced-motion`.
+- En-tête : le nom de la saison est une 2e ligne sous « Le Sang de Tiamat » (`small.ssub`), les boutons restent à droite (`.top` en `nowrap`).
 
 ## Calendrier du contenu
 
