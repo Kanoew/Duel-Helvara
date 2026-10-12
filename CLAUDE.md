@@ -280,6 +280,23 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 
 ---
 
+## Décisions d'équilibrage (12 octobre 2026, d'après `rapport-cartes.md`) : ne pas revenir dessus sans l'accord de Jordan
+
+Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD` est passé à `alpha-0.3`.
+
+- **Nemesis** 5/−5 : ne peut pas être jouée au tour 6 (`banned()`, testée par `canStage` et `aiPlan`, donc grisée en main et refusée même avec de l'énergie en réserve). Continu inchangé, deux Nemesis s'annulent.
+- **Balor** 6/5 (Rare) : −3 à **deux** cartes adverses différentes au hasard ici (une seule carte adverse : −3 une fois).
+- **Pandore** 3/0 : dépense toute l'énergie restante (réserve de Prométhée comprise), **+2** par énergie dépensée. L'IA la joue en dernier (`late`), et la simulation de l'IA calcule `S.unspent`.
+- **Aphrodite** coût 4 ; **Le Sans-Voix** 2/4 ; **Fange** 3/3 ; **Le Mendiant de la Riponne** 0/2 (effets inchangés).
+- **Qetesh du Nouvel An** 5/3 : « au début du tour suivant, charme la carte adverse la plus forte ici de **coût** 5 ou moins ». Marqueur `c.midnight` (tour du déclenchement, 🕛 sur la carte tant qu'il attend), `midnightCharm()` appelée par `startTurn()` avant la pioche ; rien si Qetesh n'est plus en jeu (ou a perdu ses effets) ; la cible est choisie au déclenchement. **Le +1 aux autres cartes est supprimé.**
+- **Qetesh X Jordan du Nouvel An** 6/4 : Révélation : charme la plus forte adverse **ici** de coût 5 ou moins. Continu : tes autres cartes **ici** ont +2 (plus de charme dans les 3 lieux, plus de +1 partout).
+- **Nyx X Oshun** 6/4 : détruit la plus forte adverse ici ; la moitié de sa puissance (arrondie au-dessus, prise au moment de la destruction) va à ta carte la plus faible **dans un autre lieu** (aucune carte ailleurs : bonus perdu).
+- **Résurrections** : Loviatar inchangée. **Hadès** 4/4 (coût 4 au lieu de 5). **Hel** 6/5 : ressuscite **ici** jusqu'à 3 cartes défaussées (les plus fortes, selon la place), sans Révélation. **Hel du Réveillon** inchangée. **Hel X Baldur** 6/3 : ressuscite ici la carte détruite **ou** défaussée la plus forte, avec sa Révélation, intouchable (`ward`) ; si c'est Baldur (toute version, `charOf`), +5.
+- **Marqueur « ressuscitée »** : `c.risen = true`, posé par `resurrect()` (Loviatar, Hadès, Hel, Hel du Réveillon, Hel X Baldur, et aussi le Tombeau).
+- **Cartes de défausse (toujours cachées, 3/3 épiques provisoires, `rel`/`soon` à 2099)** : **Cronos** (Primordial) défausse les cartes de coût ≤ 1 de ta main, +2 chacune ; **Izanami** (Primordial) défausse ta carte la plus faible de ta main, Continu : tes cartes ressuscitées (`risen`) ont +2 ; **Loki** (Désir) : chaque joueur défausse la carte la plus chère de sa main (égalité : `gPick`).
+- **IA** : coûts et puissances estimés pour `ulnem`, `ulqetyar`, `ulhel`, `ulqetjor_r`, les résurrections, Cronos, Izanami, Loki (voir `place()`). Constat : à 6 d'énergie ces fusions (puissance 2-3) perdent le plus souvent contre deux cartes moins chères à égalité de simulation exacte ; l'IA les garde en main dans ~70 % des parties au tour 6 et ne les pose que lorsque c'est meilleur. Ce n'est donc plus un défaut de l'IA mais un signal d'équilibrage.
+- **Outil d'équilibrage** : `--inclure cronos,izanami,loki` rend jouables quelques cartes cachées (elles restent « pas sorties » dans le rapport). Rapport régénéré avec 6000 parties, graine 20261012.
+
 ## Façon de travailler avec Jordan
 
 - Jordan prépare souvent les changements dans une autre session (brainstorm) et les apporte sous forme de fichier `.md` : le lire, vérifier qu'il est cohérent avec le code (et le dire s'il ne l'est pas), puis l'appliquer.

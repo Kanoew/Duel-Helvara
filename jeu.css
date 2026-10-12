@@ -82,6 +82,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-grad
 .mini{position:relative;height:var(--mh);border-radius:6px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.12);padding:0;background:none;display:block;width:100%}
 .mini .art{position:absolute;inset:0}
 .mini .pw{position:absolute;right:3px;bottom:3px;min-width:20px;height:20px;padding:0 4px;border-radius:10px;background:rgba(6,10,18,.85);font-family:var(--display);font-size:13px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.mini .midn{position:absolute;left:3px;top:3px;font-size:12px;line-height:1;filter:drop-shadow(0 0 3px #b48cff);pointer-events:none}
 .mini .pw.up{color:#9fe0b0}.mini .pw.down{color:#f0a0a0}
 .mini.staged{border:1px dashed var(--me);opacity:.8}
 .mini.back .art{background:repeating-linear-gradient(135deg,#1c2238 0 6px,#161b2d 6px 12px)!important}

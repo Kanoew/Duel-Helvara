@@ -10,6 +10,7 @@
      node outils/equilibrage.js --parties 5000        # plus de parties = chiffres plus fiables
      node outils/equilibrage.js --palier 3            # niveau de l'IA (0 à 6, 5 par défaut)
      node outils/equilibrage.js --date 2026-11-15     # cartes sorties à cette date (par défaut 2026-12-31 : tout ce qui est daté en 2026)
+     node outils/equilibrage.js --inclure cronos,izanami,loki   # ne rend jouables que ces cartes cachées (elles restent « pas sorties » dans le rapport)
      node outils/equilibrage.js --inclure-cachees     # ajoute les cartes sans date (2099) : elles n'ont pas d'effet, chiffres peu parlants
      node outils/equilibrage.js --graine 42           # même graine = mêmes parties (reproductible)
      node outils/equilibrage.js --ouvriers 4          # nombre de Chromium en parallèle
@@ -28,6 +29,7 @@ const OPT = {
   palier: Math.min(6, Math.max(0, parseInt(opt("palier", 5), 10) || 5)),
   date: String(opt("date", "2026-12-31")),
   cachees: !!opt("inclure-cachees", false),
+  inclure: String(opt("inclure", "")).split(",").map(x => x.trim()).filter(Boolean),   /* ids de cartes cachées à jouer quand même (ex. cronos,izanami,loki) */
   graine: parseInt(opt("graine", 20261012), 10) || 20261012,
   ouvriers: Math.max(1, parseInt(opt("ouvriers", Math.min(4, Math.max(1, os.cpus().length - 1))), 10) || 1),
   sortie: path.resolve(process.cwd(), String(opt("sortie", path.join(ROOT, "rapport-cartes.md")))),
@@ -147,6 +149,7 @@ async function newWorker(browser, port, k) {
   await page.addInitScript(d => { window.__today = d; }, OPT.date);
   await page.goto(`http://127.0.0.1:${port}/index.html`); await page.waitForFunction(() => typeof newGame === "function" && typeof aiPlan === "function");
   page.setDefaultTimeout(180000);
+  if (OPT.inclure.length) await page.evaluate(ids => { window.__relOrig = {}; for (const id of ids) if (CARDS[id]) { window.__relOrig[id] = CARDS[id].rel; CARDS[id].rel = "2026-10-01"; } }, OPT.inclure);
   const info = await page.evaluate(inPageSetup, { seed: OPT.graine, palier: OPT.palier });
   return { page, errors, info };
 }
@@ -158,7 +161,7 @@ async function main() {
   /* données des cartes : une fois, depuis le vrai jeu */
   const dataW = await newWorker(browser, port, 99);
   const data = await dataW.page.evaluate(() => ({
-    cards: Object.entries(CARDS).map(([id, c]) => ({ id, name: c.name, cost: c.cost, pow: c.pow, fac: c.fac, r: c.r, rel: c.rel || null, soon: c.soon || null, ex: c.ex || null, base: c.base || null, token: !!c.token, fx: c.fx || "" })),
+    cards: Object.entries(CARDS).map(([id, c]) => ({ id, name: c.name, cost: c.cost, pow: c.pow, fac: c.fac, r: c.r, rel: (window.__relOrig && window.__relOrig[id]) || c.rel || null, soon: c.soon || null, ex: c.ex || null, base: c.base || null, token: !!c.token, fx: c.fx || "" })),
     uls: ULS.map(u => ({ id: u.id, req: u.req, fac: u.fac || null, min: u.min || null })),
     facs: Object.fromEntries(Object.entries(FAC).map(([k, v]) => [k, v.n])), build: typeof BUILD === "string" ? BUILD : "?",
   }));
@@ -272,7 +275,7 @@ function report(data, games, pageErrors, secs) {
   out(`# Rapport des cartes · Duel d'Helvara`);
   out(`\nGénéré le ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC par \`outils/equilibrage.js\` (version du moteur ${data.build}). **Aucune carte n'a été modifiée et aucun chiffre n'est proposé** : ce document sert à décider.\n`);
   out(`- **Parties simulées** : ${games.length} (${played.length} terminées), IA de palier ${OPT.palier} contre IA de palier ${OPT.palier}, graine ${OPT.graine}, ${secs} s.`);
-  out(`- **Cartes en jeu** : toutes celles dont la date de sortie est au plus le ${OPT.date}${OPT.cachees ? " (cartes cachées de 2099 incluses)" : " (les cartes cachées de 2099, sans effet, ne sont pas jouées)"}.`);
+  out(`- **Cartes en jeu** : toutes celles dont la date de sortie est au plus le ${OPT.date}${OPT.cachees ? " (cartes cachées de 2099 incluses)" : OPT.inclure.length ? ` (cartes cachées de 2099 jouées : ${OPT.inclure.join(", ")} ; les autres cachées, sans effet, ne sont pas jouées)` : " (les cartes cachées de 2099, sans effet, ne sont pas jouées)"}.`);
   out(`- **Decks** : 12 cartes, mêmes règles que le jeu (une version par personnage, une seule ultra-légendaire, ses conditions remplies). Trois decks sur quatre sont tirés au hasard avec une faction dominante et une courbe de coûts raisonnable ; un sur quatre est fabriqué par le jeu pour son IA. Ce ne sont pas des decks de joueurs : les cartes les plus fortes ne sont pas surreprésentées.`);
   out(`- **Lieux** : 3 lieux tirés au hasard parmi ceux sortis à cette date, comme dans une vraie partie.`);
   out(`- **Camp qui révèle en premier** (le « joueur ») : ${pct(A.pWins, A.ok)} % de victoires (nulles : ${pct(A.nul, A.ok)} %). Un écart net avec 50 % signalerait un avantage lié à l'ordre de révélation.`);

@@ -493,7 +493,7 @@ function mini(s,li,c,staged){
   const p=staged?CARDS[c.id].pow:cardPow(s,li,c), base=CARDS[c.id].pow;
   const cls=staged?"":p>base?"up":p<base?"down":"";
   const act=(staged?`data-act="unstage" data-uid="${c.uid}"`:`data-act="inspect" data-uid="${c.uid}"`)+` data-lp="c${c.uid}"`;
-  return `<button class="mini${CARDS[c.id].r==="U"?" holo":""}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${staged?"":deltaBadge(p-base)}<span class="pw ${cls}">${p}</span></button>`;
+  return `<button class="mini${CARDS[c.id].r==="U"?" holo":""}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}<span class="pw ${cls}">${p}</span></button>`;
 }
 function sideHTML(s,li){
   const items=S.board[s][li].map(c=>mini(s,li,c,s==="p"&&!c.rev));
@@ -526,7 +526,7 @@ function infoHTML(){
   const uid=S.sel||(S.info&&S.info.uid), loc=S.info&&S.info.loc!=null?S.info.loc:null;
   if(uid){ const f=findAny(uid); if(f){ const d=CARDS[f.c.id], F=FAC[d.fac];
     return `<div><div class="t">${d.name}<span class="chip" style="color:${F.c}">${F.n}</span></div>
-      <div class="m">Coût ${d.cost} · Puissance ${d.pow}${d.fx?` · ${d.fx}`:" · Pas d'effet."}${f.c.neg?` <b style="color:#f0a0a0">Effets annulés.</b>`:""}</div>
+      <div class="m">Coût ${d.cost} · Puissance ${d.pow}${d.fx?` · ${d.fx}`:" · Pas d'effet."}${f.c.neg?` <b style="color:#f0a0a0">Effets annulés.</b>`:""}${f.c.midnight>0&&!f.c.neg?` <b style="color:#c9b0ff">🕛 Minuit : charme au début du prochain tour.</b>`:""}</div>
       ${S.sel?`<div class="m" style="color:var(--me)">Touche un lieu pour la poser.</div>`:""}</div>`; } }
   if(loc!=null){ const L=S.locs[loc];
     return L.rev?`<div><div class="t">${LOCS[L.id].name}</div><div class="m">${L.stopped?"Effet arrêté par Perséphone. ":""}${LOCS[L.id].fx}${L.locked?" Vritra a verrouillé ce lieu : plus personne ne peut y jouer.":""}</div></div>`
