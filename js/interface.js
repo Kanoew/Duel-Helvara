@@ -129,7 +129,7 @@ function seasonDeco(where){ const se=season(); if(!se) return "";
   return se==="noel"?`<div class="sdeco bar" aria-hidden="true"><span class="holly">${HOLLY}</span></div>`:"";
 }
 function seasonBarHTML(){ const se=season(); if(!se) return ""; const T=SEASON[se];
-  return `<div class="seasonbar ${se}">${seasonDeco("bar")}<div><div class="eyebrow">${T.eyebrow}</div><b>${T.title}</b><div class="hint">${T.hint}</div></div>${P.starter?`<button class="primary small" data-act="go" data-to="shop">${T.btn}</button>`:""}</div>`; }
+  return `<div class="seasonbar ${se}">${seasonDeco("bar")}<div><div class="eyebrow">${T.eyebrow}</div><b>${T.title}</b><div class="hint">${T.hint}</div></div>${P.starter?`<button class="primary small" data-act="seasonpack" data-pid="${se}">${T.btn}</button>`:""}</div>`; }
 let ulLater=false, deckRename=false;
 let histFilter="all", histOpen=new Set();
 function histHTML(){
@@ -294,10 +294,10 @@ function deckHTML(){
 function shopHTML(){
   const av=avail(), owned=av.filter(id=>P.owned.includes(id)).length, tot=av.length, lp=lastPack;
   const missOf=pk=>pk.starter?1:PACK(pk.id).filter(id=>!P.owned.includes(id)&&pk.odds.some(o=>o[0]===CARDS[id].r)).length;
-  const tiles=PACKS.filter(pk=>!(pk.starter&&P.starter)&&(inWin(pk.win)||soonWin(pk.win))).sort((a,b)=>(missOf(a)?0:1)-(missOf(b)?0:1)).map(pk=>{
+  const tiles=PACKS.filter(pk=>!(pk.starter&&P.starter)&&(inWin(pk.win)||soonWin(pk.win))).sort((a,b)=>(b.id===packFocus)-(a.id===packFocus)||(missOf(a)?0:1)-(missOf(b)?0:1)).map(pk=>{
     const miss=pk.starter?0:missOf(pk), done=!pk.starter&&!miss;
     const open=inWin(pk.win), gate=!pk.starter&&!P.starter, lack=pk.price-P.chf, ok=lack<=0&&open&&!gate&&!done;
-    return `<article class="packtile ${done?"done":""} ${pk.starter?"starter":""} ${pk.starter&&hlStarter?"hl":""}" data-pid="${pk.id}">
+    return `<article class="packtile ${done?"done":""} ${pk.starter?"starter":""} ${(pk.starter&&hlStarter)||pk.id===packFocus?"hl":""}" data-pid="${pk.id}">
       <div class="pack" role="img" aria-label="${pk.name}" style="background-image:url('${pk.img}')"></div>
       <div class="pbody">
         <div class="eyebrow">${pk.starter?"Pack de départ · 12 cartes":pk.win?`Édition limitée · ${pk.n} cartes`:`${pk.n} cartes`}</div>
@@ -734,7 +734,7 @@ document.addEventListener("click", e=>{
     case "sheet": sheet=sheet===el.dataset.s?null:el.dataset.s; sfx("click"); render(); return;
     case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; sheet=null; render(); return;
     case "sheetin": return;
-    case "go": { const to=el.dataset.to; if(to==="board"||to==="home") lbRefresh(); sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
+    case "go": { const to=el.dataset.to; packFocus=null; if(to==="board"||to==="home") lbRefresh(); sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
     case "play": sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
@@ -796,6 +796,9 @@ document.addEventListener("click", e=>{
     case "tutodone": finishTuto(); return;
     case "tuto": sheet=null; sfx("click"); startTutorial(); return;
     case "buy": buyPack(el.dataset.pid); return;
+    case "seasonpack": { /* le bandeau de saison de l'accueil mène au paquet d'édition de la saison : boutique, paquet en tête et surligné */
+      const pid=el.dataset.pid; if(!PACKS.some(x=>x.id===pid)) return; packFocus=pid; sheet=null; seasonNote=""; dailyNote=""; screen="shop"; sfx("click"); render(); window.scrollTo(0,0);
+      requestAnimationFrame(()=>{ const t=document.querySelector(`.packtile[data-pid="${pid}"]`); if(t) t.scrollIntoView({block:"center",behavior:"smooth"}); }); return; }
     case "filter": deckFilter=el.dataset.f; sfx("click"); render(); return;
     case "toggle": { const id=el.dataset.id;
       const clash=P.deck.find(x=>x!==id&&charOf(x)===charOf(id)&&!(["yarden","yarden_d"].includes(x)&&["yarden","yarden_d"].includes(id)));

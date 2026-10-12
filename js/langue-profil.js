@@ -268,7 +268,7 @@ function qEnd(res,blitz){
 let P = clean(lsRead());
 { const a=checkSeason(), b=ensureQuests(), c=ensureWeek(); if(a||b||c) lsWrite(); }
 let packOpen=null, gz=null, lpTimer=null, lpFired=false;
-let storeReady=false, tutoStep=-1, hlStarter=false, avPick=false, zoomId=null, fanPick=null;
+let storeReady=false, tutoStep=-1, hlStarter=false, packFocus=null, avPick=false, zoomId=null, fanPick=null;
 const rankIcon=(lv,cls="")=>`<img class="rkicon ${cls}" src="images/rangs/${tierOf(lv)}.png?v=2" alt="${TIERS[tierOf(lv)]}">`;
 function avatarHTML(cls=""){ const a=P.avatar&&P.owned.includes(P.avatar)?P.avatar:null; return a?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${a}.jpg?v=7')"></span>`:`<span class="avatar ${cls} empty">${esc(P.name.charAt(0).toUpperCase())}</span>`; }
 let dbDoc=null, store="local", writing=false, again=false, saveTimer=null, lastPack=null;

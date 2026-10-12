@@ -249,6 +249,10 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - **Limites à garder en tête** : c'est de l'IA contre IA, donc une carte qui demande une combinaison (Hel, Hadès…) peut paraître faible parce que l'IA la pose peu ; le tirage de decks n'est pas celui des joueurs ; sous 100 decks, marge d'erreur > ±10 points.
 - Première mesure (6000 parties, palier 5) : aucune erreur ; le camp qui révèle en premier gagne 48,9 % ; victoire par rareté 48,9 à 55 % (ultra-légendaires 55 %), par faction 48,2 à 52 % (Jugement en tête).
 
+## Accueil : bandeau de saison → paquet d'édition (12 octobre 2026)
+
+Le bouton du bandeau de saison (« Ouvrir le Pli des Citrouilles », de l'Étoile, du Douzième Coup) ne mène plus à la boutique en vrac : `data-act="seasonpack"` (`data-pid` = identifiant de la saison = identifiant du paquet d'édition, donc **toute future saison/paquet d'édition marche sans code en plus** si son id de `SEASON` est celui de son paquet) ouvre la boutique avec **le paquet en tête de liste et surligné** (`packFocus`, remis à zéro par le menu). Testé dans `outils/tests-scenarios.js` et aux 4 dates (Halloween, hors saison, Noël, Nouvel An).
+
 ## Décors saisonniers de l'accueil
 
 - `seasonDeco("fan"|"bar")` : Halloween = toiles d'araignée dans les coins de la vitrine (derrière les cartes), araignée qui se balance (devant), deux citrouilles qui luisent posées sur le bandeau de saison ; Noël = guirlande lumineuse sur la vitrine et houx sur le bandeau ; Nouvel An = guirlande dorée. Dessins SVG intégrés, animations par transform/opacité, coupées par `prefers-reduced-motion`.
