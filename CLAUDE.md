@@ -32,6 +32,7 @@ Réponses en **français**.
 | `vendor/supabase.js` | Bibliothèque Supabase en local (le CDN est bloqué) |
 | `README.md` | Présentation du jeu sur GitHub (français et anglais), lien de jeu et Discord |
 | `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor |
+| `outils/equilibrage.js`, `rapport-cartes.md` | Outil d'équilibrage (IA contre IA avec le vrai moteur, hors du jeu) et son rapport |
 | `images/` | Illustrations des cartes (`<id>.jpg`) |
 | `images/avatars/` | Portraits carrés (`<id>.jpg`) |
 | `images/mini/` | Illustrations réduites pour les grilles (360 × 540) |
@@ -225,6 +226,15 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - **Lecture par Jordan** : vues `v_taux_victoire_cartes` (avec écart à la moyenne), `v_taux_victoire_par_mode`, `v_taux_victoire_par_lieu`, `v_cartes_signalees`, `v_retours_par_jour`, dans Supabase → Table Editor → schéma `public` (les cartes y sont désignées par leur identifiant).
 - **Confidentialité** : `confidentialite.html` et `privacy.html` mises à jour (retours, statistiques, compteur technique, canaux en direct à la place du salon commun, comptes anonymes sans partie supprimés après 14 jours).
 - **Piège corrigé** : la main collante (`.handdock`) est sous les voiles (`z-index` 3 contre 5) ; avec 6 elle passait par-dessus le panneau de résultat.
+
+## Outil d'équilibrage (12 octobre, audit étape 5)
+
+- **Lancer** : `node outils/equilibrage.js` (2000 parties par défaut, ~10 s) ou `--parties 6000` ; options dans l'en-tête du script (`--palier`, `--date`, `--inclure-cachees`, `--graine`, `--ouvriers`, `--sortie`, `--brut`). Écrit `rapport-cartes.md` à la racine. Nécessite Playwright et Chromium (voir Tests).
+- **Principe** : charge `index.html` dans Chromium sans réseau (faux Supabase) et fait jouer `aiPlan("p")` contre `aiPlan("e")` avec le vrai moteur (`newGame`, `resolveTurn`, `finish`). Seuls l'affichage, le son et la sauvegarde sont neutralisés (`render`, `sfx`, `save`, `pushHist`, `qProg`…). **Rien du moteur n'est recopié** : si le moteur change, l'outil suit. Le deck adverse passe par un `aiDeck` remplacé le temps de `newGame()`.
+- **Decks** : tirés au hasard avec les règles du jeu (une version par personnage, une seule ultra-légendaire dont les conditions sont remplies), faction dominante, courbe de coûts raisonnable ; 1 sur 4 vient d'`aiDeck(palier, true)`. **Reproductible** : une graine par partie (`--graine`), mêmes parties quel que soit le nombre d'ouvriers (testé : 400 parties identiques avec 2 et 3 ouvriers). Pour rester reproductible, chaque partie remet `RNG`, `P.lv`, `P.streak`… à un état fixe.
+- **Rapport** : santé du moteur (erreurs, puissances NaN, erreurs de console), répartition rareté × coût (toutes les cartes, sorties, pas sorties), statistiques par carte (victoire en deck et posée, taux de pose, puissance de fin, survie, tour de pose), victoire par coût, rareté et faction, liste de TOUTES les cartes pas encore sorties avec leurs valeurs provisoires, effets qui se ressemblent (familles, formulations presque identiques, même cible). **Ne propose aucun chiffre.**
+- **Limites à garder en tête** : c'est de l'IA contre IA, donc une carte qui demande une combinaison (Hel, Hadès…) peut paraître faible parce que l'IA la pose peu ; le tirage de decks n'est pas celui des joueurs ; sous 100 decks, marge d'erreur > ±10 points.
+- Première mesure (6000 parties, palier 5) : aucune erreur ; le camp qui révèle en premier gagne 48,9 % ; victoire par rareté 48,9 à 55 % (ultra-légendaires 55 %), par faction 48,2 à 52 % (Jugement en tête).
 
 ## Décors saisonniers de l'accueil
 
