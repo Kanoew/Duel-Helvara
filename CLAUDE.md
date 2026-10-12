@@ -249,6 +249,10 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - **Limites à garder en tête** : c'est de l'IA contre IA, donc une carte qui demande une combinaison (Hel, Hadès…) peut paraître faible parce que l'IA la pose peu ; le tirage de decks n'est pas celui des joueurs ; sous 100 decks, marge d'erreur > ±10 points.
 - Première mesure (6000 parties, palier 5) : aucune erreur ; le camp qui révèle en premier gagne 48,9 % ; victoire par rareté 48,9 à 55 % (ultra-légendaires 55 %), par faction 48,2 à 52 % (Jugement en tête).
 
+## Filtres de la collection (12 octobre 2026)
+
+L'écran Collection (= constructeur de deck, `deckHTML`) a 4 rangées de puces qui se **combinent** : faction (`deckFilter`), coût 0 à 6+ (`costFilter`), rareté C/R/E/L/Ultra (`rarFilter`), possession Toutes/Possédées/Manquantes (`ownFilter`). `collMatch(id)` est le seul prédicat ; compteur « N cartes affichées » et bouton « Réinitialiser les filtres » dès qu'un filtre est actif ; sur téléphone les rangées défilent en largeur (une ligne chacune). Les filtres vivent le temps de la session (variables d'`sons-effets.js`). Testés dans `outils/tests-scenarios.js`.
+
 ## Décors saisonniers de l'accueil
 
 - `seasonDeco("fan"|"bar")` : Halloween = toiles d'araignée dans les coins de la vitrine (derrière les cartes), araignée qui se balance (devant), deux citrouilles qui luisent posées sur le bandeau de saison ; Noël = guirlande lumineuse sur la vitrine et houx sur le bandeau ; Nouvel An = guirlande dorée. Dessins SVG intégrés, animations par transform/opacité, coupées par `prefers-reduced-motion`.

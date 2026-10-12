@@ -256,14 +256,30 @@ function profileHTML(){
 }
 
 /* --- deck --- */
+/* Filtres de la collection : faction, coût, rareté et possession se combinent */
+const COST_KEYS=["0","1","2","3","4","5","6"], RAR_KEYS=["C","R","E","L","U"];
+const filtersOn=()=>deckFilter!=="all"||costFilter!=="all"||rarFilter!=="all"||ownFilter!=="all";
+function collMatch(id){
+  const d=CARDS[id];
+  if(deckFilter!=="all"&&d.fac!==deckFilter) return false;
+  if(costFilter!=="all"&&(costFilter==="6"?d.cost<6:d.cost!==+costFilter)) return false;
+  if(rarFilter!=="all"&&d.r!==rarFilter) return false;
+  if(ownFilter==="owned"&&!P.owned.includes(id)) return false;
+  if(ownFilter==="missing"&&P.owned.includes(id)) return false;
+  return true;
+}
 function filterChips(){
-  const opts=[["all","Toutes"],...Object.entries(FAC).map(([k,v])=>[k,v.n])];
-  return `<div class="chips">${opts.map(([k,n])=>`<button class="chipbtn" aria-pressed="${deckFilter===k}" data-act="filter" data-f="${k}" ${k!=="all"?`style="--cc:${FAC[k].c}"`:""}>${n}</button>`).join("")}</div>`;
+  const chip=(act,cur,k,label,col)=>`<button class="chipbtn" aria-pressed="${cur===k}" data-act="${act}" data-f="${k}" ${col?`style="--cc:${col}"`:""}>${label}</button>`;
+  const row=(label,html)=>`<div class="fgroup"><span class="flabel">${label}</span><div class="chips">${html}</div></div>`;
+  return row("Faction",[["all","Toutes"],...Object.entries(FAC).map(([k,v])=>[k,v.n])].map(([k,n])=>chip("filter",deckFilter,k,n,k!=="all"&&FAC[k].c)).join(""))
+    +row("Coût",chip("fcost",costFilter,"all","Tous")+COST_KEYS.map(k=>chip("fcost",costFilter,k,k==="6"?"6+":k)).join(""))
+    +row("Rareté",chip("frar",rarFilter,"all","Toutes")+RAR_KEYS.map(k=>chip("frar",rarFilter,k,k==="U"?"Ultra":RAR[k].n,RAR[k].c)).join(""))
+    +row("Possession",[["all","Toutes"],["owned","Possédées"],["missing","Manquantes"]].map(([k,n])=>chip("fown",ownFilter,k,n)).join(""));
 }
 function deckHTML(){
   const sorted=[...P.deck].sort((a,b)=>CARDS[a].cost-CARDS[b].cost||CARDS[a].pow-CARDS[b].pow);
   const slots=[]; for(let i=0;i<ECO.deckSize;i++) slots.push(sorted[i]?thumb(sorted[i],`data-act="deckout" data-id="${sorted[i]}" data-lp="z${sorted[i]}"`):`<div class="thumb empty"></div>`);
-  const coll=POOL.filter(id=>SHOWN(id)&&(deckFilter==="all"||CARDS[id].fac===deckFilter)).sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].cost-CARDS[b].cost||CARDS[a].name.localeCompare(CARDS[b].name));
+  const coll=POOL.filter(id=>SHOWN(id)&&collMatch(id)).sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].cost-CARDS[b].cost||CARDS[a].name.localeCompare(CARDS[b].name));
   const avg=P.deck.length?(P.deck.reduce((a,id)=>a+CARDS[id].cost,0)/P.deck.length).toFixed(1):"–";
   const full=P.deck.length>=ECO.deckSize;
   const facCount=Object.keys(FAC).map(k=>[k,P.deck.filter(id=>CARDS[id].fac===k).length]).filter(x=>x[1]);
@@ -282,9 +298,10 @@ function deckHTML(){
   <section class="sec">
     <h2>Toutes les cartes · ${P.owned.length}/${avail().length}</h2>
     ${filterChips()}
+    ${filtersOn()?`<div class="fresult"><span>${coll.length} carte${coll.length>1?"s":""} affichée${coll.length>1?"s":""}</span><button class="ghost small" data-act="freset">Réinitialiser les filtres</button></div>`:""}
     <p class="hint">Touche une carte pour l'ajouter au deck ou l'en retirer, garde le doigt dessus pour la voir en grand. Les cartes grisées restent à trouver.</p>
     <div class="grid">${gridArt(()=>coll.map(id=>{ if(!P.owned.includes(id)) return lockedCard(id); const inn=P.deck.includes(id); const off=!inn&&full;
-      return `<button class="pick ${inn?"in":""} ${off?"off":""}" data-act="toggle" data-id="${id}" data-lp="z${id}" aria-pressed="${inn}">${inn?`<span class="tag">Dans le deck</span>`:""}${fullCard(id)}</button>`; }).join(""))||`<p class="hint">Aucune carte de cette faction pour l'instant.</p>`}</div>
+      return `<button class="pick ${inn?"in":""} ${off?"off":""}" data-act="toggle" data-id="${id}" data-lp="z${id}" aria-pressed="${inn}">${inn?`<span class="tag">Dans le deck</span>`:""}${fullCard(id)}</button>`; }).join(""))||`<p class="hint">${filtersOn()?"Aucune carte ne correspond à ces filtres.":"Aucune carte de cette faction pour l'instant."}</p>`}</div>
   </section>
   ${locsHTML()}
   <button class="play" data-act="play" ${deckReady()?"":"disabled"}>${deckReady()?"Jouer avec ce deck":`Encore ${12-P.deck.length} carte${12-P.deck.length>1?"s":""} à ajouter`}</button>`;
@@ -797,6 +814,10 @@ document.addEventListener("click", e=>{
     case "tuto": sheet=null; sfx("click"); startTutorial(); return;
     case "buy": buyPack(el.dataset.pid); return;
     case "filter": deckFilter=el.dataset.f; sfx("click"); render(); return;
+    case "fcost": costFilter=el.dataset.f; sfx("click"); render(); return;
+    case "frar": rarFilter=el.dataset.f; sfx("click"); render(); return;
+    case "fown": ownFilter=el.dataset.f; sfx("click"); render(); return;
+    case "freset": deckFilter=costFilter=rarFilter=ownFilter="all"; sfx("click"); render(); return;
     case "toggle": { const id=el.dataset.id;
       const clash=P.deck.find(x=>x!==id&&charOf(x)===charOf(id)&&!(["yarden","yarden_d"].includes(x)&&["yarden","yarden_d"].includes(id)));
       if(P.deck.includes(id)){ P.deck=P.deck.filter(x=>x!==id); deckMsg=pruneUL(); sfx("undo"); }

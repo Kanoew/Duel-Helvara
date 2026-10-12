@@ -149,7 +149,7 @@
     "Avatar":"Avatar",
     /* collection */
     "12/12 · actif":"12/12 · active", "Renommer":"Rename", "Changer l'illustration":"Change the art", "Nom du deck":"Deck name",
-    "Toutes":"All", "Dans le deck":"In the deck", "À trouver dans un pack":"Found in packs", "Bientôt":"Soon",
+    "Toutes":"All", "Tous":"All", "Faction":"Faction", "Coût":"Cost", "Rareté":"Rarity", "Possession":"Owned", "Possédées":"Owned", "Manquantes":"Missing", "Ultra":"Ultra", "Réinitialiser les filtres":"Reset filters", "Aucune carte ne correspond à ces filtres.":"No card matches these filters.", "Dans le deck":"In the deck", "À trouver dans un pack":"Found in packs", "Bientôt":"Soon",
     "Touche une carte pour l'ajouter au deck ou l'en retirer, garde le doigt dessus pour la voir en grand. Les cartes grisées restent à trouver.":"Tap a card to add it to the deck or remove it, hold your finger on it to see it full-size. Greyed-out cards are still to be found.",
     "Aucune carte de cette faction pour l'instant.":"No cards from this faction yet.", "Jouer avec ce deck":"Play with this deck",
     "Les lieux d'Helvara":"The locations of Helvara", "Trois lieux par partie, révélés aux tours 1, 2 et 3.":"Three locations per game, revealed on turns 1, 2 and 3.",
@@ -325,6 +325,7 @@
     [/^Édition limitée · (\d+) cartes$/, (m,n)=>`Limited edition · ${n} cards`],
     [/^(\d+) cartes$/, (m,n)=>`${n} cards`],
     [/^(.+) · doublon \+(\d+)$/, (m,a,v)=>`${a} · duplicate +${v}`],
+    [/^(\d+) cartes? affichées?$/, (m,n)=>`${n} ${s(n,"card")} shown`],
     [/^(\d+) cartes? de ces raretés à trouver · au moins une nouvelle par pack$/, (m,n)=>`${n} ${s(n,"card")} of these rarities to find · at least one new per pack`],
     [/^Il manque (\d+) CHF$/, (m,n)=>`${n} CHF short`],
     [/^Dès le (.+)$/, (m,d)=>`From ${d}`],
