@@ -43,6 +43,7 @@
     [/^absorbe (.+), \+(\d+)$/, (m,a,v)=>`absorbs ${a}, +${v}`],
     [/^copie (-?\d+)$/, (m,v)=>`copies ${v}`],
     [/^reflète (-?\d+)$/, (m,v)=>`reflects ${v}`],
+    [/^disperse (\d+) cartes?, −1 à (\d+)$/, (m,n,w)=>`scatters ${n} ${s(n,"card")}, −1 to ${w}`],
     [/^disperse (\d+) cartes?$/, (m,n)=>`scatters ${n} ${s(n,"card")}`],
     [/^chacun défausse sa plus chère : (.+)$/, (m,a)=>`each discards their most expensive: ${a.replace(/ et /g," and ")}`],
     [/^défausse (.+), \+(\d+)$/, (m,a,v)=>`discards ${a.replace(/ et /g," and ")}, +${v}`],

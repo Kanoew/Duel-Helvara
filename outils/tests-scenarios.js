@@ -1,0 +1,110 @@
+#!/usr/bin/env node
+/* Duel d'Helvara : tests de scénarios fixes (quelques secondes), avec le vrai moteur dans Chromium, sans réseau.
+   Usage : node outils/tests-scenarios.js          (code de sortie 1 si un test échoue)
+   Chaque scénario construit un plateau précis, joue le tour pour de vrai (resolveTurn) et vérifie la règle. */
+const fs = require("fs"), path = require("path"), http = require("http");
+const ROOT = path.resolve(__dirname, "..");
+function loadPlaywright() {
+  for (const p of ["playwright", "/opt/node-tools/node_modules/playwright"]) { try { return require(p); } catch (e) { /* suivant */ } }
+  console.error("Playwright introuvable (voir CLAUDE.md, section Tests)."); process.exit(1);
+}
+const { chromium } = loadPlaywright();
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".jpg": "image/jpeg", ".png": "image/png", ".mp3": "audio/mpeg", ".json": "application/json" };
+
+/* Tout ce bloc tourne DANS la page du jeu ; il renvoie la liste [nom, ok, détail]. */
+async function inPage() {
+  const res = []; const T = (nom, ok, detail) => res.push([nom, !!ok, detail === undefined ? "" : String(detail)]);
+  for (const f of ["render", "sfx", "endCine", "endMusic", "save", "lbPublish", "pushHist", "qProg", "qEnd", "music", "cardVfx", "fusionCine"]) { if (typeof window[f] === "function") window[f] = () => {}; }
+  window.factionCine = () => Promise.resolve();
+  const plain = Object.keys(CARDS).filter(id => !CARDS[id].token && !CARDS[id].fx && !ULof(id) && CARDS[id].pow <= 3 && !CARDS[id].base);   /* cartes sans effet : puissance fixée à la main */
+  const fresh = () => {
+    P.owned = Object.keys(CARDS).filter(id => !CARDS[id].token); P.deck = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)).slice(0, 12); P.lv = 30;
+    newGame(); quiet = true; S.tut = false; S.turn = 3; S.locs.forEach(L => { L.rev = true; L.id = "tour"; });
+    for (const s of ["p", "e"]) S.board[s] = [[], [], []]; S.hand = { p: [], e: [] }; S.discardPile = { p: [], e: [] }; S.graveyard = { p: [], e: [] }; S.discarded = 0; S.destroyed = 0;
+  };
+  const put = (s, li, id, pow) => { const c = mk(id); c.rev = true; if (pow != null) c.pow = pow; S.board[s][li].push(c); return c; };
+  const card = (id, pow) => { const c = mk(id); if (pow != null) c.pow = pow; return c; };
+  const find = (s, id) => { for (let li = 0; li < 3; li++) for (const c of S.board[s][li]) if (c.id === id) return c; return null; };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  /* 1. Nike + Aphrodite : 2 cartes à 1, Nike, Aphrodite au tour 6 → Nike finit à 9 */
+  fresh(); S.turn = 6; { const a = card(plain[0], 1), b = card(plain[1], 1), n = card("nike"), ap = card("aphrodite"); S.hand.p = [a, b, n, ap];
+    await resolveTurn([a, b, n, ap].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Nike + Aphrodite : Nike finit à 9", nk && nk.pow === 9, nk && nk.pow); }
+  /* 1b. Aphrodite posée AVANT Nike : elle ne compte pas parmi les cartes jouées avant Nike */
+  fresh(); S.turn = 5; { const a = card(plain[0], 1), ap = card("aphrodite"), n = card("nike"); S.hand.p = [a, ap, n];
+    await resolveTurn([a, ap, n].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Aphrodite posée avant Nike : Nike +2 seulement", nk && nk.pow === 3, nk && nk.pow); }
+  /* 2. Aphrodite seule en début de tour → aucun effet */
+  fresh(); S.turn = 4; { const ap = card("aphrodite"); S.hand.p = [ap]; const before = JSON.stringify(S.board);
+    await resolveTurn([{ c: ap, li: 0 }], [], false); const a = find("p", "aphrodite"); T("Aphrodite seule : aucun effet", a && a.pow === 2 && S.board.p.flat().length === 1 && !before.includes('"id":"aphrodite"'), a && a.pow); }
+  /* 2b. Aphrodite rejoue depuis le lieu de la carte d'origine (pas le sien), jamais une autre Aphrodite */
+  fresh(); S.turn = 4; { const w1 = put("e", 1, plain[2], 1), w2 = put("e", 1, plain[3], 1), decoy = put("e", 2, plain[4], 1), g = card("rusalka");   /* Rusalka détruit la plus faible carte adverse (≤ 2) du lieu où elle est */
+    const ap = card("aphrodite"), ap2 = card("aphrodite"); S.hand.p = [g, ap, ap2];
+    await resolveTurn([{ c: g, li: 1 }, { c: ap, li: 2 }, { c: ap2, li: 2 }], [], false);
+    T("Aphrodite rejoue depuis le lieu d'origine (pas le sien), 2e Aphrodite ne rejoue pas la 1re", S.board.e[1].length === 0 && S.board.e[2].includes(decoy) && S.destroyed === 2, `lieu d'origine : ${S.board.e[1].length} restante(s), leurre intact : ${S.board.e[2].includes(decoy)}, détruites ${S.destroyed}`); }
+  /* 3. Prométhée garde de l'énergie, puis Lilith + Aphrodite le même tour → deux cartes volées */
+  fresh(); S.turn = 3; { put("p", 1, "promethee"); S.bonus = { p: 4, e: 0 }; startTurn(); /* tour 4, énergie 8 */
+    const e1 = put("e", 0, plain[2], 4), e2 = put("e", 0, plain[3], 3), li = card("lilith"), ap = card("aphrodite"); S.hand.p = [li, ap];
+    const okE = S.energy === 8; let st = canStage(li, 0); if (st) S.staged.push({ c: li, li: 0 }); const st2 = canStage(ap, 0); if (st2) S.staged.push({ c: ap, li: 0 });
+    const noRes = (() => { fresh(); S.turn = 3; startTurn(); const l2 = card("lilith"), a2 = card("aphrodite"); S.hand.p = [l2, a2]; if (!canStage(l2, 0)) return true; S.staged.push({ c: l2, li: 0 }); return !canStage(a2, 0); })();
+    fresh(); S.turn = 3; put("p", 1, "promethee"); S.bonus = { p: 4, e: 0 }; startTurn(); const f1 = put("e", 0, plain[2], 4), f2 = put("e", 0, plain[3], 3), L2 = card("lilith"), A2 = card("aphrodite"); S.hand.p = [L2, A2];
+    S.staged = []; S.staged.push({ c: L2, li: 0 }); const canA = canStage(A2, 0); S.staged.push({ c: A2, li: 0 });
+    await resolveTurn(S.staged.slice(), [], false);
+    const stolen = S.board.p[0].filter(x => x === f1 || x === f2).length;
+    T("Prométhée : Lilith + Aphrodite tiennent dans l'énergie gardée (et pas sans elle)", okE && st && st2 && noRes && canA, `énergie ${okE ? 8 : "?"}, sans réserve impossible : ${noRes}`);
+    T("Lilith + Aphrodite : deux cartes volées", stolen === 2 && S.board.e[0].length === 0, `${stolen} cartes passées de mon côté`); }
+  /* 4. Styx : Nike à 5 détruite par un effet adverse → revient en main à 5, rejouée sa Révélation se redéclenche */
+  fresh(); S.turn = 4; { put("p", 0, "styx"); const nk = put("p", 0, "nike", 5); SRC = { s: "e", cost: 3 }; const ok = destroy("p", 0, nk); SRC = null;
+    const inHand = S.hand.p.includes(nk), grave = S.graveyard.p.includes("nike");
+    T("Styx : Nike (5) détruite par l'adversaire revient en main à 5", ok && inHand && nk.pow === 5 && !nk.rev && !grave && !S.board.p[0].includes(nk), `main ${inHand}, puissance ${nk.pow}, cimetière ${grave}`);
+    T("Styx : la main affiche la puissance modifiée", handHTML().includes(">5</span>") && handHTML().includes("pw up"), "");
+    const x = card(plain[0], 1); S.hand.p.push(x); S.turn = 5;
+    await resolveTurn([{ c: x, li: 1 }, { c: nk, li: 1 }], [], false);
+    T("Styx : Nike rejouée, sa Révélation se redéclenche (5 + 2)", nk.rev && nk.pow === 7, nk.pow); }
+  /* 4b. Styx ne ramène PAS une carte détruite par ton propre effet, ni par la Faille (décision de Jordan) */
+  fresh(); S.turn = 4; { put("p", 0, "styx"); const nk = put("p", 0, "nike", 5); SRC = { s: "p", cost: 3 }; destroy("p", 0, nk); SRC = null;
+    T("Styx : destruction par ton propre effet → cimetière, pas la main", !S.hand.p.includes(nk) && S.graveyard.p.includes("nike"), ""); }
+  fresh(); S.turn = 4; { put("p", 0, "styx"); const nk = put("p", 0, "nike", 5); SRC = null; destroy("p", 0, nk);
+    T("Styx : destruction sans source de carte (Faille) → cimetière", !S.hand.p.includes(nk) && S.graveyard.p.includes("nike"), ""); }
+  fresh(); S.turn = 4; { put("p", 0, "styx"); const n1 = put("p", 0, "nike", 4), bo = put("p", 0, "bourreau"); const fi = card("ficelle"); S.hand.p = [fi];
+    await resolveTurn([{ c: fi, li: 0 }], [], false);
+    T("Styx + Ficelle Dévorante : cartes Jugement détruites par la Ficelle ne reviennent pas", !S.hand.p.includes(n1) && !S.hand.p.includes(bo) && S.graveyard.p.includes("nike") && S.graveyard.p.includes("bourreau"), `main ${S.hand.p.length}, cimetière ${S.graveyard.p.join(",")}`); }
+  fresh(); S.turn = 4; { put("e", 0, "styx"); const bo = put("e", 0, "bourreau"); SRC = { s: "p", cost: 3 }; destroy("e", 0, bo); SRC = null;
+    T("Styx adverse : sa carte Jugement détruite par MON effet revient dans SA main", S.hand.e.includes(bo) && !S.graveyard.e.includes("bourreau"), ""); }
+  /* 5. Set : 1, 2 et 3 cartes adverses, lieux pleins */
+  for (const k of [1, 2, 3]) { fresh(); S.turn = 4; const es = []; for (let i = 0; i < k; i++) es.push(put("e", 0, plain[i], 3)); const st = card("set"); S.hand.p = [st];
+    await resolveTurn([{ c: st, li: 0 }], [], false); const moved = es.filter(x => !S.board.e[0].includes(x)), weak = moved.filter(x => x.pow === 2).length;
+    T(`Set : ${k} carte(s) adverse(s) → ${Math.min(2, k)} dispersée(s), −1 chacune`, moved.length === Math.min(2, k) && weak === moved.length && es.filter(x => S.board.e[0].includes(x)).every(x => x.pow === 3), `dispersées ${moved.length}, −1 : ${weak}`); }
+  fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3)]; for (const li of [1, 2]) for (let i = 0; i < 4; i++) put("e", li, plain[4 + i], 2);
+    const st = card("set"); S.hand.p = [st]; await resolveTurn([{ c: st, li: 0 }], [], false);
+    T("Set : lieux pleins → rien ne bouge, rien ne perd 1", es.every(x => S.board.e[0].includes(x) && x.pow === 3), ""); }
+  fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; for (let i = 0; i < 4; i++) put("e", 1, plain[4 + i], 2); put("e", 2, plain[9], 2); put("e", 2, plain[10], 2); put("e", 2, plain[11], 2);
+    const st = card("set"); S.hand.p = [st]; await resolveTurn([{ c: st, li: 0 }], [], false);
+    const moved = es.filter(x => !S.board.e[0].includes(x)); T("Set : seule place restante dans un lieu → au plus 1 carte déplacée", moved.length === 1 && S.board.e[2].length === 4 && moved[0].pow === 2, `déplacées ${moved.length}`); }
+  /* 6. Prométhée + Pandore : l'énergie gardée est dépensée et comptée (+2 par énergie) */
+  fresh(); S.turn = 0; startTurn(); { const pr = card("promethee"); S.hand.p = [pr]; await resolveTurn([{ c: pr, li: 0 }], [], false);       /* tour 1 : Prométhée (coût 1) */
+    await resolveTurn([], [], false);                                                                                                        /* tour 2 : rien joué → 2 gardées */
+    const e3 = S.energy; const pd = card("pandore"); S.hand.p = [pd]; await resolveTurn([{ c: pd, li: 0 }], [], false);                    /* tour 3 : énergie 3 + 2 */
+    T("Prométhée + Pandore : énergie gardée comptée au tour 3 (5)", e3 === 5, e3);
+    T("Prométhée + Pandore : +2 par énergie dépensée (2 restantes → 4)", pd.pow === 4, pd.pow);
+    T("Prométhée + Pandore : l'énergie dépensée n'est pas gardée une 2e fois", S.energy === 4, S.energy); }
+  /* Rappels des séries précédentes */
+  fresh(); S.turn = 6; S.energy = 12; { const n = card("nemesis"); S.hand.p = [n]; const a = canStage(n, 0); S.turn = 5; T("Nemesis : injouable au tour 6, jouable au tour 5", !a && canStage(n, 0), ""); }
+  fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }
+  return res;
+}
+
+(async () => {
+  const srv = http.createServer((q, r) => { let f = path.join(ROOT, decodeURIComponent(q.url.split("?")[0])); if (f.endsWith("/")) f += "index.html";
+    fs.readFile(f, (e, d) => { if (e) { r.writeHead(404); r.end(); return; } r.writeHead(200, { "content-type": TYPES[path.extname(f)] || "application/octet-stream" }); r.end(d); }); }).listen(0);
+  const port = srv.address().port;
+  const browser = await chromium.launch(); const page = await browser.newPage(); const errors = [];
+  page.on("pageerror", e => errors.push(e.message));
+  await page.route("**/vendor/supabase.js*", r => r.fulfill({ contentType: "text/javascript", body: "window.supabase=undefined" }));
+  await page.addInitScript(() => { window.__today = "2026-12-31"; });
+  await page.goto(`http://127.0.0.1:${port}/index.html`); await page.waitForFunction(() => typeof newGame === "function" && typeof aiPlan === "function");
+  let res; try { res = await page.evaluate(inPage); } catch (e) { console.error("Plantage du scénario : " + String(e.message).split("\n").slice(0, 3).join(" | ")); await browser.close(); srv.close(); process.exit(1); }
+  let bad = 0; for (const [n, ok, d] of res) { if (!ok) bad++; console.log(`${ok ? "ok      " : "PAS OK  "} ${n}${d && !ok ? "  → " + d : ""}`); }
+  if (errors.length) { bad++; console.log("PAS OK   erreurs de la page : " + errors.slice(0, 3).join(" | ")); }
+  console.log(`\n${res.length - bad} sur ${res.length} scénarios valides.`);
+  await browser.close(); srv.close(); process.exit(bad ? 1 : 0);
+})();

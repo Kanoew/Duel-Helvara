@@ -539,8 +539,8 @@ function handHTML(){
   return S.hand.p.map(c=>{
     const d=CARDS[c.id], any=[0,1,2].some(li=>canStage(c,li));
     const cheapest=Math.min(...[0,1,2].map(li=>costOf("p",c,li,S.staged.length===0)));
-    return `<button class="hc${d.r==="U"?" holo":""}${rc(d)}${S.sel===c.uid?" sel":""}${any||S.busy?"":" no"}${S.tut&&tutReq().some(([id])=>id===c.id)&&!S.staged.some(x=>x.c.id===c.id)?" tutreq":""}" data-act="hand" data-uid="${c.uid}" data-lp="c${c.uid}" aria-label="${d.name}, coût ${d.cost}, puissance ${d.pow}">
-      ${art(c.id)}<span class="cost${cheapest<d.cost?" cut":""}">${cheapest}</span><span class="nm">${d.name}</span><span class="pw">${d.pow}</span></button>`;
+    return `<button class="hc${d.r==="U"?" holo":""}${rc(d)}${S.sel===c.uid?" sel":""}${any||S.busy?"":" no"}${S.tut&&tutReq().some(([id])=>id===c.id)&&!S.staged.some(x=>x.c.id===c.id)?" tutreq":""}" data-act="hand" data-uid="${c.uid}" data-lp="c${c.uid}" aria-label="${d.name}, coût ${d.cost}, puissance ${c.pow}">
+      ${art(c.id)}<span class="cost${cheapest<d.cost?" cut":""}">${cheapest}</span><span class="nm">${d.name}</span><span class="pw ${c.pow>d.pow?"up":c.pow<d.pow?"down":""}">${c.pow}</span></button>`;
   }).join("")||`<div class="m" style="color:var(--mist);padding:20px 4px">Main vide.</div>`;
 }
 /* Retour facultatif et discret en fin de partie : 👍 / 👎 / « Une carte m'a paru injuste » (puis on choisit la carte). */
@@ -617,7 +617,7 @@ function gzHTML(){
       <div class="zoominfo"><div class="t">${L.rev?d.name:"Lieu inconnu"}</div><p>${L.rev?d.fx:`Il sera révélé au début du tour ${li+1}.`}${L.stopped?" <b>Effet arrêté par Perséphone.</b>":""}${L.locked?" <b>Verrouillé par Vritra : plus personne ne peut y jouer.</b>":""}</p>
       <div class="m">Puissance : <span style="color:var(--me)">toi ${total("p",li)}</span> · <span style="color:var(--foe)">adversaire ${total("e",li)}</span></div></div></div></div>`; }
   const uid=+gz.slice(1), f=findAny(uid); if(!f){ return ""; } const c=f.c, d=CARDS[c.id];
-  const onBoard=f.li!=null&&c.rev, cur=onBoard?cardPow(f.s,f.li,c):d.pow, cont=onBoard?cur-c.pow:0;
+  const onBoard=f.li!=null&&c.rev, cur=onBoard?cardPow(f.s,f.li,c):c.pow, cont=onBoard?cur-c.pow:0;
   const mods=(c.mods||[]);
   return `<div class="veil" data-act="gzclose"><div class="zoomwrap">${fullCard(c.id,"big",cur)}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m">Coût ${d.cost} · puissance de base ${d.pow}${onBoard?` · actuelle <b>${cur}</b>`:""}</div>${d.fx?`<p>${d.fx}</p>`:""}

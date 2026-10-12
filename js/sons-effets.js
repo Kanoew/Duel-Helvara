@@ -393,7 +393,7 @@ function factionCine(id,s,li){ const f=FACTION_CINE[id]; return f?f(id,s,li):Pro
 function nikeCine(id,s,li){
   return new Promise(done=>{
     const nk=S.board[s][li].find(c=>c.id===id&&!c.rev)||S.board[s][li].find(c=>c.id===id);
-    const plays=(S.turnPlays&&S.turnPlays[s])||[], k=plays.indexOf(nk), before=k>0?plays.slice(0,k):[], n=before.length;
+    const plays=(S.turnPlays&&S.turnPlays[s])||[], k=plays.indexOf(nk), before=(k>0?plays.slice(0,k):[]).filter(x=>charOf(x.id)!=="aphrodite"&&x.id!=="ulaph"), n=before.length;
     const elOf=c=>c&&document.querySelector(`[data-cu="${c.uid}"]`);
     const tEl=elOf(nk)||document.querySelector(`.loc[data-li="${li}"]`), tr=tEl&&tEl.getBoundingClientRect();
     if(!tr||!tr.width){ done(); return; }

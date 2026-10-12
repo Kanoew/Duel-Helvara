@@ -40,7 +40,8 @@ Réponses en **français**.
 | `vendor/supabase.js` | Bibliothèque Supabase en local (le CDN est bloqué) |
 | `README.md` | Présentation du jeu sur GitHub (français et anglais), lien de jeu et Discord |
 | `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor |
-| `outils/equilibrage.js`, `rapport-cartes.md` | Outil d'équilibrage (IA contre IA avec le vrai moteur, hors du jeu) et son rapport |
+| `outils/equilibrage.js`, `rapport-cartes.md`, `rapport-cible.md` | Outil d'équilibrage (IA contre IA avec le vrai moteur, hors du jeu), son rapport complet et son rapport ciblé (`--cartes`) |
+| `outils/tests-scenarios.js` | Tests de scénarios fixes (quelques secondes, `node outils/tests-scenarios.js`) : Nike + Aphrodite, Styx, Set, Prométhée + Pandore… **À relancer après toute modification du moteur** |
 | `images/` | Illustrations des cartes (`<id>.jpg`) |
 | `images/avatars/` | Portraits carrés (`<id>.jpg`) |
 | `images/mini/` | Illustrations réduites pour les grilles (360 × 540) |
@@ -275,7 +276,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - Prométhée garde l'énergie non dépensée (10 maximum).
 - Pandore la dépense (+1 de puissance par énergie).
 - Bia coupe la réserve adverse.
-- Styx donne +3 à Nike et à Bia, et rend ses cartes Jugement indestructibles dans son lieu.
+- Styx donne +3 à Nike et à Bia ; une carte Jugement de son camp détruite dans son lieu **par un effet adverse** revient dans la main (voir « Décisions d'équilibrage », 2e série).
 - Nike : +2 par carte jouée avant elle ce tour. Elle se **gagne dans le Journal des factions** (50 parties jouées avec au moins 8 cartes Jugement, décision de Jordan du 12 octobre ; avant : 7 autres cartes Jugement en collection), et se joue avec 8 cartes Jugement dans le deck, elle comprise.
 
 ---
@@ -287,7 +288,7 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - **Nemesis** 5/−5 : ne peut pas être jouée au tour 6 (`banned()`, testée par `canStage` et `aiPlan`, donc grisée en main et refusée même avec de l'énergie en réserve). Continu inchangé, deux Nemesis s'annulent.
 - **Balor** 6/5 (Rare) : −3 à **deux** cartes adverses différentes au hasard ici (une seule carte adverse : −3 une fois).
 - **Pandore** 3/0 : dépense toute l'énergie restante (réserve de Prométhée comprise), **+2** par énergie dépensée. L'IA la joue en dernier (`late`), et la simulation de l'IA calcule `S.unspent`.
-- **Aphrodite** coût 4 ; **Le Sans-Voix** 2/4 ; **Fange** 3/3 ; **Le Mendiant de la Riponne** 0/2 (effets inchangés).
+- **Aphrodite** : voir la 2e série (coût 1) ; **Le Sans-Voix** 2/4 ; **Fange** 3/3 ; **Le Mendiant de la Riponne** 0/2 (effets inchangés).
 - **Qetesh du Nouvel An** 5/3 : « au début du tour suivant, charme la carte adverse la plus forte ici de **coût** 5 ou moins ». Marqueur `c.midnight` (tour du déclenchement, 🕛 sur la carte tant qu'il attend), `midnightCharm()` appelée par `startTurn()` avant la pioche ; rien si Qetesh n'est plus en jeu (ou a perdu ses effets) ; la cible est choisie au déclenchement. **Le +1 aux autres cartes est supprimé.**
 - **Qetesh X Jordan du Nouvel An** 6/4 : Révélation : charme la plus forte adverse **ici** de coût 5 ou moins. Continu : tes autres cartes **ici** ont +2 (plus de charme dans les 3 lieux, plus de +1 partout).
 - **Nyx X Oshun** 6/4 : détruit la plus forte adverse ici ; la moitié de sa puissance (arrondie au-dessus, prise au moment de la destruction) va à ta carte la plus faible **dans un autre lieu** (aucune carte ailleurs : bonus perdu).
@@ -296,6 +297,16 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - **Cartes de défausse (toujours cachées, 3/3 épiques provisoires, `rel`/`soon` à 2099)** : **Cronos** (Primordial) défausse les cartes de coût ≤ 1 de ta main, +2 chacune ; **Izanami** (Primordial) défausse ta carte la plus faible de ta main, Continu : tes cartes ressuscitées (`risen`) ont +2 ; **Loki** (Désir) : chaque joueur défausse la carte la plus chère de sa main (égalité : `gPick`).
 - **IA** : coûts et puissances estimés pour `ulnem`, `ulqetyar`, `ulhel`, `ulqetjor_r`, les résurrections, Cronos, Izanami, Loki (voir `place()`). Constat : à 6 d'énergie ces fusions (puissance 2-3) perdent le plus souvent contre deux cartes moins chères à égalité de simulation exacte ; l'IA les garde en main dans ~70 % des parties au tour 6 et ne les pose que lorsque c'est meilleur. Ce n'est donc plus un défaut de l'IA mais un signal d'équilibrage.
 - **Outil d'équilibrage** : `--inclure cronos,izanami,loki` rend jouables quelques cartes cachées (elles restent « pas sorties » dans le rapport). Rapport régénéré avec 6000 parties, graine 20261012.
+
+### 2e série (12 octobre 2026, cartes qui sortent jusqu'au 15 novembre) : même règle, ne pas revenir dessus sans l'accord de Jordan
+
+`BUILD` : `alpha-0.4`. Inchangées : Nike, Pandore, Prométhée, Seigneur de la marée noire, Messagère d'Hécate, et le reste des vagues du 1er et du 15 novembre.
+
+- **Aphrodite** 1/2, Épique : « rejoue la Révélation de la dernière carte que tu as révélée **ce tour**, où qu'elle soit ». `S.lastRev[côté]` est posé par `reveal()` (jamais par une Aphrodite, ni `ulaph`) et remis à zéro dans `resolveTurn()` ; l'effet est rejoué par `replayFx()` **depuis le lieu de la carte d'origine** (cherchée sur le plateau : absente → rien). Rien si aucune carte n'a été révélée avant elle. L'ordre de révélation suit les lieux (0, 1, 2) puis l'ordre de pose : une Aphrodite posée dans un lieu plus à gauche que sa cible est révélée avant elle. **Nike** compte les cartes jouées avant elle **sans les Aphrodite** (`isAph`) et se recalcule à chaque rejeu (1 + 1 + Nike + Aphrodite : Nike 1 + 4 + 4 = 9). IA : `late` (Pandore 3, Aphrodite 2, Nike 1), variantes où chaque carte passe juste avant Aphrodite, estimation selon la carte précédente, et `sim()` remet `S.lastRev` et `S.turnPlays` à jour.
+- **Lip Dentelle** 3/3 (gagne la puissance **actuelle** de la carte défaussée, `t.pow`), **Le Bourreau de la brèche** 3/4, **Médée** 4/4 : effets inchangés.
+- **Set** 5/4 : « disperse jusqu'à 2 cartes adverses d'ici, au hasard (`gShuffle`), vers les autres lieux s'il y a de la place ; chacune perd 1 ». Une carte sans place ailleurs reste et ne perd rien ; les cartes `fated` ne sont jamais choisies.
+- **Styx** 4/3, Légendaire : Continu : Nike et Bia +3 où qu'elles soient. **Quand une de tes cartes Jugement est détruite ici par un effet ADVERSE** (nuance de Jordan : sinon trop fort), elle **revient dans ta main** avec la puissance qu'elle avait (`styxReturn()`, via `entomb()` dans `destroy`, Nyx, Lilith, Ereshkigal ; main pleine : défausse). **Ne reviennent pas** : destruction par ton propre effet (Ficelle Dévorante, Nyx X Oshun sur ton camp…) ni par la Faille (pas de carte source : `SRC` nul). L'ancienne protection « indestructibles » (`styxSafe`) est supprimée. La main et l'agrandissement d'une carte en main affichent `c.pow` (vert/rouge si modifiée).
+- **Outils** : `node outils/equilibrage.js --cartes a,b,c --parties 1000` place 2 de ces cartes dans chaque deck des deux camps et écrit `rapport-cible.md` (sans toucher `rapport-cartes.md`) ; `node outils/tests-scenarios.js` (23 scénarios fixes). Mesure ciblée du 12 octobre (1000 parties, graine 20261012) : Aphrodite 47,7 %, Lip Dentelle 54,5 %, Bourreau 50,0 %, Médée 47,7 %, Set 49,6 %, Styx 47,3 % (Styx posée 19 % des parties seulement).
 
 ## Façon de travailler avec Jordan
 

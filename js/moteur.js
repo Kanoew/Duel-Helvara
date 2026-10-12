@@ -199,15 +199,23 @@ const fated=c=>c.id==="ananke"&&!c.neg;
 const noWeak=c=>((c.id==="ecorche"||c.id==="jordan")&&!c.neg)||c.noweak||c.ward||fated(c); /* l'Écorché, Jordan, le Tatoueur, Hel X Baldur */
 function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)||baldurSafe(s,c)) return false; c.pow-=n; return true; }
 /* Styx : les cartes Jugement de son côté, dans son lieu, ne peuvent pas être détruites */
-const styxSafe=(s,li,c)=>CARDS[c.id]&&CARDS[c.id].fac==="jugement"&&S.board[s][li].some(x=>live(x)&&x.id==="styx");
+/* Styx : une carte Jugement de son camp détruite ici par un effet ADVERSE revient en main, avec la puissance qu'elle avait.
+   (Un effet de son propre camp, comme la Ficelle Dévorante, ou la Faille ne la ramènent pas.) */
+function styxReturn(s,li,c){
+  if(!real(c)||CARDS[c.id].fac!=="jugement"||!SRC||SRC.s===s||!S.board[s][li].some(x=>live(x)&&x.id==="styx")) return false;
+  c.rev=false; c.neg=false; c.fresh=false; c.midnight=0; c.risen=false; delete c.charm; delete c.captive; delete c.ward;
+  if(S.hand[s].length<7) S.hand[s].push(c); else { S.discarded=(S.discarded||0)+1; piles(); S.discardPile[s].push(c.id); }
+  return true; }
+/* Une carte détruite va au cimetière (ou revient en main grâce à Styx) */
+const entomb=(s,li,c)=>{ if(!styxReturn(s,li,c)) bury(s,c); };
 /* Le Flon : une carte qui arrive ici par un déplacement gagne +2 */
 function flonHook(i,t){ if(locIs(i,"flon")){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Le Flon"}); } }
 /* Sauvabelin : aucune carte ne peut être détruite dans ce lieu, quelle que soit la source */
 const forest=li=>locIs(li,"sauvabelin");
-function destroy(s,li,c){ if(forest(li)||shielded(s,li)||c.ward||fated(c)||baldurSafe(s,c)||styxSafe(s,li,c)) return false; S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.destroyed++; bury(s,c); if(s==="e") S.killE=(S.killE||0)+1; danteHook(li); return true; }
+function destroy(s,li,c){ if(forest(li)||shielded(s,li)||c.ward||fated(c)||baldurSafe(s,c)) return false; S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.destroyed++; entomb(s,li,c); if(s==="e") S.killE=(S.killE||0)+1; danteHook(li); return true; }
 const nm=c=>CARDS[c.id].name;
 /* Le Cirque : mêmes protections que contre un affaiblissement, plus Uzume et Baldur (sans effet perdu), et les captives */
-const cirqueSafe=(s,li,c)=>shielded(s,li)||sunlit(s)||noWeak(c)||styxSafe(s,li,c)||(!c.neg&&(c.id==="uzume"||c.id==="baldur"))||!!(c.captive&&captorLive(c.captive));
+const cirqueSafe=(s,li,c)=>shielded(s,li)||sunlit(s)||noWeak(c)||(!c.neg&&(c.id==="uzume"||c.id==="baldur"))||!!(c.captive&&captorLive(c.captive));
 /* Dante : chaque carte détruite dans son lieu, des deux côtés, lui donne +1 */
 function danteHook(li){ for(const side of ["p","e"]) for(const d of S.board[side][li]) if(live(d)&&d.id==="dante"){ d.pow+=1; (d.mods=d.mods||[]).push({v:1,src:"Dante"}); log(`Dante · +1 (${who(side)})`); } }
 /* Médée : sa prochaine carte adverse jouée ici perd 2 (les deux suivantes avec Hécate) */
@@ -223,7 +231,9 @@ const JPARTNERS=new Set((()=>{ const out=[]; for(const u of ULS) if(u.req.some(r
 function reveal(s,li,c){
   const prevSrc=SRC; SRC={s,cost:CARDS[c.id].cost};
   try{ revealFx(s,li,c); } finally { SRC=prevSrc; }
+  if(!isAph(c)) (S.lastRev=S.lastRev||{p:null,e:null})[s]=c;   /* Aphrodite rejoue la dernière Révélation du tour */
 }
+const isAph=c=>charOf(c.id)==="aphrodite"||c.id==="ulaph";
 /* Rejouer la Révélation d'une carte déjà posée (Aphrodite) : ni Brigid, ni effets de lieu à la pose */
 const replayable=x=>x.rev&&!x.neg&&!CARDS[x.id].token&&charOf(x.id)!=="aphrodite"&&x.id!=="ulaph";
 function replayFx(s,li,x){ const prev=SRC; SRC={s,cost:CARDS[x.id].cost}; try{ revealFx(s,li,x,{replay:true}); } finally { SRC=prev; } }
@@ -253,12 +263,15 @@ function revealFx(s,li,c,opts={}){
     case "voleuse": { const t=gPick(S.hand[o]); if(t){ discard(o,t); note=`${who(o)} défausse ${nm(t)}`; snd="void"; } break; }
     case "sansvoix": if(S.turn<6){ (S.mute=S.mute||[]).push({s:o,li,t:S.turn+1}); note="silence au prochain tour"; snd="lock"; } break;
     case "chasseur": { const t=strongest(foes,o,li); if(t&&S.board[s][li].length<capOf(s,li)){ const e=mk(t.id); e.rev=true; e.fresh=true; e.neg=true; e.echo=true; e.pow=Math.max(0,pw(o,li,t))-(locIs(li,"tour")&&CARDS[t.id].pow>=5&&!CARDS[t.id].token?2:0); S.board[s][li].push(e); note=`Écho ${/^[aeiouyéèêâîh]/i.test(nm(t))?"d’":"de "}${nm(t)} (${pw(o,li,t)})`; snd="void"; } break; }
-    case "set": { let n=0; for(const t of targets.filter(x=>!fated(x))){ const sp=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(!sp.length) break; const i=gPick(sp); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); n++; } if(n){ note=`disperse ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
+    case "set": { let n=0, w=0; for(const t of gShuffle(targets.filter(x=>!fated(x))).slice(0,2)){ const sp=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(!sp.length) continue; const i=gPick(sp); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); n++;
+        if(weaken(o,i,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Set"}); w++; } }
+      if(n){ note=`disperse ${n} carte${n>1?"s":""}`+(w?`, −1 à ${w}`:""); snd="debuff"; } break; }
     case "maree": { let n=0; for(const t of targets.filter(x=>CARDS[x.id].cost<=2)) if(destroy(o,li,t)) n++; if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "brigid": S.forge[s]=1; note="la forge s'allume"; snd="buff"; break;
-    case "lipdentelle": { const t=S.hand[s].slice().sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; if(t){ discard(s,t); const v=Math.max(0,CARDS[t.id].pow); c.pow+=v; note=`défausse ${nm(t)}, +${v}`; snd="buff"; } break; }
+    case "lipdentelle": { const t=S.hand[s].slice().sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; if(t){ discard(s,t); const v=Math.max(0,t.pow); c.pow+=v; note=`défausse ${nm(t)}, +${v}`; snd="buff"; } break; }
     case "andraste": if(foes.length) buffSelf(2*foes.length); break;
-    case "aphrodite": { const t=S.board[s][li].filter(x=>x!==c&&replayable(x)&&CARDS[x.id].fac==="desir").sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost||pw(s,li,b)-pw(s,li,a))[0]; if(t){ replayFx(s,li,t); note=`rejoue ${nm(t)}`; snd="void"; } break; }
+    case "aphrodite": { const L=S.lastRev&&S.lastRev[s]; if(!L||L===c||!replayable(L)) break; const at=[0,1,2].find(i=>S.board[s][i].includes(L)); if(at==null) break;
+      replayFx(s,at,L); note=`rejoue ${nm(L)}`; snd="void"; break; }
     case "calypso": { const t=strongest(targets.filter(x=>!fated(x)),o,li); if(t&&!shielded(o,li)&&!sunlit(o)){ t.captive=c.uid; note=`${nm(t)} est captive`; snd="lock"; } break; }
     case "tefnut": { mates.forEach(x=>x.pow+=1); if(mates.length){ note=`+1 à ${mates.length} carte${mates.length>1?"s":""}`; snd="buff"; } break; }
     case "susanoo": { const t=weakest(mates.filter(x=>!fated(x)),s,li); const spots=[0,1,2].filter(i=>i!==li&&S.locs[i].rev&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)); if(t&&spots.length){ const i=gPick(spots); S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); t.fresh=true; t.pow+=3; (t.mods=t.mods||[]).push({v:3,src:"Susanoo"}); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}, +3`; snd="buff"; } if(onSide(s,"amaterasu")) buffSelf(2); break; }
@@ -276,17 +289,17 @@ function revealFx(s,li,c,opts={}){
     case "troll": { const t=weakest(mates,s,li); if(t&&destroy(s,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } break; }
     case "vritra": S.locs[li].locked=true; note="le lieu est verrouillé"; snd="lock"; break;
     case "yarden": if([0,1,2].every(i=>S.board[s][i].length>0)) buffSelf(4); break;
-    case "nyx": { const t=strongest(foes.filter(x=>!fated(x)),o,li); if(t&&!forest(li)){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.destroyed++; bury(o,t); if(o==="e") S.killE=(S.killE||0)+1; danteHook(li); note=`détruit ${nm(t)}`; snd="void"; } break; }
+    case "nyx": { const t=strongest(foes.filter(x=>!fated(x)),o,li); if(t&&!forest(li)){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.destroyed++; entomb(o,li,t); if(o==="e") S.killE=(S.killE||0)+1; danteHook(li); note=`détruit ${nm(t)}`; snd="void"; } break; }
     case "pandore": { const k=(S.unspent&&S.unspent[s])||0; if(k){ S.unspent[s]=0; buffSelf(2*k); note=`dépense ${k} énergie, +${2*k}`; } break; }
     case "athena": { const top=S.deck[s].slice(0,3); if(top.length&&S.hand[s].length<7){ const t=top.sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; S.deck[s].splice(S.deck[s].indexOf(t),1); S.hand[s].push(t); note=s==="p"?`prend ${nm(t)} en main`:"prend une carte en main"; } break; }
     case "bia": { const res=(S.bonus[o]||0)>0||((S.unspent&&S.unspent[o])>0&&S.board[o].some(col=>col.some(x=>live(x)&&x.id==="promethee")));
       if(res){ S.bonus[o]=0; if(S.biaBlock) S.biaBlock[o]=true; note="l'adversaire perd son énergie conservée"; snd="debuff"; }
       else { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Bia"}); note=`−1 à ${nm(t)}`; snd="debuff"; } } break; }
     case "ananke": { const t=total(o,li)+1, v=t-(cardPow(s,li,c)-c.pow); if(v!==c.pow){ (c.mods=c.mods||[]).push({v:v-c.pow,src:"Ananké"}); c.pow=v; } note=`prend la puissance adverse (${t-1}), +1`; snd="buff"; break; }
-    case "nike": { const k=Math.max(0,((S.turnPlays&&S.turnPlays[s])||[]).indexOf(c)); if(k) buffSelf(2*k); break; }
+    case "nike": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k); break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(6); snd=foes.length?"void":snd; break; }
     case "lilith": { const t=strongest(targets.filter(x=>!fated(x)&&pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
-      if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else if(forest(li)){ S.board[o][li].push(t); } else { S.destroyed++; bury(o,t); if(o==="e") S.killE=(S.killE||0)+1; danteHook(li); note=`${nm(t)} est détruite`; } snd="void"; } break; }
+      if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else if(forest(li)){ S.board[o][li].push(t); } else { S.destroyed++; entomb(o,li,t); if(o==="e") S.killE=(S.killE||0)+1; danteHook(li); note=`${nm(t)} est détruite`; } snd="void"; } break; }
     case "psyche": { const t=weakest(mates,s,li)||c; t.pow+=2; note=`+2 à ${nm(t)}`; snd="buff"; break; }
     case "tlazol": { let n=0; for(const x of mates) if(x.pow<CARDS[x.id].pow){ x.pow=CARDS[x.id].pow; n++; } if(n){ c.pow+=2*n; note=`purifie ${n} carte${n>1?"s":""}, +${2*n}`; snd="buff"; } break; }
     case "eris": { const t=strongest(targets.filter(x=>!fated(x)),o,li); const spots=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(t&&spots.length){ const i=gPick(spots); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
@@ -339,7 +352,7 @@ function revealFx(s,li,c,opts={}){
         let w=null,wi=0; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[s][i]) if(x.rev&&(!w||pw(s,i,x)<pw(s,wi,w))){ w=x; wi=i; }
         if(w&&v){ w.pow+=v; (w.mods=w.mods||[]).push({v,src:"Nyx X Oshun"}); note+=`, +${v} à ${nm(w)}`; } } break; }
     case "biblio": if(S.hand[s].length<S.hand[o].length){ draw(s); note="pioche 1 carte"; } break;
-    case "ereshkigal": { const vs=forest(li)?[]:foes.filter(x=>!fated(x)&&pw(o,li,x)<=3); if(vs.length){ S.board[o][li]=S.board[o][li].filter(x=>!vs.includes(x)); S.destroyed+=vs.length; vs.forEach(x=>{ bury(o,x); danteHook(li); }); if(o==="e") S.killE=(S.killE||0)+vs.length; note=`détruit ${vs.length} carte${vs.length>1?"s":""}`; snd="destroy"; } break; }
+    case "ereshkigal": { const vs=forest(li)?[]:foes.filter(x=>!fated(x)&&pw(o,li,x)<=3); if(vs.length){ S.board[o][li]=S.board[o][li].filter(x=>!vs.includes(x)); S.destroyed+=vs.length; vs.forEach(x=>{ entomb(o,li,x); danteHook(li); }); if(o==="e") S.killE=(S.killE||0)+vs.length; note=`détruit ${vs.length} carte${vs.length>1?"s":""}`; snd="destroy"; } break; }
     case "pele": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li]) if(x!==c&&x.rev&&weaken(side,li,x,2)) n++; if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "pele_r": { let n=0; for(let i=0;i<3;i++){ const t=strongest(S.board[o][i].filter(x=>x.rev&&!untargetable(s,o,x)),o,i); if(t&&weaken(o,i,t,2)) n++; } if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "ulpele_r": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
@@ -435,14 +448,17 @@ function aiPlan(me="e",tierOv){
     if(S.locs[li].locked||muted(me,li)||banned(c)||S.board[me][li].length+ctx.pend[li]>=capOf(me,li)) return null;
     const cost=costOf(me,c,li,ctx.first); if(cost>ctx.en) return null;
     const diff=diffs[li], foes=foesN[li], mates=matesN[li]+ctx.pend[li];
-    let pow=d.pow+NZ.get(c)[li], hit=0, adj=0;
+    let pow=c.pow+NZ.get(c)[li], hit=0, adj=0;
     if(locIs(li,"tour")&&d.pow>=5) pow+=2;
     if(locIs(li,"encheres")) pow+=2;
     if(locIs(li,"escaliers")&&d.fac==="helvara") pow+=2;
     if(locIs(li,"domaine")&&JPARTNERS.has(c.id)) pow+=2;
     if(HITS.includes(c.id)){ if(foes) hit+=2.5; else adj-=1; }
     if(NEEDS_MATES.includes(c.id)) pow+=mates?2:-1;
-    if(c.id==="aphrodite") pow+=S.board[me][li].some(x=>replayable(x)&&CARDS[x.id].fac==="desir")?3:-2;
+    if(c.id==="aphrodite"){ /* elle rejoue la dernière Révélation du tour : ici, la dernière carte posée avant elle */
+      const prev=ctx.plays.filter(x=>!isAph(x.c)); const L=prev[prev.length-1];
+      if(!L) adj-=3; else if(L.c.id==="nike") pow+=2*prev.length-2; else if(L.c.id==="pandore") adj-=1;
+      else if(HITS.includes(L.c.id)){ if(foesN[L.li]) hit+=2.5; else adj-=1; } else pow+=1.5; }
     if(c.id==="messagere"&&diff>0) pow+=3;
     if(locIs(li,"cirque")&&S.turn<4) pow+=d.pow<=2?2:-2;
     if(locIs(li,"sauvabelin")&&DESTROYERS.has(c.id)) adj-=4;
@@ -481,13 +497,14 @@ function aiPlan(me="e",tierOv){
     return {cost,pow,hit,adj};
   };
   /* ordre de pose : les préparatrices d'abord, Pandore et Nike en dernier, puis les plus chères */
-  const late=c=>c.id==="pandore"?2:c.id==="nike"?1:0, prepFor=(c,cs)=>(AI_PAY[c.id]||[]).some(p=>cs.some(x=>x.id===p.a))?1:0;
+  const late=c=>c.id==="pandore"?3:c.id==="aphrodite"?2:c.id==="nike"?1:0, prepFor=(c,cs)=>(AI_PAY[c.id]||[]).some(p=>cs.some(x=>x.id===p.a))?1:0;
   const order=cs=>cs.slice().sort((a,b)=>late(a)-late(b)||prepFor(a,cs)-prepFor(b,cs)||CARDS[b.id].cost-CARDS[a.id].cost);
   const winP=(add,hit)=>{ const p=[0,1,2].map(li=>{ let m=me0[li]+add[li]+meFut[li]-(op0[li]-hit[li]+opFut[li]); if(nemInv(li)) m=-m; return 1/(1+Math.exp(-1.6*m/sd)); });
     return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
   /* simulation exacte d'un plan sur une copie de la partie (Révélations comprises), sans son ni journal visibles */
   const sim=plays=>{ const keep=S, kq=quiet; let out=null;
     try{ quiet=true; S=structuredClone(keep);
+      S.lastRev={p:null,e:null}; S.turnPlays={...(S.turnPlays||{}),[me]:plays.map(({c})=>S.hand[me].find(y=>y.uid===c.uid)).filter(Boolean)};
       S.unspent={p:0,e:0,...(S.unspent||{})}; S.unspent[me]=Math.max(0,(me==="e"?S.energyE:S.energy)-plays.reduce((a,x,i)=>a+costOf(me,x.c,x.li,i===0),0));
       for(const {c,li} of plays){ const x=S.hand[me].find(y=>y.uid===c.uid); if(!x) continue; S.hand[me]=S.hand[me].filter(y=>y!==x); S.board[me][li].push(x); reveal(me,li,x); }
       if(keep.turn<6) for(const {c,li} of plays) if(c.id==="qetesh_r"){ const x=S.board[me][li].find(y=>y.uid===c.uid); if(x&&live(x)) midnightCharm(me,li,x); }
@@ -509,7 +526,13 @@ function aiPlan(me="e",tierOv){
     /* garder une carte pour plus tard : bonus aux tours 2 à 5 si elle attend sa préparation ou le tour 6 */
     const kept=hand.filter(c=>!cs.includes(c));
     if(S.turn>=2&&S.turn<=5&&kept.some(k=>(AI_PAY[k.id]||[]).some(p=>onBoard(p.a)||ctx.plays.some(x=>x.c.id===p.a))||(CARDS[k.id].cost>=6&&S.turn===5))) bonus+=3;
-    cands.push({plays:ctx.plays,bonus,est:winP(add,hit)*100+bonus});
+    const cand={plays:ctx.plays,bonus,est:winP(add,hit)*100+bonus}; cands.push(cand);
+    /* Aphrodite : variantes où chaque autre carte passe juste avant elle (l'ordre décide quelle Révélation elle rejoue) */
+    const aph=ctx.plays.find(x=>x.c.id==="aphrodite");
+    if(aph) for(const k of ctx.plays) if(k!==aph&&k.c.id!=="pandore"&&!isAph(k.c)){
+      const rest=ctx.plays.filter(x=>x!==aph&&x!==k&&x.c.id!=="pandore"), pd=ctx.plays.filter(x=>x.c.id==="pandore");
+      const v=[...rest,k,aph,...pd]; if(v.every((x,i)=>x===ctx.plays[i])) continue;
+      cands.push({plays:v,bonus,est:cand.est}); }
   }
   /* les meilleures estimations sont rejouées pour de vrai sur une copie : le choix final se fait sur le résultat exact */
   cands.sort((a,b)=>b.est-a.est);
@@ -528,7 +551,7 @@ async function endTurn(){
 }
 async function resolveTurn(mine, theirs, animate){
   const wait=ms=>animate?sleep(ms):Promise.resolve();
-  S.busy=true; S.sel=null; S.info=null; S.staged=[]; S.nudge=false;
+  S.busy=true; S.sel=null; S.info=null; S.staged=[]; S.nudge=false; S.lastRev={p:null,e:null};
   /* Prométhée : énergie non dépensée ; Nike : ordre dans lequel chaque joueur a posé ses cartes (l'IA garde Nike pour la fin) */
   const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0)),0);
   const unspent=S.unspent={p:Math.max(0,S.energy-spent("p",mine)),e:Math.max(0,S.energyE-spent("e",theirs))}; S.biaBlock={p:false,e:false};
@@ -574,7 +597,7 @@ async function resolveTurn(mine, theirs, animate){
     const rifts=[0,1,2].filter(li=>locIs(li,"faille"));
     if(animate&&rifts.length){ rifts.forEach(li=>FX.play("faille_open",{li})); await wait(1150); rifts.forEach(li=>FX.play("faille_close",{li})); }
     S.locs.forEach((L,li)=>{ if(locIs(li,"faille")){
-      for(const s of ["p","e"]){ const arr=S.board[s][li].filter(c=>c.rev&&!(c.id==="uzume"&&!c.neg)&&!fated(c)&&!baldurSafe(s,c)&&!c.ward&&!styxSafe(s,li,c)); if(!arr.length) continue;
+      for(const s of ["p","e"]){ const arr=S.board[s][li].filter(c=>c.rev&&!(c.id==="uzume"&&!c.neg)&&!fated(c)&&!baldurSafe(s,c)&&!c.ward); if(!arr.length) continue;
         const w=arr.sort((a,b)=>cardPow(s,li,a)-cardPow(s,li,b))[0];
         if(destroy(s,li,w)){ log(`La Faille détruit ${nm(w)} (${who(s)})`); sfx("destroy"); } }
     }});

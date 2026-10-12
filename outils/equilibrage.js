@@ -10,6 +10,7 @@
      node outils/equilibrage.js --parties 5000        # plus de parties = chiffres plus fiables
      node outils/equilibrage.js --palier 3            # niveau de l'IA (0 à 6, 5 par défaut)
      node outils/equilibrage.js --date 2026-11-15     # cartes sorties à cette date (par défaut 2026-12-31 : tout ce qui est daté en 2026)
+     node outils/equilibrage.js --cartes aphrodite,set,styx --parties 1000   # mode ciblé : chaque deck contient 2 de ces cartes ; écrit rapport-cible.md (ne touche pas à rapport-cartes.md)
      node outils/equilibrage.js --inclure cronos,izanami,loki   # ne rend jouables que ces cartes cachées (elles restent « pas sorties » dans le rapport)
      node outils/equilibrage.js --inclure-cachees     # ajoute les cartes sans date (2099) : elles n'ont pas d'effet, chiffres peu parlants
      node outils/equilibrage.js --graine 42           # même graine = mêmes parties (reproductible)
@@ -32,7 +33,8 @@ const OPT = {
   inclure: String(opt("inclure", "")).split(",").map(x => x.trim()).filter(Boolean),   /* ids de cartes cachées à jouer quand même (ex. cronos,izanami,loki) */
   graine: parseInt(opt("graine", 20261012), 10) || 20261012,
   ouvriers: Math.max(1, parseInt(opt("ouvriers", Math.min(4, Math.max(1, os.cpus().length - 1))), 10) || 1),
-  sortie: path.resolve(process.cwd(), String(opt("sortie", path.join(ROOT, "rapport-cartes.md")))),
+  cartes: String(opt("cartes", "")).split(",").map(x => x.trim()).filter(Boolean),     /* mode ciblé : ces cartes sont placées exprès dans les decks des deux camps */
+  sortie: path.resolve(process.cwd(), String(opt("sortie", path.join(ROOT, String(opt("cartes", "")) ? "rapport-cible.md" : "rapport-cartes.md")))),
   brut: opt("brut", null),
   aujourdhui: String(opt("aujourdhui", new Date().toISOString().slice(0, 10))),
 };
@@ -84,10 +86,12 @@ function inPageSetup(o) {
     }
     return deck;
   }
+  /* mode ciblé : deux cartes de la liste, tirées au hasard, ouvrent chaque deck */
+  const forcedPick = () => { const a = o.cartes.filter(id => CARDS[id] && REL(id)), out = []; while (out.length < Math.min(2, a.length)) { const x = pick(a); if (!out.includes(x) && !clash(out, x)) out.push(x); } return out; };
   function genDeck() {
-    const fac = pick(Object.keys(FAC)), bias = pick([0, 0, 1.5, 3]);
+    const fac = pick(Object.keys(FAC)), bias = pick([0, 0, 1.5, 3]), forced = o.cartes.length ? forcedPick() : [];
     for (let tries = 0; tries < 8; tries++) {
-      let deck = [];
+      let deck = [...forced];
       const u = us.length && Math.random() < .45 ? pick(us) : null;
       if (u) {
         for (const r of u.req) deck.push(pick([].concat(r).filter(id => REL(id) && CARDS[id])));
@@ -98,7 +102,7 @@ function inPageSetup(o) {
       } else fill(deck, fac, bias, 12);
       if (okDeck(deck)) return deck;
     }
-    return fill([], fac, bias, 12);
+    return fill([...forced], fac, bias, 12);
   }
   /* Une partie sur quatre : un deck fabriqué par le jeu lui-même pour son IA (palier choisi). */
   const realDeck = () => { try { const d = aiDeck(o.palier, true).deck; return okDeck(d) ? d : genDeck(); } catch (e) { return genDeck(); } };
@@ -109,7 +113,7 @@ function inPageSetup(o) {
       const rec = {};
       Math.random = mul(o.seed + (firstIndex + g) * 7919 + 13); RNG = Math.random; /* une graine par partie : mêmes parties quel que soit le nombre d'ouvriers */
       try {
-        const dp = Math.random() < .25 ? realDeck() : genDeck(), de = Math.random() < .25 ? realDeck() : genDeck();
+        const dp = !o.cartes.length && Math.random() < .25 ? realDeck() : genDeck(), de = !o.cartes.length && Math.random() < .25 ? realDeck() : genDeck();
         rec.dp = dp; rec.de = de;
         P.owned = ids; P.deck = dp; P.w = Math.max(P.w, 1); P.chf = 0; P.lv = START[o.palier]; P.st = 0; P.streak = 0; P.best = P.lv; /* même état de départ à chaque partie */
         const keep = window.aiDeck; window.aiDeck = () => ({ deck: de, fac: "helvara" });
@@ -150,7 +154,7 @@ async function newWorker(browser, port, k) {
   await page.goto(`http://127.0.0.1:${port}/index.html`); await page.waitForFunction(() => typeof newGame === "function" && typeof aiPlan === "function");
   page.setDefaultTimeout(180000);
   if (OPT.inclure.length) await page.evaluate(ids => { window.__relOrig = {}; for (const id of ids) if (CARDS[id]) { window.__relOrig[id] = CARDS[id].rel; CARDS[id].rel = "2026-10-01"; } }, OPT.inclure);
-  const info = await page.evaluate(inPageSetup, { seed: OPT.graine, palier: OPT.palier });
+  const info = await page.evaluate(inPageSetup, { seed: OPT.graine, palier: OPT.palier, cartes: OPT.cartes });
   return { page, errors, info };
 }
 
@@ -187,7 +191,7 @@ async function main() {
 
   games.sort((a, b) => a.i - b.i);
   if (OPT.brut) fs.writeFileSync(path.resolve(process.cwd(), String(OPT.brut)), JSON.stringify({ opt: OPT, games }));
-  const md = report(data, games, pageErrors, Math.round((Date.now() - t0) / 1000));
+  const md = (OPT.cartes.length ? reportCible : report)(data, games, pageErrors, Math.round((Date.now() - t0) / 1000));
   fs.writeFileSync(OPT.sortie, md);
   console.log(`Rapport écrit : ${OPT.sortie} (${games.length} parties, ${Math.round((Date.now() - t0) / 1000)} s)`);
 }
@@ -260,6 +264,26 @@ function effectGroups(cards) {
     if (g) g.items.push(it); else groups.push({ type: it.type, tok: it.tok, items: [it] });
   }
   return groups.filter(g => g.items.length >= 2).sort((a, b) => b.items.length - a.items.length);
+}
+
+/* ---------------------------------------------------------------- rapport ciblé */
+function reportCible(data, games, pageErrors, secs) {
+  const A = aggregate(games), byId = Object.fromEntries(data.cards.map(c => [c.id, c]));
+  const errs = games.filter(g => g.err), bads = games.filter(g => g.bad), played = games.filter(g => g.res);
+  const L = [];
+  L.push(`# Rapport ciblé · Duel d'Helvara\n`);
+  L.push(`Généré le ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC par \`outils/equilibrage.js --cartes ${OPT.cartes.join(",")}\` (version du moteur ${data.build}). Il ne remplace pas \`rapport-cartes.md\`.\n`);
+  L.push(`- **Parties simulées** : ${games.length} (${played.length} terminées), IA de palier ${OPT.palier} contre IA de palier ${OPT.palier}, graine ${OPT.graine}, ${secs} s.`);
+  L.push(`- **Decks** : 12 cartes, mêmes règles que le jeu ; **chaque deck des deux camps contient 2 des cartes ciblées**, tirées au hasard, le reste est tiré comme d'habitude.`);
+  L.push(`- **Moteur** : ${!errs.length && !bads.length && !pageErrors.length ? "aucune erreur, aucune puissance invalide, aucune erreur de console." : `**${errs.length} partie(s) en erreur, ${bads.length} avec puissance invalide, ${pageErrors.length} erreur(s) de console**.`}`);
+  L.push(`- Sous 100 decks, la marge d'erreur dépasse ±10 points (⚠).\n`);
+  L.push(`| Carte | id | Coût | Puiss. | Decks | Victoire (deck) | Pose | Victoire (posée) | Puiss. fin | Survie | Tour |\n|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|`);
+  for (const id of OPT.cartes) {
+    const c = byId[id], s = A.S[id]; if (!c || !s) { L.push(`| ${id} | \`${id}\` | | | 0 | | | | | | |`); continue; }
+    L.push(`| ${md(c.name)} | \`${id}\` | ${c.cost} | ${c.pow} | ${s.dk}${s.dk < 100 ? " ⚠" : ""} | ${num(100 * s.w / s.dk)} % | ${pct(s.pl, s.dk, 0)} % | ${pct(s.plw, s.pl)} % | ${s.alive ? num(s.powSum / s.alive) : "–"} | ${pct(s.alive, s.pl, 0)} % | ${s.pl ? num(s.turnSum / s.pl) : "–"} |`);
+  }
+  L.push(`\nCamp qui révèle en premier : ${pct(A.pWins, A.ok)} % de victoires (nulles : ${pct(A.nul, A.ok)} %).\n`);
+  return L.join("\n");
 }
 
 /* ---------------------------------------------------------------- rapport */

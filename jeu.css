@@ -366,6 +366,7 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .dlt{position:absolute;left:3px;top:3px;font:700 10px var(--body);padding:1px 4px;border-radius:6px;background:rgba(6,10,18,.85);z-index:2}
 .dlt.up{color:#9fe0b0}.dlt.down{color:#f0a0a0}
 .full .pw.up{color:#9fe0b0}.full .pw.down{color:#f0a0a0}
+.hc .pw.up{color:#9fe0b0}.hc .pw.down{color:#f0a0a0}
 .modlist{display:flex;flex-direction:column;gap:3px;margin:6px 0 10px;font-size:13px}
 .modlist .up{color:#9fe0b0}.modlist .down{color:#f0a0a0}
 .gzloc{width:min(420px,100%);display:flex;flex-direction:column;gap:10px}
