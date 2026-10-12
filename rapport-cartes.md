@@ -1,12 +1,12 @@
 # Rapport des cartes · Duel d'Helvara
 
-Généré le 2026-10-12 14:58 UTC par `outils/equilibrage.js` (version du moteur alpha-0.3). **Aucune carte n'a été modifiée et aucun chiffre n'est proposé** : ce document sert à décider.
+Généré le 2026-10-12 15:42 UTC par `outils/equilibrage.js` (version du moteur alpha-0.4). **Aucune carte n'a été modifiée et aucun chiffre n'est proposé** : ce document sert à décider.
 
-- **Parties simulées** : 6000 (6000 terminées), IA de palier 5 contre IA de palier 5, graine 20261012, 27 s.
+- **Parties simulées** : 6000 (6000 terminées), IA de palier 5 contre IA de palier 5, graine 20261012, 33 s.
 - **Cartes en jeu** : toutes celles dont la date de sortie est au plus le 2026-12-31 (cartes cachées de 2099 jouées : cronos, izanami, loki ; les autres cachées, sans effet, ne sont pas jouées).
 - **Decks** : 12 cartes, mêmes règles que le jeu (une version par personnage, une seule ultra-légendaire, ses conditions remplies). Trois decks sur quatre sont tirés au hasard avec une faction dominante et une courbe de coûts raisonnable ; un sur quatre est fabriqué par le jeu pour son IA. Ce ne sont pas des decks de joueurs : les cartes les plus fortes ne sont pas surreprésentées.
 - **Lieux** : 3 lieux tirés au hasard parmi ceux sortis à cette date, comme dans une vraie partie.
-- **Camp qui révèle en premier** (le « joueur ») : 48.0 % de victoires (nulles : 0.8 %). Un écart net avec 50 % signalerait un avantage lié à l'ordre de révélation.
+- **Camp qui révèle en premier** (le « joueur ») : 48.1 % de victoires (nulles : 0.8 %). Un écart net avec 50 % signalerait un avantage lié à l'ordre de révélation.
 - **Moyenne de victoires d'une carte présente dans un deck** : 49.6 % (nulles : 0.8 % des parties).
 - Lecture : ce sont des parties IA contre IA. Un humain joue les combinaisons, le serment et les lieux mieux (ou moins bien) que l'IA : les chiffres indiquent des tendances, pas une vérité. En dessous de 100 decks, la marge d'erreur dépasse ±10 points : à lire avec prudence (⚠).
 
@@ -24,10 +24,10 @@ Jetons exclus. « Sorties » = date de sortie au plus le 2026-10-12.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | Commune | 1 | 6 | 6 | 3 | 3 | 2 | · | · | **21** |
 | Rare | · | 3 | 18 | 14 | 8 | 7 | 1 | · | **51** |
-| Épique | · | 2 | 3 | 42 | 18 | 23 | · | · | **88** |
+| Épique | · | 3 | 3 | 42 | 17 | 23 | · | · | **88** |
 | Légendaire | · | 2 | 1 | 2 | 3 | 3 | 10 | · | **21** |
 | Ultra-légendaire | · | · | · | 2 | · | 1 | 31 | 1 | **35** |
-| **Total** | **1** | **13** | **28** | **63** | **32** | **36** | **42** | **1** | **216** |
+| **Total** | **1** | **14** | **28** | **63** | **31** | **36** | **42** | **1** | **216** |
 
 Par faction : Helvara 44 · Primordial 63 · Désir 53 · Jugement 56
 
@@ -50,10 +50,10 @@ Par faction : Helvara 19 · Primordial 22 · Désir 21 · Jugement 18
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Commune | 1 | 2 | 1 | · | · | · | · | **4** |
 | Rare | · | · | 8 | 4 | 3 | · | 1 | **16** |
-| Épique | · | · | 1 | 42 | 13 | 14 | · | **70** |
+| Épique | · | 1 | 1 | 42 | 12 | 14 | · | **70** |
 | Légendaire | · | 1 | 1 | 1 | 3 | 2 | 5 | **13** |
 | Ultra-légendaire | · | · | · | 2 | · | 1 | 30 | **33** |
-| **Total** | **1** | **3** | **11** | **49** | **19** | **17** | **36** | **136** |
+| **Total** | **1** | **4** | **11** | **49** | **18** | **17** | **36** | **136** |
 
 Par faction : Helvara 25 · Primordial 41 · Désir 32 · Jugement 38
 
@@ -67,115 +67,112 @@ Colonnes : **decks** = nombre de decks (des deux camps) qui contenaient la carte
 
 | Carte | id | Faction | Coût | Puiss. | Rareté | Decks | Victoire (deck) | Pose | Victoire (posée) | Écart | Puiss. fin | Survie | Tour |
 |---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Yarden X Apsu | `ulya` | Primordial | 9 | 12 | Ultra-légendaire | 570 | 68.4 % | 62 % | 73.9 % | +18.8 | 15.9 | 96 % | 4.7 |
-| Qetesh X Jordan du Nouvel An *(pas sortie)* | `ulqetjor_r` | Désir | 6 | 4 | Ultra-légendaire | 312 | 65.7 % | 45 % | 82.9 % | +16.1 | 3.9 | 99 % | 5.9 |
-| Apsu | `apsu` | Primordial | 6 | 8 | Légendaire | 893 | 62.2 % | 33 % | 67.1 % | +12.6 | 10.2 | 98 % | 5.8 |
-| Qetesh du Nouvel An *(pas sortie)* | `qetesh_r` | Désir | 5 | 3 | Épique | 702 | 61.0 % | 47 % | 68.4 % | +11.4 | 3.3 | 97 % | 4.8 |
-| Nyx X Oshun *(pas sortie)* | `uloshun` | Primordial | 6 | 4 | Ultra-légendaire | 325 | 58.8 % | 35 % | 68.7 % | +9.2 | 3.9 | 100 % | 5.8 |
-| Yarden Weiss | `yarden` | Primordial | 5 | 6 | Épique | 1616 | 58.0 % | 59 % | 59.5 % | +8.4 | 8.4 | 95 % | 5.2 |
-| Le Troll | `troll` | Primordial | 5 | 9 | Commune | 450 | 57.1 % | 53 % | 57.9 % | +7.5 | 9.0 | 95 % | 5.2 |
-| Ereshkigal | `ereshkigal` | Primordial | 6 | 7 | Légendaire | 592 | 56.8 % | 43 % | 61.8 % | +7.2 | 7.1 | 97 % | 5.8 |
-| Jordan X Izzy | `ulji` | Désir | 6 | 6 | Ultra-légendaire | 309 | 56.3 % | 46 % | 67.8 % | +6.7 | 6.1 | 99 % | 5.9 |
-| Arès, Boucher d'Halloween | `ares_h` | Primordial | 5 | 4 | Épique | 433 | 55.9 % | 55 % | 60.1 % | +6.3 | 6.0 | 96 % | 5.3 |
-| Ishara | `ishara` | Helvara | 2 | 2 | Rare | 1199 | 55.5 % | 71 % | 54.4 % | +5.9 | 2.4 | 91 % | 3.7 |
-| Qetesh X Yarden *(pas sortie)* | `ulqetyar` | Désir | 6 | 3 | Ultra-légendaire | 296 | 55.4 % | 9 % | 53.8 % | +5.8 | 6.5 | 100 % | 6.0 |
-| Le Seigneur de la marée noire *(pas sortie)* | `maree` | Primordial | 6 | 8 | Légendaire | 636 | 55.3 % | 43 % | 62.7 % | +5.7 | 8.1 | 98 % | 5.8 |
-| Bastet | `bastet` | Désir | 5 | 4 | Rare | 487 | 55.0 % | 37 % | 50.3 % | +5.4 | 4.0 | 97 % | 5.3 |
-| Céleste | `celeste` | Helvara | 3 | 3 | Rare | 1214 | 54.9 % | 73 % | 55.3 % | +5.3 | 5.7 | 89 % | 3.8 |
+| Qetesh X Jordan du Nouvel An *(pas sortie)* | `ulqetjor_r` | Désir | 6 | 4 | Ultra-légendaire | 312 | 68.9 % | 48 % | 83.4 % | +19.3 | 3.8 | 99 % | 5.9 |
+| Yarden X Apsu | `ulya` | Primordial | 9 | 12 | Ultra-légendaire | 570 | 68.2 % | 63 % | 72.9 % | +18.6 | 16.0 | 96 % | 4.8 |
+| Apsu | `apsu` | Primordial | 6 | 8 | Légendaire | 899 | 62.8 % | 30 % | 64.2 % | +13.2 | 10.1 | 99 % | 5.9 |
+| Qetesh du Nouvel An *(pas sortie)* | `qetesh_r` | Désir | 5 | 3 | Épique | 698 | 61.7 % | 47 % | 66.7 % | +12.1 | 3.3 | 97 % | 4.8 |
+| Yarden Weiss | `yarden` | Primordial | 5 | 6 | Épique | 1612 | 58.6 % | 59 % | 60.5 % | +9.0 | 8.5 | 95 % | 5.2 |
+| Calypso, Reine des Glaces *(pas sortie)* | `calypso_n` | Désir | 5 | 3 | Épique | 403 | 57.3 % | 50 % | 57.6 % | +7.7 | 5.3 | 95 % | 5.3 |
+| Nyx X Oshun *(pas sortie)* | `uloshun` | Primordial | 6 | 4 | Ultra-légendaire | 325 | 56.6 % | 33 % | 68.2 % | +7.0 | 3.9 | 98 % | 5.9 |
+| Qetesh X Yarden *(pas sortie)* | `ulqetyar` | Désir | 6 | 3 | Ultra-légendaire | 296 | 56.1 % | 8 % | 48.0 % | +6.5 | 6.6 | 100 % | 6.0 |
+| Calypso X Jordan *(pas sortie)* | `ulcal` | Désir | 5 | 4 | Ultra-légendaire | 297 | 55.9 % | 35 % | 64.8 % | +6.3 | 4.2 | 100 % | 5.3 |
+| Nemesis *(pas sortie)* | `nemesis` | Jugement | 5 | -5 | Légendaire | 1117 | 55.4 % | 59 % | 61.7 % | +5.8 | -4.9 | 95 % | 4.9 |
+| Set *(pas sortie)* | `set` | Primordial | 5 | 4 | Épique | 453 | 55.4 % | 31 % | 54.6 % | +5.8 | 4.0 | 96 % | 5.4 |
+| Balor *(pas sortie)* | `balor` | Jugement | 6 | 5 | Rare | 831 | 55.0 % | 34 % | 62.1 % | +5.4 | 5.2 | 99 % | 5.8 |
+| Arès, Boucher d'Halloween | `ares_h` | Primordial | 5 | 4 | Épique | 451 | 54.8 % | 51 % | 61.1 % | +5.2 | 6.0 | 96 % | 5.3 |
+| Nyx X Circé *(pas sortie)* | `ulcirce` | Primordial | 6 | 3 | Ultra-légendaire | 293 | 54.3 % | 16 % | 60.4 % | +4.7 | 3.0 | 100 % | 5.9 |
+| Le Troll | `troll` | Primordial | 5 | 9 | Commune | 439 | 54.2 % | 54 % | 56.3 % | +4.6 | 9.0 | 95 % | 5.1 |
 
 ### Les 15 cartes qui gagnent le moins (au moins 100 decks)
 
 | Carte | id | Faction | Coût | Puiss. | Rareté | Decks | Victoire (deck) | Pose | Victoire (posée) | Écart | Puiss. fin | Survie | Tour |
 |---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Konohanasakuya-Hime | `konohana` | Désir | 1 | 4 | Rare | 1139 | 41.1 % | 76 % | 40.0 % | -8.5 | 0.9 | 86 % | 2.7 |
-| Hel X Baldur *(pas sortie)* | `ulhel` | Primordial | 6 | 3 | Ultra-légendaire | 274 | 42.3 % | 10 % | 44.4 % | -7.3 | 3.1 | 100 % | 5.9 |
-| Hel *(pas sortie)* | `hel` | Primordial | 6 | 5 | Légendaire | 871 | 43.1 % | 25 % | 51.1 % | -6.5 | 5.1 | 98 % | 5.9 |
-| Mohini | `mohini` | Désir | 1 | 1 | Légendaire | 1867 | 43.8 % | 68 % | 42.9 % | -5.8 | 1.3 | 88 % | 3.3 |
-| Aphrodite *(pas sortie)* | `aphrodite` | Désir | 4 | 4 | Épique | 1373 | 44.1 % | 44 % | 39.2 % | -5.5 | 3.9 | 93 % | 4.7 |
-| La Nuée de Miroirs | `nuee` | Primordial | 4 | 3 | Rare | 766 | 44.4 % | 28 % | 39.5 % | -5.2 | 4.6 | 95 % | 5.2 |
-| Circé *(pas sortie)* | `circe` | Désir | 5 | 3 | Épique | 1152 | 44.4 % | 18 % | 39.9 % | -5.2 | 3.0 | 94 % | 5.3 |
-| Loki *(pas sortie)* | `loki` | Désir | 3 | 3 | Épique | 1555 | 44.8 % | 51 % | 41.1 % | -4.8 | 3.1 | 88 % | 4.2 |
-| Ishtar | `ishtar` | Désir | 4 | 3 | Épique | 1108 | 44.8 % | 19 % | 45.8 % | -4.8 | 3.0 | 93 % | 4.8 |
-| Perséphone | `persephone` | Jugement | 3 | 3 | Rare | 1424 | 45.0 % | 52 % | 41.7 % | -4.6 | 2.8 | 93 % | 4.3 |
-| Pele X Jordan du Réveillon *(pas sortie)* | `ulpele_r` | Primordial | 6 | 4 | Ultra-légendaire | 312 | 45.2 % | 33 % | 42.7 % | -4.4 | 4.0 | 99 % | 5.9 |
-| Tlazolteotl | `tlazol` | Désir | 3 | 2 | Rare | 905 | 45.2 % | 37 % | 40.1 % | -4.4 | 2.8 | 92 % | 4.3 |
-| Lip Dentelle *(pas sortie)* | `lipdentelle` | Désir | 3 | 2 | Épique | 1529 | 45.3 % | 72 % | 43.9 % | -4.3 | 5.7 | 93 % | 3.7 |
-| Ame-no-Uzume | `uzume` | Désir | 2 | 3 | Rare | 1173 | 45.4 % | 70 % | 43.1 % | -4.2 | 3.3 | 96 % | 3.4 |
-| Pandore *(pas sortie)* | `pandore` | Désir | 3 | 0 | Épique | 2623 | 45.4 % | 35 % | 37.9 % | -4.2 | 4.9 | 94 % | 5.3 |
+| Pele X Jordan du Réveillon *(pas sortie)* | `ulpele_r` | Primordial | 6 | 4 | Ultra-légendaire | 312 | 41.0 % | 31 % | 38.8 % | -8.6 | 3.8 | 99 % | 5.9 |
+| Eir | `eir` | Jugement | 4 | 3 | Rare | 849 | 42.3 % | 16 % | 31.4 % | -7.3 | 3.3 | 99 % | 4.9 |
+| Hel X Baldur *(pas sortie)* | `ulhel` | Primordial | 6 | 3 | Ultra-légendaire | 274 | 43.1 % | 12 % | 65.6 % | -6.5 | 3.1 | 100 % | 6.0 |
+| Hel *(pas sortie)* | `hel` | Primordial | 6 | 5 | Légendaire | 877 | 43.7 % | 24 % | 43.9 % | -5.9 | 5.2 | 97 % | 5.9 |
+| Vritra | `vritra` | Primordial | 5 | 5 | Légendaire | 1116 | 44.2 % | 42 % | 41.3 % | -5.4 | 5.1 | 97 % | 5.2 |
+| Circé *(pas sortie)* | `circe` | Désir | 5 | 3 | Épique | 1150 | 44.7 % | 21 % | 43.6 % | -4.9 | 3.1 | 93 % | 5.2 |
+| Dante *(pas sortie)* | `dante` | Primordial | 4 | 4 | Rare | 697 | 44.8 % | 37 % | 41.9 % | -4.8 | 4.1 | 89 % | 4.7 |
+| Ishtar | `ishtar` | Désir | 4 | 3 | Épique | 1196 | 45.0 % | 21 % | 38.9 % | -4.6 | 3.1 | 93 % | 4.9 |
+| Loviatar *(pas sortie)* | `loviatar` | Primordial | 4 | 3 | Épique | 951 | 45.0 % | 28 % | 38.7 % | -4.6 | 3.1 | 93 % | 4.7 |
+| Konohanasakuya-Hime | `konohana` | Désir | 1 | 4 | Rare | 911 | 45.0 % | 77 % | 43.7 % | -4.6 | 1.0 | 86 % | 2.7 |
+| Cronos *(pas sortie)* | `cronos` | Primordial | 3 | 3 | Épique | 1530 | 45.2 % | 52 % | 39.3 % | -4.4 | 3.6 | 93 % | 3.9 |
+| Loki *(pas sortie)* | `loki` | Désir | 3 | 3 | Épique | 1545 | 45.4 % | 51 % | 39.6 % | -4.2 | 3.1 | 91 % | 4.2 |
+| Izanami *(pas sortie)* | `izanami` | Primordial | 3 | 3 | Épique | 1513 | 45.6 % | 37 % | 38.6 % | -4.0 | 3.1 | 90 % | 4.1 |
+| Tlazolteotl | `tlazol` | Désir | 3 | 2 | Rare | 903 | 45.6 % | 37 % | 40.8 % | -4.0 | 2.7 | 92 % | 4.5 |
+| L'Esquille | `esquille` | Primordial | 3 | 1 | Rare | 842 | 45.7 % | 52 % | 44.0 % | -3.9 | 1.3 | 88 % | 4.3 |
 
 ### Les cartes jamais ou presque jamais jouées alors qu'elles sont dans le deck (pose sous 50 %, au moins 100 decks)
 
 | Carte | id | Faction | Coût | Puiss. | Rareté | Decks | Victoire (deck) | Pose | Victoire (posée) | Écart | Puiss. fin | Survie | Tour |
 |---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Qetesh X Yarden *(pas sortie)* | `ulqetyar` | Désir | 6 | 3 | Ultra-légendaire | 296 | 55.4 % | 9 % | 53.8 % | +5.8 | 6.5 | 100 % | 6.0 |
-| Hel X Baldur *(pas sortie)* | `ulhel` | Primordial | 6 | 3 | Ultra-légendaire | 274 | 42.3 % | 10 % | 44.4 % | -7.3 | 3.1 | 100 % | 5.9 |
-| Yarden, Dragonification partielle | `yarden_d` | Primordial | 6 | 3 | Légendaire | 373 | 48.0 % | 12 % | 48.8 % | -1.6 | 6.6 | 98 % | 5.9 |
-| Nyx X Circé *(pas sortie)* | `ulcirce` | Primordial | 6 | 3 | Ultra-légendaire | 293 | 53.6 % | 12 % | 48.6 % | +4.0 | 3.0 | 100 % | 5.8 |
-| Amaterasu | `amaterasu` | Jugement | 5 | 4 | Épique | 520 | 46.0 % | 12 % | 38.1 % | -3.6 | 4.3 | 89 % | 5.3 |
-| Médée, Mariée Spectrale | `medee_h` | Jugement | 4 | 3 | Épique | 759 | 46.9 % | 13 % | 43.3 % | -2.7 | 3.0 | 97 % | 5.0 |
-| Nemesis X Jordan *(pas sortie)* | `ulnem` | Jugement | 6 | 2 | Ultra-légendaire | 299 | 54.5 % | 13 % | 41.0 % | +4.9 | 2.0 | 100 % | 5.9 |
-| Nike *(pas sortie)* | `nike` | Jugement | 3 | 1 | Ultra-légendaire | 1051 | 45.5 % | 16 % | 47.2 % | -4.1 | 4.4 | 96 % | 5.4 |
-| Médée *(pas sortie)* | `medee` | Jugement | 4 | 3 | Épique | 763 | 46.5 % | 17 % | 39.8 % | -3.1 | 2.9 | 94 % | 4.9 |
-| Aphrodite X Yarden *(pas sortie)* | `ulaph` | Désir | 6 | 5 | Ultra-légendaire | 324 | 46.6 % | 17 % | 40.0 % | -3.0 | 5.4 | 100 % | 5.9 |
-| Eir | `eir` | Jugement | 4 | 3 | Rare | 860 | 45.7 % | 18 % | 41.1 % | -3.9 | 3.3 | 98 % | 4.9 |
-| Circé *(pas sortie)* | `circe` | Désir | 5 | 3 | Épique | 1152 | 44.4 % | 18 % | 39.9 % | -5.2 | 3.0 | 94 % | 5.3 |
-| Ishtar | `ishtar` | Désir | 4 | 3 | Épique | 1108 | 44.8 % | 19 % | 45.8 % | -4.8 | 3.0 | 93 % | 4.8 |
-| Hel, Reine du Réveillon *(pas sortie)* | `hel_r` | Primordial | 5 | 2 | Épique | 396 | 52.0 % | 20 % | 64.1 % | +2.4 | 2.2 | 95 % | 5.3 |
-| Le Carillonneur de la Cathédrale *(pas sortie)* | `carillonneur` | Helvara | 3 | 1 | Légendaire | 1602 | 52.1 % | 20 % | 57.4 % | +2.5 | 4.0 | 91 % | 4.4 |
-| Styx *(pas sortie)* | `styx` | Jugement | 4 | 2 | Légendaire | 1728 | 46.1 % | 22 % | 45.2 % | -3.5 | 1.9 | 99 % | 4.8 |
-| Set *(pas sortie)* | `set` | Primordial | 5 | 4 | Épique | 471 | 49.3 % | 24 % | 34.2 % | -0.3 | 4.2 | 100 % | 5.5 |
-| Le Bourreau de la brèche *(pas sortie)* | `bourreau` | Jugement | 3 | 2 | Épique | 1588 | 46.4 % | 25 % | 39.5 % | -3.2 | 2.1 | 94 % | 4.5 |
-| Hel *(pas sortie)* | `hel` | Primordial | 6 | 5 | Légendaire | 871 | 43.1 % | 25 % | 51.1 % | -6.5 | 5.1 | 98 % | 5.9 |
-| Sekhmet, Lionne de l'Hiver *(pas sortie)* | `sekhmet_n` | Jugement | 5 | 4 | Épique | 471 | 49.3 % | 25 % | 48.3 % | -0.3 | 3.9 | 93 % | 5.3 |
-| La Ficelle Dévorante | `ficelle` | Helvara | 5 | 4 | Épique | 1200 | 50.8 % | 26 % | 49.5 % | +1.1 | 7.9 | 92 % | 5.2 |
-| Loviatar *(pas sortie)* | `loviatar` | Primordial | 4 | 3 | Épique | 947 | 45.8 % | 28 % | 39.1 % | -3.8 | 3.1 | 93 % | 4.7 |
-| La Nuée de Miroirs | `nuee` | Primordial | 4 | 3 | Rare | 766 | 44.4 % | 28 % | 39.5 % | -5.2 | 4.6 | 95 % | 5.2 |
-| Jordan, le Créateur | `jordan` | Primordial | 1 | -1 | Épique | 1990 | 51.0 % | 30 % | 44.9 % | +1.4 | -0.3 | 85 % | 3.7 |
-| Freya | `freya` | Désir | 5 | 5 | Rare | 508 | 45.7 % | 31 % | 31.2 % | -3.9 | 5.5 | 94 % | 5.2 |
-| Lilith | `lilith` | Désir | 6 | 5 | Légendaire | 1248 | 46.9 % | 32 % | 59.6 % | -2.7 | 5.2 | 98 % | 5.8 |
-| Apsu, Veillée des Chaînes *(pas sortie)* | `apsu_n` | Primordial | 6 | 7 | Légendaire | 340 | 51.8 % | 32 % | 53.6 % | +2.2 | 7.5 | 96 % | 5.9 |
-| Pele X Jordan du Réveillon *(pas sortie)* | `ulpele_r` | Primordial | 6 | 4 | Ultra-légendaire | 312 | 45.2 % | 33 % | 42.7 % | -4.4 | 4.0 | 99 % | 5.9 |
-| Inanna | `inanna` | Jugement | 5 | 5 | Épique | 532 | 47.6 % | 33 % | 39.8 % | -2.0 | 5.2 | 94 % | 5.3 |
-| Apsu | `apsu` | Primordial | 6 | 8 | Légendaire | 893 | 62.2 % | 33 % | 67.1 % | +12.6 | 10.2 | 98 % | 5.8 |
-| Les Costumes | `costumes` | Helvara | 4 | 3 | Commune | 1022 | 49.1 % | 33 % | 43.0 % | -0.5 | 4.9 | 94 % | 4.9 |
-| La Doyenne | `doyenne` | Helvara | 5 | 4 | Commune | 463 | 45.6 % | 33 % | 47.7 % | -4.0 | 4.1 | 95 % | 5.4 |
-| Pandore *(pas sortie)* | `pandore` | Désir | 3 | 0 | Épique | 2623 | 45.4 % | 35 % | 37.9 % | -4.2 | 4.9 | 94 % | 5.3 |
-| Calypso X Jordan *(pas sortie)* | `ulcal` | Désir | 5 | 4 | Ultra-légendaire | 297 | 50.8 % | 35 % | 61.0 % | +1.2 | 4.1 | 98 % | 5.3 |
-| Nyx X Oshun *(pas sortie)* | `uloshun` | Primordial | 6 | 4 | Ultra-légendaire | 325 | 58.8 % | 35 % | 68.7 % | +9.2 | 3.9 | 100 % | 5.8 |
-| Nyx | `nyx` | Primordial | 6 | 5 | Légendaire | 1193 | 54.8 % | 36 % | 63.9 % | +5.2 | 5.2 | 97 % | 5.8 |
-| Hécate | `hecate` | Jugement | 3 | 2 | Commune | 885 | 49.0 % | 36 % | 47.6 % | -0.6 | 2.2 | 91 % | 4.3 |
-| Bastet | `bastet` | Désir | 5 | 4 | Rare | 487 | 55.0 % | 37 % | 50.3 % | +5.4 | 4.0 | 97 % | 5.3 |
-| Tlazolteotl | `tlazol` | Désir | 3 | 2 | Rare | 905 | 45.2 % | 37 % | 40.1 % | -4.4 | 2.8 | 92 % | 4.3 |
-| Vasseur | `vasseur` | Helvara | 3 | 2 | Commune | 840 | 47.9 % | 37 % | 46.0 % | -1.7 | 4.5 | 95 % | 4.3 |
-| Izanami *(pas sortie)* | `izanami` | Primordial | 3 | 3 | Épique | 1512 | 47.4 % | 38 % | 44.6 % | -2.2 | 3.0 | 89 % | 4.1 |
-| Oya | `oya` | Jugement | 5 | 4 | Épique | 462 | 48.9 % | 38 % | 49.1 % | -0.7 | 4.1 | 97 % | 5.3 |
-| Odin *(pas sortie)* | `odin` | Jugement | 4 | 4 | Légendaire | 1694 | 47.9 % | 39 % | 43.7 % | -1.7 | 3.9 | 92 % | 4.7 |
-| Dante *(pas sortie)* | `dante` | Primordial | 4 | 4 | Rare | 721 | 48.4 % | 39 % | 47.1 % | -1.2 | 4.1 | 95 % | 4.7 |
-| Baldur *(pas sortie)* | `baldur` | Jugement | 4 | 4 | Épique | 1108 | 45.9 % | 39 % | 42.9 % | -3.7 | 4.2 | 97 % | 4.7 |
-| Nergal, Fossoyeur d'Halloween | `nergal_h` | Primordial | 5 | 4 | Épique | 458 | 52.8 % | 39 % | 49.7 % | +3.2 | 7.7 | 94 % | 5.3 |
-| Balor *(pas sortie)* | `balor` | Jugement | 6 | 5 | Rare | 830 | 54.3 % | 40 % | 64.8 % | +4.7 | 5.1 | 99 % | 5.8 |
-| Sekhmet | `sekhmet` | Jugement | 5 | 6 | Rare | 495 | 50.3 % | 40 % | 53.0 % | +0.7 | 6.1 | 96 % | 5.2 |
-| Hathor | `hathor` | Désir | 4 | 3 | Rare | 806 | 49.8 % | 40 % | 49.2 % | +0.2 | 3.1 | 93 % | 4.8 |
-| Qetesh X Jordan *(pas sortie)* | `ulqetjor` | Désir | 6 | 4 | Ultra-légendaire | 296 | 50.0 % | 41 % | 47.9 % | +0.4 | 3.9 | 99 % | 5.9 |
-| Anat | `anat` | Désir | 4 | 4 | Épique | 1072 | 45.6 % | 41 % | 42.3 % | -4.0 | 5.5 | 90 % | 4.8 |
-| Le Seigneur de la marée noire *(pas sortie)* | `maree` | Primordial | 6 | 8 | Légendaire | 636 | 55.3 % | 43 % | 62.7 % | +5.7 | 8.1 | 98 % | 5.8 |
-| Vritra | `vritra` | Primordial | 5 | 5 | Légendaire | 1106 | 47.5 % | 43 % | 45.4 % | -2.1 | 5.2 | 96 % | 5.2 |
-| Ereshkigal | `ereshkigal` | Primordial | 6 | 7 | Légendaire | 592 | 56.8 % | 43 % | 61.8 % | +7.2 | 7.1 | 97 % | 5.8 |
-| Pele | `pele` | Primordial | 5 | 6 | Rare | 398 | 52.5 % | 43 % | 52.6 % | +2.9 | 6.1 | 97 % | 5.3 |
-| Aphrodite *(pas sortie)* | `aphrodite` | Désir | 4 | 4 | Épique | 1373 | 44.1 % | 44 % | 39.2 % | -5.5 | 3.9 | 93 % | 4.7 |
-| Qetesh X Jordan du Nouvel An *(pas sortie)* | `ulqetjor_r` | Désir | 6 | 4 | Ultra-légendaire | 312 | 65.7 % | 45 % | 82.9 % | +16.1 | 3.9 | 99 % | 5.9 |
-| Hadès *(pas sortie)* | `hades` | Primordial | 4 | 4 | Légendaire | 1723 | 47.9 % | 46 % | 43.4 % | -1.7 | 3.9 | 91 % | 4.6 |
-| Jordan X Izzy | `ulji` | Désir | 6 | 6 | Ultra-légendaire | 309 | 56.3 % | 46 % | 67.8 % | +6.7 | 6.1 | 99 % | 5.9 |
-| Qetesh du Nouvel An *(pas sortie)* | `qetesh_r` | Désir | 5 | 3 | Épique | 702 | 61.0 % | 47 % | 68.4 % | +11.4 | 3.3 | 97 % | 4.8 |
-| Thor *(pas sortie)* | `thor` | Primordial | 4 | 3 | Épique | 948 | 49.6 % | 47 % | 47.8 % | -0.0 | 3.2 | 93 % | 4.3 |
-| Izzy, Lune de Sang | `izzy_h` | Désir | 3 | 0 | Légendaire | 771 | 49.7 % | 48 % | 49.6 % | +0.1 | 2.4 | 91 % | 4.4 |
-| Nyx, Guerrière d'Halloween | `nyx_h` | Primordial | 5 | 4 | Épique | 422 | 51.4 % | 48 % | 55.0 % | +1.8 | 3.9 | 96 % | 5.2 |
-| Calypso, Reine des Glaces *(pas sortie)* | `calypso_n` | Désir | 5 | 3 | Épique | 426 | 51.9 % | 48 % | 60.3 % | +2.3 | 5.2 | 96 % | 5.3 |
-| La Mère de Cendre | `mere` | Primordial | 5 | 4 | Rare | 475 | 52.2 % | 48 % | 51.5 % | +2.6 | 4.0 | 96 % | 5.0 |
-| Éos de Nouvel An *(pas sortie)* | `eos_r` | Jugement | 2 | 1 | Épique | 889 | 48.0 % | 48 % | 47.1 % | -1.6 | 1.4 | 90 % | 3.9 |
-| Pele du Réveillon *(pas sortie)* | `pele_r` | Primordial | 5 | 3 | Épique | 745 | 47.4 % | 49 % | 48.4 % | -2.2 | 3.3 | 96 % | 5.1 |
-| Jordan, le Narrateur | `jordan_n` | Primordial | 1 | 0 | Épique | 1997 | 49.9 % | 49 % | 47.8 % | +0.3 | 0.4 | 87 % | 3.2 |
-| Chernobog *(pas sortie)* | `chernobog` | Jugement | 4 | 4 | Épique | 878 | 50.2 % | 49 % | 53.1 % | +0.6 | 4.0 | 89 % | 4.7 |
+| Qetesh X Yarden *(pas sortie)* | `ulqetyar` | Désir | 6 | 3 | Ultra-légendaire | 296 | 56.1 % | 8 % | 48.0 % | +6.5 | 6.6 | 100 % | 6.0 |
+| Amaterasu | `amaterasu` | Jugement | 5 | 4 | Épique | 529 | 48.6 % | 11 % | 34.5 % | -1.0 | 4.2 | 93 % | 5.4 |
+| Yarden, Dragonification partielle | `yarden_d` | Primordial | 6 | 3 | Légendaire | 356 | 47.5 % | 11 % | 30.0 % | -2.1 | 6.8 | 98 % | 5.9 |
+| Hel X Baldur *(pas sortie)* | `ulhel` | Primordial | 6 | 3 | Ultra-légendaire | 274 | 43.1 % | 12 % | 65.6 % | -6.5 | 3.1 | 100 % | 6.0 |
+| Nemesis X Jordan *(pas sortie)* | `ulnem` | Jugement | 6 | 2 | Ultra-légendaire | 299 | 53.8 % | 13 % | 46.2 % | +4.2 | 1.9 | 100 % | 5.9 |
+| Médée, Mariée Spectrale | `medee_h` | Jugement | 4 | 3 | Épique | 769 | 46.3 % | 13 % | 43.6 % | -3.3 | 3.1 | 96 % | 4.8 |
+| Eir | `eir` | Jugement | 4 | 3 | Rare | 849 | 42.3 % | 16 % | 31.4 % | -7.3 | 3.3 | 99 % | 4.9 |
+| Aphrodite X Yarden *(pas sortie)* | `ulaph` | Désir | 6 | 5 | Ultra-légendaire | 324 | 52.5 % | 16 % | 49.1 % | +2.9 | 5.0 | 100 % | 5.8 |
+| Nyx X Circé *(pas sortie)* | `ulcirce` | Primordial | 6 | 3 | Ultra-légendaire | 293 | 54.3 % | 16 % | 60.4 % | +4.7 | 3.0 | 100 % | 5.9 |
+| Circé *(pas sortie)* | `circe` | Désir | 5 | 3 | Épique | 1150 | 44.7 % | 21 % | 43.6 % | -4.9 | 3.1 | 93 % | 5.2 |
+| Ishtar | `ishtar` | Désir | 4 | 3 | Épique | 1196 | 45.0 % | 21 % | 38.9 % | -4.6 | 3.1 | 93 % | 4.9 |
+| Le Carillonneur de la Cathédrale *(pas sortie)* | `carillonneur` | Helvara | 3 | 1 | Légendaire | 1601 | 51.1 % | 22 % | 55.6 % | +1.5 | 4.0 | 94 % | 4.5 |
+| Hel, Reine du Réveillon *(pas sortie)* | `hel_r` | Primordial | 5 | 2 | Épique | 392 | 52.3 % | 22 % | 63.5 % | +2.7 | 2.2 | 94 % | 5.3 |
+| Hel *(pas sortie)* | `hel` | Primordial | 6 | 5 | Légendaire | 877 | 43.7 % | 24 % | 43.9 % | -5.9 | 5.2 | 97 % | 5.9 |
+| La Ficelle Dévorante | `ficelle` | Helvara | 5 | 4 | Épique | 1198 | 48.7 % | 27 % | 49.2 % | -0.9 | 8.0 | 94 % | 5.2 |
+| Sekhmet, Lionne de l'Hiver *(pas sortie)* | `sekhmet_n` | Jugement | 5 | 4 | Épique | 478 | 46.0 % | 28 % | 40.3 % | -3.6 | 3.9 | 94 % | 5.3 |
+| Loviatar *(pas sortie)* | `loviatar` | Primordial | 4 | 3 | Épique | 951 | 45.0 % | 28 % | 38.7 % | -4.6 | 3.1 | 93 % | 4.7 |
+| Freya | `freya` | Désir | 5 | 5 | Rare | 499 | 50.9 % | 29 % | 44.4 % | +1.3 | 5.6 | 94 % | 5.3 |
+| La Nuée de Miroirs | `nuee` | Primordial | 4 | 3 | Rare | 747 | 47.0 % | 29 % | 41.0 % | -2.6 | 4.6 | 97 % | 5.1 |
+| Apsu | `apsu` | Primordial | 6 | 8 | Légendaire | 899 | 62.8 % | 30 % | 64.2 % | +13.2 | 10.1 | 99 % | 5.9 |
+| Jordan, le Créateur | `jordan` | Primordial | 1 | -1 | Épique | 1996 | 48.6 % | 30 % | 45.9 % | -1.0 | -0.4 | 86 % | 3.8 |
+| Lilith | `lilith` | Désir | 6 | 5 | Légendaire | 1243 | 51.2 % | 30 % | 66.9 % | +1.6 | 5.2 | 98 % | 5.8 |
+| Inanna | `inanna` | Jugement | 5 | 5 | Épique | 530 | 47.4 % | 30 % | 37.9 % | -2.2 | 5.4 | 89 % | 5.2 |
+| Set *(pas sortie)* | `set` | Primordial | 5 | 4 | Épique | 453 | 55.4 % | 31 % | 54.6 % | +5.8 | 4.0 | 96 % | 5.4 |
+| Apsu, Veillée des Chaînes *(pas sortie)* | `apsu_n` | Primordial | 6 | 7 | Légendaire | 349 | 50.1 % | 31 % | 51.4 % | +0.5 | 7.4 | 96 % | 5.9 |
+| Pele X Jordan du Réveillon *(pas sortie)* | `ulpele_r` | Primordial | 6 | 4 | Ultra-légendaire | 312 | 41.0 % | 31 % | 38.8 % | -8.6 | 3.8 | 99 % | 5.9 |
+| La Doyenne | `doyenne` | Helvara | 5 | 4 | Commune | 457 | 46.4 % | 32 % | 44.9 % | -3.2 | 4.1 | 93 % | 5.3 |
+| Les Costumes | `costumes` | Helvara | 4 | 3 | Commune | 1015 | 46.5 % | 32 % | 39.5 % | -3.1 | 4.8 | 92 % | 4.9 |
+| Styx *(pas sortie)* | `styx` | Jugement | 4 | 3 | Légendaire | 1729 | 48.5 % | 33 % | 47.2 % | -1.1 | 2.9 | 91 % | 4.6 |
+| Odin *(pas sortie)* | `odin` | Jugement | 4 | 4 | Légendaire | 1677 | 49.6 % | 33 % | 45.4 % | +0.0 | 3.9 | 92 % | 4.7 |
+| Nyx X Oshun *(pas sortie)* | `uloshun` | Primordial | 6 | 4 | Ultra-légendaire | 325 | 56.6 % | 33 % | 68.2 % | +7.0 | 3.9 | 98 % | 5.9 |
+| Balor *(pas sortie)* | `balor` | Jugement | 6 | 5 | Rare | 831 | 55.0 % | 34 % | 62.1 % | +5.4 | 5.2 | 99 % | 5.8 |
+| Hécate | `hecate` | Jugement | 3 | 2 | Commune | 872 | 48.3 % | 34 % | 47.3 % | -1.3 | 2.1 | 89 % | 4.4 |
+| Nyx | `nyx` | Primordial | 6 | 5 | Légendaire | 1193 | 54.1 % | 35 % | 59.3 % | +4.5 | 5.1 | 98 % | 5.8 |
+| Médée *(pas sortie)* | `medee` | Jugement | 4 | 4 | Épique | 766 | 48.3 % | 35 % | 48.1 % | -1.3 | 3.9 | 91 % | 4.7 |
+| Pandore *(pas sortie)* | `pandore` | Désir | 3 | 0 | Épique | 2622 | 46.2 % | 35 % | 40.8 % | -3.4 | 5.0 | 95 % | 5.4 |
+| Calypso X Jordan *(pas sortie)* | `ulcal` | Désir | 5 | 4 | Ultra-légendaire | 297 | 55.9 % | 35 % | 64.8 % | +6.3 | 4.2 | 100 % | 5.3 |
+| Sekhmet | `sekhmet` | Jugement | 5 | 6 | Rare | 499 | 51.7 % | 36 % | 54.4 % | +2.1 | 6.1 | 89 % | 5.1 |
+| Tlazolteotl | `tlazol` | Désir | 3 | 2 | Rare | 903 | 45.6 % | 37 % | 40.8 % | -4.0 | 2.7 | 92 % | 4.5 |
+| Vasseur | `vasseur` | Helvara | 3 | 2 | Commune | 847 | 48.4 % | 37 % | 47.3 % | -1.2 | 4.4 | 96 % | 4.4 |
+| Izanami *(pas sortie)* | `izanami` | Primordial | 3 | 3 | Épique | 1513 | 45.6 % | 37 % | 38.6 % | -4.0 | 3.1 | 90 % | 4.1 |
+| Dante *(pas sortie)* | `dante` | Primordial | 4 | 4 | Rare | 697 | 44.8 % | 37 % | 41.9 % | -4.8 | 4.1 | 89 % | 4.7 |
+| Baldur *(pas sortie)* | `baldur` | Jugement | 4 | 4 | Épique | 1090 | 47.9 % | 37 % | 49.5 % | -1.7 | 4.1 | 95 % | 4.7 |
+| Nike *(pas sortie)* | `nike` | Jugement | 3 | 1 | Ultra-légendaire | 1050 | 48.1 % | 39 % | 44.6 % | -1.5 | 4.2 | 97 % | 5.5 |
+| Nergal, Fossoyeur d'Halloween | `nergal_h` | Primordial | 5 | 4 | Épique | 465 | 48.6 % | 39 % | 51.1 % | -1.0 | 7.6 | 96 % | 5.4 |
+| Qetesh X Jordan *(pas sortie)* | `ulqetjor` | Désir | 6 | 4 | Ultra-légendaire | 296 | 48.0 % | 40 % | 38.5 % | -1.6 | 4.0 | 97 % | 5.9 |
+| Oya | `oya` | Jugement | 5 | 4 | Épique | 476 | 49.2 % | 40 % | 47.1 % | -0.4 | 4.0 | 96 % | 5.3 |
+| Pele | `pele` | Primordial | 5 | 6 | Rare | 418 | 52.2 % | 41 % | 54.4 % | +2.6 | 6.0 | 98 % | 5.2 |
+| Bastet | `bastet` | Désir | 5 | 4 | Rare | 488 | 52.0 % | 41 % | 46.8 % | +2.4 | 4.0 | 96 % | 5.3 |
+| Ereshkigal | `ereshkigal` | Primordial | 6 | 7 | Légendaire | 591 | 53.1 % | 42 % | 58.9 % | +3.5 | 7.0 | 97 % | 5.8 |
+| Vritra | `vritra` | Primordial | 5 | 5 | Légendaire | 1116 | 44.2 % | 42 % | 41.3 % | -5.4 | 5.1 | 97 % | 5.2 |
+| Le Seigneur de la marée noire *(pas sortie)* | `maree` | Primordial | 6 | 8 | Légendaire | 633 | 53.9 % | 42 % | 63.6 % | +4.3 | 8.1 | 100 % | 5.9 |
+| Hathor | `hathor` | Désir | 4 | 3 | Rare | 805 | 51.6 % | 42 % | 51.3 % | +2.0 | 3.1 | 94 % | 4.8 |
+| Anat | `anat` | Désir | 4 | 4 | Épique | 1130 | 46.3 % | 42 % | 42.0 % | -3.3 | 5.6 | 93 % | 4.8 |
+| Perséphone | `persephone` | Jugement | 3 | 3 | Rare | 1443 | 47.0 % | 44 % | 45.2 % | -2.6 | 2.9 | 92 % | 4.3 |
+| Hadès *(pas sortie)* | `hades` | Primordial | 4 | 4 | Légendaire | 1731 | 46.2 % | 45 % | 42.8 % | -3.4 | 3.9 | 91 % | 4.6 |
+| Éos de Nouvel An *(pas sortie)* | `eos_r` | Jugement | 2 | 1 | Épique | 887 | 45.8 % | 46 % | 47.3 % | -3.8 | 1.4 | 89 % | 3.8 |
+| Jordan X Izzy | `ulji` | Désir | 6 | 6 | Ultra-légendaire | 310 | 48.7 % | 47 % | 57.2 % | -0.9 | 6.0 | 99 % | 5.9 |
+| Qetesh du Nouvel An *(pas sortie)* | `qetesh_r` | Désir | 5 | 3 | Épique | 698 | 61.7 % | 47 % | 66.7 % | +12.1 | 3.3 | 97 % | 4.8 |
+| La Mère de Cendre | `mere` | Primordial | 5 | 4 | Rare | 479 | 48.4 % | 47 % | 44.9 % | -1.2 | 3.8 | 96 % | 5.0 |
+| Nyx, Guerrière d'Halloween | `nyx_h` | Primordial | 5 | 4 | Épique | 417 | 54.2 % | 48 % | 57.3 % | +4.6 | 4.1 | 96 % | 5.2 |
+| Pele du Réveillon *(pas sortie)* | `pele_r` | Primordial | 5 | 3 | Épique | 748 | 47.6 % | 48 % | 49.0 % | -2.0 | 3.3 | 96 % | 5.2 |
+| Thor *(pas sortie)* | `thor` | Primordial | 4 | 3 | Épique | 960 | 47.7 % | 48 % | 46.9 % | -1.9 | 3.1 | 92 % | 4.3 |
+| Izzy, Lune de Sang | `izzy_h` | Désir | 3 | 0 | Légendaire | 769 | 50.3 % | 48 % | 52.8 % | +0.7 | 2.4 | 92 % | 4.4 |
+| Qetesh X Jordan du Nouvel An *(pas sortie)* | `ulqetjor_r` | Désir | 6 | 4 | Ultra-légendaire | 312 | 68.9 % | 48 % | 83.4 % | +19.3 | 3.8 | 99 % | 5.9 |
+| Jordan, le Narrateur | `jordan_n` | Primordial | 1 | 0 | Épique | 1992 | 48.3 % | 50 % | 47.6 % | -1.3 | 0.4 | 87 % | 3.2 |
 
 ### Toutes les cartes simulées, par rareté puis par écart
 
@@ -184,201 +181,201 @@ Colonnes : **decks** = nombre de decks (des deux camps) qui contenaient la carte
 
 | Carte | id | Faction | Coût | Puiss. | Rareté | Decks | Victoire (deck) | Pose | Victoire (posée) | Écart | Puiss. fin | Survie | Tour |
 |---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Le Troll | `troll` | Primordial | 5 | 9 | Commune | 450 | 57.1 % | 53 % | 57.9 % | +7.5 | 9.0 | 95 % | 5.2 |
-| Dévote de Xochiquetzal | `devote` | Désir | 4 | 6 | Commune | 766 | 53.9 % | 64 % | 53.2 % | +4.3 | 5.9 | 91 % | 4.4 |
-| Le Charognard du M2 | `charognard` | Helvara | 2 | 2 | Commune | 918 | 53.5 % | 73 % | 53.9 % | +3.9 | 3.8 | 94 % | 3.7 |
-| Passante d'Ouchy | `passante` | Helvara | 1 | 2 | Commune | 970 | 52.6 % | 74 % | 51.0 % | +3.0 | 2.5 | 89 % | 2.8 |
-| Veilleur du Sous-gare | `veilleur` | Helvara | 2 | 3 | Commune | 886 | 52.1 % | 73 % | 50.5 % | +2.5 | 3.3 | 89 % | 3.3 |
-| Le Mendiant de la Riponne *(pas sortie)* | `mendiant` | Helvara | 0 | 2 | Commune | 731 | 52.0 % | 81 % | 51.1 % | +2.4 | 2.4 | 92 % | 2.9 |
-| Le Bibliothécaire des Passages | `biblio` | Helvara | 1 | 2 | Commune | 973 | 51.7 % | 77 % | 51.9 % | +2.1 | 2.5 | 90 % | 2.9 |
-| Rémi | `remi` | Helvara | 2 | 1 | Commune | 888 | 51.5 % | 68 % | 49.7 % | +1.9 | 4.0 | 93 % | 4.0 |
-| Sélène | `selene` | Jugement | 4 | 4 | Commune | 832 | 51.2 % | 65 % | 49.5 % | +1.6 | 6.7 | 92 % | 4.9 |
-| Rusalka | `rusalka` | Primordial | 2 | 2 | Commune | 906 | 51.0 % | 63 % | 48.5 % | +1.4 | 2.0 | 90 % | 3.6 |
-| Le Boucher de la Riponne *(pas sortie)* | `boucher` | Helvara | 1 | 3 | Commune | 993 | 50.6 % | 68 % | 51.1 % | +1.0 | 3.2 | 87 % | 2.5 |
-| Le Funambule du Belvédère | `funambule` | Helvara | 2 | 2 | Commune | 885 | 50.5 % | 66 % | 48.3 % | +0.9 | 3.3 | 91 % | 3.1 |
-| Coursier du Flon | `coursier` | Helvara | 1 | 1 | Commune | 985 | 50.1 % | 70 % | 51.4 % | +0.5 | 1.6 | 87 % | 2.9 |
-| Maeve | `maeve` | Désir | 3 | 3 | Commune | 794 | 49.9 % | 70 % | 49.6 % | +0.3 | 5.2 | 90 % | 3.7 |
-| Les Costumes | `costumes` | Helvara | 4 | 3 | Commune | 1022 | 49.1 % | 33 % | 43.0 % | -0.5 | 4.9 | 94 % | 4.9 |
-| Kitsune | `kitsune` | Désir | 1 | 1 | Commune | 949 | 49.1 % | 73 % | 50.1 % | -0.5 | 1.3 | 87 % | 2.8 |
-| Hécate | `hecate` | Jugement | 3 | 2 | Commune | 885 | 49.0 % | 36 % | 47.6 % | -0.6 | 2.2 | 91 % | 4.3 |
-| Tefnut *(pas sortie)* | `tefnut` | Jugement | 2 | 2 | Commune | 982 | 48.3 % | 71 % | 47.3 % | -1.3 | 2.1 | 89 % | 3.7 |
-| Vasseur | `vasseur` | Helvara | 3 | 2 | Commune | 840 | 47.9 % | 37 % | 46.0 % | -1.7 | 4.5 | 95 % | 4.3 |
-| La Mouche de la Faille *(pas sortie)* | `mouche` | Primordial | 1 | 3 | Commune | 906 | 47.5 % | 76 % | 45.5 % | -2.1 | 2.9 | 86 % | 2.8 |
-| La Doyenne | `doyenne` | Helvara | 5 | 4 | Commune | 463 | 45.6 % | 33 % | 47.7 % | -4.0 | 4.1 | 95 % | 5.4 |
+| Le Troll | `troll` | Primordial | 5 | 9 | Commune | 439 | 54.2 % | 54 % | 56.3 % | +4.6 | 9.0 | 95 % | 5.1 |
+| Veilleur du Sous-gare | `veilleur` | Helvara | 2 | 3 | Commune | 889 | 52.3 % | 72 % | 52.0 % | +2.7 | 3.3 | 86 % | 3.3 |
+| Le Charognard du M2 | `charognard` | Helvara | 2 | 2 | Commune | 921 | 51.9 % | 73 % | 52.7 % | +2.3 | 3.9 | 93 % | 3.6 |
+| Rémi | `remi` | Helvara | 2 | 1 | Commune | 881 | 51.8 % | 66 % | 52.0 % | +2.2 | 4.2 | 92 % | 3.9 |
+| Le Bibliothécaire des Passages | `biblio` | Helvara | 1 | 2 | Commune | 954 | 51.3 % | 78 % | 51.1 % | +1.7 | 2.4 | 88 % | 2.9 |
+| Le Funambule du Belvédère | `funambule` | Helvara | 2 | 2 | Commune | 901 | 51.1 % | 67 % | 49.8 % | +1.5 | 3.4 | 89 % | 3.1 |
+| Dévote de Xochiquetzal | `devote` | Désir | 4 | 6 | Commune | 761 | 51.0 % | 63 % | 50.9 % | +1.4 | 5.9 | 91 % | 4.4 |
+| Passante d'Ouchy | `passante` | Helvara | 1 | 2 | Commune | 968 | 50.2 % | 73 % | 49.6 % | +0.6 | 2.5 | 90 % | 2.8 |
+| Sélène | `selene` | Jugement | 4 | 4 | Commune | 829 | 50.2 % | 65 % | 48.5 % | +0.6 | 6.8 | 93 % | 5.0 |
+| Le Mendiant de la Riponne *(pas sortie)* | `mendiant` | Helvara | 0 | 2 | Commune | 760 | 49.9 % | 81 % | 49.8 % | +0.3 | 2.4 | 90 % | 2.9 |
+| Maeve | `maeve` | Désir | 3 | 3 | Commune | 809 | 49.3 % | 71 % | 49.1 % | -0.3 | 5.1 | 91 % | 3.8 |
+| Coursier du Flon | `coursier` | Helvara | 1 | 1 | Commune | 984 | 49.3 % | 70 % | 48.5 % | -0.3 | 1.6 | 86 % | 2.9 |
+| Kitsune | `kitsune` | Désir | 1 | 1 | Commune | 932 | 48.7 % | 72 % | 48.1 % | -0.9 | 1.3 | 86 % | 2.7 |
+| Rusalka | `rusalka` | Primordial | 2 | 2 | Commune | 905 | 48.6 % | 65 % | 46.0 % | -1.0 | 2.1 | 88 % | 3.7 |
+| Vasseur | `vasseur` | Helvara | 3 | 2 | Commune | 847 | 48.4 % | 37 % | 47.3 % | -1.2 | 4.4 | 96 % | 4.4 |
+| Hécate | `hecate` | Jugement | 3 | 2 | Commune | 872 | 48.3 % | 34 % | 47.3 % | -1.3 | 2.1 | 89 % | 4.4 |
+| La Mouche de la Faille *(pas sortie)* | `mouche` | Primordial | 1 | 3 | Commune | 908 | 47.5 % | 75 % | 46.0 % | -2.1 | 3.0 | 86 % | 2.7 |
+| Tefnut *(pas sortie)* | `tefnut` | Jugement | 2 | 2 | Commune | 992 | 47.2 % | 72 % | 45.7 % | -2.4 | 2.1 | 88 % | 3.7 |
+| Les Costumes | `costumes` | Helvara | 4 | 3 | Commune | 1015 | 46.5 % | 32 % | 39.5 % | -3.1 | 4.8 | 92 % | 4.9 |
+| La Doyenne | `doyenne` | Helvara | 5 | 4 | Commune | 457 | 46.4 % | 32 % | 44.9 % | -3.2 | 4.1 | 93 % | 5.3 |
+| Le Boucher de la Riponne *(pas sortie)* | `boucher` | Helvara | 1 | 3 | Commune | 972 | 46.2 % | 69 % | 47.1 % | -3.4 | 3.2 | 88 % | 2.6 |
 
 #### Rare (46)
 
 | Carte | id | Faction | Coût | Puiss. | Rareté | Decks | Victoire (deck) | Pose | Victoire (posée) | Écart | Puiss. fin | Survie | Tour |
 |---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Ishara | `ishara` | Helvara | 2 | 2 | Rare | 1199 | 55.5 % | 71 % | 54.4 % | +5.9 | 2.4 | 91 % | 3.7 |
-| Bastet | `bastet` | Désir | 5 | 4 | Rare | 487 | 55.0 % | 37 % | 50.3 % | +5.4 | 4.0 | 97 % | 5.3 |
-| Céleste | `celeste` | Helvara | 3 | 3 | Rare | 1214 | 54.9 % | 73 % | 55.3 % | +5.3 | 5.7 | 89 % | 3.8 |
-| Balor *(pas sortie)* | `balor` | Jugement | 6 | 5 | Rare | 830 | 54.3 % | 40 % | 64.8 % | +4.7 | 5.1 | 99 % | 5.8 |
-| Colosse du Léman | `colosse` | Helvara | 5 | 8 | Rare | 457 | 54.3 % | 58 % | 58.2 % | +4.7 | 8.2 | 95 % | 5.1 |
-| La Messagère d'Hécate *(pas sortie)* | `messagere` | Helvara | 2 | 2 | Rare | 1161 | 54.3 % | 61 % | 58.7 % | +4.7 | 4.9 | 88 % | 3.5 |
-| Durga | `durga` | Jugement | 5 | 5 | Rare | 520 | 54.0 % | 58 % | 56.0 % | +4.4 | 7.6 | 95 % | 5.1 |
-| Arès | `ares` | Primordial | 4 | 3 | Rare | 727 | 53.9 % | 53 % | 53.9 % | +4.3 | 4.9 | 93 % | 4.7 |
-| Oshun *(pas sortie)* | `oshun` | Désir | 4 | 3 | Rare | 1042 | 52.7 % | 59 % | 51.8 % | +3.1 | 3.1 | 93 % | 4.7 |
-| Pele | `pele` | Primordial | 5 | 6 | Rare | 398 | 52.5 % | 43 % | 52.6 % | +2.9 | 6.1 | 97 % | 5.3 |
-| La Mère de Cendre | `mere` | Primordial | 5 | 4 | Rare | 475 | 52.2 % | 48 % | 51.5 % | +2.6 | 4.0 | 96 % | 5.0 |
-| L'Écorché Silencieux | `ecorche` | Helvara | 3 | 3 | Rare | 1193 | 52.0 % | 67 % | 50.1 % | +2.4 | 3.6 | 92 % | 4.1 |
-| Araignée de cristal | `araignee` | Primordial | 4 | 4 | Rare | 721 | 51.7 % | 54 % | 48.5 % | +2.1 | 3.8 | 92 % | 4.6 |
-| Le Comptable du Grand-Pont | `comptable` | Helvara | 1 | 1 | Rare | 1552 | 51.6 % | 76 % | 51.3 % | +2.0 | 2.6 | 88 % | 3.0 |
-| Félix | `felix` | Helvara | 2 | 3 | Rare | 1176 | 51.4 % | 72 % | 52.3 % | +1.8 | 3.3 | 89 % | 3.4 |
-| Skadi | `skadi` | Jugement | 3 | 3 | Rare | 1019 | 51.1 % | 72 % | 51.1 % | +1.5 | 3.0 | 87 % | 3.8 |
-| Le Relieur | `relieur` | Helvara | 2 | 2 | Rare | 1209 | 51.0 % | 65 % | 49.1 % | +1.4 | 2.4 | 89 % | 3.6 |
-| Athéna *(pas sortie)* | `athena` | Jugement | 2 | 2 | Rare | 1397 | 50.5 % | 63 % | 46.6 % | +0.9 | 2.1 | 90 % | 3.5 |
-| Andraste *(pas sortie)* | `andraste` | Désir | 4 | 3 | Rare | 767 | 50.3 % | 58 % | 51.0 % | +0.7 | 6.7 | 93 % | 4.6 |
-| Sekhmet | `sekhmet` | Jugement | 5 | 6 | Rare | 495 | 50.3 % | 40 % | 53.0 % | +0.7 | 6.1 | 96 % | 5.2 |
-| Týr | `tyr` | Jugement | 2 | 3 | Rare | 1371 | 50.1 % | 71 % | 50.5 % | +0.5 | 2.9 | 91 % | 3.5 |
-| Le Sans-Voix *(pas sortie)* | `sansvoix` | Primordial | 2 | 4 | Rare | 1320 | 50.0 % | 73 % | 51.8 % | +0.4 | 3.9 | 92 % | 3.3 |
-| Hathor | `hathor` | Désir | 4 | 3 | Rare | 806 | 49.8 % | 40 % | 49.2 % | +0.2 | 3.1 | 93 % | 4.8 |
-| Idunn | `idunn` | Désir | 2 | 2 | Rare | 1179 | 49.1 % | 62 % | 49.2 % | -0.5 | 3.3 | 90 % | 3.6 |
-| L'Esquille | `esquille` | Primordial | 3 | 1 | Rare | 841 | 49.1 % | 51 % | 45.5 % | -0.5 | 1.2 | 89 % | 4.3 |
-| Freyr | `freyr` | Désir | 3 | 3 | Rare | 882 | 49.1 % | 52 % | 46.3 % | -0.5 | 3.2 | 89 % | 4.1 |
-| Melinoë | `melinoe` | Primordial | 2 | 2 | Rare | 1366 | 49.0 % | 77 % | 49.2 % | -0.6 | 4.4 | 92 % | 3.1 |
-| Izzy | `izzy` | Désir | 2 | 1 | Rare | 1485 | 49.0 % | 69 % | 49.4 % | -0.6 | 3.6 | 92 % | 3.8 |
-| Le Tatoueur de Chauderon *(pas sortie)* | `tatoueur` | Helvara | 2 | 2 | Rare | 1208 | 48.9 % | 72 % | 47.0 % | -0.7 | 2.3 | 88 % | 3.5 |
-| Bia *(pas sortie)* | `bia` | Jugement | 3 | 3 | Rare | 1769 | 48.7 % | 64 % | 47.5 % | -0.9 | 3.6 | 91 % | 4.3 |
-| Agent de Thot | `thot` | Jugement | 3 | 3 | Rare | 1195 | 48.6 % | 70 % | 48.4 % | -1.0 | 2.9 | 91 % | 4.0 |
-| Éris | `eris` | Désir | 3 | 3 | Rare | 913 | 48.4 % | 57 % | 45.2 % | -1.2 | 3.2 | 88 % | 4.3 |
-| Dante *(pas sortie)* | `dante` | Primordial | 4 | 4 | Rare | 721 | 48.4 % | 39 % | 47.1 % | -1.2 | 4.1 | 95 % | 4.7 |
-| Artémis | `artemis` | Jugement | 3 | 3 | Rare | 1403 | 48.1 % | 70 % | 48.3 % | -1.5 | 3.3 | 91 % | 4.0 |
-| Brigid *(pas sortie)* | `brigid` | Désir | 2 | 2 | Rare | 1179 | 48.1 % | 69 % | 49.8 % | -1.5 | 2.2 | 89 % | 3.5 |
-| Éos | `eos` | Jugement | 2 | 2 | Rare | 1470 | 48.0 % | 60 % | 46.8 % | -1.6 | 2.1 | 91 % | 3.6 |
-| Morrigan | `morrigan` | Jugement | 2 | 2 | Rare | 1319 | 47.6 % | 67 % | 44.5 % | -2.0 | 2.0 | 90 % | 3.2 |
-| Hermès | `hermes` | Désir | 1 | 1 | Rare | 1099 | 46.7 % | 63 % | 45.7 % | -2.9 | 1.3 | 86 % | 2.8 |
-| Dionysos *(pas sortie)* | `dionysos` | Désir | 2 | 2 | Rare | 1258 | 46.2 % | 61 % | 43.5 % | -3.4 | 2.2 | 91 % | 3.7 |
-| Eir | `eir` | Jugement | 4 | 3 | Rare | 860 | 45.7 % | 18 % | 41.1 % | -3.9 | 3.3 | 98 % | 4.9 |
-| Freya | `freya` | Désir | 5 | 5 | Rare | 508 | 45.7 % | 31 % | 31.2 % | -3.9 | 5.5 | 94 % | 5.2 |
-| Ame-no-Uzume | `uzume` | Désir | 2 | 3 | Rare | 1173 | 45.4 % | 70 % | 43.1 % | -4.2 | 3.3 | 96 % | 3.4 |
-| Tlazolteotl | `tlazol` | Désir | 3 | 2 | Rare | 905 | 45.2 % | 37 % | 40.1 % | -4.4 | 2.8 | 92 % | 4.3 |
-| Perséphone | `persephone` | Jugement | 3 | 3 | Rare | 1424 | 45.0 % | 52 % | 41.7 % | -4.6 | 2.8 | 93 % | 4.3 |
-| La Nuée de Miroirs | `nuee` | Primordial | 4 | 3 | Rare | 766 | 44.4 % | 28 % | 39.5 % | -5.2 | 4.6 | 95 % | 5.2 |
-| Konohanasakuya-Hime | `konohana` | Désir | 1 | 4 | Rare | 1139 | 41.1 % | 76 % | 40.0 % | -8.5 | 0.9 | 86 % | 2.7 |
+| Balor *(pas sortie)* | `balor` | Jugement | 6 | 5 | Rare | 831 | 55.0 % | 34 % | 62.1 % | +5.4 | 5.2 | 99 % | 5.8 |
+| La Messagère d'Hécate *(pas sortie)* | `messagere` | Helvara | 2 | 2 | Rare | 1149 | 54.0 % | 62 % | 57.0 % | +4.4 | 4.9 | 89 % | 3.6 |
+| Ishara | `ishara` | Helvara | 2 | 2 | Rare | 1193 | 53.2 % | 71 % | 53.1 % | +3.6 | 2.4 | 91 % | 3.7 |
+| Durga | `durga` | Jugement | 5 | 5 | Rare | 508 | 53.0 % | 57 % | 57.8 % | +3.4 | 7.6 | 96 % | 5.2 |
+| Pele | `pele` | Primordial | 5 | 6 | Rare | 418 | 52.2 % | 41 % | 54.4 % | +2.6 | 6.0 | 98 % | 5.2 |
+| Bastet | `bastet` | Désir | 5 | 4 | Rare | 488 | 52.0 % | 41 % | 46.8 % | +2.4 | 4.0 | 96 % | 5.3 |
+| Éris | `eris` | Désir | 3 | 3 | Rare | 909 | 52.0 % | 59 % | 49.2 % | +2.4 | 3.2 | 89 % | 4.3 |
+| Oshun *(pas sortie)* | `oshun` | Désir | 4 | 3 | Rare | 1050 | 51.7 % | 60 % | 51.0 % | +2.1 | 3.1 | 94 % | 4.7 |
+| Sekhmet | `sekhmet` | Jugement | 5 | 6 | Rare | 499 | 51.7 % | 36 % | 54.4 % | +2.1 | 6.1 | 89 % | 5.1 |
+| Arès | `ares` | Primordial | 4 | 3 | Rare | 710 | 51.7 % | 55 % | 53.5 % | +2.1 | 4.8 | 94 % | 4.8 |
+| Hathor | `hathor` | Désir | 4 | 3 | Rare | 805 | 51.6 % | 42 % | 51.3 % | +2.0 | 3.1 | 94 % | 4.8 |
+| Colosse du Léman | `colosse` | Helvara | 5 | 8 | Rare | 465 | 51.2 % | 58 % | 55.4 % | +1.6 | 8.3 | 95 % | 5.2 |
+| L'Écorché Silencieux | `ecorche` | Helvara | 3 | 3 | Rare | 1212 | 51.0 % | 68 % | 50.1 % | +1.4 | 3.6 | 89 % | 4.1 |
+| Freya | `freya` | Désir | 5 | 5 | Rare | 499 | 50.9 % | 29 % | 44.4 % | +1.3 | 5.6 | 94 % | 5.3 |
+| Céleste | `celeste` | Helvara | 3 | 3 | Rare | 1209 | 50.9 % | 72 % | 50.9 % | +1.3 | 5.7 | 89 % | 3.7 |
+| Le Tatoueur de Chauderon *(pas sortie)* | `tatoueur` | Helvara | 2 | 2 | Rare | 1210 | 50.3 % | 72 % | 48.3 % | +0.7 | 2.3 | 89 % | 3.5 |
+| Le Comptable du Grand-Pont | `comptable` | Helvara | 1 | 1 | Rare | 1554 | 50.0 % | 75 % | 50.3 % | +0.4 | 2.6 | 87 % | 3.0 |
+| Skadi | `skadi` | Jugement | 3 | 3 | Rare | 1018 | 49.9 % | 70 % | 50.5 % | +0.3 | 3.0 | 87 % | 3.9 |
+| Éos | `eos` | Jugement | 2 | 2 | Rare | 1466 | 49.9 % | 57 % | 48.8 % | +0.3 | 2.1 | 90 % | 3.5 |
+| Andraste *(pas sortie)* | `andraste` | Désir | 4 | 3 | Rare | 769 | 49.8 % | 59 % | 51.5 % | +0.2 | 6.7 | 95 % | 4.6 |
+| Athéna *(pas sortie)* | `athena` | Jugement | 2 | 2 | Rare | 1401 | 49.6 % | 61 % | 48.2 % | +0.0 | 2.1 | 90 % | 3.5 |
+| Bia *(pas sortie)* | `bia` | Jugement | 3 | 3 | Rare | 1765 | 49.6 % | 61 % | 47.4 % | -0.0 | 3.8 | 91 % | 4.4 |
+| Félix | `felix` | Helvara | 2 | 3 | Rare | 1181 | 49.5 % | 71 % | 49.6 % | -0.1 | 3.3 | 89 % | 3.4 |
+| Týr | `tyr` | Jugement | 2 | 3 | Rare | 1339 | 49.4 % | 71 % | 49.1 % | -0.2 | 2.9 | 91 % | 3.5 |
+| Freyr | `freyr` | Désir | 3 | 3 | Rare | 876 | 49.3 % | 53 % | 47.1 % | -0.3 | 3.3 | 91 % | 4.2 |
+| Izzy | `izzy` | Désir | 2 | 1 | Rare | 1443 | 49.3 % | 69 % | 49.8 % | -0.3 | 3.6 | 89 % | 3.8 |
+| Artémis | `artemis` | Jugement | 3 | 3 | Rare | 1375 | 49.2 % | 70 % | 49.2 % | -0.4 | 3.1 | 91 % | 3.9 |
+| Araignée de cristal | `araignee` | Primordial | 4 | 4 | Rare | 719 | 49.2 % | 55 % | 47.7 % | -0.4 | 3.8 | 94 % | 4.6 |
+| Morrigan | `morrigan` | Jugement | 2 | 2 | Rare | 1322 | 49.1 % | 67 % | 48.4 % | -0.5 | 2.1 | 90 % | 3.2 |
+| Le Relieur | `relieur` | Helvara | 2 | 2 | Rare | 1220 | 49.0 % | 64 % | 46.9 % | -0.6 | 2.4 | 89 % | 3.6 |
+| Brigid *(pas sortie)* | `brigid` | Désir | 2 | 2 | Rare | 1128 | 48.8 % | 70 % | 50.4 % | -0.8 | 2.1 | 90 % | 3.5 |
+| Melinoë | `melinoe` | Primordial | 2 | 2 | Rare | 1365 | 48.7 % | 77 % | 49.9 % | -0.9 | 4.4 | 92 % | 3.1 |
+| La Mère de Cendre | `mere` | Primordial | 5 | 4 | Rare | 479 | 48.4 % | 47 % | 44.9 % | -1.2 | 3.8 | 96 % | 5.0 |
+| Agent de Thot | `thot` | Jugement | 3 | 3 | Rare | 1168 | 48.4 % | 68 % | 48.2 % | -1.2 | 2.9 | 91 % | 4.0 |
+| Idunn | `idunn` | Désir | 2 | 2 | Rare | 1156 | 48.2 % | 62 % | 47.8 % | -1.4 | 3.4 | 91 % | 3.6 |
+| Le Sans-Voix *(pas sortie)* | `sansvoix` | Primordial | 2 | 4 | Rare | 1346 | 47.9 % | 73 % | 49.4 % | -1.7 | 3.9 | 92 % | 3.3 |
+| Dionysos *(pas sortie)* | `dionysos` | Désir | 2 | 2 | Rare | 1217 | 47.7 % | 61 % | 44.4 % | -1.9 | 2.1 | 89 % | 3.6 |
+| Ame-no-Uzume | `uzume` | Désir | 2 | 3 | Rare | 1139 | 47.6 % | 69 % | 46.4 % | -2.0 | 3.3 | 96 % | 3.4 |
+| Hermès | `hermes` | Désir | 1 | 1 | Rare | 892 | 47.1 % | 61 % | 46.4 % | -2.5 | 1.2 | 86 % | 2.8 |
+| La Nuée de Miroirs | `nuee` | Primordial | 4 | 3 | Rare | 747 | 47.0 % | 29 % | 41.0 % | -2.6 | 4.6 | 97 % | 5.1 |
+| Perséphone | `persephone` | Jugement | 3 | 3 | Rare | 1443 | 47.0 % | 44 % | 45.2 % | -2.6 | 2.9 | 92 % | 4.3 |
+| L'Esquille | `esquille` | Primordial | 3 | 1 | Rare | 842 | 45.7 % | 52 % | 44.0 % | -3.9 | 1.3 | 88 % | 4.3 |
+| Tlazolteotl | `tlazol` | Désir | 3 | 2 | Rare | 903 | 45.6 % | 37 % | 40.8 % | -4.0 | 2.7 | 92 % | 4.5 |
+| Konohanasakuya-Hime | `konohana` | Désir | 1 | 4 | Rare | 911 | 45.0 % | 77 % | 43.7 % | -4.6 | 1.0 | 86 % | 2.7 |
+| Dante *(pas sortie)* | `dante` | Primordial | 4 | 4 | Rare | 697 | 44.8 % | 37 % | 41.9 % | -4.8 | 4.1 | 89 % | 4.7 |
+| Eir | `eir` | Jugement | 4 | 3 | Rare | 849 | 42.3 % | 16 % | 31.4 % | -7.3 | 3.3 | 99 % | 4.9 |
 
 #### Épique (48)
 
 | Carte | id | Faction | Coût | Puiss. | Rareté | Decks | Victoire (deck) | Pose | Victoire (posée) | Écart | Puiss. fin | Survie | Tour |
 |---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Qetesh du Nouvel An *(pas sortie)* | `qetesh_r` | Désir | 5 | 3 | Épique | 702 | 61.0 % | 47 % | 68.4 % | +11.4 | 3.3 | 97 % | 4.8 |
-| Yarden Weiss | `yarden` | Primordial | 5 | 6 | Épique | 1616 | 58.0 % | 59 % | 59.5 % | +8.4 | 8.4 | 95 % | 5.2 |
-| Arès, Boucher d'Halloween | `ares_h` | Primordial | 5 | 4 | Épique | 433 | 55.9 % | 55 % | 60.1 % | +6.3 | 6.0 | 96 % | 5.3 |
-| Nergal | `nergal` | Primordial | 5 | 4 | Épique | 714 | 53.9 % | 53 % | 57.3 % | +4.3 | 4.5 | 94 % | 5.1 |
-| Poséidon *(pas sortie)* | `poseidon` | Primordial | 4 | 3 | Épique | 916 | 53.7 % | 58 % | 54.0 % | +4.1 | 3.0 | 94 % | 4.4 |
-| Aphrodite, Étoile de Noël *(pas sortie)* | `aphrodite_n` | Désir | 5 | 4 | Épique | 393 | 53.4 % | 57 % | 56.0 % | +3.8 | 3.9 | 96 % | 4.9 |
-| Qetesh *(pas sortie)* | `qetesh` | Désir | 4 | 2 | Épique | 1545 | 53.0 % | 63 % | 56.9 % | +3.4 | 2.4 | 94 % | 4.4 |
-| Nergal, Fossoyeur d'Halloween | `nergal_h` | Primordial | 5 | 4 | Épique | 458 | 52.8 % | 39 % | 49.7 % | +3.2 | 7.7 | 94 % | 5.3 |
-| Le Graffeur du Tunnel de la Borde *(pas sortie)* | `graffeur` | Helvara | 3 | 2 | Épique | 1597 | 52.2 % | 65 % | 53.0 % | +2.6 | 2.6 | 87 % | 3.7 |
-| Le Chasseur d'échos *(pas sortie)* | `chasseur` | Primordial | 4 | 3 | Épique | 945 | 52.1 % | 59 % | 51.0 % | +2.5 | 3.0 | 93 % | 4.5 |
-| Hel, Reine du Réveillon *(pas sortie)* | `hel_r` | Primordial | 5 | 2 | Épique | 396 | 52.0 % | 20 % | 64.1 % | +2.4 | 2.2 | 95 % | 5.3 |
-| Dame Joanna | `joanna` | Helvara | 2 | 2 | Épique | 915 | 51.9 % | 74 % | 51.3 % | +2.3 | 2.4 | 91 % | 3.5 |
-| Calypso, Reine des Glaces *(pas sortie)* | `calypso_n` | Désir | 5 | 3 | Épique | 426 | 51.9 % | 48 % | 60.3 % | +2.3 | 5.2 | 96 % | 5.3 |
-| Susanoo *(pas sortie)* | `susanoo` | Jugement | 4 | 4 | Épique | 893 | 51.6 % | 57 % | 52.5 % | +2.0 | 3.8 | 92 % | 4.1 |
-| Nyx, Guerrière d'Halloween | `nyx_h` | Primordial | 5 | 4 | Épique | 422 | 51.4 % | 48 % | 55.0 % | +1.8 | 3.9 | 96 % | 5.2 |
-| Ixchel | `ixchel` | Jugement | 4 | 4 | Épique | 869 | 51.3 % | 68 % | 52.2 % | +1.7 | 3.8 | 93 % | 4.3 |
-| Jordan, le Créateur | `jordan` | Primordial | 1 | -1 | Épique | 1990 | 51.0 % | 30 % | 44.9 % | +1.4 | -0.3 | 85 % | 3.7 |
-| Morrigan, Sorcière d'Halloween | `morrigan_h` | Jugement | 2 | 2 | Épique | 875 | 50.9 % | 61 % | 49.4 % | +1.3 | 2.1 | 90 % | 3.6 |
-| La Ficelle Dévorante | `ficelle` | Helvara | 5 | 4 | Épique | 1200 | 50.8 % | 26 % | 49.5 % | +1.1 | 7.9 | 92 % | 5.2 |
-| Chernobog *(pas sortie)* | `chernobog` | Jugement | 4 | 4 | Épique | 878 | 50.2 % | 49 % | 53.1 % | +0.6 | 4.0 | 89 % | 4.7 |
-| Fange *(pas sortie)* | `fange` | Primordial | 3 | 3 | Épique | 1532 | 50.1 % | 58 % | 48.8 % | +0.5 | 4.5 | 91 % | 4.0 |
-| Jordan, le Narrateur | `jordan_n` | Primordial | 1 | 0 | Épique | 1997 | 49.9 % | 49 % | 47.8 % | +0.3 | 0.4 | 87 % | 3.2 |
-| Heimdall *(pas sortie)* | `heimdall` | Jugement | 3 | 3 | Épique | 1594 | 49.9 % | 75 % | 48.8 % | +0.3 | 4.7 | 87 % | 3.9 |
-| Thor *(pas sortie)* | `thor` | Primordial | 4 | 3 | Épique | 948 | 49.6 % | 47 % | 47.8 % | -0.0 | 3.2 | 93 % | 4.3 |
-| Scáthach *(pas sortie)* | `scathach` | Jugement | 4 | 3 | Épique | 877 | 49.4 % | 60 % | 49.0 % | -0.2 | 3.0 | 89 % | 4.3 |
-| Sekhmet, Lionne de l'Hiver *(pas sortie)* | `sekhmet_n` | Jugement | 5 | 4 | Épique | 471 | 49.3 % | 25 % | 48.3 % | -0.3 | 3.9 | 93 % | 5.3 |
-| Set *(pas sortie)* | `set` | Primordial | 5 | 4 | Épique | 471 | 49.3 % | 24 % | 34.2 % | -0.3 | 4.2 | 100 % | 5.5 |
-| Calypso *(pas sortie)* | `calypso` | Désir | 5 | 4 | Épique | 1131 | 49.2 % | 53 % | 51.6 % | -0.4 | 4.3 | 95 % | 5.2 |
-| Oya | `oya` | Jugement | 5 | 4 | Épique | 462 | 48.9 % | 38 % | 49.1 % | -0.7 | 4.1 | 97 % | 5.3 |
-| Éos de Nouvel An *(pas sortie)* | `eos_r` | Jugement | 2 | 1 | Épique | 889 | 48.0 % | 48 % | 47.1 % | -1.6 | 1.4 | 90 % | 3.9 |
-| Inanna | `inanna` | Jugement | 5 | 5 | Épique | 532 | 47.6 % | 33 % | 39.8 % | -2.0 | 5.2 | 94 % | 5.3 |
-| Izanami *(pas sortie)* | `izanami` | Primordial | 3 | 3 | Épique | 1512 | 47.4 % | 38 % | 44.6 % | -2.2 | 3.0 | 89 % | 4.1 |
-| Pele du Réveillon *(pas sortie)* | `pele_r` | Primordial | 5 | 3 | Épique | 745 | 47.4 % | 49 % | 48.4 % | -2.2 | 3.3 | 96 % | 5.1 |
-| Cronos *(pas sortie)* | `cronos` | Primordial | 3 | 3 | Épique | 1534 | 47.1 % | 54 % | 42.2 % | -2.5 | 3.6 | 91 % | 4.0 |
-| Médée, Mariée Spectrale | `medee_h` | Jugement | 4 | 3 | Épique | 759 | 46.9 % | 13 % | 43.3 % | -2.7 | 3.0 | 97 % | 5.0 |
-| Médée *(pas sortie)* | `medee` | Jugement | 4 | 3 | Épique | 763 | 46.5 % | 17 % | 39.8 % | -3.1 | 2.9 | 94 % | 4.9 |
-| Le Bourreau de la brèche *(pas sortie)* | `bourreau` | Jugement | 3 | 2 | Épique | 1588 | 46.4 % | 25 % | 39.5 % | -3.2 | 2.1 | 94 % | 4.5 |
-| Amaterasu | `amaterasu` | Jugement | 5 | 4 | Épique | 520 | 46.0 % | 12 % | 38.1 % | -3.6 | 4.3 | 89 % | 5.3 |
-| Baldur *(pas sortie)* | `baldur` | Jugement | 4 | 4 | Épique | 1108 | 45.9 % | 39 % | 42.9 % | -3.7 | 4.2 | 97 % | 4.7 |
-| Loviatar *(pas sortie)* | `loviatar` | Primordial | 4 | 3 | Épique | 947 | 45.8 % | 28 % | 39.1 % | -3.8 | 3.1 | 93 % | 4.7 |
-| Psyché | `psyche` | Désir | 4 | 3 | Épique | 1082 | 45.7 % | 57 % | 42.6 % | -3.9 | 3.8 | 88 % | 4.5 |
-| Anat | `anat` | Désir | 4 | 4 | Épique | 1072 | 45.6 % | 41 % | 42.3 % | -4.0 | 5.5 | 90 % | 4.8 |
-| Pandore *(pas sortie)* | `pandore` | Désir | 3 | 0 | Épique | 2623 | 45.4 % | 35 % | 37.9 % | -4.2 | 4.9 | 94 % | 5.3 |
-| Lip Dentelle *(pas sortie)* | `lipdentelle` | Désir | 3 | 2 | Épique | 1529 | 45.3 % | 72 % | 43.9 % | -4.3 | 5.7 | 93 % | 3.7 |
-| Ishtar | `ishtar` | Désir | 4 | 3 | Épique | 1108 | 44.8 % | 19 % | 45.8 % | -4.8 | 3.0 | 93 % | 4.8 |
-| Loki *(pas sortie)* | `loki` | Désir | 3 | 3 | Épique | 1555 | 44.8 % | 51 % | 41.1 % | -4.8 | 3.1 | 88 % | 4.2 |
-| Circé *(pas sortie)* | `circe` | Désir | 5 | 3 | Épique | 1152 | 44.4 % | 18 % | 39.9 % | -5.2 | 3.0 | 94 % | 5.3 |
-| Aphrodite *(pas sortie)* | `aphrodite` | Désir | 4 | 4 | Épique | 1373 | 44.1 % | 44 % | 39.2 % | -5.5 | 3.9 | 93 % | 4.7 |
+| Qetesh du Nouvel An *(pas sortie)* | `qetesh_r` | Désir | 5 | 3 | Épique | 698 | 61.7 % | 47 % | 66.7 % | +12.1 | 3.3 | 97 % | 4.8 |
+| Yarden Weiss | `yarden` | Primordial | 5 | 6 | Épique | 1612 | 58.6 % | 59 % | 60.5 % | +9.0 | 8.5 | 95 % | 5.2 |
+| Calypso, Reine des Glaces *(pas sortie)* | `calypso_n` | Désir | 5 | 3 | Épique | 403 | 57.3 % | 50 % | 57.6 % | +7.7 | 5.3 | 95 % | 5.3 |
+| Set *(pas sortie)* | `set` | Primordial | 5 | 4 | Épique | 453 | 55.4 % | 31 % | 54.6 % | +5.8 | 4.0 | 96 % | 5.4 |
+| Arès, Boucher d'Halloween | `ares_h` | Primordial | 5 | 4 | Épique | 451 | 54.8 % | 51 % | 61.1 % | +5.2 | 6.0 | 96 % | 5.3 |
+| Nyx, Guerrière d'Halloween | `nyx_h` | Primordial | 5 | 4 | Épique | 417 | 54.2 % | 48 % | 57.3 % | +4.6 | 4.1 | 96 % | 5.2 |
+| Aphrodite, Étoile de Noël *(pas sortie)* | `aphrodite_n` | Désir | 5 | 4 | Épique | 386 | 54.1 % | 60 % | 57.5 % | +4.5 | 4.0 | 94 % | 4.9 |
+| Calypso *(pas sortie)* | `calypso` | Désir | 5 | 4 | Épique | 1126 | 53.8 % | 50 % | 56.3 % | +4.2 | 4.3 | 96 % | 5.2 |
+| Ixchel | `ixchel` | Jugement | 4 | 4 | Épique | 865 | 53.6 % | 66 % | 55.0 % | +4.0 | 3.8 | 92 % | 4.3 |
+| Qetesh *(pas sortie)* | `qetesh` | Désir | 4 | 2 | Épique | 1621 | 53.6 % | 61 % | 57.5 % | +4.0 | 2.4 | 93 % | 4.5 |
+| Poséidon *(pas sortie)* | `poseidon` | Primordial | 4 | 3 | Épique | 908 | 52.4 % | 58 % | 54.5 % | +2.8 | 3.0 | 95 % | 4.3 |
+| Hel, Reine du Réveillon *(pas sortie)* | `hel_r` | Primordial | 5 | 2 | Épique | 392 | 52.3 % | 22 % | 63.5 % | +2.7 | 2.2 | 94 % | 5.3 |
+| Morrigan, Sorcière d'Halloween | `morrigan_h` | Jugement | 2 | 2 | Épique | 866 | 52.1 % | 59 % | 51.1 % | +2.5 | 2.2 | 90 % | 3.5 |
+| Chernobog *(pas sortie)* | `chernobog` | Jugement | 4 | 4 | Épique | 887 | 51.9 % | 51 % | 52.3 % | +2.3 | 4.0 | 93 % | 4.7 |
+| Nergal | `nergal` | Primordial | 5 | 4 | Épique | 719 | 51.5 % | 52 % | 50.8 % | +1.9 | 4.5 | 96 % | 5.2 |
+| Susanoo *(pas sortie)* | `susanoo` | Jugement | 4 | 4 | Épique | 877 | 51.1 % | 57 % | 51.2 % | +1.5 | 3.8 | 90 % | 4.2 |
+| Le Graffeur du Tunnel de la Borde *(pas sortie)* | `graffeur` | Helvara | 3 | 2 | Épique | 1604 | 50.4 % | 64 % | 51.5 % | +0.8 | 2.6 | 89 % | 3.7 |
+| Heimdall *(pas sortie)* | `heimdall` | Jugement | 3 | 3 | Épique | 1595 | 50.3 % | 72 % | 50.1 % | +0.7 | 4.7 | 88 % | 3.9 |
+| Lip Dentelle *(pas sortie)* | `lipdentelle` | Désir | 3 | 3 | Épique | 1511 | 49.6 % | 74 % | 49.8 % | +0.0 | 6.9 | 89 % | 3.7 |
+| Scáthach *(pas sortie)* | `scathach` | Jugement | 4 | 3 | Épique | 869 | 49.5 % | 59 % | 47.7 % | -0.1 | 2.9 | 90 % | 4.3 |
+| Le Chasseur d'échos *(pas sortie)* | `chasseur` | Primordial | 4 | 3 | Épique | 968 | 49.2 % | 59 % | 47.8 % | -0.4 | 3.0 | 92 % | 4.5 |
+| Oya | `oya` | Jugement | 5 | 4 | Épique | 476 | 49.2 % | 40 % | 47.1 % | -0.4 | 4.0 | 96 % | 5.3 |
+| Le Bourreau de la brèche *(pas sortie)* | `bourreau` | Jugement | 3 | 4 | Épique | 1588 | 49.1 % | 61 % | 45.8 % | -0.5 | 3.9 | 92 % | 4.1 |
+| Dame Joanna | `joanna` | Helvara | 2 | 2 | Épique | 904 | 48.9 % | 73 % | 48.9 % | -0.7 | 2.5 | 91 % | 3.5 |
+| Aphrodite *(pas sortie)* | `aphrodite` | Désir | 1 | 2 | Épique | 1905 | 48.8 % | 75 % | 49.0 % | -0.8 | 2.2 | 89 % | 3.4 |
+| La Ficelle Dévorante | `ficelle` | Helvara | 5 | 4 | Épique | 1198 | 48.7 % | 27 % | 49.2 % | -0.9 | 8.0 | 94 % | 5.2 |
+| Jordan, le Créateur | `jordan` | Primordial | 1 | -1 | Épique | 1996 | 48.6 % | 30 % | 45.9 % | -1.0 | -0.4 | 86 % | 3.8 |
+| Nergal, Fossoyeur d'Halloween | `nergal_h` | Primordial | 5 | 4 | Épique | 465 | 48.6 % | 39 % | 51.1 % | -1.0 | 7.6 | 96 % | 5.4 |
+| Amaterasu | `amaterasu` | Jugement | 5 | 4 | Épique | 529 | 48.6 % | 11 % | 34.5 % | -1.0 | 4.2 | 93 % | 5.4 |
+| Jordan, le Narrateur | `jordan_n` | Primordial | 1 | 0 | Épique | 1992 | 48.3 % | 50 % | 47.6 % | -1.3 | 0.4 | 87 % | 3.2 |
+| Médée *(pas sortie)* | `medee` | Jugement | 4 | 4 | Épique | 766 | 48.3 % | 35 % | 48.1 % | -1.3 | 3.9 | 91 % | 4.7 |
+| Fange *(pas sortie)* | `fange` | Primordial | 3 | 3 | Épique | 1533 | 48.1 % | 56 % | 45.9 % | -1.5 | 4.6 | 91 % | 4.0 |
+| Baldur *(pas sortie)* | `baldur` | Jugement | 4 | 4 | Épique | 1090 | 47.9 % | 37 % | 49.5 % | -1.7 | 4.1 | 95 % | 4.7 |
+| Thor *(pas sortie)* | `thor` | Primordial | 4 | 3 | Épique | 960 | 47.7 % | 48 % | 46.9 % | -1.9 | 3.1 | 92 % | 4.3 |
+| Pele du Réveillon *(pas sortie)* | `pele_r` | Primordial | 5 | 3 | Épique | 748 | 47.6 % | 48 % | 49.0 % | -2.0 | 3.3 | 96 % | 5.2 |
+| Inanna | `inanna` | Jugement | 5 | 5 | Épique | 530 | 47.4 % | 30 % | 37.9 % | -2.2 | 5.4 | 89 % | 5.2 |
+| Médée, Mariée Spectrale | `medee_h` | Jugement | 4 | 3 | Épique | 769 | 46.3 % | 13 % | 43.6 % | -3.3 | 3.1 | 96 % | 4.8 |
+| Anat | `anat` | Désir | 4 | 4 | Épique | 1130 | 46.3 % | 42 % | 42.0 % | -3.3 | 5.6 | 93 % | 4.8 |
+| Pandore *(pas sortie)* | `pandore` | Désir | 3 | 0 | Épique | 2622 | 46.2 % | 35 % | 40.8 % | -3.4 | 5.0 | 95 % | 5.4 |
+| Sekhmet, Lionne de l'Hiver *(pas sortie)* | `sekhmet_n` | Jugement | 5 | 4 | Épique | 478 | 46.0 % | 28 % | 40.3 % | -3.6 | 3.9 | 94 % | 5.3 |
+| Psyché | `psyche` | Désir | 4 | 3 | Épique | 1139 | 45.9 % | 56 % | 43.1 % | -3.7 | 3.7 | 88 % | 4.5 |
+| Éos de Nouvel An *(pas sortie)* | `eos_r` | Jugement | 2 | 1 | Épique | 887 | 45.8 % | 46 % | 47.3 % | -3.8 | 1.4 | 89 % | 3.8 |
+| Izanami *(pas sortie)* | `izanami` | Primordial | 3 | 3 | Épique | 1513 | 45.6 % | 37 % | 38.6 % | -4.0 | 3.1 | 90 % | 4.1 |
+| Loki *(pas sortie)* | `loki` | Désir | 3 | 3 | Épique | 1545 | 45.4 % | 51 % | 39.6 % | -4.2 | 3.1 | 91 % | 4.2 |
+| Cronos *(pas sortie)* | `cronos` | Primordial | 3 | 3 | Épique | 1530 | 45.2 % | 52 % | 39.3 % | -4.4 | 3.6 | 93 % | 3.9 |
+| Loviatar *(pas sortie)* | `loviatar` | Primordial | 4 | 3 | Épique | 951 | 45.0 % | 28 % | 38.7 % | -4.6 | 3.1 | 93 % | 4.7 |
+| Ishtar | `ishtar` | Désir | 4 | 3 | Épique | 1196 | 45.0 % | 21 % | 38.9 % | -4.6 | 3.1 | 93 % | 4.9 |
+| Circé *(pas sortie)* | `circe` | Désir | 5 | 3 | Épique | 1150 | 44.7 % | 21 % | 43.6 % | -4.9 | 3.1 | 93 % | 5.2 |
 
 #### Légendaire (19)
 
 | Carte | id | Faction | Coût | Puiss. | Rareté | Decks | Victoire (deck) | Pose | Victoire (posée) | Écart | Puiss. fin | Survie | Tour |
 |---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Apsu | `apsu` | Primordial | 6 | 8 | Légendaire | 893 | 62.2 % | 33 % | 67.1 % | +12.6 | 10.2 | 98 % | 5.8 |
-| Ereshkigal | `ereshkigal` | Primordial | 6 | 7 | Légendaire | 592 | 56.8 % | 43 % | 61.8 % | +7.2 | 7.1 | 97 % | 5.8 |
-| Le Seigneur de la marée noire *(pas sortie)* | `maree` | Primordial | 6 | 8 | Légendaire | 636 | 55.3 % | 43 % | 62.7 % | +5.7 | 8.1 | 98 % | 5.8 |
-| Nyx | `nyx` | Primordial | 6 | 5 | Légendaire | 1193 | 54.8 % | 36 % | 63.9 % | +5.2 | 5.2 | 97 % | 5.8 |
-| Nemesis *(pas sortie)* | `nemesis` | Jugement | 5 | -5 | Légendaire | 1119 | 54.5 % | 59 % | 61.7 % | +4.9 | -4.9 | 96 % | 4.9 |
-| Le Carillonneur de la Cathédrale *(pas sortie)* | `carillonneur` | Helvara | 3 | 1 | Légendaire | 1602 | 52.1 % | 20 % | 57.4 % | +2.5 | 4.0 | 91 % | 4.4 |
-| Apsu, Veillée des Chaînes *(pas sortie)* | `apsu_n` | Primordial | 6 | 7 | Légendaire | 340 | 51.8 % | 32 % | 53.6 % | +2.2 | 7.5 | 96 % | 5.9 |
-| La Voleuse du Flon *(pas sortie)* | `voleuse` | Helvara | 2 | 2 | Légendaire | 1788 | 51.6 % | 66 % | 49.7 % | +2.0 | 2.4 | 89 % | 3.6 |
-| Izzy, Lune de Sang | `izzy_h` | Désir | 3 | 0 | Légendaire | 771 | 49.7 % | 48 % | 49.6 % | +0.1 | 2.4 | 91 % | 4.4 |
-| Yarden, Dragonification partielle | `yarden_d` | Primordial | 6 | 3 | Légendaire | 373 | 48.0 % | 12 % | 48.8 % | -1.6 | 6.6 | 98 % | 5.9 |
-| Hadès *(pas sortie)* | `hades` | Primordial | 4 | 4 | Légendaire | 1723 | 47.9 % | 46 % | 43.4 % | -1.7 | 3.9 | 91 % | 4.6 |
-| Odin *(pas sortie)* | `odin` | Jugement | 4 | 4 | Légendaire | 1694 | 47.9 % | 39 % | 43.7 % | -1.7 | 3.9 | 92 % | 4.7 |
-| Vritra | `vritra` | Primordial | 5 | 5 | Légendaire | 1106 | 47.5 % | 43 % | 45.4 % | -2.1 | 5.2 | 96 % | 5.2 |
-| Anubis *(pas sortie)* | `anubis` | Jugement | 5 | 4 | Légendaire | 930 | 47.3 % | 65 % | 47.3 % | -2.3 | 6.3 | 94 % | 5.1 |
-| Lilith | `lilith` | Désir | 6 | 5 | Légendaire | 1248 | 46.9 % | 32 % | 59.6 % | -2.7 | 5.2 | 98 % | 5.8 |
-| Prométhée *(pas sortie)* | `promethee` | Primordial | 1 | 1 | Légendaire | 2889 | 46.5 % | 68 % | 46.1 % | -3.1 | 1.2 | 88 % | 2.9 |
-| Styx *(pas sortie)* | `styx` | Jugement | 4 | 2 | Légendaire | 1728 | 46.1 % | 22 % | 45.2 % | -3.5 | 1.9 | 99 % | 4.8 |
-| Mohini | `mohini` | Désir | 1 | 1 | Légendaire | 1867 | 43.8 % | 68 % | 42.9 % | -5.8 | 1.3 | 88 % | 3.3 |
-| Hel *(pas sortie)* | `hel` | Primordial | 6 | 5 | Légendaire | 871 | 43.1 % | 25 % | 51.1 % | -6.5 | 5.1 | 98 % | 5.9 |
+| Apsu | `apsu` | Primordial | 6 | 8 | Légendaire | 899 | 62.8 % | 30 % | 64.2 % | +13.2 | 10.1 | 99 % | 5.9 |
+| Nemesis *(pas sortie)* | `nemesis` | Jugement | 5 | -5 | Légendaire | 1117 | 55.4 % | 59 % | 61.7 % | +5.8 | -4.9 | 95 % | 4.9 |
+| Nyx | `nyx` | Primordial | 6 | 5 | Légendaire | 1193 | 54.1 % | 35 % | 59.3 % | +4.5 | 5.1 | 98 % | 5.8 |
+| Le Seigneur de la marée noire *(pas sortie)* | `maree` | Primordial | 6 | 8 | Légendaire | 633 | 53.9 % | 42 % | 63.6 % | +4.3 | 8.1 | 100 % | 5.9 |
+| Ereshkigal | `ereshkigal` | Primordial | 6 | 7 | Légendaire | 591 | 53.1 % | 42 % | 58.9 % | +3.5 | 7.0 | 97 % | 5.8 |
+| La Voleuse du Flon *(pas sortie)* | `voleuse` | Helvara | 2 | 2 | Légendaire | 1766 | 51.8 % | 65 % | 49.9 % | +2.2 | 2.4 | 89 % | 3.6 |
+| Lilith | `lilith` | Désir | 6 | 5 | Légendaire | 1243 | 51.2 % | 30 % | 66.9 % | +1.6 | 5.2 | 98 % | 5.8 |
+| Le Carillonneur de la Cathédrale *(pas sortie)* | `carillonneur` | Helvara | 3 | 1 | Légendaire | 1601 | 51.1 % | 22 % | 55.6 % | +1.5 | 4.0 | 94 % | 4.5 |
+| Izzy, Lune de Sang | `izzy_h` | Désir | 3 | 0 | Légendaire | 769 | 50.3 % | 48 % | 52.8 % | +0.7 | 2.4 | 92 % | 4.4 |
+| Apsu, Veillée des Chaînes *(pas sortie)* | `apsu_n` | Primordial | 6 | 7 | Légendaire | 349 | 50.1 % | 31 % | 51.4 % | +0.5 | 7.4 | 96 % | 5.9 |
+| Odin *(pas sortie)* | `odin` | Jugement | 4 | 4 | Légendaire | 1677 | 49.6 % | 33 % | 45.4 % | +0.0 | 3.9 | 92 % | 4.7 |
+| Styx *(pas sortie)* | `styx` | Jugement | 4 | 3 | Légendaire | 1729 | 48.5 % | 33 % | 47.2 % | -1.1 | 2.9 | 91 % | 4.6 |
+| Prométhée *(pas sortie)* | `promethee` | Primordial | 1 | 1 | Légendaire | 2895 | 48.3 % | 68 % | 47.4 % | -1.3 | 1.2 | 88 % | 2.8 |
+| Anubis *(pas sortie)* | `anubis` | Jugement | 5 | 4 | Légendaire | 923 | 48.2 % | 61 % | 49.7 % | -1.4 | 6.3 | 94 % | 5.0 |
+| Mohini | `mohini` | Désir | 1 | 1 | Légendaire | 1878 | 47.5 % | 68 % | 46.7 % | -2.1 | 1.2 | 88 % | 3.3 |
+| Yarden, Dragonification partielle | `yarden_d` | Primordial | 6 | 3 | Légendaire | 356 | 47.5 % | 11 % | 30.0 % | -2.1 | 6.8 | 98 % | 5.9 |
+| Hadès *(pas sortie)* | `hades` | Primordial | 4 | 4 | Légendaire | 1731 | 46.2 % | 45 % | 42.8 % | -3.4 | 3.9 | 91 % | 4.6 |
+| Vritra | `vritra` | Primordial | 5 | 5 | Légendaire | 1116 | 44.2 % | 42 % | 41.3 % | -5.4 | 5.1 | 97 % | 5.2 |
+| Hel *(pas sortie)* | `hel` | Primordial | 6 | 5 | Légendaire | 877 | 43.7 % | 24 % | 43.9 % | -5.9 | 5.2 | 97 % | 5.9 |
 
 #### Ultra-légendaire (13)
 
 | Carte | id | Faction | Coût | Puiss. | Rareté | Decks | Victoire (deck) | Pose | Victoire (posée) | Écart | Puiss. fin | Survie | Tour |
 |---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Yarden X Apsu | `ulya` | Primordial | 9 | 12 | Ultra-légendaire | 570 | 68.4 % | 62 % | 73.9 % | +18.8 | 15.9 | 96 % | 4.7 |
-| Qetesh X Jordan du Nouvel An *(pas sortie)* | `ulqetjor_r` | Désir | 6 | 4 | Ultra-légendaire | 312 | 65.7 % | 45 % | 82.9 % | +16.1 | 3.9 | 99 % | 5.9 |
-| Nyx X Oshun *(pas sortie)* | `uloshun` | Primordial | 6 | 4 | Ultra-légendaire | 325 | 58.8 % | 35 % | 68.7 % | +9.2 | 3.9 | 100 % | 5.8 |
-| Jordan X Izzy | `ulji` | Désir | 6 | 6 | Ultra-légendaire | 309 | 56.3 % | 46 % | 67.8 % | +6.7 | 6.1 | 99 % | 5.9 |
-| Qetesh X Yarden *(pas sortie)* | `ulqetyar` | Désir | 6 | 3 | Ultra-légendaire | 296 | 55.4 % | 9 % | 53.8 % | +5.8 | 6.5 | 100 % | 6.0 |
-| Nemesis X Jordan *(pas sortie)* | `ulnem` | Jugement | 6 | 2 | Ultra-légendaire | 299 | 54.5 % | 13 % | 41.0 % | +4.9 | 2.0 | 100 % | 5.9 |
-| Nyx X Circé *(pas sortie)* | `ulcirce` | Primordial | 6 | 3 | Ultra-légendaire | 293 | 53.6 % | 12 % | 48.6 % | +4.0 | 3.0 | 100 % | 5.8 |
-| Calypso X Jordan *(pas sortie)* | `ulcal` | Désir | 5 | 4 | Ultra-légendaire | 297 | 50.8 % | 35 % | 61.0 % | +1.2 | 4.1 | 98 % | 5.3 |
-| Qetesh X Jordan *(pas sortie)* | `ulqetjor` | Désir | 6 | 4 | Ultra-légendaire | 296 | 50.0 % | 41 % | 47.9 % | +0.4 | 3.9 | 99 % | 5.9 |
-| Aphrodite X Yarden *(pas sortie)* | `ulaph` | Désir | 6 | 5 | Ultra-légendaire | 324 | 46.6 % | 17 % | 40.0 % | -3.0 | 5.4 | 100 % | 5.9 |
-| Nike *(pas sortie)* | `nike` | Jugement | 3 | 1 | Ultra-légendaire | 1051 | 45.5 % | 16 % | 47.2 % | -4.1 | 4.4 | 96 % | 5.4 |
-| Pele X Jordan du Réveillon *(pas sortie)* | `ulpele_r` | Primordial | 6 | 4 | Ultra-légendaire | 312 | 45.2 % | 33 % | 42.7 % | -4.4 | 4.0 | 99 % | 5.9 |
-| Hel X Baldur *(pas sortie)* | `ulhel` | Primordial | 6 | 3 | Ultra-légendaire | 274 | 42.3 % | 10 % | 44.4 % | -7.3 | 3.1 | 100 % | 5.9 |
+| Qetesh X Jordan du Nouvel An *(pas sortie)* | `ulqetjor_r` | Désir | 6 | 4 | Ultra-légendaire | 312 | 68.9 % | 48 % | 83.4 % | +19.3 | 3.8 | 99 % | 5.9 |
+| Yarden X Apsu | `ulya` | Primordial | 9 | 12 | Ultra-légendaire | 570 | 68.2 % | 63 % | 72.9 % | +18.6 | 16.0 | 96 % | 4.8 |
+| Nyx X Oshun *(pas sortie)* | `uloshun` | Primordial | 6 | 4 | Ultra-légendaire | 325 | 56.6 % | 33 % | 68.2 % | +7.0 | 3.9 | 98 % | 5.9 |
+| Qetesh X Yarden *(pas sortie)* | `ulqetyar` | Désir | 6 | 3 | Ultra-légendaire | 296 | 56.1 % | 8 % | 48.0 % | +6.5 | 6.6 | 100 % | 6.0 |
+| Calypso X Jordan *(pas sortie)* | `ulcal` | Désir | 5 | 4 | Ultra-légendaire | 297 | 55.9 % | 35 % | 64.8 % | +6.3 | 4.2 | 100 % | 5.3 |
+| Nyx X Circé *(pas sortie)* | `ulcirce` | Primordial | 6 | 3 | Ultra-légendaire | 293 | 54.3 % | 16 % | 60.4 % | +4.7 | 3.0 | 100 % | 5.9 |
+| Nemesis X Jordan *(pas sortie)* | `ulnem` | Jugement | 6 | 2 | Ultra-légendaire | 299 | 53.8 % | 13 % | 46.2 % | +4.2 | 1.9 | 100 % | 5.9 |
+| Aphrodite X Yarden *(pas sortie)* | `ulaph` | Désir | 6 | 5 | Ultra-légendaire | 324 | 52.5 % | 16 % | 49.1 % | +2.9 | 5.0 | 100 % | 5.8 |
+| Jordan X Izzy | `ulji` | Désir | 6 | 6 | Ultra-légendaire | 310 | 48.7 % | 47 % | 57.2 % | -0.9 | 6.0 | 99 % | 5.9 |
+| Nike *(pas sortie)* | `nike` | Jugement | 3 | 1 | Ultra-légendaire | 1050 | 48.1 % | 39 % | 44.6 % | -1.5 | 4.2 | 97 % | 5.5 |
+| Qetesh X Jordan *(pas sortie)* | `ulqetjor` | Désir | 6 | 4 | Ultra-légendaire | 296 | 48.0 % | 40 % | 38.5 % | -1.6 | 4.0 | 97 % | 5.9 |
+| Hel X Baldur *(pas sortie)* | `ulhel` | Primordial | 6 | 3 | Ultra-légendaire | 274 | 43.1 % | 12 % | 65.6 % | -6.5 | 3.1 | 100 % | 6.0 |
+| Pele X Jordan du Réveillon *(pas sortie)* | `ulpele_r` | Primordial | 6 | 4 | Ultra-légendaire | 312 | 41.0 % | 31 % | 38.8 % | -8.6 | 3.8 | 99 % | 5.9 |
 
 ### Victoire selon le coût et la rareté (cartes dans le deck, toutes cartes confondues)
 
 | Coût | Cartes | Decks | Victoire (deck) | Pose |
 |---|---:|---:|---:|---:|
-| 0 | 1 | 731 | 52.0 % | 81 % |
-| 1 | 13 | 18309 | 48.4 % | 64 % |
-| 2 | 26 | 30402 | 50.0 % | 67 % |
-| 3 | 26 | 33765 | 48.4 % | 52 % |
-| 4 | 30 | 30258 | 48.7 % | 44 % |
-| 5 | 31 | 19949 | 51.3 % | 43 % |
-| 6 | 19 | 10016 | 52.6 % | 31 % |
-| 9 | 1 | 570 | 68.4 % | 62 % |
+| 0 | 1 | 760 | 49.9 % | 81 % |
+| 1 | 14 | 19741 | 48.4 % | 65 % |
+| 2 | 26 | 30187 | 49.7 % | 67 % |
+| 3 | 26 | 33709 | 48.5 % | 54 % |
+| 4 | 29 | 29084 | 48.7 % | 45 % |
+| 5 | 31 | 19936 | 51.5 % | 43 % |
+| 6 | 19 | 10013 | 52.7 % | 30 % |
+| 9 | 1 | 570 | 68.2 % | 63 % |
 
 | Rareté | Cartes | Decks | Victoire (deck) | Pose |
 |---|---:|---:|---:|---:|
-| Commune | 21 | 18024 | 50.6 % | 64 % |
-| Rare | 46 | 47598 | 49.5 % | 61 % |
-| Épique | 48 | 50057 | 49.1 % | 46 % |
-| Légendaire | 19 | 23363 | 49.3 % | 46 % |
-| Ultra-légendaire | 13 | 4958 | 53.0 % | 29 % |
+| Commune | 21 | 17996 | 49.4 % | 64 % |
+| Rare | 46 | 46885 | 49.4 % | 60 % |
+| Épique | 48 | 50818 | 49.3 % | 49 % |
+| Légendaire | 19 | 23343 | 50.0 % | 45 % |
+| Ultra-légendaire | 13 | 4958 | 53.5 % | 34 % |
 
 | Faction | Cartes | Decks | Victoire (deck) | Pose |
 |---|---:|---:|---:|---:|
-| Helvara | 26 | 28025 | 51.7 % | 62 % |
-| Primordial | 44 | 39563 | 50.7 % | 49 % |
-| Désir | 40 | 38742 | 47.9 % | 53 % |
-| Jugement | 37 | 37670 | 48.8 % | 50 % |
+| Helvara | 26 | 28015 | 50.3 % | 62 % |
+| Primordial | 44 | 39597 | 49.5 % | 49 % |
+| Désir | 40 | 38844 | 49.3 % | 54 % |
+| Jugement | 37 | 37544 | 49.4 % | 51 % |
 
 ## 4. Cartes pas encore sorties (136)
 
@@ -387,6 +384,7 @@ Date de sortie postérieure au 2026-10-12, y compris les cartes sans date (2099)
 | Carte | id | Faction | Coût | Puiss. | Rareté | Effet | Sortie prévue | Annonce |
 |---|---|---|---:|---:|---|---|---|---|
 | Le Mendiant de la Riponne | `mendiant` | Helvara | 0 | 2 | Commune | Révélation : défausse une carte au hasard de ta main. Nourrit Rémi. | 2026-11-01 | 2026-10-27 |
+| Aphrodite | `aphrodite` | Désir | 1 | 2 | Épique | Révélation : rejoue la Révélation de la dernière carte que tu as révélée ce tour, où qu'elle soit. | 2026-11-01 | 2026-10-27 |
 | La Mouche de la Faille | `mouche` | Primordial | 1 | 3 | Commune | Continu : −1 à tes autres cartes ici. | 2026-11-01 | 2026-10-27 |
 | Brigid | `brigid` | Désir | 2 | 2 | Rare | Révélation : la prochaine carte que tu révèles gagne +3. | 2026-11-01 | 2026-10-27 |
 | La Messagère d'Hécate | `messagere` | Helvara | 2 | 2 | Rare | Continu : à la fin de chaque tour, si tu ne mènes pas ici, +2 (6 au maximum). | 2026-11-01 | 2026-10-27 |
@@ -394,20 +392,19 @@ Date de sortie postérieure au 2026-10-12, y compris les cartes sans date (2099)
 | Le Sans-Voix | `sansvoix` | Primordial | 2 | 4 | Rare | Révélation : ton adversaire ne peut pas jouer ici au prochain tour. | 2026-11-01 | 2026-10-27 |
 | Tefnut | `tefnut` | Jugement | 2 | 2 | Commune | Révélation : +1 à tes autres cartes ici. | 2026-11-01 | 2026-10-27 |
 | Fange | `fange` | Primordial | 3 | 3 | Épique | Continu : +1 par carte défaussée pendant la partie, des deux côtés. | 2026-11-01 | 2026-10-27 |
-| Le Bourreau de la brèche | `bourreau` | Jugement | 3 | 2 | Épique | Révélation : condamne une case adverse ici jusqu'à la fin de la partie. | 2026-11-01 | 2026-10-27 |
-| Lip Dentelle | `lipdentelle` | Désir | 3 | 2 | Épique | Révélation : défausse la carte la plus chère de ta main et gagne sa puissance. | 2026-11-01 | 2026-10-27 |
+| Le Bourreau de la brèche | `bourreau` | Jugement | 3 | 4 | Épique | Révélation : condamne une case adverse ici jusqu'à la fin de la partie. | 2026-11-01 | 2026-10-27 |
+| Lip Dentelle | `lipdentelle` | Désir | 3 | 3 | Épique | Révélation : défausse la carte la plus chère de ta main et gagne sa puissance. | 2026-11-01 | 2026-10-27 |
 | Andraste | `andraste` | Désir | 4 | 3 | Rare | Révélation : +2 par carte adverse ici. | 2026-11-01 | 2026-10-27 |
-| Aphrodite | `aphrodite` | Désir | 4 | 4 | Épique | Révélation : rejoue la Révélation de ta carte Désir la plus chère ici. | 2026-11-01 | 2026-10-27 |
 | Chernobog | `chernobog` | Jugement | 4 | 4 | Épique | Continu : les cartes adverses ici ne peuvent pas dépasser leur puissance de base. | 2026-11-01 | 2026-10-27 |
 | Dante | `dante` | Primordial | 4 | 4 | Rare | Continu : chaque fois qu'une carte est détruite ici, des deux côtés, +1. | 2026-11-01 | 2026-10-27 |
 | Le Chasseur d'échos | `chasseur` | Primordial | 4 | 3 | Épique | Révélation : crée de ton côté un Écho de la carte adverse la plus forte ici (même puissance, sans effet). | 2026-11-01 | 2026-10-27 |
-| Médée | `medee` | Jugement | 4 | 3 | Épique | Continu : la prochaine carte adverse jouée ici perd 2. Si Hécate est de ton côté, les deux prochaines. | 2026-11-01 | 2026-10-27 |
+| Médée | `medee` | Jugement | 4 | 4 | Épique | Continu : la prochaine carte adverse jouée ici perd 2. Si Hécate est de ton côté, les deux prochaines. | 2026-11-01 | 2026-10-27 |
 | Susanoo | `susanoo` | Jugement | 4 | 4 | Épique | Révélation : la tempête emporte ta carte la plus faible ici vers un autre lieu, où elle gagne +3. +2 si Amaterasu est de ton côté. | 2026-11-01 | 2026-10-27 |
 | Anubis | `anubis` | Jugement | 5 | 4 | Légendaire | Révélation : pèse les cœurs. Si l'adversaire mène ici, détruit sa carte la plus forte ici. Sinon, +4. | 2026-11-01 | 2026-10-27 |
 | Calypso | `calypso` | Désir | 5 | 4 | Épique | Révélation : la carte adverse la plus forte ici devient captive. Sa puissance tombe à 0 tant que Calypso reste en jeu. | 2026-11-01 | 2026-10-27 |
 | Calypso X Jordan | `ulcal` | Désir | 5 | 4 | Ultra-légendaire | Continu : tes cartes ici ne peuvent être ni détruites ni affaiblies, et les autres gagnent +2. Exige Calypso et Jordan dans le deck. | 2026-11-01 | 2026-10-27 |
 | Nemesis | `nemesis` | Jugement | 5 | -5 | Légendaire | Ne peut pas être jouée au tour 6. Continu : dans ce lieu, c'est le joueur avec le moins de puissance qui gagne. Deux Nemesis s'annulent. | 2026-11-01 | 2026-10-27 |
-| Set | `set` | Primordial | 5 | 4 | Épique | Révélation : la tempête de sable disperse les cartes adverses d'ici vers les autres lieux, au hasard, s'il y a de la place. | 2026-11-01 | 2026-10-27 |
+| Set | `set` | Primordial | 5 | 4 | Épique | Révélation : la tempête de sable disperse jusqu'à 2 cartes adverses d'ici, au hasard, vers les autres lieux s'il y a de la place. Chacune perd 1. | 2026-11-01 | 2026-10-27 |
 | Aphrodite X Yarden | `ulaph` | Désir | 6 | 5 | Ultra-légendaire | Révélation : rejoue la Révélation de chacune de tes autres cartes ici. Exige Aphrodite et Yarden Weiss dans le deck. | 2026-11-01 | 2026-10-27 |
 | Balor | `balor` | Jugement | 6 | 5 | Rare | Révélation : −3 à deux cartes adverses différentes au hasard ici. | 2026-11-01 | 2026-10-27 |
 | Le Seigneur de la marée noire | `maree` | Primordial | 6 | 8 | Légendaire | Révélation : détruit les cartes adverses de coût 2 ou moins ici. | 2026-11-01 | 2026-10-27 |
@@ -417,7 +414,7 @@ Date de sortie postérieure au 2026-10-12, y compris les cartes sans date (2099)
 | Bia | `bia` | Jugement | 3 | 3 | Rare | Révélation : l'adversaire perd son énergie conservée. S'il n'en avait pas, −1 à sa carte la plus forte ici. | 2026-11-15 | 2026-11-10 |
 | Nike | `nike` | Jugement | 3 | 1 | Ultra-légendaire | Révélation : +2 pour chaque autre carte que tu as jouée avant elle ce tour. Exige 8 cartes Jugement dans le deck, Nike comprise. | 2026-11-15 | 2026-11-10 |
 | Pandore | `pandore` | Désir | 3 | 0 | Épique | Révélation : dépense toute l'énergie qu'il te reste. +2 par énergie dépensée. | 2026-11-15 | 2026-11-10 |
-| Styx | `styx` | Jugement | 4 | 2 | Légendaire | Continu : Nike et Bia ont +3 où qu'elles soient. Tes cartes Jugement ici ne peuvent pas être détruites. | 2026-11-15 | 2026-11-10 |
+| Styx | `styx` | Jugement | 4 | 3 | Légendaire | Continu : Nike et Bia ont +3 où qu'elles soient. Quand une de tes cartes Jugement est détruite ici par un effet adverse, elle revient dans ta main. | 2026-11-15 | 2026-11-10 |
 | Le Boucher de la Riponne | `boucher` | Helvara | 1 | 3 | Commune | Révélation : détruit ton autre carte la plus faible ici et pioche 1. | 2026-12-01 | 2026-11-26 |
 | Dionysos | `dionysos` | Désir | 2 | 2 | Rare | Révélation : chaque joueur pioche 1 carte, puis défausse une carte au hasard. | 2026-12-01 | 2026-11-26 |
 | Le Tatoueur de Chauderon | `tatoueur` | Helvara | 2 | 2 | Rare | Révélation : ta carte la plus forte ici gagne +1 et ne peut plus être affaiblie. | 2026-12-01 | 2026-11-26 |
@@ -564,11 +561,12 @@ Deux regroupements, faits sur le texte des effets (noms de cartes et nombres ign
 
 Une carte peut appartenir à plusieurs familles. Entre parenthèses : coût, puissance, rareté.
 
-**Détruit une carte adverse (la plus forte, la plus faible, selon un seuil…)** : 11 cartes (7 sorties, 4 pas encore)
+**Détruit une carte adverse (la plus forte, la plus faible, selon un seuil…)** : 12 cartes (7 sorties, 5 pas encore)
 
 - Rusalka (2/2, Commune) : Révélation : détruit la carte adverse la plus faible ici si elle a 2 ou moins.
 - Izzy, Lune de Sang (3/0, Légendaire) : Révélation : détruit la carte adverse la plus forte ici (6 ou moins) et gagne la moitié de sa puissance, arrondie au-dessus.
 - L'Esquille (3/1, Rare) : Révélation : détruit la carte adverse la plus faible ici.
+- Styx (4/3, Légendaire, pas sortie) : Continu : Nike et Bia ont +3 où qu'elles soient. Quand une de tes cartes Jugement est détruite ici par un effet adverse, elle revient dans ta main.
 - Durga (5/5, Rare) : Révélation : détruit la carte adverse la plus forte ici si elle a 7 ou plus. Sinon, +3.
 - Nyx, Guerrière d'Halloween (5/4, Épique) : Révélation : détruit les 2 cartes adverses les plus faibles ici.
 - Sekhmet, Lionne de l'Hiver (5/4, Épique, pas sortie) : Révélation : détruit les cartes adverses de puissance 2 ou moins ici. Les tiennes sont épargnées.
@@ -633,7 +631,7 @@ Une carte peut appartenir à plusieurs familles. Entre parenthèses : coût, pui
 - Heimdall (3/3, Épique, pas sortie) : Révélation : tes autres cartes ici passent par le Bifröst vers un lieu où l'on ne peut plus jouer, s'il y a de la place. Sinon, +2.
 - Poséidon (4/3, Épique, pas sortie) : Révélation : le reflux renvoie dans la main adverse les cartes adverses de coût 3 ou moins ici.
 - Susanoo (4/4, Épique, pas sortie) : Révélation : la tempête emporte ta carte la plus faible ici vers un autre lieu, où elle gagne +3. +2 si Amaterasu est de ton côté.
-- Set (5/4, Épique, pas sortie) : Révélation : la tempête de sable disperse les cartes adverses d'ici vers les autres lieux, au hasard, s'il y a de la place.
+- Set (5/4, Épique, pas sortie) : Révélation : la tempête de sable disperse jusqu'à 2 cartes adverses d'ici, au hasard, vers les autres lieux s'il y a de la place. Chacune perd 1.
 
 **Bonus de puissance à elle-même (Révélation conditionnelle ou fixe)** : 25 cartes (15 sorties, 10 pas encore)
 
@@ -649,7 +647,7 @@ Une carte peut appartenir à plusieurs familles. Entre parenthèses : coût, pui
 - Céleste (3/3, Rare) : Révélation : si tu ne mènes pas ici à son arrivée (sans compter Céleste), +3.
 - Freyr (3/3, Rare) : Révélation : +1 énergie au tour suivant. Continu : +2 si Freya est ici.
 - Izzy, Lune de Sang (3/0, Légendaire) : Révélation : détruit la carte adverse la plus forte ici (6 ou moins) et gagne la moitié de sa puissance, arrondie au-dessus.
-- Lip Dentelle (3/2, Épique, pas sortie) : Révélation : défausse la carte la plus chère de ta main et gagne sa puissance.
+- Lip Dentelle (3/3, Épique, pas sortie) : Révélation : défausse la carte la plus chère de ta main et gagne sa puissance.
 - Maeve (3/3, Commune) : Révélation : si tu mènes ici, +3.
 - Nike (3/1, Ultra-légendaire, pas sortie) : Révélation : +2 pour chaque autre carte que tu as jouée avant elle ce tour. Exige 8 cartes Jugement dans le deck, Nike comprise.
 - Vasseur (3/2, Commune) : Révélation : +4 de Puissance dans deux tours.
@@ -670,7 +668,7 @@ Une carte peut appartenir à plusieurs familles. Entre parenthèses : coût, pui
 - Izanami (3/3, Épique, pas sortie) : Révélation : défausse ta carte la plus faible de ta main. Continu : tes cartes ressuscitées ont +2.
 - Le Graffeur du Tunnel de la Borde (3/2, Épique, pas sortie) : Continu : +2 de ton côté dans les lieux voisins.
 - Oshun (4/3, Rare, pas sortie) : Révélation : +1 à toutes tes autres cartes, dans les 3 lieux.
-- Styx (4/2, Légendaire, pas sortie) : Continu : Nike et Bia ont +3 où qu'elles soient. Tes cartes Jugement ici ne peuvent pas être détruites.
+- Styx (4/3, Légendaire, pas sortie) : Continu : Nike et Bia ont +3 où qu'elles soient. Quand une de tes cartes Jugement est détruite ici par un effet adverse, elle revient dans ta main.
 - Bastet (5/4, Rare) : Révélation : +2 à tes autres cartes ici.
 - La Doyenne (5/4, Commune) : Continu : tes autres cartes Helvara ont +1, dans tous les lieux.
 - Nemesis X Jordan (6/2, Ultra-légendaire, pas sortie) : Révélation : détruit la carte la plus forte de chaque côté ici, puis tes autres cartes ici gagnent +2. Exige Nemesis et Jordan dans le deck.
@@ -695,7 +693,7 @@ Une carte peut appartenir à plusieurs familles. Entre parenthèses : coût, pui
 - Cronos (3/3, Épique, pas sortie) : Révélation : défausse les cartes de coût 1 ou moins de ta main. +2 pour chacune.
 - Hécate (3/2, Commune) : Révélation : pioche 2 cartes.
 - Izanami (3/3, Épique, pas sortie) : Révélation : défausse ta carte la plus faible de ta main. Continu : tes cartes ressuscitées ont +2.
-- Lip Dentelle (3/2, Épique, pas sortie) : Révélation : défausse la carte la plus chère de ta main et gagne sa puissance.
+- Lip Dentelle (3/3, Épique, pas sortie) : Révélation : défausse la carte la plus chère de ta main et gagne sa puissance.
 - Loki (3/3, Épique, pas sortie) : Révélation : chaque joueur défausse la carte la plus chère de sa main.
 - Odin (4/4, Légendaire, pas sortie) : Révélation : défausse la carte la plus chère de ta main, puis pioche 2 cartes.
 
@@ -734,14 +732,13 @@ Une carte peut appartenir à plusieurs familles. Entre parenthèses : coût, pui
 - Qetesh X Jordan du Nouvel An (6/4, Ultra-légendaire, pas sortie) : Révélation : charme la carte adverse la plus forte ici de coût 5 ou moins. Continu : tes autres cartes ici ont +2. Exige Qetesh du Nouvel An et Jor…
 - Yarden X Apsu (9/12, Ultra-légendaire) : Coûte 1 de moins par autre carte dans ta main. Révélation : +1 par carte restée dans ta main. Exige Yarden Weiss et Apsu dans le deck.
 
-**Protection contre la destruction, l'affaiblissement ou le ciblage** : 9 cartes (5 sorties, 4 pas encore)
+**Protection contre la destruction, l'affaiblissement ou le ciblage** : 8 cartes (5 sorties, 3 pas encore)
 
 - Jordan, le Créateur (1/-1, Épique) : Ne peut pas être affaibli. Révélation : ajoute Yarden Weiss à ta main depuis ton deck.
 - L'Écorché Silencieux (3/3, Rare) : Ne peut pas être affaibli. Révélation : −2 à une carte adverse au hasard ici.
 - Chernobog (4/4, Épique, pas sortie) : Continu : les cartes adverses ici ne peuvent pas dépasser leur puissance de base.
 - Eir (4/3, Rare) : Continu : tes cartes ici ne peuvent être ni détruites ni affaiblies.
 - Psyché (4/3, Épique) : Continu : tes cartes ici ne descendent pas sous 1. Révélation : +2 à ta carte la plus faible ici.
-- Styx (4/2, Légendaire, pas sortie) : Continu : Nike et Bia ont +3 où qu'elles soient. Tes cartes Jugement ici ne peuvent pas être détruites.
 - Amaterasu (5/4, Épique) : Continu : tes cartes ne peuvent pas être affaiblies, dans les 3 lieux.
 - Calypso X Jordan (5/4, Ultra-légendaire, pas sortie) : Continu : tes cartes ici ne peuvent être ni détruites ni affaiblies, et les autres gagnent +2. Exige Calypso et Jordan dans le deck.
 - Ananké (6/1, Ultra-légendaire, pas sortie) : Fatalité : ne peut être ni détruite, ni déplacée, ni affaiblie. Révélation : sa puissance devient égale à la puissance totale adverse ici, +1. Exig…
@@ -750,7 +747,7 @@ Une carte peut appartenir à plusieurs familles. Entre parenthèses : coût, pui
 
 - Le Sans-Voix (2/4, Rare, pas sortie) : Révélation : ton adversaire ne peut pas jouer ici au prochain tour.
 - Morrigan (2/2, Rare) : Continu : tu gagnes les égalités ici.
-- Le Bourreau de la brèche (3/2, Épique, pas sortie) : Révélation : condamne une case adverse ici jusqu'à la fin de la partie.
+- Le Bourreau de la brèche (3/4, Épique, pas sortie) : Révélation : condamne une case adverse ici jusqu'à la fin de la partie.
 - Perséphone (3/3, Rare) : Révélation : l'effet du lieu s'arrête.
 - Nemesis (5/-5, Légendaire, pas sortie) : Ne peut pas être jouée au tour 6. Continu : dans ce lieu, c'est le joueur avec le moins de puissance qui gagne. Deux Nemesis s'annulent.
 - Vritra (5/5, Légendaire) : Révélation : plus personne ne peut jouer ici.
@@ -904,7 +901,7 @@ Cartes qui visent la même chose (« la carte adverse la plus forte ici »…), 
 - Eir (4/3, Rare) : Continu : tes cartes ici ne peuvent être ni détruites ni affaiblies.
 - Oshun (4/3, Rare, pas sortie) : Révélation : +1 à toutes tes autres cartes, dans les 3 lieux.
 - Psyché (4/3, Épique) : Continu : tes cartes ici ne descendent pas sous 1. Révélation : +2 à ta carte la plus faible ici.
-- Styx (4/2, Légendaire, pas sortie) : Continu : Nike et Bia ont +3 où qu'elles soient. Tes cartes Jugement ici ne peuvent pas être détruites.
+- Styx (4/3, Légendaire, pas sortie) : Continu : Nike et Bia ont +3 où qu'elles soient. Quand une de tes cartes Jugement est détruite ici par un effet adverse, elle revient dans ta main.
 - Amaterasu (5/4, Épique) : Continu : tes cartes ne peuvent pas être affaiblies, dans les 3 lieux.
 - Bastet (5/4, Rare) : Révélation : +2 à tes autres cartes ici.
 - Calypso X Jordan (5/4, Ultra-légendaire, pas sortie) : Continu : tes cartes ici ne peuvent être ni détruites ni affaiblies, et les autres gagnent +2. Exige Calypso et Jordan dans le deck.
@@ -915,7 +912,7 @@ Cartes qui visent la même chose (« la carte adverse la plus forte ici »…), 
 - Qetesh X Jordan (6/4, Ultra-légendaire, pas sortie) : Continu : tes autres cartes ont +1, dans les 3 lieux. Exige Qetesh et Jordan dans le deck.
 - Qetesh X Jordan du Nouvel An (6/4, Ultra-légendaire, pas sortie) : Révélation : charme la carte adverse la plus forte ici de coût 5 ou moins. Continu : tes autres cartes ici ont +2. Exige Qetesh du Nouvel An et Jordan dans le deck.
 
-**La main ou le deck (pioche, défausse, prise en main)** : 15 cartes (6 sorties, 9 pas encore)
+**La main ou le deck (pioche, défausse, prise en main)** : 16 cartes (6 sorties, 10 pas encore)
 
 - Le Mendiant de la Riponne (0/2, Commune, pas sortie) : Révélation : défausse une carte au hasard de ta main. Nourrit Rémi.
 - Jordan, le Créateur (1/-1, Épique) : Ne peut pas être affaibli. Révélation : ajoute Yarden Weiss à ta main depuis ton deck.
@@ -927,9 +924,10 @@ Cartes qui visent la même chose (« la carte adverse la plus forte ici »…), 
 - Morrigan, Sorcière d'Halloween (2/2, Épique) : Révélation : pioche 2 cartes, puis défausse la carte la plus chère de ta main.
 - Cronos (3/3, Épique, pas sortie) : Révélation : défausse les cartes de coût 1 ou moins de ta main. +2 pour chacune.
 - Izanami (3/3, Épique, pas sortie) : Révélation : défausse ta carte la plus faible de ta main. Continu : tes cartes ressuscitées ont +2.
-- Lip Dentelle (3/2, Épique, pas sortie) : Révélation : défausse la carte la plus chère de ta main et gagne sa puissance.
+- Lip Dentelle (3/3, Épique, pas sortie) : Révélation : défausse la carte la plus chère de ta main et gagne sa puissance.
 - Odin (4/4, Légendaire, pas sortie) : Révélation : défausse la carte la plus chère de ta main, puis pioche 2 cartes.
 - Poséidon (4/3, Épique, pas sortie) : Révélation : le reflux renvoie dans la main adverse les cartes adverses de coût 3 ou moins ici.
+- Styx (4/3, Légendaire, pas sortie) : Continu : Nike et Bia ont +3 où qu'elles soient. Quand une de tes cartes Jugement est détruite ici par un effet adverse, elle revient dans ta main.
 - Jordan X Izzy (6/6, Ultra-légendaire) : Révélation : prend la carte la plus puissante de la main adverse et l'invoque ici, ou dans un autre lieu si c'est plein. Exige Jordan et Izzy dans le deck.
 - Yarden X Apsu (9/12, Ultra-légendaire) : Coûte 1 de moins par autre carte dans ta main. Révélation : +1 par carte restée dans ta main. Exige Yarden Weiss et Apsu dans le deck.
 
