@@ -256,6 +256,17 @@ async function inPage() {
     T("Glisser : le toucher seul sélectionne toujours la carte", S.sel === +el.dataset.uid, "");
     window.render = () => {}; screen = "home"; S.sel = null;
   }
+  /* Préchargement du deck choisi */
+  {
+    fresh(); PRE.clear(); preQ.length = 0; nextPlay = null; preloadDeck();
+    const wantImgs = P.deck.every(id => PRE.has(CARDS[id].img) && PRE.has(`images/avatars/${id}.webp?v=7`));
+    T("Préchargement : les illustrations et avatars des 12 cartes du deck sont mis en file", P.deck.length === 12 && wantImgs, PRE.size);
+    T("Préchargement : le morceau de partie est choisi et mis en file", (nextPlay === "play" || nextPlay === "play2") && PRE.has(MUSIC[nextPlay]), nextPlay);
+    const before = PRE.size; preloadDeck(); T("Préchargement : rien n'est mis en file deux fois", PRE.size === before, "");
+    nextPlay = "play2"; playFor = null; screen = "play"; const k = musicKey();
+    T("Préchargement : la partie joue le morceau préchargé", k === "play2" && nextPlay === null, k);
+    screen = "home"; playFor = null;
+  }
   /* Rappels des séries précédentes */
   fresh(); S.turn = 6; S.energy = 12; { const n = card("nemesis"); S.hand.p = [n]; const a = canStage(n, 0); S.turn = 5; T("Nemesis : injouable au tour 6, jouable au tour 5", !a && canStage(n, 0), ""); }
   fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }

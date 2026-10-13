@@ -5,6 +5,24 @@ function fxH(t){ return String(t||"").replace(/(^|\. )(Révélation|Continu|Fata
    Extrait d'index.html le 12 octobre 2026 sans aucun changement de code : les fichiers js/ se chargent dans l'ordre d'index.html et partagent la même portée globale. */
 /* ======= RENDU ======= */
 const esc=s=>String(s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+/* Préchargement discret du deck choisi (étape 3) : illustrations des cartes du deck, leurs avatars et le morceau de la prochaine partie,
+   en arrière-plan (priorité basse, quand le navigateur est au repos), sans jamais bloquer l'interface. Rien si l'économie de données est active. */
+const PRE=new Set(); let preQ=[], preTimer=null;
+function preSlow(){ const c=navigator.connection; return !!c&&(c.saveData||/(^|-)2g$/.test(c.effectiveType||"")); }
+function preAdd(u,audio){ if(u&&!PRE.has(u)){ PRE.add(u); preQ.push([u,audio]); } }
+function preRun(){
+  preTimer=null; const t0=performance.now();
+  while(preQ.length&&performance.now()-t0<8){ const [u,audio]=preQ.shift();
+    try{ if(audio) fetch(u,{priority:"low"}).then(r=>r.arrayBuffer()).catch(()=>{}); else { const im=new Image(); im.decoding="async"; im.fetchPriority="low"; im.src=u; } }catch(_){} }
+  if(preQ.length) preSched();
+}
+function preSched(){ if(preTimer) return; preTimer=(window.requestIdleCallback?requestIdleCallback(preRun,{timeout:2500}):setTimeout(preRun,200)); }
+function preloadDeck(){
+  if(preSlow()||!P||!Array.isArray(P.deck)) return;
+  for(const id of P.deck){ const d=CARDS[id]; if(!d||!d.img) continue; preAdd(d.img); preAdd(`images/avatars/${id}.webp?v=7`); }
+  if(!nextPlay) nextPlay=Math.random()<.5?"play":"play2"; preAdd(MUSIC[nextPlay],true);
+  preSched();
+}
 let ART_MINI=false; /* vrai pendant le rendu des grilles : illustration réduite (images/mini, 360 × 540) */
 const gridArt=fn=>{ ART_MINI=true; try{ return fn(); } finally{ ART_MINI=false; } };
 function art(id,light){
@@ -868,7 +886,7 @@ document.addEventListener("click", e=>{
     case "bzplay": if(S&&S.blitz&&!S.over){ screen="play"; render(); return; } sfx("click"); bzGame(); window.scrollTo(0,0); return;
     case "bzquit": if(S&&S.blitz&&!S.over) S=null; bzEndRun(); render(); return;
     case "bzclear": P.bz.run=null; save(); sfx("click"); render(); return;
-    case "deckpick": { const i=+el.dataset.i; if(i===P.di) return; P.decks[P.di].cards=[...P.deck]; P.di=i; P.deck=[...P.decks[i].cards].filter(id=>P.owned.includes(id)); deckMsg=pruneUL(); deckRename=false; save(); sfx("select"); render(); return; }
+    case "deckpick": { const i=+el.dataset.i; if(i===P.di) return; P.decks[P.di].cards=[...P.deck]; P.di=i; P.deck=[...P.decks[i].cards].filter(id=>P.owned.includes(id)); deckMsg=pruneUL(); deckRename=false; save(); sfx("select"); render(); preloadDeck(); return; }
     case "deckrename": deckRename=true; render(); { const i=document.getElementById("deck-input"); if(i){ i.focus(); i.select(); } } return;
     case "deckcover": { const D=P.decks[P.di]; D.cover=COVERS[(COVERS.indexOf(D.cover)+1)%COVERS.length]; save(); sfx("click"); render(); return; }
     case "mpcreate": mqStop(); mpCreate(); return;
@@ -912,7 +930,7 @@ document.addEventListener("click", e=>{
       else if(clash){ deckMsg=`Une seule version par personnage : retire d'abord ${CARDS[clash].name}.`; sfx("debuff"); }
       else if(P.deck.length<ECO.deckSize){ P.deck.push(id); deckMsg=""; sfx("select"); }
       else { deckMsg="Ton deck est plein : retire d'abord une carte."; sfx("debuff"); }
-      save(); render(); return; }
+      save(); render(); if(P.deck.length>=ECO.deckSize) preloadDeck(); return; }
     case "close": S.over.closed=true; render(); return;
     case "pileview": if(S){ gz="p"+el.dataset.p; sfx("select"); render(); } return;
   }
@@ -955,6 +973,6 @@ window.claude?.hot?.snapshot?.(()=>({S:S&&S.mp?null:S,uidN,games,screen:screen==
 function boot(d){
   applyLang();
   if(d && d.S!==undefined){ S=(d.S&&d.S.bonus)?d.S:null; uidN=d.uidN||0; games=d.games||0; screen=d.screen||"home"; if(S) S.busy=false; }
-  render(); initStore().finally(()=>{ storeReady=true; claimDaily(); render(); }); initRoom();
+  render(); initStore().finally(()=>{ storeReady=true; claimDaily(); render(); preloadDeck(); }); initRoom();
 }
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});

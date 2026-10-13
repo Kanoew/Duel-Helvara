@@ -54,7 +54,7 @@ function sfx(n){ if(!quiet && P.sfx && SFX[n]) try{ SFX[n](); }catch(e){} }
 const MUSIC={home:"audio/accueil.mp3",play:"audio/partie.mp3",play2:"audio/partie_2.mp3",tension:"audio/partie_tension.mp3",home_halloween:"audio/accueil_halloween.mp3",home_noel:"audio/accueil_noel.mp3",home_nouvelan:"audio/accueil_noel.mp3",
   win:"audio/victoire.mp3",lose:"audio/defaite.mp3"};
 /* bgm : morceau en cours ; bgmFade : celui qui s'éteint ; bgmHold : morceau de partie mis en pause pendant le jingle de fin */
-let bgm=null, bgmFade=null, bgmHold=null, bgmArmed=false, jingle=null, playFor=null, playPick="play", endKey=null;
+let bgm=null, bgmFade=null, bgmHold=null, bgmArmed=false, jingle=null, playFor=null, playPick="play", nextPlay=null, endKey=null;
 const mVol=()=>Math.max(0,Math.min(1,(P.vm??35)/100));
 const MBUF=new Map(), MLOOP=new WeakMap();
 /* Bornes de la boucle : on saute le silence du début et de la fin du fichier (jusqu'à 0,3 s), sinon il s'entend à chaque tour */
@@ -105,7 +105,7 @@ function mStop(t,dur){ if(!t) return; mRamp(t,0,dur);
   setTimeout(()=>{ mPause(t); t.dead=true; if(t.g) try{ t.g.disconnect(); }catch(e){} if(t.el) t.el.removeAttribute("src"); },dur*1000+80); }
 function musicKey(){
   if(screen==="play"&&S){
-    if(playFor!==S){ playFor=S; playPick=Math.random()<.5?"play":"play2"; }
+    if(playFor!==S){ playFor=S; playPick=nextPlay||(Math.random()<.5?"play":"play2"); nextPlay=null; } /* nextPlay : morceau déjà préchargé avant la partie */
     if(S.over) return endKey||playPick; /* écran de fin : le morceau de la partie reprend après le jingle */
     return S.turn>=5?"tension":playPick; }
   const se=season(); return se?"home_"+se:"home"; }
