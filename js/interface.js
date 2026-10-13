@@ -576,7 +576,7 @@ function infoHTML(){
                :`<div><div class="t">Lieu inconnu</div><div class="m">Il sera révélé au début du tour ${loc+1}.</div></div>`; }
   /* Aide générale : les 3 premières parties (jamais pendant le tutoriel, qui a son propre encadré), ou à la demande avec le « ? » */
   if(!(S.help||(!S.tut&&P.w+P.l+P.d<3))) return "";
-  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser, ou soulève-la vers le haut et lâche-la sur un lieu. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
+  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser. Tu peux aussi la glisser vers le haut sur un lieu. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
 }
 function handHTML(){
   return S.hand.p.map(c=>{

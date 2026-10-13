@@ -227,7 +227,7 @@
     "Nouvelle partie":"New game", "Lieu inconnu":"Unknown location", "Effet arrêté":"Effect stopped", "Verrouillé":"Locked",
     "Silence : tu ne peux pas jouer ici":"Silence: you can't play here", "Silence adverse":"Enemy silence", "Nemesis : le plus faible gagne":"Nemesis: the weakest wins",
     "Touche un lieu pour la poser.":"Tap a location to play it.", "Effets annulés.":"Effects cancelled.", "Effet arrêté par Perséphone.":"Effect stopped by Persephone.",
-    "Touche une carte de ta main puis un lieu pour la poser, ou soulève-la vers le haut et lâche-la sur un lieu.":"Tap a card in your hand, then a location to play it, or lift it upwards and drop it on a location.", "Appui long":"Long-press",
+    "Touche une carte de ta main puis un lieu pour la poser.":"Tap a card in your hand, then a location to play it.", "Tu peux aussi la glisser vers le haut sur un lieu.":"You can also drag it upwards onto a location.", "Appui long":"Long-press",
     "sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre.":"a card or a location to see it full-size. Tap a card played this turn to take it back.",
     "Main vide.":"Empty hand.", "Puissance :":"Power:", "Cette carte a perdu ses effets.":"This card has lost its effects.",
     "Verrouillé par Vritra : plus personne ne peut y jouer.":"Locked by Vritra: no one can play here anymore.",
