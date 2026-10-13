@@ -9,10 +9,10 @@ let ART_MINI=false; /* vrai pendant le rendu des grilles : illustration réduite
 const gridArt=fn=>{ ART_MINI=true; try{ return fn(); } finally{ ART_MINI=false; } };
 function art(id,light){
   const d=CARDS[id];
-  if(ART_MINI&&!d.token&&d.img&&/^images\/[^/]+\.jpg/.test(d.img)) return `<div class="art" style="background-image:url('${d.img.replace("images/","images/mini/")}')"></div>`;
-  if(light&&!d.token&&d.img) return `<div class="art" style="background-image:url('images/avatars/${id}.jpg?v=7')"></div>`;
+  if(ART_MINI&&!d.token&&d.img&&/^images\/[^/]+\.webp/.test(d.img)) return `<div class="art" style="background-image:url('${d.img.replace("images/","images/mini/")}')"></div>`;
+  if(light&&!d.token&&d.img) return `<div class="art" style="background-image:url('images/avatars/${id}.webp?v=7')"></div>`;
   if(d.token&&d.img) return `<div class="art" style="background-image:url('${d.img}')"></div>`;
-  if(d.token) return `<div class="art token-img" style="background-image:url('images/reflet.jpg')${id==="illusion"?";filter:sepia(.7) saturate(2.2) hue-rotate(-12deg)":id==="cendreux"?";filter:grayscale(1) sepia(.5) brightness(.7)":id==="lanterne"?";filter:sepia(1) saturate(4) hue-rotate(-25deg) brightness(.8)":""}"></div>`;
+  if(d.token) return `<div class="art token-img" style="background-image:url('images/reflet.webp')${id==="illusion"?";filter:sepia(.7) saturate(2.2) hue-rotate(-12deg)":id==="cendreux"?";filter:grayscale(1) sepia(.5) brightness(.7)":id==="lanterne"?";filter:sepia(1) saturate(4) hue-rotate(-25deg) brightness(.8)":""}"></div>`;
   if(d.img) return `<div class="art" style="background-image:url('${d.img}')"></div>`;
   const mono=d.name.replace(/^(L'|Le |La |Les )/,"").charAt(0);
   return `<div class="art ph" data-mono="${mono}" style="--fc:${FAC[d.fac].c}"></div>`;
@@ -168,7 +168,7 @@ function histHTML(){
           ${hasLocs?`<div class="hlocs">${h.locs.map(l=>`<div class="hloc ${l.w==="p"?"won":l.w==="e"?"lost":""}"><div class="ln">${esc(LOCS[l.id].name)}</div><div class="lsc"><span class="me">${l.p}</span> – <span class="foe">${l.e}</span></div></div>`).join("")}</div>`:""}
           ${h.pt||h.et?`<div class="hrank"><span>Puissance totale :</span> ${h.pt} – ${h.et}${h.lv!=null?` · <span>Rang :</span> ${rankName(h.lv)}`:""}</div>`:""}
           ${h.gain?`<div class="hgain">+${h.gain} CHF</div>`:""}
-          ${hasCards?`<div class="hdeck">${h.cards.filter(id=>CARDS[id]).map(id=>`<div class="mini" title="${esc(CARDS[id].name)}"><img src="images/avatars/${id}.jpg" alt="${esc(CARDS[id].name)}" loading="lazy"></div>`).join("")}</div>`:""}
+          ${hasCards?`<div class="hdeck">${h.cards.filter(id=>CARDS[id]).map(id=>`<div class="mini" title="${esc(CARDS[id].name)}"><img src="images/avatars/${id}.webp" alt="${esc(CARDS[id].name)}" loading="lazy"></div>`).join("")}</div>`:""}
         </div>`:""}
       </div>`;
     }).join(""):`<p class="hint">Aucune partie pour ce filtre.</p>`}
@@ -322,7 +322,7 @@ function deckHTML(){
   const D=P.decks[P.di];
   return `
   <section class="sec decksec">
-    <div class="decktabs">${P.decks.map((d,i)=>`<button class="decktab ${i===P.di?"on":""}" data-act="deckpick" data-i="${i}" style="background-image:linear-gradient(180deg,rgba(8,12,20,.05),rgba(8,12,20,.9) 75%),url('images/decks/${d.cover}.jpg');${d.cover==="primordial"?"background-size:130% auto;background-position:center 85%":""}" aria-pressed="${i===P.di}"><span class="dn">${esc(d.name)}</span><span class="dc">${(i===P.di?P.deck:d.cards).length}/12${i===P.di?" · actif":""}</span></button>`).join("")}</div>
+    <div class="decktabs">${P.decks.map((d,i)=>`<button class="decktab ${i===P.di?"on":""}" data-act="deckpick" data-i="${i}" style="background-image:linear-gradient(180deg,rgba(8,12,20,.05),rgba(8,12,20,.9) 75%),url('images/decks/${d.cover}.webp');${d.cover==="primordial"?"background-size:130% auto;background-position:center 85%":""}" aria-pressed="${i===P.di}"><span class="dn">${esc(d.name)}</span><span class="dc">${(i===P.di?P.deck:d.cards).length}/12${i===P.di?" · actif":""}</span></button>`).join("")}</div>
     <div class="deckedit">${deckRename?`<form class="namerow" id="deckform"><input id="deck-input" maxlength="20" value="${esc(D.name)}" aria-label="Nom du deck" autocomplete="off"><button class="primary small" type="submit">OK</button></form>`:`<button class="ghost small" data-act="deckrename">Renommer</button>`}<button class="ghost small" data-act="deckcover">Changer l'illustration</button></div>
   </section>
   <section class="sec">
@@ -406,7 +406,7 @@ function avPickHTML(){
     <h2>Avatar</h2><p class="hint">Chaque carte de ta collection débloque son portrait · ${P.owned.length}/${avail().length}</p>
     <div class="avgrid">${ids.map(id=>{ const own=P.owned.includes(id);
       return `<button class="avopt ${P.avatar===id?"on":""}" ${own?`data-act="avset" data-id="${id}"`:"disabled"} aria-label="${CARDS[id].name}${own?"":" (verrouillé)"}">
-        <span class="avatar md ${own?"":"locked"}" style="background-image:url('images/avatars/${id}.jpg?v=7')"></span><span class="avn">${own?CARDS[id].name:"?"}</span></button>`; }).join("")}</div>
+        <span class="avatar md ${own?"":"locked"}" style="background-image:url('images/avatars/${id}.webp?v=7')"></span><span class="avn">${own?CARDS[id].name:"?"}</span></button>`; }).join("")}</div>
     <button class="ghost" data-act="avclose">Fermer</button></div></div>`;
 }
 
@@ -551,7 +551,7 @@ const VEIL="linear-gradient(180deg,rgba(8,12,20,.45),rgba(8,12,20,.85))";
 function locHTML(li){
   const L=S.locs[li], d=LOCS[L.id], a=total("p",li), b=total("e",li), w=leader(li);
   const can=S.sel&&!S.busy&&canStage(findHand(S.sel),li);
-  const img=L.rev?d.img:"images/lieux/inconnu.jpg";
+  const img=L.rev?d.img:"images/lieux/inconnu.webp";
   const cross=S.oath===li&&S.aiOath===li;
   const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
   return `<div class="loc${can?" can":""}${L.locked?" locked":""}${cross?" cross":S.oath===li?" oath":S.aiOath===li?" aioath":""}" style="background-image:${VEIL},url('${img}')" data-act="stage" data-li="${li}" data-lp="l${li}" tabindex="0">
@@ -638,7 +638,7 @@ function gameHTML(){
   ${S.disc.p||S.bonus.p?`<div class="mods">${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
   <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${pilesHTML()}</div>
   ${aiOathBar()}
-  ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.jpg?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
+  ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
   <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&S.oath==null?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
@@ -656,7 +656,7 @@ function gzHTML(){
   if(!gz||!S) return "";
   if(gz[0]==="p") return pileHTML();
   if(gz[0]==="l"){ const li=+gz.slice(1), L=S.locs[li], d=LOCS[L.id];
-    return `<div class="veil" data-act="gzclose"><div class="gzloc"><div class="gzimg" style="background-image:url('${L.rev?d.img:"images/lieux/inconnu.jpg"}')"></div>
+    return `<div class="veil" data-act="gzclose"><div class="gzloc"><div class="gzimg" style="background-image:url('${L.rev?d.img:"images/lieux/inconnu.webp"}')"></div>
       <div class="zoominfo"><div class="t">${L.rev?d.name:"Lieu inconnu"}</div><p>${L.rev?d.fx:`Il sera révélé au début du tour ${li+1}.`}${L.stopped?" <b>Effet arrêté par Perséphone.</b>":""}${L.locked?" <b>Verrouillé par Vritra : plus personne ne peut y jouer.</b>":""}</p>
       <div class="m">Puissance : <span style="color:var(--me)">toi ${total("p",li)}</span> · <span style="color:var(--foe)">adversaire ${total("e",li)}</span></div></div></div></div>`; }
   const uid=+gz.slice(1), f=findAny(uid); if(!f){ return ""; } const c=f.c, d=CARDS[c.id];

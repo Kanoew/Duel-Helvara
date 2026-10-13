@@ -43,8 +43,8 @@ Réponses en **français**.
 | `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor |
 | `outils/equilibrage.js`, `rapport-cartes.md`, `rapport-cible.md` | Outil d'équilibrage (IA contre IA avec le vrai moteur, hors du jeu), son rapport complet et son rapport ciblé (`--cartes`) |
 | `outils/tests-scenarios.js` | Tests de scénarios fixes (quelques secondes, `node outils/tests-scenarios.js`) : Nike + Aphrodite, Styx, Set, Prométhée + Pandore… **À relancer après toute modification du moteur** |
-| `images/` | Illustrations des cartes (`<id>.jpg`) |
-| `images/avatars/` | Portraits carrés (`<id>.jpg`) |
+| `images/` | Illustrations des cartes (`<id>.webp`) |
+| `images/avatars/` | Portraits carrés (`<id>.webp`) |
 | `images/mini/` | Illustrations réduites pour les grilles (360 × 540) |
 | `images/lieux/`, `images/packs/` | Lieux et paquets |
 | `audio/` | Musiques : `accueil*`, `partie`, `partie_2`, `partie_tension` (dès le tour 5), jingles `victoire` et `defaite` |
@@ -57,12 +57,12 @@ Réponses en **français**.
 
 | Image | Format | Chemin |
 |---|---|---|
-| Carte | 720 × 1080, JPEG qualité 82 | `images/<id>.jpg` |
-| Avatar | 256 × 256, JPEG qualité 85, **recadré à la main sur le visage** | `images/avatars/<id>.jpg` |
+| Carte | 720 × 1080, WebP qualité 80 | `images/<id>.webp` |
+| Avatar | 256 × 256, WebP qualité 80, **recadré à la main sur le visage** | `images/avatars/<id>.webp` |
 
 L'avatar sert de portrait au joueur, mais aussi de **miniature sur le plateau**. Il est donc obligatoire.
 
-Troisième image, générée à partir de la carte : `images/mini/<id>.jpg` (360 × 540, qualité 78), utilisée par la collection.
+Troisième image, générée à partir de la carte : `images/mini/<id>.webp` (360 × 540, WebP qualité 80), utilisée par la collection.
 
 - Autres formats : lieu en 800 × 597 dans `images/lieux/`, paquet en 600 × 894 dans `images/packs/`.
 - Les images envoyées dans le chat arrivent en pleine résolution. Vérifier leur taille réelle avant de calculer le recadrage : l'aperçu affiché est souvent plus petit.
@@ -70,8 +70,8 @@ Troisième image, générée à partir de la carte : `images/mini/<id>.jpg` (360
 
 ```js
 const sharp=require('/tmp/sb/node_modules/sharp');
-await sharp(src).resize(720,1080,{fit:'cover'}).jpeg({quality:82,mozjpeg:true}).toFile('images/<id>.jpg');
-await sharp(src).extract({left,top,width:c,height:c}).resize(256,256).jpeg({quality:85}).toFile('images/avatars/<id>.jpg');
+await sharp(src).resize(720,1080,{fit:"cover"}).webp({quality:80}).toFile('images/<id>.webp');
+await sharp(src).extract({left,top,width:c,height:c}).resize(256,256).webp({quality:80}).toFile('images/avatars/<id>.webp');
 ```
 
 Toujours regarder l'avatar obtenu (le visage doit être centré, ni trop serré ni trop large) et corriger le recadrage si besoin.
@@ -79,7 +79,7 @@ Toujours regarder l'avatar obtenu (le visage doit être centré, ni trop serré 
 ### 2. Les données, dans l'objet `CARDS` de `js/cartes.js`
 
 ```js
-athena:  {name:"Athéna", cost:2, pow:2, fac:"jugement", r:"E", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : …", img:"images/athena.jpg"},
+athena:  {name:"Athéna", cost:2, pow:2, fac:"jugement", r:"E", rel:"2026-11-15", soon:"2026-11-10", fx:"Révélation : …", img:"images/athena.webp"},
 ```
 
 | Champ | Valeurs |
@@ -223,7 +223,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 ## Performances sur téléphone (12 octobre)
 
 - **Particules saisonnières** (`html[data-season] body::after`) : animées par `transform` (calque déplacé), jamais par `background-position` (qui repeignait tout l'écran à chaque image : l'accueil tombait de 60 à 45 images/s pendant Halloween).
-- **Grilles** (collection, codex) : `content-visibility:auto` sur chaque carte (hors écran = ni dessinée ni décodée), pas de reflet, de poussières ni de holo animé, pas de flou sur les cartes « Bientôt ». Illustrations réduites `images/mini/<fichier>.jpg` (360 × 540, qualité 78) via `gridArt(()=>…)` qui active `ART_MINI` pendant le rendu. **Chaque nouvelle carte doit aussi avoir sa miniature** (`sharp(src).resize(360,540,{fit:'cover'}).jpeg({quality:78,mozjpeg:true})`), sinon la grille affichera une case vide.
+- **Grilles** (collection, codex) : `content-visibility:auto` sur chaque carte (hors écran = ni dessinée ni décodée), pas de reflet, de poussières ni de holo animé, pas de flou sur les cartes « Bientôt ». Illustrations réduites `images/mini/<fichier>.webp` (360 × 540, WebP qualité 80) via `gridArt(()=>…)` qui active `ART_MINI` pendant le rendu. **Chaque nouvelle carte doit aussi avoir sa miniature** (`sharp(src).resize(360,540,{fit:"cover"}).webp({quality:80})`), sinon la grille affichera une case vide.
 - Mesure de référence (Chromium, téléphone simulé, processeur ralenti ×6) : accueil 60 images/s, collection au repos 60, défilement ~47.
 
 ## Écran de partie sur téléphone (12 octobre, audit étape 3 ; testé en 390 × 844 et 360 × 740)
@@ -348,7 +348,7 @@ On **oublie la fusion par collection** : une fusion ne se gagne plus en réuniss
 - **13 cartes sans faction, coût ni effet, ajoutées le 9 octobre, cachées** (`rel`/`soon` à `2099-01-01`) : `daji`, `aine`, `rati`, `gaia`, `frigg`, `maat`, `typhon`, `hera`, `pakhet`, `izanami`, `echidna`, `hephaistos`, `cernunnos`. **Faction (devinée d'après les dieux déjà en jeu), coût 3, puissance 3 et rareté épique sont provisoires** : Jordan doit les fixer, avec la date et les effets.
 - **20 cartes ajoutées le 10 octobre, cachées** (`rel`/`soon` à `2099-01-01`, sans effet, sans `ex`, sans `vfx` sauf Ereshkigal) : `qetesh_v`, `circe_v`, `aphrodite_r`, `ereshkigal_n` et `ereshkigal_v` (légendaires, comme la base), `demeter`, `meduse`, `nike_v` (ultra-légendaire de faction, entrée `ULS` avec `fac`/`min`) et 12 fusions ultra-légendaires `ulqetjor_v`, `ulprombia`, `ulheradio`, `ulposathe`, `ulnikebia`, `ulmaatset`, `ulprompan`, `ulinaere`, `ulnikejor_v`, `ulaphares`, `ultyphgaia`, `ularesathe`, `ulbaldere`, `ulbaldfrigg`, `ulsusama`, `ulcircal`, `uloshoya`, `ulhadper` ; plus `ares_n` et `hel_v` (épiques, variantes du Nouvel An et de la Saint-Valentin). Les 8 images du 2e envoi suivent les mêmes règles. **Coûts (6/4 pour les fusions), factions de Déméter, Méduse et des fusions, et sources des fusions sont provisoires.** Les variantes Saint-Valentin n'ont pas de `ex` : la saison « valentin » n'existe pas encore (`SEASON`, paquet, `PACK`). `ulaph` n'accepte pas encore `aphrodite_r`.
 - **18 cartes ajoutées le 12 octobre (1re vague d'une série de 25), cachées** (`rel`/`soon` à `2099-01-01`, sans effet) : dieux `sedna`, `benzaiten`, `loki` (version féminine voulue par Jordan), `kali`, `eros` (deux visages, femme et homme, voulu), `anahita`, `cronos`, `apollon`, `herakles`, `vesta`, `indra`, `tsukuyomi`, `zeus` ; humains Helvara `possedee` (humaine aux yeux vairons, « possédée »), `musicien` (sans nom), `emiri` (chasseuse de fantômes, liée à la voyante ; Jordan hésitait entre Emiri et Chasseuse), `voyante`, `penitente` (humaine des bas-fonds, style SM, croit à l'église, se bat avec une chaîne). Styx et Méduse ont reçu une nouvelle illustration (Méduse remplace l'ancienne version). **Noms des humains sans nom, factions (devinées), coûts 3/3 et raretés E sont provisoires** ; 5 cartes restent à venir pour finir la série.
-- **4 cartes ajoutées plus tard le 12 octobre (fin de la série de 25), cachées** : `effigie`, `reflet_noir` (Jordan veut changer le nom ; `reflet` est déjà le jeton du Lac Ouchy), `enfant` (« L'Enfant sans École » : Jordan avait écrit « sans éco », à confirmer) : sans effet, factions Helvara devinées, 3/3 épique provisoires ; et **`ananke`**, ultra-légendaire de faction Primordial, avec son effet (voir ci-dessous). `images/enfant.jpg` : la bordure noire de l'image d'origine a été rognée.
+- **4 cartes ajoutées plus tard le 12 octobre (fin de la série de 25), cachées** : `effigie`, `reflet_noir` (Jordan veut changer le nom ; `reflet` est déjà le jeton du Lac Ouchy), `enfant` (« L'Enfant sans École » : Jordan avait écrit « sans éco », à confirmer) : sans effet, factions Helvara devinées, 3/3 épique provisoires ; et **`ananke`**, ultra-légendaire de faction Primordial, avec son effet (voir ci-dessous). `images/enfant.webp` : la bordure noire de l'image d'origine a été rognée.
 - **Ananké** (coût 6, puissance 1, `ULS` : 8 cartes Primordial dont elle, `quest:{k:"primordial",n:50}` par défaut comme Nike, à confirmer avec Jordan). **Fatalité** : `fated(c)` = ni détruite (`destroy`, Faille, Nyx, Ereshkigal), ni déplacée (Set, Éris, Lilith, Hermès, Susanoo, Heimdall), ni affaiblie (`noWeak` : `weaken`, Hathor, Cirque ; plus Mouche, Chernobog, Inanna, Oya, Circé, Calypso). Continu : Apsu et Mohini (`neg`) la privent de cette protection. **Révélation** : sa puissance devient la puissance totale adverse dans ce lieu +1, au moment de la révélation (les cartes adverses pas encore révélées ce tour ne comptent pas : jouer après elles vaut plus). IA : `place()` ajoute la puissance adverse du lieu. `vfx:"ananke"` dans `MIX`. Pas de cinématique de pose (`FACTION_CINE`). `BUILD` passé à `alpha-0.2`.
 - **Conservation des données** : `supabase.sql` relancé le 11 octobre (fonction `delete_my_account` en place, 0 erreur) ; le bouton « Supprimer mon compte » a été essayé avec le vrai serveur par Jordan (compte Google d'essai) : il fonctionne. Le nettoyage des comptes inactifs est planifié depuis le 11 octobre (pg_cron activé, tâche `helvara-conservation`, tous les lundis à 4 h UTC, vérifiée dans `cron.job`) : rien n'expire avant octobre 2027. `supabase.sql` relancé aussi après l'ajout de la règle DELETE sur `saves`.
 - Musique `audio/accueil_nouvelan.mp3` (optionnelle).
@@ -363,3 +363,6 @@ On **oublie la fusion par collection** : une fusion ne se gagne plus en réuniss
 - Code couleur des mots-clés (`fxH()` dans `js/interface.js`, styles `.kw-*` dans `jeu.css`) : Révélation (corail ✦), Continu (vert ∞), Fatalité (rouge ✠), en FR et en EN. Un nouveau mot-clé : l'ajouter à `FXK` et lui donner une couleur.
 - Glisser-déposer : soulever une carte de la main vers le haut et la lâcher sur un lieu (`stageSel()`, bloc « Glisser-déposer » de `js/interface.js`) ; le toucher reste possible, un glissement de côté fait défiler la main.
 - Idée en attente (Jordan) : bouton « Lore » renvoyant vers le chapitre 1 (Wattpad ou version comics). Liens à fournir.
+
+## Optimisation (13 octobre 2026, branche `perf/optimisation`)
+- **Images en WebP** (étape 1) : toutes les illustrations du jeu (`images/*.webp`, `mini/`, `avatars/`, `lieux/`, `packs/`, `decks/`, fonds) sont en **WebP qualité 80** ; les icônes de rang (`images/rangs/*.webp`) en WebP qualité 85 avec transparence. Les JPEG/PNG d'origine ont été supprimés. **Chaque nouvelle carte = illustration WebP (720 × 1080) + avatar WebP (256 × 256) + miniature WebP 360 × 540** (`images/mini/<id>.webp`), avec `sharp(...).webp({quality:80})`. Seul `images/readme/` reste en JPEG (images du README GitHub). Poids des images : 43 Mo → 29 Mo.

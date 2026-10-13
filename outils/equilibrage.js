@@ -48,7 +48,7 @@ const { chromium } = loadPlaywright();
 
 /* ------------------------------------------------ serveur local du dépôt */
 function serve() {
-  const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".jpg": "image/jpeg", ".png": "image/png", ".woff2": "font/woff2", ".mp3": "audio/mpeg" };
+  const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".jpg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".woff2": "font/woff2", ".mp3": "audio/mpeg" };
   const srv = http.createServer((q, r) => {
     let f = path.join(ROOT, decodeURIComponent(q.url.split("?")[0])); if (f.endsWith(path.sep) || f === ROOT) f = path.join(f, "index.html");
     if (!f.startsWith(ROOT)) { r.writeHead(403); return r.end(); }

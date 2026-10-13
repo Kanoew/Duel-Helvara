@@ -9,7 +9,7 @@ function loadPlaywright() {
   console.error("Playwright introuvable (voir CLAUDE.md, section Tests)."); process.exit(1);
 }
 const { chromium } = loadPlaywright();
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".jpg": "image/jpeg", ".png": "image/png", ".mp3": "audio/mpeg", ".json": "application/json" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".jpg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".mp3": "audio/mpeg", ".json": "application/json" };
 
 /* Tout ce bloc tourne DANS la page du jeu ; il renvoie la liste [nom, ok, détail]. */
 async function inPage() {
@@ -104,7 +104,7 @@ async function inPage() {
     $(".t-skip").click(); await until(() => !$(".t-end").hidden); $("[data-t=close]").click(); await tick(100);
     T("Ouverture : Continuer ferme le calque et libère l'état", !$("#tirage") && packOpen === null, "");
     /* l'animation gère une Ultra Légendaire (pas encore dans les paquets) : tension longue puis récompense qui attend le toucher */
-    ouvrirTirage({ res: [{ id: "ulya", isNew: true }], name: "Essai", img: "images/packs/breche.jpg", pid: "breche", price: 300 });
+    ouvrirTirage({ res: [{ id: "ulya", isNew: true }], name: "Essai", img: "images/packs/breche.webp", pid: "breche", price: 300 });
     $(".t-pack").click(); await until(() => /choisis|pick/i.test($(".t-status").textContent));
     const t0 = Date.now(); document.querySelector(".t-slot").click();
     const waiting = await until(() => /touche pour|tap to/i.test($(".t-status").textContent), 9000), dt = Date.now() - t0;

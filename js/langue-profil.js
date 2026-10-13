@@ -93,19 +93,19 @@ const ECO = {win:50, draw:20, loss:10, deckSize:12, tuto:100, dup:{D:10,C:10,R:2
 /* Chance (en % par paquet) qu'un paquet d'édition contienne une fusion ultra-légendaire : un peu plus que le paquet à 300 CHF (pas de garantie, édition courte). */
 const UL_SEASON=5;
 const PACKS = [
-  {id:"brulure", name:"Première Brûlure", img:"images/packs/brulure.jpg", price:100, n:12, starter:true,
+  {id:"brulure", name:"Première Brûlure", img:"images/packs/brulure.webp", price:100, n:12, starter:true,
    desc:"Ton premier deck : 12 cartes différentes, dont 2 épiques, avec une courbe de coûts jouable. Une seule fois."},
-  {id:"reflets", name:"Liasse des Reflets", img:"images/pack.jpg", price:100, n:3, odds:[["C",70],["R",30]], ul:1,
+  {id:"reflets", name:"Liasse des Reflets", img:"images/pack.webp", price:100, n:3, odds:[["C",70],["R",30]], ul:1,
    desc:"Communes et rares. Pour compléter les bases."},
-  {id:"voile", name:"Cachet du Voile", img:"images/packs/voile.jpg", price:200, n:3, odds:[["C",50],["R",35],["E",15]], ul:2,
+  {id:"voile", name:"Cachet du Voile", img:"images/packs/voile.webp", price:200, n:3, odds:[["C",50],["R",35],["E",15]], ul:2,
    desc:"Les épiques entrent en jeu."},
-  {id:"breche", name:"Brèche du Sceau", img:"images/packs/breche.jpg", price:300, n:3, odds:[["C",40],["R",33],["E",20],["L",7]], ul:4, pity:10,
+  {id:"breche", name:"Brèche du Sceau", img:"images/packs/breche.webp", price:300, n:3, odds:[["C",40],["R",33],["E",20],["L",7]], ul:4, pity:10,
    desc:"Tout peut en sortir, légendaires comprises."},
-  {id:"halloween", name:"Pli des Citrouilles", img:"images/packs/halloween.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["10-12","11-02"],
+  {id:"halloween", name:"Pli des Citrouilles", img:"images/packs/halloween.webp", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["10-12","11-02"],
    desc:"Édition d'Halloween. Plus d'épiques et de légendaires que partout ailleurs."},
-  {id:"noel", name:"Pli de l'Étoile", img:"images/packs/noel.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["12-14","01-02"],
+  {id:"noel", name:"Pli de l'Étoile", img:"images/packs/noel.webp", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["12-14","01-02"],
    desc:"Édition de Noël. Plus d'épiques et de légendaires que partout ailleurs."},
-  {id:"nouvelan", name:"Pli du Douzième Coup", img:"images/packs/nouvelan.jpg", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["12-31","01-18"],
+  {id:"nouvelan", name:"Pli du Douzième Coup", img:"images/packs/nouvelan.webp", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["12-31","01-18"],
    desc:"Édition du Nouvel An. Plus d'épiques et de légendaires que partout ailleurs."}
 ];
 const md=()=>today().slice(5);
@@ -274,8 +274,8 @@ let P = clean(lsRead());
 { const a=checkSeason(), b=ensureQuests(), c=ensureWeek(); if(a||b||c) lsWrite(); }
 let packOpen=null, gz=null, lpTimer=null, lpFired=false;
 let storeReady=false, tutoStep=-1, hlStarter=false, packFocus=null, avPick=false, zoomId=null, fanPick=null;
-const rankIcon=(lv,cls="")=>`<img class="rkicon ${cls}" src="images/rangs/${tierOf(lv)}.png?v=2" alt="${TIERS[tierOf(lv)]}">`;
-function avatarHTML(cls=""){ const a=P.avatar&&P.owned.includes(P.avatar)?P.avatar:null; return a?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${a}.jpg?v=7')"></span>`:`<span class="avatar ${cls} empty">${esc(P.name.charAt(0).toUpperCase())}</span>`; }
+const rankIcon=(lv,cls="")=>`<img class="rkicon ${cls}" src="images/rangs/${tierOf(lv)}.webp?v=2" alt="${TIERS[tierOf(lv)]}">`;
+function avatarHTML(cls=""){ const a=P.avatar&&P.owned.includes(P.avatar)?P.avatar:null; return a?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${a}.webp?v=7')"></span>`:`<span class="avatar ${cls} empty">${esc(P.name.charAt(0).toUpperCase())}</span>`; }
 let dbDoc=null, store="local", writing=false, again=false, saveTimer=null, lastPack=null;
 /* P.at : heure de la dernière modification. Au chargement, la sauvegarde locale l'emporte sur celle du compte
    si elle est plus récente et appartient au même joueur (OWNER_KEY) : un envoi raté (réseau, téléphone en veille)
@@ -350,7 +350,7 @@ function boardHTML(){
   if(lbUid) map[lbUid]={...lbClean(lbMe()),id:lbUid};
   const k=LB_SEASON(); const all=Object.values(map).filter(r=>r&&r.nick&&(r.id===lbUid||r.lv||r.st||r.sw||r.sl||r.best));
   const cur=all.filter(r=>r.season===k).sort((a,b)=>b.lv-a.lv||b.st-a.st||b.sw-a.sw), old=all.filter(r=>r.season!==k);
-  const row=(r,i)=>`<div class="lbrow ${r.id===lbUid?"me":""}"><span class="lbn">${i+1}</span>${r.av?`<span class="avatar sm" style="background-image:url('images/avatars/${r.av}.jpg?v=7')"></span>`:`<span class="avatar sm empty">${esc(r.nick.charAt(0).toUpperCase())}</span>`}<span class="lbmain"><b>${esc(r.nick)}${r.id===lbUid?" (toi)":""}</b>${act(r)?`<i class="lbon">actif</i>`:""}<small>${rankName(r.lv)} · ${r.sw} V · ${r.sl} D</small></span>${rankIcon(r.lv,"sm")}</div>`;
+  const row=(r,i)=>`<div class="lbrow ${r.id===lbUid?"me":""}"><span class="lbn">${i+1}</span>${r.av?`<span class="avatar sm" style="background-image:url('images/avatars/${r.av}.webp?v=7')"></span>`:`<span class="avatar sm empty">${esc(r.nick.charAt(0).toUpperCase())}</span>`}<span class="lbmain"><b>${esc(r.nick)}${r.id===lbUid?" (toi)":""}</b>${act(r)?`<i class="lbon">actif</i>`:""}<small>${rankName(r.lv)} · ${r.sw} V · ${r.sl} D</small></span>${rankIcon(r.lv,"sm")}</div>`;
   return `<section class="sec"><h2>Classement · ${seasonLabel()}</h2>
     <p class="hint">Les 100 meilleurs de la saison. « actif » signale les joueurs vus ces 10 dernières minutes.${store!=="cloud"?" Ta progression n'est pas sauvegardée sur ton compte : tu n'apparais pas dans le classement des autres.":""}</p>
     <div class="lb">${cur.map(row).join("")||`<p class="hint">Personne n'a encore joué cette saison.</p>`}</div></section>
