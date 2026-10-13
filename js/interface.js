@@ -416,7 +416,7 @@ function tutoHTML(){
     <div class="tutocard">${fullCard("yarden")}</div>
     <p class="tb">Chaque duel se joue sur <b>3 lieux</b> et dure <b>6 tours</b>. Pour gagner, il faut avoir plus de puissance que l'adversaire sur <b>2 lieux sur 3</b>.</p>
     <ul class="tbl"><li><b>Énergie</b> : au tour N, tu as N énergie (1 au tour 1, 2 au tour 2…). Elle ne se cumule pas d'un tour à l'autre, sauf effet de carte.</li>
-      <li><b>Lieux</b> : trois lieux tirés au hasard parmi ceux de l'univers d'Helvara, inspiré de Lausanne. Chacun a sa règle, révélée aux tours 1, 2 et 3.</li>
+      <li><b>Lieux</b> : trois lieux tirés au hasard parmi ceux de l'univers d'Helvara, inspiré par le lore Helvara de Lausanne dans Le Sang de Tiamat. Chacun a sa règle, révélée aux tours 1, 2 et 3.</li>
       <li><b>Cartes</b> : une <b>Révélation</b> se déclenche quand la carte est révélée, à la fin du tour ; un effet <b>Continu</b> agit tant que la carte reste en jeu.</li></ul>
     <p class="tb">La partie guidée t'apprend tout en 5 minutes, carte par carte.${reward?" Dans les deux cas, tu reçois <b>100 CHF</b> pour ton premier deck.":""}</p>
     <button class="primary" data-act="tutoplay">Faire la partie guidée</button>
