@@ -1,3 +1,6 @@
+// Code couleur des mots-clés d'effet (Révélation, Continu, Fatalité) : le mot seul est coloré, avec un symbole pour ne pas dépendre de la couleur
+const FXK={"Révélation":"rev","On Reveal":"rev","Continu":"cont","Ongoing":"cont","Fatalité":"fat","Fate":"fat"};
+function fxH(t){ return String(t||"").replace(/(^|\. )(Révélation|Continu|Fatalité|On Reveal|Ongoing|Fate)( ?:)/g,(m,a,k,c)=>`${a}<span class="kw kw-${FXK[k]}">${k}</span>${c}`); }
 /* Duel d'Helvara : rendu des écrans, interactions et démarrage.
    Extrait d'index.html le 12 octobre 2026 sans aucun changement de code : les fichiers js/ se chargent dans l'ordre d'index.html et partagent la même portée globale. */
 /* ======= RENDU ======= */
@@ -21,7 +24,7 @@ function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
   const fx=/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
   return `<div class="full ${extra}${d.r==="U"?" holo":""}${rc(d)}${fx}">${art(id)}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
-    <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${d.fx}</div>`:""}</div>
+    <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${fxH(d.fx)}</div>`:""}</div>
     <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }
 function thumb(id,act){
@@ -390,7 +393,7 @@ function fanPickHTML(){
 function zoomHTML(){
   if(!zoomId) return ""; const d=CARDS[zoomId], F=FAC[d.fac], R=RAR[d.r];
   return `<div class="veil" data-act="unzoom"><div class="zoomwrap">${fullCard(zoomId,"big")}
-    <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(zoomId)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${d.fx}</p>`:""}
+    <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(zoomId)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
     ${screen==="deck"&&P.owned.includes(zoomId)&&!d.token?`<p class="deckstate ${P.deck.includes(zoomId)?"in":""}">${P.deck.includes(zoomId)?`Dans ton deck · ${P.deck.length}/${ECO.deckSize}`:`Pas dans ton deck · ${P.deck.length}/${ECO.deckSize}`}</p>${deckMsg?`<p class="deckmsg">${deckMsg}</p>`:""}<button class="primary" data-act="toggle" data-id="${zoomId}">${P.deck.includes(zoomId)?"Retirer du deck":"Ajouter au deck"}</button>`:""}
     <div class="row2"><button class="ghost" data-act="unzoom">Fermer</button>${P.owned.includes(zoomId)&&P.avatar!==zoomId?`<button class="ghost" data-act="avset" data-id="${zoomId}">En faire mon avatar</button>`:""}</div></div></div></div>`;
 }
@@ -566,7 +569,7 @@ function infoHTML(){
   const uid=S.sel||(S.info&&S.info.uid), loc=S.info&&S.info.loc!=null?S.info.loc:null;
   if(uid){ const f=findAny(uid); if(f){ const d=CARDS[f.c.id], F=FAC[d.fac];
     return `<div><div class="t">${d.name}<span class="chip" style="color:${F.c}">${F.n}</span></div>
-      <div class="m">Coût ${d.cost} · Puissance ${d.pow}${d.fx?` · ${d.fx}`:" · Pas d'effet."}${f.c.neg?` <b style="color:#f0a0a0">Effets annulés.</b>`:""}${f.c.midnight>0&&!f.c.neg?` <b style="color:#c9b0ff">🕛 Minuit : charme au début du prochain tour.</b>`:""}</div>
+      <div class="m">Coût ${d.cost} · Puissance ${d.pow}${d.fx?` · ${fxH(d.fx)}`:" · Pas d'effet."}${f.c.neg?` <b style="color:#f0a0a0">Effets annulés.</b>`:""}${f.c.midnight>0&&!f.c.neg?` <b style="color:#c9b0ff">🕛 Minuit : charme au début du prochain tour.</b>`:""}</div>
       ${S.sel?`<div class="m" style="color:var(--me)">Touche un lieu pour la poser.</div>`:""}</div>`; } }
   if(loc!=null){ const L=S.locs[loc];
     return L.rev?`<div><div class="t">${LOCS[L.id].name}</div><div class="m">${L.stopped?"Effet arrêté par Perséphone. ":""}${LOCS[L.id].fx}${L.locked?" Vritra a verrouillé ce lieu : plus personne ne peut y jouer.":""}</div></div>`
@@ -660,7 +663,7 @@ function gzHTML(){
   const onBoard=f.li!=null&&c.rev, cur=onBoard?cardPow(f.s,f.li,c):c.pow, cont=onBoard?cur-c.pow:0;
   const mods=(c.mods||[]);
   return `<div class="veil" data-act="gzclose"><div class="zoomwrap">${fullCard(c.id,"big",cur)}
-    <div class="zoominfo"><div class="t">${d.name}</div><div class="m">Coût ${d.cost} · puissance de base ${d.pow}${onBoard?` · actuelle <b>${cur}</b>`:""}</div>${d.fx?`<p>${d.fx}</p>`:""}
+    <div class="zoominfo"><div class="t">${d.name}</div><div class="m">Coût ${d.cost} · puissance de base ${d.pow}${onBoard?` · actuelle <b>${cur}</b>`:""}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
     ${c.neg?`<p style="color:var(--ko)">Cette carte a perdu ses effets.</p><p class="hint" style="margin-top:-4px">Ses effets Continu et de fin de tour ne s'appliquent plus. Ses bonus déjà gagnés restent.</p>`:""}
     ${onBoard&&(mods.length||cont)?`<div class="modlist">${mods.map(m=>`<div class="${m.v>0?"up":"down"}">${m.v>0?"+":"−"}${Math.abs(m.v)} · ${esc(m.src)}${c.neg&&m.src===d.name?` <span>(acquis)</span>`:""}</div>`).join("")}${cont?`<div class="${cont>0?"up":"down"}">${cont>0?"+":"−"}${Math.abs(cont)} · effets continus et lieu</div>`:""}</div>`:""}
     <button class="ghost" data-act="gzclose">Fermer</button></div></div></div>`;

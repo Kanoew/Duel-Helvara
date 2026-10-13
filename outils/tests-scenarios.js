@@ -224,6 +224,17 @@ async function inPage() {
       T("Accueil : le menu Boutique retire le surlignage", !$(".packtile.hl") || $(".packtile.hl").dataset.pid === "brulure", ""); }
     window.render = () => {}; screen = "home"; packFocus = null;
   }
+  /* Code couleur des effets */
+  {
+    const h = fxH("Révélation : détruit. Continu : +1 de puissance."), g = fxH("Fatalité : ne peut être détruite. Révélation : x."), e = fxH("On Reveal: a. Ongoing: b. Fate: c.");
+    T("Couleurs : Révélation et Continu colorés dans le texte français", /kw-rev">Révélation<\/span> :/.test(h) && /kw-cont">Continu<\/span> :/.test(h), h);
+    T("Couleurs : Fatalité colorée (carte Ananké)", /^<span class="kw kw-fat">Fatalité<\/span> :/.test(g) && /kw-rev/.test(g), g);
+    T("Couleurs : mots anglais (On Reveal, Ongoing, Fate)", /kw-rev">On Reveal/.test(e) && /kw-cont">Ongoing/.test(e) && /kw-fat">Fate/.test(e), e);
+    T("Couleurs : un texte sans mot-clé reste intact", fxH("Jeton lancé par Thor.") === "Jeton lancé par Thor.", "");
+    screen = "deck"; zoomId = "ananke"; window.render = realRender; render();
+    T("Couleurs : la carte en grand affiche le mot Fatalité coloré", !!document.querySelector(".zoominfo .kw-fat, .full .kw-fat"), "");
+    zoomId = null; window.render = () => {};
+  }
   /* Rappels des séries précédentes */
   fresh(); S.turn = 6; S.energy = 12; { const n = card("nemesis"); S.hand.p = [n]; const a = canStage(n, 0); S.turn = 5; T("Nemesis : injouable au tour 6, jouable au tour 5", !a && canStage(n, 0), ""); }
   fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }

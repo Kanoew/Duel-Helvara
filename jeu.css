@@ -829,3 +829,11 @@ body.ec-draw #app{filter:brightness(.75);transition:filter .6s}
 .zoominfo>.primary{width:100%;margin:6px 0}
 .tuto ul.tbl{margin:8px 0 4px;padding-left:18px;text-align:left;font-size:13.5px;line-height:1.45;display:flex;flex-direction:column;gap:5px;color:var(--text,#e3eaf4)}
 .tuto ul.tbl li::marker{color:var(--warm)}
+
+/* Code couleur des effets : Révélation, Continu, Fatalité */
+:root{--kw-rev:#f59a78;--kw-cont:#62d3ab;--kw-fat:#ee6a82}
+.kw{font-weight:700;white-space:nowrap}
+.kw::before{margin-right:.25em;font-weight:400}
+.kw-rev{color:var(--kw-rev)}.kw-rev::before{content:"✦"}
+.kw-cont{color:var(--kw-cont)}.kw-cont::before{content:"∞"}
+.kw-fat{color:var(--kw-fat)}.kw-fat::before{content:"✠"}
