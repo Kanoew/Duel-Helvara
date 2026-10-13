@@ -5,7 +5,7 @@
    Le bloc entre les deux repères est réécrit par « node outils/versions.js » : ne pas le modifier à la main. */
 "use strict";
 /* VERSIONS-AUTO-DEBUT */
-const CORE_VERSION = "6470cc58dd";
+const CORE_VERSION = "2fdcd2d9f8";
 const MEDIA_VERSION = "96ee2a1827";
 const PRECACHE_CORE = ["index.html","manifest.json","fonts/fonts.css?v=a5827da2","jeu.css?v=878d6729","vendor/supabase.js?v=16aeff36","config.js?v=bf7d9cd8","cloud.js?v=25093d84","cartes-en.js?v=f38cee32","interface-en.js?v=4b4e3144","js/cartes.js?v=ed416bc5","js/langue-profil.js?v=99d827c0","js/sons-effets.js?v=2ba6a15e","js/moteur.js?v=eb858de5","js/boutique-modes.js?v=fe598729","js/ouverture.js?v=854c78b5","js/interface.js?v=2a4cb0c6"];
 const PRECACHE_MEDIA = ["fonts/manrope-latin-ext-wght-normal.woff2","fonts/manrope-latin-wght-normal.woff2","fonts/marcellus-latin-400-normal.woff2","fonts/marcellus-latin-ext-400-normal.woff2","fonts/marcellus-sc-latin-400-normal.woff2","fonts/marcellus-sc-latin-ext-400-normal.woff2","icones/apple-touch-icon.png","icones/favicon-48.png","icones/icone-192.png","icones/icone-512.png","icones/icone-maskable-512.png","images/fond.webp","images/fond_halloween.webp","images/fond_noel.webp","images/lieux/inconnu.webp","images/pack.webp","images/rangs/0.webp","images/rangs/1.webp","images/rangs/2.webp","images/rangs/3.webp","images/rangs/4.webp","images/rangs/5.webp","images/rangs/6.webp","images/reflet.webp"];

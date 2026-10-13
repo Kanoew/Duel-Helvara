@@ -34,6 +34,7 @@ const preMedia = mediaFiles.filter(f => /^fonts\/.*\.woff2$/.test(f) || /^icones
 const swBlock = "/* VERSIONS-AUTO-DEBUT */\nconst CORE_VERSION = " + JSON.stringify(CORE_V) + ";\nconst MEDIA_VERSION = " + JSON.stringify(MEDIA_V) + ";\nconst PRECACHE_CORE = " + JSON.stringify(preCore) + ";\nconst PRECACHE_MEDIA = " + JSON.stringify(preMedia) + ";\n/* VERSIONS-AUTO-FIN */";
 const SW = path.join(ROOT, "sw.js"); let sw = fs.readFileSync(SW, "utf8");
 const swNew = sw.replace(/\/\* VERSIONS-AUTO-DEBUT \*\/[\s\S]*?\/\* VERSIONS-AUTO-FIN \*\//, () => swBlock);
+if (!/VERSIONS-AUTO-DEBUT/.test(sw)) console.log("Attention : sw.js est le service worker de SECOURS (outils/sw-secours.js) : la PWA est coupée chez les joueurs. Pour la rétablir, remettre le vrai sw.js.");
 if (swNew !== sw) stale.push("sw.js");
 if (check) { if (stale.length) { console.error("Empreintes périmées : " + stale.join(", ") + "\nLance : node outils/versions.js"); process.exit(1); } console.log(`Empreintes à jour (${n} fichiers, service worker ${CORE_V}/${MEDIA_V}).`); }
 else { fs.writeFileSync(INDEX, html); fs.writeFileSync(SW, swNew); console.log(stale.length ? `Mis à jour : ${stale.join(", ")}` : `Rien à changer (${n} fichiers à jour).`); }

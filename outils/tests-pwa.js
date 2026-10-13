@@ -2,7 +2,8 @@
 /* Test du service worker (PWA) : node outils/tests-pwa.js
    Copie le jeu dans un dossier temporaire, le sert en HTTP, puis vérifie : création des caches, préchargement du deck dans le cache,
    partie contre l'IA HORS LIGNE, aucune requête externe (Supabase) en cache, et mise à jour : après un « nouveau déploiement » (fichier modifié
-   + outils/versions.js), la page reçoit la nouvelle version et l'ancien cache est supprimé. Nécessite Playwright (voir CLAUDE.md). */
+   + outils/versions.js), la page reçoit la nouvelle version (mais pas pendant l'ouverture d'un paquet) et l'ancien cache est supprimé ;
+   enfin l'interrupteur de secours (outils/sw-secours.js) vide les caches et se désinstalle sans boucle de rechargement. Nécessite Playwright (voir CLAUDE.md). */
 "use strict";
 const {chromium}=require('/opt/node-tools/node_modules/playwright');const os=require('os');const http=require('http'),fs=require('fs'),path=require('path'),cp=require('child_process');
 const SRC=path.resolve(__dirname,'..'),ROOT=fs.mkdtempSync(path.join(os.tmpdir(),'helvara-pwa-')),T={'.html':'text/html','.js':'text/javascript','.css':'text/css','.webp':'image/webp','.png':'image/png','.mp3':'audio/mpeg','.woff2':'font/woff2','.json':'application/json'};
@@ -39,13 +40,28 @@ await p.screenshot({path:path.join(ROOT,'pwa-hors-ligne.png')});
 await ctx.setOffline(false);
 // nouvelle version
 fs.appendFileSync(path.join(ROOT,'js/interface.js'),'\nwindow.__v2=1;\n');cp.execSync('node outils/versions.js',{cwd:ROOT});
-await p.evaluate(()=>{S=null;screen='home';render()});
+await p.evaluate(()=>{S=null;screen='home';packOpen={res:[],name:'essai'};render()});   /* un paquet est en cours d'ouverture */
 await p.evaluate(()=>navigator.serviceWorker.getRegistration().then(r=>r.update()));
+await p.waitForTimeout(6000);
+ok('protection : pas de rechargement pendant l\'ouverture d\'un paquet',await p.evaluate(()=>window.__v2!==1&&!!packOpen),'');
+await p.evaluate(()=>{packOpen=null});
 await p.waitForFunction(()=>window.__v2===1,null,{timeout:20000}).catch(()=>{});
 await p.waitForTimeout(1500);
 ok('nouvelle version : la page a rechargé les nouveaux fichiers',await p.evaluate(()=>window.__v2===1),'');
 keys=await p.evaluate(()=>caches.keys());
 ok('nouvelle version : ancien cache core supprimé',!keys.includes(core1)&&keys.filter(k=>k.startsWith('helvara-core-')).length===1,keys);
+// interrupteur de secours
+let navs=0;p.on('framenavigated',f=>{if(f===p.mainFrame())navs++});
+fs.copyFileSync(path.join(ROOT,'outils/sw-secours.js'),path.join(ROOT,'sw.js'));
+await p.evaluate(()=>navigator.serviceWorker.getRegistration().then(r=>r&&r.update()));
+await p.waitForTimeout(8000);
+keys=await p.evaluate(()=>caches.keys());
+ok('secours : tous les caches du jeu sont supprimés',!keys.some(k=>k.startsWith('helvara-')),keys);
+const regs=await p.evaluate(()=>navigator.serviceWorker.getRegistrations().then(r=>r.length));
+ok('secours : plus aucun service worker actif après coup',regs===0||await p.evaluate(()=>!navigator.serviceWorker.controller),regs);
+ok('secours : la page s\'est rechargée une fois, sans boucle',navs>=1&&navs<=2,navs);
+await p.waitForFunction(()=>typeof newGame==='function',null,{timeout:10000}).catch(()=>{});
+ok('secours : le jeu fonctionne normalement ensuite',await p.evaluate(()=>typeof newGame==='function'&&document.querySelector('#app').children.length>0),'');
 ok('aucune erreur de page',errs.length===0,errs.slice(0,3));
 await b.close();srv.close();fs.rmSync(ROOT,{recursive:true,force:true});process.exit(bad?1:0)})();
 function P_has(a,s){return a.some(u=>u.includes(s))}
