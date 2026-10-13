@@ -14,6 +14,7 @@ const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/cs
 /* Tout ce bloc tourne DANS la page du jeu ; il renvoie la liste [nom, ok, détail]. */
 async function inPage() {
   const res = []; const T = (nom, ok, detail) => res.push([nom, !!ok, detail === undefined ? "" : String(detail)]);
+  const realRender = window.render;
   for (const f of ["render", "sfx", "endCine", "endMusic", "save", "lbPublish", "pushHist", "qProg", "qEnd", "music", "cardVfx", "fusionCine"]) { if (typeof window[f] === "function") window[f] = () => {}; }
   window.factionCine = () => Promise.resolve();
   const plain = Object.keys(CARDS).filter(id => !CARDS[id].token && !CARDS[id].fx && !ULof(id) && CARDS[id].pow <= 3 && !CARDS[id].base);   /* cartes sans effet : puissance fixée à la main */
@@ -87,6 +88,107 @@ async function inPage() {
     T("Prométhée + Pandore : énergie gardée comptée au tour 3 (5)", e3 === 5, e3);
     T("Prométhée + Pandore : +2 par énergie dépensée (2 restantes → 4)", pd.pow === 4, pd.pow);
     T("Prométhée + Pandore : l'énergie dépensée n'est pas gardée une 2e fois", S.energy === 4, S.energy); }
+  /* 7. Ouverture de paquet « Le Tirage » : vrai achat, Passer, fermeture, rachat */
+  { const tick = ms => new Promise(r => setTimeout(r, ms)), until = async (f, ms = 8000) => { const t0 = Date.now(); while(Date.now() - t0 < ms){ if(f()) return true; await tick(40); } return false; };
+    const $ = s => document.querySelector(s);
+    P.starter = true; P.chf = 1000; P.owned = P.owned.slice(0, 5); const n0 = P.owned.length, chf0 = P.chf; quiet = true; buyPack("breche");
+    T("Ouverture : l'achat ouvre le calque avec les 3 cartes du paquet", !!$("#tirage") && document.querySelectorAll(".t-slot").length === 3 && lastPack && lastPack.res.length === 3, "");
+    T("Ouverture : les cartes sont déjà dans la collection avant l'animation", P.owned.length >= n0 && P.chf <= chf0 - 300 + lastPack.refund, `CHF ${chf0} → ${P.chf}`);
+    $(".t-pack").click(); await until(() => /choisis|pick/i.test($(".t-status").textContent));
+    T("Ouverture : le paquet distribue les cartes face cachée", !document.querySelector(".t-fan").hidden && document.querySelectorAll(".t-slot.open").length === 0, "");
+    T("Ouverture : le dos trahit la rareté (classe de halo selon la rareté de chaque carte)", [...document.querySelectorAll(".t-slot")].every((e, i) => e.classList.contains("h-" + CARDS[lastPack.res[i].id].r) || !"RELU".includes(CARDS[lastPack.res[i].id].r)), "");
+    $(".t-skip").click(); await until(() => !$(".t-end").hidden);
+    T("Ouverture : Passer retourne toutes les cartes et propose la suite", document.querySelectorAll(".t-slot.open").length === 3 && $(".t-skip").hidden && [...document.querySelectorAll(".t-end button")].some(b => /autre paquet|another pack/i.test(b.textContent)), "");
+    const chf1 = P.chf; $("[data-t=again]").click(); await tick(200);
+    T("Ouverture : « Ouvrir un autre paquet » rachète le paquet et rouvre le calque", !!$("#tirage") && document.querySelectorAll(".t-slot").length === 3 && P.chf <= chf1 - 300 + lastPack.refund, `CHF ${chf1} → ${P.chf}`);
+    $(".t-skip").click(); await until(() => !$(".t-end").hidden); $("[data-t=close]").click(); await tick(100);
+    T("Ouverture : Continuer ferme le calque et libère l'état", !$("#tirage") && packOpen === null, "");
+    /* l'animation gère une Ultra Légendaire (pas encore dans les paquets) : tension longue puis récompense qui attend le toucher */
+    ouvrirTirage({ res: [{ id: "ulya", isNew: true }], name: "Essai", img: "images/packs/breche.jpg", pid: "breche", price: 300 });
+    $(".t-pack").click(); await until(() => /choisis|pick/i.test($(".t-status").textContent));
+    const t0 = Date.now(); document.querySelector(".t-slot").click();
+    const waiting = await until(() => /touche pour|tap to/i.test($(".t-status").textContent), 9000), dt = Date.now() - t0;
+    T("Ouverture : une Ultra attend le toucher après 3,6 s environ (attente 0,8 + tension 2,3 + révélation 0,55)", waiting && dt > 3200 && dt < 5200, dt + " ms");
+    $(".t-skip").click(); await until(() => !$(".t-end").hidden); $("[data-t=close]").click(); await tick(60);
+  }
+  /* 8. Fusions (ultra-légendaires) dans les paquets */
+  { const pk = id => PACKS.find(x => x.id === id), isU = id => CARDS[id].r === "U";
+    const normal = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id));
+    const fusions = ULS.filter(u => u.req.length && !u.fac && REL(u.id)).map(u => u.id);
+    const draw = (id, n) => { const out = []; for(let i = 0; i < n; i++) out.push(drawPack(pk(id))); return out; };
+    const withU = a => a.filter(g => g.some(isU)).length;
+    P.owned = normal.slice(0, 3); P.pity = 0;
+    T("Fusions : paquets de 100, 200 et 300 CHF → 1 %, 2 % et 4 % par paquet (ligne UL des paquets)", [pk("reflets"), pk("voile"), pk("breche")].map(x => x.ul).join() === "1,2,4" && pk("breche").pity === 10, [pk("reflets"), pk("voile"), pk("breche")].map(x => x.ul).join());
+    for(const [id, rate] of [["reflets", 1], ["voile", 2]]){ P.pity = 0; const n = 30000, k = withU(draw(id, n)), got = 100 * k / n;
+      T(`Fusions : paquet « ${id} » → ${rate} % par paquet (mesuré ${got.toFixed(2)} % sur ${n} tirages)`, Math.abs(got - rate) < 0.45, got.toFixed(2)); }
+    { P.pity = 0; const gs = [], n = 20000; for(let i = 0; i < n; i++) gs.push(drawPack(pk("breche"))); let gap = 0, maxGap = 0; for(const g of gs){ if(g.some(isU)) gap = 0; else { gap++; maxGap = Math.max(maxGap, gap); } }
+      const got = 100 * withU(gs) / n;
+      T(`Fusions : paquet à 300 CHF → jamais plus de 9 paquets sans fusion (garantie à la 10e ouverture, max mesuré ${maxGap})`, maxGap <= 9, maxGap);
+      T(`Fusions : paquet à 300 CHF → environ 11,9 % de paquets avec fusion (4 % + garantie), mesuré ${got.toFixed(1)} %`, Math.abs(got - 11.9) < 1, got.toFixed(1)); }
+    P.pity = 9; { const g = drawPack(pk("breche")); T("Fusions : la 10e ouverture (9 sans fusion) contient une fusion, puis le compteur repart de 0", g.some(isU) && P.pity === 0, `compteur ${P.pity}`); }
+    P.pity = 3; { drawPack(pk("breche")); T("Fusions : le compteur compte les ouvertures sans fusion (3 → 4 ou remise à 0)", P.pity === 4 || P.pity === 0, P.pity); }
+    P.owned = normal.slice(0, 3).concat(fusions.slice(0, 5)); P.pity = 0;
+    { const gs = draw("breche", 6000).flat().filter(isU); T("Fusions : le tirage ne propose que des fusions que le joueur n'a pas déjà", gs.length > 100 && gs.every(id => !P.owned.includes(id)), gs.length + " fusions tirées"); }
+    P.owned = normal.concat(fusions); P.pity = 9;
+    { const g = drawPack(pk("breche")); T("Fusions : toutes les fusions possédées → la place garantie devient une légendaire", !g.some(isU) && g.some(id => CARDS[id].r === "L"), g.map(id => CARDS[id].r).join("")); }
+    P.pity = 0; { const gs = draw("reflets", 4000); T("Fusions : toutes possédées, paquet sans légendaire → aucune fusion et aucune carte hors de ses raretés", gs.every(g => g.length === 3 && g.every(id => !isU(id) && "CR".includes(CARDS[id].r))), ""); }
+    /* possession des sources : plus de fusion automatique */
+    { const u = ULof("ulya"); P.owned = u.req.map(r => [].concat(r)[0]); P.ulk = [];
+      T("Fusions : posséder les deux cartes ne donne plus la fusion (elle sort des paquets)", !ulEarned(u) && ulOk(u, P.owned), "");
+      const mig = clean({ owned: P.owned, chf: 10 }), mig2 = clean({ owned: P.owned, chf: 10, ulk: [] });
+      T("Fusions : une fusion déjà réclamable avant le changement le reste (fixée au premier chargement) ; une sauvegarde déjà migrée n'en gagne pas", mig.ulk.includes("ulya") && !mig2.ulk.includes("ulya"), mig.ulk.join()); }
+    /* paquet achetable tant qu'il reste une fusion à trouver, même avec toutes les cartes du paquet */
+    P.starter = true; P.chf = 1000; P.owned = normal.concat(fusions.slice(1)); P.pity = 0;
+    T("Fusions : paquet achetable tant qu'il manque une fusion, même avec toutes les cartes du paquet", packBuyable(pk("reflets")) && packBuyable(pk("breche")) && packMissing(pk("reflets")).length === 0, "");
+    P.owned = normal.concat(fusions);
+    T("Fusions : plus rien à trouver → paquet non achetable (collection complète)", !packBuyable(pk("reflets")), "");
+    /* fusion saisonnière : seulement dans son paquet d'édition */
+    P.owned = normal.slice(0, 3);
+    { const seas = fusions.filter(id => ulSeason(ULof(id))), reg = pk("breche");
+      T("Fusions saisonnières : exclues des paquets ordinaires", seas.length >= 2 && ulPool(reg).every(id => !seas.includes(id)) && ulPool(reg).length > 0, seas.join());
+      const nv = ulPool(pk("nouvelan")); T("Fusions saisonnières : le paquet du Nouvel An ne propose que les fusions de sa saison", nv.length >= 1 && nv.every(id => ulSeason(ULof(id)) === "nouvelan"), nv.join());
+      T("Fusions saisonnières : 5 % par paquet d'édition", ["halloween", "noel", "nouvelan"].every(id => pk(id).ul === 5), ""); }
+  }
+  /* 9. Filtres de la collection : faction, coût, rareté, possession */
+  { const tick = ms => new Promise(r => setTimeout(r, ms)), $ = x => document.querySelector(x), $$ = x => [...document.querySelectorAll(x)];
+    const normal = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id));
+    P.owned = normal.filter((_, i) => i % 2 === 0).concat(["ulya"]); P.deck = []; P.tuto = true; tutoStep = -1; P.starter = true;
+    window.render = realRender; screen = "deck"; deckFilter = costFilter = rarFilter = ownFilter = "all"; render();
+    const shown = () => $$(".grid > *").length, avail = () => POOL.filter(id => SHOWN(id)).length;
+    const clickChip = (act, f) => { const b = $(`[data-act=${act}][data-f="${f}"]`); if(b) b.click(); return !!b; };
+    T("Filtres : sans filtre, toute la collection affichée", shown() === avail(), `${shown()} / ${avail()}`);
+    T("Filtres : les 4 rangées de puces existent (faction, coût 0 à 6+, rareté, possession)", !!$("[data-act=filter]") && $$("[data-act=fcost]").length === 8 && $$("[data-act=frar]").length === 6 && $$("[data-act=fown]").length === 3, "");
+    clickChip("fcost", "3"); const n3 = POOL.filter(id => SHOWN(id) && CARDS[id].cost === 3).length;
+    T("Filtres : coût 3 → seulement les cartes de coût 3", shown() === n3 && n3 > 5, `${shown()} / ${n3}`);
+    clickChip("fcost", "6"); const n6 = POOL.filter(id => SHOWN(id) && CARDS[id].cost >= 6).length;
+    T("Filtres : coût 6+ → toutes les cartes de coût 6 ou plus", shown() === n6 && n6 > 5, `${shown()} / ${n6}`);
+    clickChip("fcost", "all"); clickChip("frar", "U"); const nu = POOL.filter(id => SHOWN(id) && CARDS[id].r === "U").length;
+    T("Filtres : rareté Ultra → seulement les ultra-légendaires", shown() === nu && nu > 3, `${shown()} / ${nu}`);
+    clickChip("frar", "R"); clickChip("fcost", "2"); clickChip("filter", "primordial");
+    const nc = POOL.filter(id => SHOWN(id) && CARDS[id].r === "R" && CARDS[id].cost === 2 && CARDS[id].fac === "primordial").length;
+    T("Filtres : faction + coût + rareté se combinent (intersection)", shown() === nc, `${shown()} / ${nc}`);
+    deckFilter = costFilter = rarFilter = "all"; clickChip("fown", "owned");
+    T("Filtres : Possédées → seulement les cartes possédées", shown() === POOL.filter(id => SHOWN(id) && P.owned.includes(id)).length && $$(".grid .locked").length === 0, `${shown()} cartes`);
+    clickChip("fown", "missing");
+    T("Filtres : Manquantes → seulement les cartes à trouver", $$(".grid > *").every(e => e.classList.contains("locked")) && shown() === POOL.filter(id => SHOWN(id) && !P.owned.includes(id)).length, "");
+    clickChip("frar", "U"); clickChip("fcost", "0");
+    T("Filtres : aucune carte correspondante → message clair", shown() === 0 || !!$(".grid .hint"), shown() + " affichées");
+    $("[data-act=freset]").click();
+    T("Filtres : « Réinitialiser les filtres » remet tout à zéro", shown() === avail() && !$("[data-act=freset]") && costFilter === "all" && rarFilter === "all" && ownFilter === "all" && deckFilter === "all", "");
+    window.render = () => {}; screen = "home";
+  }
+  /* 10. Accueil : le bandeau de saison mène au paquet d'édition, en tête de la boutique et surligné */
+  { const $ = x => document.querySelector(x), se = season();
+    P.starter = true; P.tuto = true; tutoStep = -1; P.chf = 500; P.owned = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)).slice(0, 5);
+    window.render = realRender; screen = "home"; packFocus = null; render();
+    const btn = $("[data-act=seasonpack]"); T("Accueil : le bandeau de saison propose d'ouvrir le paquet d'édition (saison « " + se + " »)", !!se && !!btn && btn.dataset.pid === se, se);
+    if(btn){ btn.click(); const first = $(".packtile");
+      T("Accueil : le bouton de saison ouvre la boutique avec le paquet d'édition en tête", screen === "shop" && first && first.dataset.pid === se, first && first.dataset.pid);
+      T("Accueil : le paquet d'édition est surligné", !!first && first.classList.contains("hl"), "");
+      const go = $("[data-act=go][data-to=shop]"); go.click();
+      T("Accueil : le menu Boutique retire le surlignage", !$(".packtile.hl") || $(".packtile.hl").dataset.pid === "brulure", ""); }
+    window.render = () => {}; screen = "home"; packFocus = null;
+  }
   /* Rappels des séries précédentes */
   fresh(); S.turn = 6; S.energy = 12; { const n = card("nemesis"); S.hand.p = [n]; const a = canStage(n, 0); S.turn = 5; T("Nemesis : injouable au tour 6, jouable au tour 5", !a && canStage(n, 0), ""); }
   fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }

@@ -137,7 +137,7 @@ function endMusic(res){
 }
 
 /* ======= ÉTAT DE PARTIE ======= */
-let S=null, uidN=0, games=0, screen="home", editName=false, deckMsg="", deckFilter="all";
+let S=null, uidN=0, games=0, screen="home", editName=false, deckMsg="", deckFilter="all", costFilter="all", rarFilter="all", ownFilter="all";
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 /* ======= EFFETS VISUELS =======
    Une seule toile par-dessus l'écran, une seule boucle d'animation, en pause quand l'onglet est caché.

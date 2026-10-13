@@ -12,22 +12,55 @@ function starterRoll(){
   }
   return [...STARTER];
 }
+/* --- Fusions (ultra-légendaires) dans les paquets ---
+   Chaque paquet a une chance `ul` (en % par paquet) de contenir UNE fusion à la place d'une de ses 3 cartes. Le paquet à 300 CHF a une garantie :
+   à la 10e ouverture sans fusion (`P.pity`), il en contient une. Le tirage ne choisit que parmi les fusions que le joueur n'a pas encore ;
+   s'il les a toutes, la place devient une légendaire (paquets qui en contiennent). Une fusion saisonnière (qui exige une variante `ex`)
+   ne sort que du paquet de sa saison. Une fusion exige toujours ses deux personnages dans le deck (ulOk). */
+const ulSeason=u=>{ for(const r of u.req) for(const x of [].concat(r)) if(CARDS[x]&&CARDS[x].ex) return CARDS[x].ex; return null; };
+function ulPool(pk){
+  if(!pk||!pk.ul) return [];
+  const fus=ULS.filter(u=>u.req.length&&!u.fac&&CARDS[u.id]&&REL(u.id)&&!P.owned.includes(u.id));
+  const own=pk.win?fus.filter(u=>ulSeason(u)===pk.id):[], reg=fus.filter(u=>!ulSeason(u));
+  return (own.length?own:reg).map(u=>u.id);
+}
+/* Cartes de ces raretés qu'il reste à trouver dans le paquet (sans les fusions) */
+const packMissing=pk=>PACK(pk.id).filter(id=>!P.owned.includes(id)&&pk.odds.some(o=>o[0]===CARDS[id].r));
+/* Un paquet peut-il être acheté maintenant ? (même règle pour le bouton de la boutique et « Ouvrir un autre paquet ») */
+function packBuyable(pk){
+  if(!pk) return false;
+  if(!pk.starter&&!packMissing(pk).length&&!ulPool(pk).length) return false;
+  return !(P.chf<pk.price||(pk.starter&&P.starter)||!inWin(pk.win)||(!pk.starter&&!P.starter));
+}
+/* Tirage du contenu d'un paquet payant (3 cartes). Lit P.owned, met à jour P.pity ; ne touche à rien d'autre (testé par outils/tests-scenarios.js). */
+function drawPack(pk){
+  let got;
+  const allowed=pk.odds.map(o=>o[0]);
+  got=[]; for(let i=0;i<pk.n;i++){ const r=rollRarity(pk.odds); got.push(pickRand(PACK(pk.id).filter(id=>CARDS[id].r===r))); }
+  const missing=PACK(pk.id).filter(id=>!P.owned.includes(id)&&allowed.includes(CARDS[id].r));
+  const exc=PACK(pk.id).filter(id=>CARDS[id].ex===pk.id&&!P.owned.includes(id)); if(exc.length&&!got.some(id=>CARDS[id].ex===pk.id)) got[2]=pickRand(exc);
+  if(missing.length && !got.some(id=>missing.includes(id))){
+    const r=rollRarity(pk.odds); const m=missing.filter(id=>CARDS[id].r===r);
+    got[0]=pickRand(m.length?m:missing);
+  }
+  if(pk.ul){ /* la place d'une fusion : tirée, ou garantie à la 10e ouverture du paquet à 300 CHF */
+    const forced=pk.pity&&(P.pity||0)>=pk.pity-1, slot=forced||Math.random()*100<pk.ul;
+    if(pk.pity) P.pity=slot?0:(P.pity||0)+1;
+    if(slot){
+      const pool=ulPool(pk), legs=pk.odds.some(o=>o[0]==="L")?PACK(pk.id).filter(id=>CARDS[id].r==="L"):[];
+      if(pool.length) got[1]=pickRand(pool);
+      else if(legs.length){ const m=legs.filter(id=>!P.owned.includes(id)); got[1]=pickRand(m.length?m:legs); }
+    }
+  }
+  got=shuffle(got);
+  return got;
+}
 function buyPack(pid){
-  const pk=PACKS.find(x=>x.id===pid); if(pk&&!pk.starter&&!PACK(pk.id).some(id=>!P.owned.includes(id)&&pk.odds.some(o=>o[0]===CARDS[id].r))) return;
-  if(!pk||P.chf<pk.price||(pk.starter&&P.starter)||!inWin(pk.win)||(!pk.starter&&!P.starter)) return;
+  const pk=PACKS.find(x=>x.id===pid); if(!packBuyable(pk)) return;
   P.chf-=pk.price;
   let got;
   if(pk.starter){ got=starterRoll(); P.starter=true; hlStarter=false; }
-  else {
-    const allowed=pk.odds.map(o=>o[0]);
-    got=[]; for(let i=0;i<pk.n;i++){ const r=rollRarity(pk.odds); got.push(pickRand(PACK(pk.id).filter(id=>CARDS[id].r===r))); }
-    const missing=PACK(pk.id).filter(id=>!P.owned.includes(id)&&allowed.includes(CARDS[id].r));
-    const exc=PACK(pk.id).filter(id=>CARDS[id].ex===pk.id&&!P.owned.includes(id)); if(exc.length&&!got.some(id=>CARDS[id].ex===pk.id)) got[2]=pickRand(exc);
-    if(missing.length && !got.some(id=>missing.includes(id))){
-      const r=rollRarity(pk.odds); const m=missing.filter(id=>CARDS[id].r===r);
-      got[0]=pickRand(m.length?m:missing);
-    }
-  }
+  else got=drawPack(pk);
   const res=[]; let refund=0; const seen=new Set();
   for(const id of got){
     if(P.owned.includes(id)||seen.has(id)){ const v=ECO.dup[CARDS[id].r]||10; refund+=v; res.push({id,isNew:false,v}); }
@@ -35,12 +68,9 @@ function buyPack(pid){
   }
   if(pk.starter && P.deck.length<ECO.deckSize){ const pick=[...new Set([...P.deck,...got])].filter(id=>P.owned.includes(id)); P.deck=pick.slice(0,ECO.deckSize); }
   P.chf+=refund; lastPack={res,refund,name:pk.name,pid}; packOpen={res,name:pk.name,img:pk.img};
-  save(); sfx("pack");
-  if(res.some(r=>r.isNew&&CARDS[r.id].r==="L")) sfx("legend"); else if(res.some(r=>r.isNew)) sfx("rare");
-  if(refund) setTimeout(()=>sfx("coin"),1300);
+  save();
   render();
-  const el=document.querySelector(`.packtile[data-pid="${pid}"] .pack`); if(el){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
-  const op=document.querySelector(".opened"); if(op) op.scrollIntoView({behavior:"smooth",block:"start"});
+  ouvrirTirage({res,name:pk.name,img:pk.img,pid,price:pk.price}); /* js/ouverture.js : « Le Tirage » (les sons sont joués pendant l'animation) */
 }
 
 

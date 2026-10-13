@@ -129,7 +129,7 @@ function seasonDeco(where){ const se=season(); if(!se) return "";
   return se==="noel"?`<div class="sdeco bar" aria-hidden="true"><span class="holly">${HOLLY}</span></div>`:"";
 }
 function seasonBarHTML(){ const se=season(); if(!se) return ""; const T=SEASON[se];
-  return `<div class="seasonbar ${se}">${seasonDeco("bar")}<div><div class="eyebrow">${T.eyebrow}</div><b>${T.title}</b><div class="hint">${T.hint}</div></div>${P.starter?`<button class="primary small" data-act="go" data-to="shop">${T.btn}</button>`:""}</div>`; }
+  return `<div class="seasonbar ${se}">${seasonDeco("bar")}<div><div class="eyebrow">${T.eyebrow}</div><b>${T.title}</b><div class="hint">${T.hint}</div></div>${P.starter?`<button class="primary small" data-act="seasonpack" data-pid="${se}">${T.btn}</button>`:""}</div>`; }
 let ulLater=false, deckRename=false;
 let histFilter="all", histOpen=new Set();
 function histHTML(){
@@ -178,7 +178,7 @@ function ulHTML(){
   return `<div class="veil"><div class="result ulpop" role="dialog" aria-label="Ultra-légendaire">
     <div class="eyebrow">${u.fac?"Ultra-légendaire de faction":"Fusion disponible"}</div><h2>${CARDS[u.id].name}</h2>
     <div class="ulcard">${fullCard(u.id)}</div>
-    <p class="hint">${u.quest?`Ton journal est complet : ${u.quest.n} parties ${u.quest.k==="nikev"?"avec Nike pendant la Saint-Valentin":`avec la faction ${FAC[u.fac].n}`}. ${CARDS[u.id].name} rejoint ta faction.`:u.fac?`Ta collection compte assez de cartes ${FAC[u.fac].n}. ${CARDS[u.id].name} rejoint ta faction.`:`Tu possèdes ${u.n}. Leur fusion ultra-légendaire t'attend.`}</p>
+    <p class="hint">${u.quest?`Ton journal est complet : ${u.quest.n} parties ${u.quest.k==="nikev"?"avec Nike pendant la Saint-Valentin":`avec la faction ${FAC[u.fac].n}`}. ${CARDS[u.id].name} rejoint ta faction.`:u.fac?`Ta collection compte assez de cartes ${FAC[u.fac].n}. ${CARDS[u.id].name} rejoint ta faction.`:`Tu possédais déjà ${u.n} : leur fusion ultra-légendaire t'attend.`}</p>
     <button class="primary" data-act="ulclaim" data-id="${u.id}">Réclamer la carte</button><button class="ghost" data-act="ullater">Plus tard</button></div></div>`;
 }
 function fanIds(){
@@ -256,14 +256,30 @@ function profileHTML(){
 }
 
 /* --- deck --- */
+/* Filtres de la collection : faction, coût, rareté et possession se combinent */
+const COST_KEYS=["0","1","2","3","4","5","6"], RAR_KEYS=["C","R","E","L","U"];
+const filtersOn=()=>deckFilter!=="all"||costFilter!=="all"||rarFilter!=="all"||ownFilter!=="all";
+function collMatch(id){
+  const d=CARDS[id];
+  if(deckFilter!=="all"&&d.fac!==deckFilter) return false;
+  if(costFilter!=="all"&&(costFilter==="6"?d.cost<6:d.cost!==+costFilter)) return false;
+  if(rarFilter!=="all"&&d.r!==rarFilter) return false;
+  if(ownFilter==="owned"&&!P.owned.includes(id)) return false;
+  if(ownFilter==="missing"&&P.owned.includes(id)) return false;
+  return true;
+}
 function filterChips(){
-  const opts=[["all","Toutes"],...Object.entries(FAC).map(([k,v])=>[k,v.n])];
-  return `<div class="chips">${opts.map(([k,n])=>`<button class="chipbtn" aria-pressed="${deckFilter===k}" data-act="filter" data-f="${k}" ${k!=="all"?`style="--cc:${FAC[k].c}"`:""}>${n}</button>`).join("")}</div>`;
+  const chip=(act,cur,k,label,col)=>`<button class="chipbtn" aria-pressed="${cur===k}" data-act="${act}" data-f="${k}" ${col?`style="--cc:${col}"`:""}>${label}</button>`;
+  const row=(label,html)=>`<div class="fgroup"><span class="flabel">${label}</span><div class="chips">${html}</div></div>`;
+  return row("Faction",[["all","Toutes"],...Object.entries(FAC).map(([k,v])=>[k,v.n])].map(([k,n])=>chip("filter",deckFilter,k,n,k!=="all"&&FAC[k].c)).join(""))
+    +row("Coût",chip("fcost",costFilter,"all","Tous")+COST_KEYS.map(k=>chip("fcost",costFilter,k,k==="6"?"6+":k)).join(""))
+    +row("Rareté",chip("frar",rarFilter,"all","Toutes")+RAR_KEYS.map(k=>chip("frar",rarFilter,k,k==="U"?"Ultra":RAR[k].n,RAR[k].c)).join(""))
+    +row("Possession",[["all","Toutes"],["owned","Possédées"],["missing","Manquantes"]].map(([k,n])=>chip("fown",ownFilter,k,n)).join(""));
 }
 function deckHTML(){
   const sorted=[...P.deck].sort((a,b)=>CARDS[a].cost-CARDS[b].cost||CARDS[a].pow-CARDS[b].pow);
   const slots=[]; for(let i=0;i<ECO.deckSize;i++) slots.push(sorted[i]?thumb(sorted[i],`data-act="deckout" data-id="${sorted[i]}" data-lp="z${sorted[i]}"`):`<div class="thumb empty"></div>`);
-  const coll=POOL.filter(id=>SHOWN(id)&&(deckFilter==="all"||CARDS[id].fac===deckFilter)).sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].cost-CARDS[b].cost||CARDS[a].name.localeCompare(CARDS[b].name));
+  const coll=POOL.filter(id=>SHOWN(id)&&collMatch(id)).sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].cost-CARDS[b].cost||CARDS[a].name.localeCompare(CARDS[b].name));
   const avg=P.deck.length?(P.deck.reduce((a,id)=>a+CARDS[id].cost,0)/P.deck.length).toFixed(1):"–";
   const full=P.deck.length>=ECO.deckSize;
   const facCount=Object.keys(FAC).map(k=>[k,P.deck.filter(id=>CARDS[id].fac===k).length]).filter(x=>x[1]);
@@ -282,9 +298,10 @@ function deckHTML(){
   <section class="sec">
     <h2>Toutes les cartes · ${P.owned.length}/${avail().length}</h2>
     ${filterChips()}
+    ${filtersOn()?`<div class="fresult"><span>${coll.length} carte${coll.length>1?"s":""} affichée${coll.length>1?"s":""}</span><button class="ghost small" data-act="freset">Réinitialiser les filtres</button></div>`:""}
     <p class="hint">Touche une carte pour l'ajouter au deck ou l'en retirer, garde le doigt dessus pour la voir en grand. Les cartes grisées restent à trouver.</p>
     <div class="grid">${gridArt(()=>coll.map(id=>{ if(!P.owned.includes(id)) return lockedCard(id); const inn=P.deck.includes(id); const off=!inn&&full;
-      return `<button class="pick ${inn?"in":""} ${off?"off":""}" data-act="toggle" data-id="${id}" data-lp="z${id}" aria-pressed="${inn}">${inn?`<span class="tag">Dans le deck</span>`:""}${fullCard(id)}</button>`; }).join(""))||`<p class="hint">Aucune carte de cette faction pour l'instant.</p>`}</div>
+      return `<button class="pick ${inn?"in":""} ${off?"off":""}" data-act="toggle" data-id="${id}" data-lp="z${id}" aria-pressed="${inn}">${inn?`<span class="tag">Dans le deck</span>`:""}${fullCard(id)}</button>`; }).join(""))||`<p class="hint">${filtersOn()?"Aucune carte ne correspond à ces filtres.":"Aucune carte de cette faction pour l'instant."}</p>`}</div>
   </section>
   ${locsHTML()}
   <button class="play" data-act="play" ${deckReady()?"":"disabled"}>${deckReady()?"Jouer avec ce deck":`Encore ${12-P.deck.length} carte${12-P.deck.length>1?"s":""} à ajouter`}</button>`;
@@ -293,18 +310,19 @@ function deckHTML(){
 /* --- boutique --- */
 function shopHTML(){
   const av=avail(), owned=av.filter(id=>P.owned.includes(id)).length, tot=av.length, lp=lastPack;
-  const missOf=pk=>pk.starter?1:PACK(pk.id).filter(id=>!P.owned.includes(id)&&pk.odds.some(o=>o[0]===CARDS[id].r)).length;
-  const tiles=PACKS.filter(pk=>!(pk.starter&&P.starter)&&(inWin(pk.win)||soonWin(pk.win))).sort((a,b)=>(missOf(a)?0:1)-(missOf(b)?0:1)).map(pk=>{
-    const miss=pk.starter?0:missOf(pk), done=!pk.starter&&!miss;
+  const missOf=pk=>pk.starter?1:packMissing(pk).length+ulPool(pk).length;
+  const tiles=PACKS.filter(pk=>!(pk.starter&&P.starter)&&(inWin(pk.win)||soonWin(pk.win))).sort((a,b)=>(b.id===packFocus)-(a.id===packFocus)||(missOf(a)?0:1)-(missOf(b)?0:1)).map(pk=>{
+    const miss=pk.starter?0:missOf(pk), done=!pk.starter&&!miss, missN=pk.starter?0:packMissing(pk).length, ulN=pk.starter?0:ulPool(pk).length;
     const open=inWin(pk.win), gate=!pk.starter&&!P.starter, lack=pk.price-P.chf, ok=lack<=0&&open&&!gate&&!done;
-    return `<article class="packtile ${done?"done":""} ${pk.starter?"starter":""} ${pk.starter&&hlStarter?"hl":""}" data-pid="${pk.id}">
+    return `<article class="packtile ${done?"done":""} ${pk.starter?"starter":""} ${(pk.starter&&hlStarter)||pk.id===packFocus?"hl":""}" data-pid="${pk.id}">
       <div class="pack" role="img" aria-label="${pk.name}" style="background-image:url('${pk.img}')"></div>
       <div class="pbody">
         <div class="eyebrow">${pk.starter?"Pack de départ · 12 cartes":pk.win?`Édition limitée · ${pk.n} cartes`:`${pk.n} cartes`}</div>
         <h3 class="pname2">${pk.name}</h3>
         <p class="pdesc">${pk.desc}</p>
-        ${pk.odds?`<div class="odds">${pk.odds.map(([r,w])=>`<span style="color:${RAR[r].c}">${w} %</span><span>${RAR[r].n} · doublon +${ECO.dup[r]}</span>`).join("")}</div>
-        <div class="hint">${miss?`${miss} carte${miss>1?"s":""} de ces raretés à trouver · au moins une nouvelle par pack`:"Tu as déjà toutes les cartes de ces raretés"}</div>`:""}
+        ${pk.odds?`<div class="odds">${pk.odds.map(([r,w])=>`<span style="color:${RAR[r].c}">${w} %</span><span>${RAR[r].n} · doublon +${ECO.dup[r]}</span>`).join("")}${pk.ul?`<span style="color:${RAR.U.c}">${pk.ul} %</span><span>${RAR.U.n} · par paquet</span>`:""}</div>
+        <div class="hint">${missN?`${missN} carte${missN>1?"s":""} de ces raretés à trouver · au moins une nouvelle par pack`:ulN?"Tu as déjà toutes les cartes de ces raretés : une fusion peut encore sortir":"Tu as déjà toutes les cartes de ces raretés"}${missN&&ulN?` · ${ulN} fusion${ulN>1?"s":""} à trouver`:""}</div>
+        ${pk.pity?`<div class="hint">Garantie : une fusion à la ${pk.pity}e ouverture${(P.pity||0)>0?` · prochaine garantie dans ${Math.max(1,pk.pity-(P.pity||0))} ouverture${pk.pity-(P.pity||0)>1?"s":""}`:""}</div>`:""}`:""}
         <div class="buyrow"><span class="price">${pk.price} CHF</span>
           <button class="primary" data-act="buy" data-pid="${pk.id}" ${ok?"":"disabled"}>${done?"Collection complète":!open?`Dès le ${frDate(pk.win[0])}`:gate?"Ouvre d'abord la Première Brûlure":lack>0?`Il manque ${lack} CHF`:"Acheter et ouvrir"}</button></div>
         ${pk.win?`<div class="hint">${open?"Disponible jusqu'au ":"Du "+frDate(pk.win[0])+" au "}${frDate(pk.win[1])}</div>`:""}
@@ -323,23 +341,6 @@ function shopHTML(){
 }
 
 /* --- ouverture de pack --- */
-function packOpenHTML(){
-  if(!packOpen) return ""; const many=packOpen.res.length>3;
-  /* positions des éclats : calculées à partir de l'index (pas de hasard), pour qu'un nouveau rendu ne les déplace pas */
-  const fan=(n,k,min,span)=>Array.from({length:n},(_,i)=>{ const a=(i/n)*Math.PI*2+k, d=min+((i*37+k*53)%100)/100*span; return [Math.round(Math.cos(a)*d),Math.round(Math.sin(a)*d)]; });
-  return `<div class="veil packveil"><div class="packshow ${many?"many":""}">
-    <div class="packburst" style="background-image:url('${packOpen.img}')"></div>
-    <h2>${esc(packOpen.name)}</h2>
-    <div class="packcards">${packOpen.res.map((r,k)=>{
-      const rar=CARDS[r.id].r, seal=rar==="E"||rar==="L"||rar==="U";
-      const fx=seal
-        ? `<div class="pseal"><div class="ring"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 L36 20 L20 36 L4 20 Z M20 12 L28 20 L20 28 L12 20 Z"/><circle cx="20" cy="20" r="2.5"/></svg></div></div>`+fan(10,k,60,80).map(([x,y],i)=>`<i class="pfrag" style="--sx:${x}px;--sy:${y}px;--rot:${180+(i*67)%360}deg"></i>`).join("")
-        : `<div class="pglow"></div>`+fan(12,k,50,40).map(([x,y])=>`<i class="pspark" style="--sx:${x}px;--sy:${y}px"></i>`).join("");
-      return `<div class="pcell ${seal?"anim-seal":"anim-flip"}" style="--d:${(0.6+k*(many?.12:.45)).toFixed(2)}s"><div class="p3d"><div class="pface pfront">${fullCard(r.id,rar==="L"&&r.isNew?"legend":"")}</div><div class="pface pback" aria-hidden="true"></div>${fx}</div><span class="badge ${r.isNew?"new":"dup"}">${r.isNew?"Nouvelle":`Doublon · +${r.v} CHF`}</span></div>`;
-    }).join("")}</div>
-    <button class="primary" data-act="packclose">Continuer</button></div></div>`;
-}
-
 /* --- vitrine de l'accueil --- */
 function fanPickHTML(){
   if(!fanPick) return "";
@@ -464,6 +465,7 @@ function rulesHTML(){
       <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
       <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
       <li><b>Perdre ses effets</b> : la carte garde sa puissance et les bonus déjà gagnés, mais ses effets Continu et de fin de tour ne s'appliquent plus.</li>
+      <li><b>Les fusions sortent des paquets.</b> 1 % par paquet à 100 CHF, 2 % à 200 CHF, 4 % à 300 CHF (garantie à la 10e ouverture), 5 % pour les paquets d'édition. Aucune fusion ne se gagne plus en réunissant ses cartes.</li>
       <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, se gagne dans le Journal des factions (50 parties jouées avec 8 cartes de sa faction) et exige 8 cartes de sa faction dans le deck.</li>
       <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
       <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
@@ -635,7 +637,7 @@ function render(){
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
   /* le code de salon en cours de saisie survit aux redessins (le salon commun en provoque à chaque arrivée ou départ) */
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
-  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+packOpenHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
+  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
   document.body.classList.toggle("hasdock",screen!=="play");
   document.body.classList.toggle("inplay",screen==="play");
   setTimeout(()=>FX.decorate(app),30);
@@ -734,7 +736,7 @@ document.addEventListener("click", e=>{
     case "sheet": sheet=sheet===el.dataset.s?null:el.dataset.s; sfx("click"); render(); return;
     case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; sheet=null; render(); return;
     case "sheetin": return;
-    case "go": { const to=el.dataset.to; if(to==="board"||to==="home") lbRefresh(); sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
+    case "go": { const to=el.dataset.to; packFocus=null; if(to==="board"||to==="home") lbRefresh(); sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
     case "play": sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
@@ -791,12 +793,18 @@ document.addEventListener("click", e=>{
     case "dismiss": if(!P.dis.includes(el.dataset.id)) P.dis.push(el.dataset.id); save(); render(); return;
     case "ulclaim": { const id=el.dataset.id; if(ULof(id)&&!P.owned.includes(id)&&ulEarned(ULof(id))){ P.owned.push(id); save(); sfx("legend"); } zoomId=id; render(); return; }
     case "ullater": ulLater=true; render(); return;
-    case "packclose": packOpen=null; render(); return;
     case "tutoplay": tutoStep=-1; sfx("click"); startTutorial(); return;
     case "tutodone": finishTuto(); return;
     case "tuto": sheet=null; sfx("click"); startTutorial(); return;
     case "buy": buyPack(el.dataset.pid); return;
+    case "seasonpack": { /* le bandeau de saison de l'accueil mène au paquet d'édition de la saison : boutique, paquet en tête et surligné */
+      const pid=el.dataset.pid; if(!PACKS.some(x=>x.id===pid)) return; packFocus=pid; sheet=null; seasonNote=""; dailyNote=""; screen="shop"; sfx("click"); render(); window.scrollTo(0,0);
+      requestAnimationFrame(()=>{ const t=document.querySelector(`.packtile[data-pid="${pid}"]`); if(t) t.scrollIntoView({block:"center",behavior:"smooth"}); }); return; }
     case "filter": deckFilter=el.dataset.f; sfx("click"); render(); return;
+    case "fcost": costFilter=el.dataset.f; sfx("click"); render(); return;
+    case "frar": rarFilter=el.dataset.f; sfx("click"); render(); return;
+    case "fown": ownFilter=el.dataset.f; sfx("click"); render(); return;
+    case "freset": deckFilter=costFilter=rarFilter=ownFilter="all"; sfx("click"); render(); return;
     case "toggle": { const id=el.dataset.id;
       const clash=P.deck.find(x=>x!==id&&charOf(x)===charOf(id)&&!(["yarden","yarden_d"].includes(x)&&["yarden","yarden_d"].includes(id)));
       if(P.deck.includes(id)){ P.deck=P.deck.filter(x=>x!==id); deckMsg=pruneUL(); sfx("undo"); }
