@@ -72,7 +72,7 @@ function mBuf(key){
   p.catch(()=>{ if(MBUF.get(key)===p) MBUF.delete(key); });
   MBUF.set(key,p);
   const busy=new Set([bgm,bgmFade,bgmHold,jingle].filter(Boolean).map(t=>t.key)); busy.add(key);
-  for(const k of [...MBUF.keys()]){ if(MBUF.size<=3) break; if(!busy.has(k)) MBUF.delete(k); }
+  for(const k of [...MBUF.keys()]){ if(MBUF.size<=2) break; if(!busy.has(k)) MBUF.delete(k); }
   return p;
 }
 function mTrack(key,loop=true){
