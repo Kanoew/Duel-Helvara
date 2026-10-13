@@ -576,7 +576,7 @@ function infoHTML(){
                :`<div><div class="t">Lieu inconnu</div><div class="m">Il sera révélé au début du tour ${loc+1}.</div></div>`; }
   /* Aide générale : les 3 premières parties (jamais pendant le tutoriel, qui a son propre encadré), ou à la demande avec le « ? » */
   if(!(S.help||(!S.tut&&P.w+P.l+P.d<3))) return "";
-  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
+  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser, ou soulève-la vers le haut et lâche-la sur un lieu. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
 }
 function handHTML(){
   return S.hand.p.map(c=>{
@@ -771,7 +771,59 @@ function fanRelease(e,cancel){
 }
 document.addEventListener("pointerup", e=>fanRelease(e,false));
 document.addEventListener("pointercancel", e=>fanRelease(e,true));
+/* Pose la carte sélectionnée (S.sel) sur un lieu : même règle pour le toucher et pour le glisser-déposer */
+function stageSel(li){
+  const c=S.sel&&findHand(S.sel);
+  if(c&&canStage(c,li)){ const fx=c.id==="ulya"?costFor("p",c.id,li,S.staged.length===0):null; S.hand.p=S.hand.p.filter(x=>x!==c); S.staged.push(fx!=null?{c,li,fixed:fx}:{c,li}); S.sel=null; S.info=null; sfx("place"); return true; }
+  return false;
+}
+/* Glisser-déposer : on soulève une carte de la main VERS LE HAUT (un glissement de côté fait défiler la main, un toucher
+   sélectionne comme avant), puis on la lâche sur un lieu. Lâchée ailleurs, elle retourne dans la main. */
+const DRAG_MIN=18; let drag=null, dragEnd=0;
+function dragTarget(x,y){ for(const el of document.elementsFromPoint(x,y)){ const t=el.closest&&el.closest("[data-act=stage]"); if(t&&t.closest(".board,#app")) return t; } return null; }
+function dragMark(on,uid){
+  const c=on?findHand(uid):null;
+  document.querySelectorAll("[data-act=stage]").forEach(el=>{ const li=+el.dataset.li; el.classList.toggle("dropok",!!c&&canStage(c,li)); el.classList.toggle("dropno",!!c&&!canStage(c,li)); if(!on) el.classList.remove("drophov"); });
+}
+function dragStop(){ if(!drag) return; if(drag.ghost) drag.ghost.remove(); dragMark(false); document.body.classList.remove("dragging"); if(drag.src) drag.src.classList.remove("lifted"); drag=null; }
+document.addEventListener("pointerdown", e=>{
+  if(drag||e.button>0||!S||screen!=="play"||S.busy||S.over||(S.mp&&S.mp.locked)) return;
+  const el=e.target.closest&&e.target.closest(".hc[data-act=hand]"); if(!el) return;
+  drag={src:el,uid:+el.dataset.uid,id:e.pointerId,x0:e.clientX,y0:e.clientY,on:false,ghost:null};
+});
+document.addEventListener("pointermove", e=>{
+  if(!drag||e.pointerId!==drag.id) return;
+  if(!drag.on){
+    const dy=drag.y0-e.clientY, dx=Math.abs(e.clientX-drag.x0);
+    if((dx>DRAG_MIN&&dx>dy)||dy<-DRAG_MIN){ dragStop(); return; } /* de côté ou vers le bas : c'est autre chose (défiler) */
+    if(dy<DRAG_MIN||dy<dx*1.2) return;
+    const c=findHand(drag.uid); if(!c){ dragStop(); return; }
+    drag.on=true; clearTimeout(lpTimer); lpFired=false;
+    try{ drag.src.setPointerCapture(e.pointerId); }catch(_){}
+    const r=drag.src.getBoundingClientRect(), g=drag.src.cloneNode(true);
+    g.className+=" dragghost"; g.removeAttribute("data-act"); g.style.cssText=`position:fixed;left:0;top:0;width:${r.width}px;height:${r.height}px;margin:0;pointer-events:none;z-index:60;transform:translate(${r.left}px,${r.top}px)`;
+    document.body.appendChild(g); drag.ghost=g; drag.dx=drag.x0-r.left; drag.dy=drag.y0-r.top;
+    drag.src.classList.add("lifted"); document.body.classList.add("dragging"); S.sel=null; S.info=null; dragMark(true,drag.uid); sfx("select");
+  }
+  e.preventDefault();
+  drag.ghost.style.transform=`translate(${e.clientX-drag.dx}px,${e.clientY-drag.dy-34}px) scale(1.12) rotate(-3deg)`;
+  const t=dragTarget(e.clientX,e.clientY-34);
+  document.querySelectorAll(".drophov").forEach(x=>x.classList.remove("drophov")); if(t&&t.classList.contains("dropok")){ const li=t.dataset.li; document.querySelectorAll(`[data-act=stage][data-li="${li}"]`).forEach(x=>x.classList.add("drophov")); }
+});
+function dragRelease(e,cancel){
+  if(!drag||e.pointerId!==drag.id) return;
+  const was=drag.on, uid=drag.uid; let li=null;
+  if(was&&!cancel){ const t=dragTarget(e.clientX,e.clientY-34); if(t) li=+t.dataset.li; }
+  dragStop();
+  if(!was) return;
+  dragEnd=Date.now(); /* le clic qui suit le lâcher ne doit rien faire */
+  if(li!=null){ S.sel=uid; if(!stageSel(li)){ S.sel=null; sfx("debuff"); } } else if(!cancel) sfx("undo");
+  render();
+}
+document.addEventListener("pointerup", e=>dragRelease(e,false));
+document.addEventListener("pointercancel", e=>dragRelease(e,true));
 document.addEventListener("click", e=>{
+  if(Date.now()-dragEnd<150){ dragEnd=0; e.preventDefault(); e.stopPropagation(); return; }
   if(lpFired){ lpFired=false; e.preventDefault(); e.stopPropagation(); return; }
   if(Date.now()-fanSwiped<400){ fanSwiped=0; e.preventDefault(); return; } /* le clic qui suit un glissement */
   const el=e.target.closest("[data-act]"); if(!el) return;
@@ -882,9 +934,7 @@ document.addEventListener("click", e=>{
     if(x){ S.staged=S.staged.filter(s=>s!==x); S.hand.p.push(x.c); sfx("undo"); } render(); return; }
   if(act==="inspect"){ e.stopPropagation(); S.sel=null; gz="c"+el.dataset.uid; sfx("select"); render(); return; }
   if(act==="stage"){ const li=+el.dataset.li;
-    if(S.sel){ const c=findHand(S.sel);
-      if(c&&canStage(c,li)){ const fx=c.id==="ulya"?costFor("p",c.id,li,S.staged.length===0):null; S.hand.p=S.hand.p.filter(x=>x!==c); S.staged.push(fx!=null?{c,li,fixed:fx}:{c,li}); S.sel=null; S.info=null; sfx("place"); }
-    } else { gz="l"+li; sfx("select"); }
+    if(S.sel) stageSel(li); else { gz="l"+li; sfx("select"); }
     render(); }
 });
 document.addEventListener("submit", e=>{

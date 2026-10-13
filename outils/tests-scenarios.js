@@ -235,6 +235,27 @@ async function inPage() {
     T("Couleurs : la carte en grand affiche le mot Fatalité coloré", !!document.querySelector(".zoominfo .kw-fat, .full .kw-fat"), "");
     zoomId = null; window.render = () => {};
   }
+  /* Glisser-déposer : soulever vers le haut, lâcher sur un lieu */
+  {
+    fresh(); S.turn = 3; S.energy = 9; S.busy = false; S.hand.p = [card(plain[0], 1), card(plain[1], 1)]; screen = "play"; window.render = realRender; render();
+    const ev = (t, x, y) => document.dispatchEvent(new PointerEvent(t, { clientX: x, clientY: y, pointerId: 7, bubbles: true, button: 0 }));
+    const hcEl = () => document.querySelector(".hc[data-act=hand]"), mid = el => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+    const dispatchOn = (el, t, x, y) => el.dispatchEvent(new PointerEvent(t, { clientX: x, clientY: y, pointerId: 7, bubbles: true, button: 0 }));
+    let el = hcEl(), [x, y] = mid(el); const loc1 = mid(document.querySelectorAll(".loc")[1]);
+    dispatchOn(el, "pointerdown", x, y); ev("pointermove", x, y - 40);
+    T("Glisser : un geste vers le haut soulève la carte (fantôme + lieux possibles)", document.body.classList.contains("dragging") && !!document.querySelector(".dragghost") && document.querySelectorAll(".dropok").length > 0, "");
+    ev("pointermove", loc1[0], loc1[1] + 34); ev("pointerup", loc1[0], loc1[1] + 34);
+    T("Glisser : lâchée sur un lieu, la carte est posée là", S.staged.length === 1 && S.staged[0].li === 1 && S.hand.p.length === 1 && !document.querySelector(".dragghost"), JSON.stringify(S.staged.map(z => z.li)));
+    el = hcEl(); [x, y] = mid(el); dispatchOn(el, "pointerdown", x, y); ev("pointermove", x + 60, y + 2); ev("pointerup", x + 60, y + 2);
+    T("Glisser : un geste de côté ne pose rien (c'est le défilement de la main)", S.staged.length === 1 && !document.body.classList.contains("dragging"), "");
+    el = hcEl(); [x, y] = mid(el); dispatchOn(el, "pointerdown", x, y); ev("pointermove", x, y - 60); ev("pointermove", 195, 20); ev("pointerup", 195, 20);
+    T("Glisser : lâchée hors d'un lieu, la carte retourne dans la main", S.staged.length === 1 && S.hand.p.length === 1 && !document.querySelector(".dragghost"), "");
+    S.energy = 0; render(); el = hcEl(); [x, y] = mid(el); dispatchOn(el, "pointerdown", x, y); ev("pointermove", x, y - 40); ev("pointermove", loc1[0], loc1[1] + 34); ev("pointerup", loc1[0], loc1[1] + 34);
+    T("Glisser : sans assez d'énergie, la pose est refusée comme au toucher", S.staged.length === 1, "");
+    dragEnd = 0; S.energy = 9; render(); el = hcEl(); el.click();
+    T("Glisser : le toucher seul sélectionne toujours la carte", S.sel === +el.dataset.uid, "");
+    window.render = () => {}; screen = "home"; S.sel = null;
+  }
   /* Rappels des séries précédentes */
   fresh(); S.turn = 6; S.energy = 12; { const n = card("nemesis"); S.hand.p = [n]; const a = canStage(n, 0); S.turn = 5; T("Nemesis : injouable au tour 6, jouable au tour 5", !a && canStage(n, 0), ""); }
   fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }

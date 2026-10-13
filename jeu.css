@@ -837,3 +837,13 @@ body.ec-draw #app{filter:brightness(.75);transition:filter .6s}
 .kw-rev{color:var(--kw-rev)}.kw-rev::before{content:"✦"}
 .kw-cont{color:var(--kw-cont)}.kw-cont::before{content:"∞"}
 .kw-fat{color:var(--kw-fat)}.kw-fat::before{content:"✠"}
+
+/* Glisser-déposer : soulever une carte de la main vers le haut, la lâcher sur un lieu */
+.hc{touch-action:pan-x}
+body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
+.hc.lifted{opacity:.3}
+.dragghost{border-radius:9px;box-shadow:0 14px 30px rgba(0,0,0,.6),0 0 0 2px var(--me);opacity:.96}
+.dragging .dropok{outline:2px dashed var(--me);outline-offset:-3px;transition:background .12s}
+.dragging .dropno{opacity:.45}
+.dragging .dropok.drophov{outline:2px solid var(--frost);background-color:rgba(111,184,222,.18)}
+@media (prefers-reduced-motion: reduce){ .dragging .dropok{transition:none} }
