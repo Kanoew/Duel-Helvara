@@ -258,9 +258,18 @@ function profileHTML(){
 /* --- deck --- */
 /* Filtres de la collection : faction, coût, rareté et possession se combinent */
 const COST_KEYS=["0","1","2","3","4","5","6"], RAR_KEYS=["C","R","E","L","U"];
-const filtersOn=()=>deckFilter!=="all"||costFilter!=="all"||rarFilter!=="all"||ownFilter!=="all";
+const filtersOn=()=>filtCount()>0||normQ(searchQ).trim()!=="";
+/* Recherche par mot-clé : tous les mots doivent se trouver dans le nom, l'effet, la faction ou la rareté (sans accents ni majuscules) */
+const normQ=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function searchOK(id){
+  const w=normQ(searchQ).split(/\s+/).filter(Boolean); if(!w.length) return true;
+  const d=CARDS[id], hay=normQ([d.name,d.fx,FAC[d.fac].n,RAR[d.r].n,"cout "+d.cost,"puissance "+d.pow].join(" "));
+  return w.every(x=>hay.includes(x));
+}
+const filtCount=()=>[deckFilter,costFilter,rarFilter,ownFilter].filter(x=>x!=="all").length;
 function collMatch(id){
   const d=CARDS[id];
+  if(!searchOK(id)) return false;
   if(deckFilter!=="all"&&d.fac!==deckFilter) return false;
   if(costFilter!=="all"&&(costFilter==="6"?d.cost<6:d.cost!==+costFilter)) return false;
   if(rarFilter!=="all"&&d.r!==rarFilter) return false;
@@ -276,10 +285,34 @@ function filterChips(){
     +row("Rareté",chip("frar",rarFilter,"all","Toutes")+RAR_KEYS.map(k=>chip("frar",rarFilter,k,k==="U"?"Ultra":RAR[k].n,RAR[k].c)).join(""))
     +row("Possession",[["all","Toutes"],["owned","Possédées"],["missing","Manquantes"]].map(([k,n])=>chip("fown",ownFilter,k,n)).join(""));
 }
+/* Panneau « Filtrer » (comme dans un tableur) : les choix s'ouvrent à la demande */
+function filtHTML(){
+  if(!filtOpen||screen!=="deck") return "";
+  const n=POOL.filter(id=>SHOWN(id)&&collMatch(id)).length;
+  return `<div class="veil" data-act="filtclose"><div class="result filtpanel" role="dialog" aria-label="Filtrer les cartes">
+    <h2>Filtrer les cartes</h2>${filterChips()}
+    <div class="row2"><button class="ghost" data-act="freset" ${filtersOn()?"":"disabled"}>Réinitialiser</button><button class="primary" data-act="filtclose">Voir ${n} carte${n>1?"s":""}</button></div></div></div>`;
+}
+/* Une carte de la collection : toucher = la lire en grand (avec Ajouter / Retirer), le petit bouton « Deck » = ajouter ou retirer d'un geste */
+function collCard(id,full){
+  if(!P.owned.includes(id)) return lockedCard(id);
+  const inn=P.deck.includes(id), off=!inn&&full, nm=CARDS[id].name;
+  return `<div class="pick ${inn?"in":""} ${off?"off":""}" data-lp="z${id}"><button class="pickmain" data-act="zoom" data-id="${id}" aria-label="Voir ${esc(nm)}">${fullCard(id)}</button>
+    <button class="qadd ${inn?"on":""}" data-act="toggle" data-id="${id}" aria-pressed="${inn}" aria-label="${inn?"Retirer du deck":"Ajouter au deck"} : ${esc(nm)}">${inn?"✓ Deck":"+ Deck"}</button></div>`;
+}
+function collSort(){ return POOL.filter(id=>SHOWN(id)&&collMatch(id)).sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].cost-CARDS[b].cost||CARDS[a].name.localeCompare(CARDS[b].name)); }
+function collGridHTML(){ const full=P.deck.length>=ECO.deckSize, coll=collSort();
+  return gridArt(()=>coll.map(id=>collCard(id,full)).join(""))||`<p class="hint">${filtersOn()?"Aucune carte ne correspond à ces filtres.":"Aucune carte de cette faction pour l'instant."}</p>`; }
+function collInfoHTML(){ const n=collSort().length;
+  return filtersOn()?`<span>${n} carte${n>1?"s":""} affichée${n>1?"s":""}</span><button class="ghost small" data-act="freset">Réinitialiser</button>`:""; }
+/* Mini-deck toujours visible : 12 cases, toucher une case = lire la carte */
+function deckMiniHTML(){
+  const sorted=[...P.deck].sort((a,b)=>CARDS[a].cost-CARDS[b].cost||CARDS[a].pow-CARDS[b].pow);
+  return Array.from({length:ECO.deckSize},(_,i)=>sorted[i]?`<button class="dm" data-act="zoom" data-id="${sorted[i]}" aria-label="${esc(CARDS[sorted[i]].name)}">${art(sorted[i],true)}<span class="c">${CARDS[sorted[i]].cost}</span></button>`:`<span class="dm empty"></span>`).join("");
+}
 function deckHTML(){
   const sorted=[...P.deck].sort((a,b)=>CARDS[a].cost-CARDS[b].cost||CARDS[a].pow-CARDS[b].pow);
-  const slots=[]; for(let i=0;i<ECO.deckSize;i++) slots.push(sorted[i]?thumb(sorted[i],`data-act="deckout" data-id="${sorted[i]}" data-lp="z${sorted[i]}"`):`<div class="thumb empty"></div>`);
-  const coll=POOL.filter(id=>SHOWN(id)&&collMatch(id)).sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].cost-CARDS[b].cost||CARDS[a].name.localeCompare(CARDS[b].name));
+  const slots=[]; for(let i=0;i<ECO.deckSize;i++) slots.push(sorted[i]?thumb(sorted[i],`data-act="zoom" data-id="${sorted[i]}" data-lp="z${sorted[i]}"`):`<div class="thumb empty"></div>`);
   const avg=P.deck.length?(P.deck.reduce((a,id)=>a+CARDS[id].cost,0)/P.deck.length).toFixed(1):"–";
   const full=P.deck.length>=ECO.deckSize;
   const facCount=Object.keys(FAC).map(k=>[k,P.deck.filter(id=>CARDS[id].fac===k).length]).filter(x=>x[1]);
@@ -291,17 +324,17 @@ function deckHTML(){
   </section>
   <section class="sec">
     <div class="deckhead"><h2>${esc(D.name)}</h2><span class="count ${full?"ok":""}">${P.deck.length} / 12</span></div>
-    <p>Touche une carte de ta collection pour l'ajouter ou la retirer. Une seule copie par carte. Coût moyen : ${avg}${facCount.length?` · ${facCount.map(([k,n])=>`<span style="color:${FAC[k].c}">${FAC[k].n} ${n}</span>`).join(" · ")}`:""}.</p>
+    <p>Touche une carte pour la lire en grand, puis ajoute-la ou retire-la. Une seule copie par carte. Coût moyen : ${avg}${facCount.length?` · ${facCount.map(([k,n])=>`<span style="color:${FAC[k].c}">${FAC[k].n} ${n}</span>`).join(" · ")}`:""}.</p>
     <div class="strip">${slots.join("")}</div>
     ${deckMsg?`<p style="color:var(--warm);margin-top:8px">${deckMsg}</p>`:""}
   </section>
   <section class="sec">
     <h2>Toutes les cartes · ${P.owned.length}/${avail().length}</h2>
-    ${filterChips()}
-    ${filtersOn()?`<div class="fresult"><span>${coll.length} carte${coll.length>1?"s":""} affichée${coll.length>1?"s":""}</span><button class="ghost small" data-act="freset">Réinitialiser les filtres</button></div>`:""}
-    <p class="hint">Touche une carte pour l'ajouter au deck ou l'en retirer, garde le doigt dessus pour la voir en grand. Les cartes grisées restent à trouver.</p>
-    <div class="grid">${gridArt(()=>coll.map(id=>{ if(!P.owned.includes(id)) return lockedCard(id); const inn=P.deck.includes(id); const off=!inn&&full;
-      return `<button class="pick ${inn?"in":""} ${off?"off":""}" data-act="toggle" data-id="${id}" data-lp="z${id}" aria-pressed="${inn}">${inn?`<span class="tag">Dans le deck</span>`:""}${fullCard(id)}</button>`; }).join(""))||`<p class="hint">${filtersOn()?"Aucune carte ne correspond à ces filtres.":"Aucune carte de cette faction pour l'instant."}</p>`}</div>
+    <div class="collbar2"><div class="dmrow"><div class="dmini" id="dmini">${deckMiniHTML()}</div><b class="dmcount ${full?"ok":""}">${P.deck.length}/${ECO.deckSize}</b></div>
+      <div class="srow"><input id="coll-search" type="search" value="${esc(searchQ)}" placeholder="Rechercher : nom, effet, mot-clé…" aria-label="Rechercher une carte" autocomplete="off" enterkeyhint="search"><button class="ghost ${filtCount()?"on":""}" data-act="filtopen" aria-haspopup="dialog">Filtrer${filtCount()?` · ${filtCount()}`:""}</button></div></div>
+    <div class="fresult" id="collinfo">${collInfoHTML()}</div>
+    <p class="hint">Touche une carte pour la lire en grand et l'ajouter au deck. Le bouton « + Deck » l'ajoute d'un geste. Les cartes grisées restent à trouver.</p>
+    <div class="grid" id="collgrid">${collGridHTML()}</div>
   </section>
   ${locsHTML()}
   <button class="play" data-act="play" ${deckReady()?"":"disabled"}>${deckReady()?"Jouer avec ce deck":`Encore ${12-P.deck.length} carte${12-P.deck.length>1?"s":""} à ajouter`}</button>`;
@@ -358,6 +391,7 @@ function zoomHTML(){
   if(!zoomId) return ""; const d=CARDS[zoomId], F=FAC[d.fac], R=RAR[d.r];
   return `<div class="veil" data-act="unzoom"><div class="zoomwrap">${fullCard(zoomId,"big")}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(zoomId)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${d.fx}</p>`:""}
+    ${screen==="deck"&&P.owned.includes(zoomId)&&!d.token?`<p class="deckstate ${P.deck.includes(zoomId)?"in":""}">${P.deck.includes(zoomId)?`Dans ton deck · ${P.deck.length}/${ECO.deckSize}`:`Pas dans ton deck · ${P.deck.length}/${ECO.deckSize}`}</p>${deckMsg?`<p class="deckmsg">${deckMsg}</p>`:""}<button class="primary" data-act="toggle" data-id="${zoomId}">${P.deck.includes(zoomId)?"Retirer du deck":"Ajouter au deck"}</button>`:""}
     <div class="row2"><button class="ghost" data-act="unzoom">Fermer</button>${P.owned.includes(zoomId)&&P.avatar!==zoomId?`<button class="ghost" data-act="avset" data-id="${zoomId}">En faire mon avatar</button>`:""}</div></div></div></div>`;
 }
 
@@ -380,7 +414,11 @@ function tutoHTML(){
     <div class="eyebrow">Tutoriel</div>
     <h2>Bienvenue à Helvara</h2>
     <div class="tutocard">${fullCard("yarden")}</div>
-    <p class="tb">Chaque duel se joue sur <b>3 lieux</b> et dure <b>6 tours</b>. Pour gagner, il faut avoir plus de puissance que l'adversaire sur <b>2 lieux sur 3</b>.<br><br>La partie guidée t'apprend tout en 5 minutes, carte par carte.${reward?" Dans les deux cas, tu reçois <b>100 CHF</b> pour ton premier deck.":""}</p>
+    <p class="tb">Chaque duel se joue sur <b>3 lieux</b> et dure <b>6 tours</b>. Pour gagner, il faut avoir plus de puissance que l'adversaire sur <b>2 lieux sur 3</b>.</p>
+    <ul class="tbl"><li><b>Énergie</b> : au tour N, tu as N énergie (1 au tour 1, 2 au tour 2…). Elle ne se cumule pas d'un tour à l'autre, sauf effet de carte.</li>
+      <li><b>Lieux</b> : trois lieux tirés au hasard parmi ceux de l'univers d'Helvara, inspiré de Lausanne. Chacun a sa règle, révélée aux tours 1, 2 et 3.</li>
+      <li><b>Cartes</b> : une <b>Révélation</b> se déclenche quand la carte est révélée, à la fin du tour ; un effet <b>Continu</b> agit tant que la carte reste en jeu.</li></ul>
+    <p class="tb">La partie guidée t'apprend tout en 5 minutes, carte par carte.${reward?" Dans les deux cas, tu reçois <b>100 CHF</b> pour ton premier deck.":""}</p>
     <button class="primary" data-act="tutoplay">Faire la partie guidée</button>
     <button class="ghost" data-act="tutodone">${reward?"Passer le tutoriel":"Fermer"}</button>
   </div></div>`;
@@ -390,8 +428,8 @@ const TUT={
   ai:["passante","veilleur","thot","devote","colosse","ishara","felix","izzy","celeste","coursier","esquille","yarden"],
   plays:{1:[["passante",0]],2:[["veilleur",1]],3:[["thot",2]],4:[["devote",1]],5:[["colosse",2]],6:[["ishara",2]]},
   steps:{
-   1:{req:[["coursier",0]],t:"Tu as <b>1 énergie</b> au tour 1. Touche le <b>Coursier du Flon</b> (coût 1), puis la <b>Ruelle</b>. Termine ton tour : à la révélation, il te fait piocher une carte."},
-   2:{req:[["felix",1]],t:"Le <b>Lac Ouchy</b> vient d'apparaître. Chaque lieu a sa règle : ici, ta première carte laisse un Reflet de 2. Pose <b>Félix</b> au Lac Ouchy : ta prochaine carte coûtera 1 de moins."},
+   1:{req:[["coursier",0]],t:"Tu as <b>1 énergie</b> au tour 1 : ton énergie est égale au numéro du tour, elle ne se cumule pas. Touche le <b>Coursier du Flon</b> (coût 1), puis la <b>Ruelle</b>. Termine ton tour : à la <b>Révélation</b>, l'effet de la carte se déclenche. Ici, il te fait piocher une carte."},
+   2:{req:[["felix",1]],t:"Le <b>Lac Ouchy</b> vient d'apparaître. Chaque lieu a sa règle : ici, ta première carte laisse un Reflet de 2. Pose <b>Félix</b> au Lac Ouchy : ta prochaine carte coûtera 1 de moins. Tu as maintenant 2 énergie, même si tu n'avais pas tout dépensé au tour 1."},
    3:{req:[["celeste",2],["passante",0]],t:"Céleste coûte 3, mais Félix et le <b>Sous-gare</b> la font passer à 1. Pose <b>Céleste</b> au Sous-gare, puis la <b>Passante</b> à la Ruelle. Tu peux jouer plusieurs cartes tant que tu as de l'énergie."},
    4:{req:[["izzy",1]],t:"L'Agent de Thot adverse a <b>affaibli</b> Céleste : son chiffre est passé en rouge. Pose <b>Izzy</b> au Lac Ouchy : elle copie la puissance de la carte adverse la plus forte du lieu. Appui long sur une carte pour la voir en grand."},
    5:{req:[["yarden",2]],t:"Tu as des cartes dans les 3 lieux : <b>Yarden Weiss</b> gagne +4 en arrivant. Pose-la au Sous-gare."},
@@ -449,7 +487,7 @@ function rulesHTML(){
   </section>
   <section class="sec"><h2>Règles</h2>
     <ol class="rules">
-      <li>6 tours. Au tour N, tu as N énergie. Tu pioches 1 carte par tour (main de 7 maximum).</li>
+      <li>6 tours. Au tour N, tu as N énergie, qui ne se cumule pas d'un tour à l'autre (sauf effet de carte). Tu pioches 1 carte par tour (main de 7 maximum).</li>
       <li>Tu poses tes cartes, l'adversaire pose les siennes face cachée. Tout est révélé en fin de tour, lieu par lieu : dans chaque lieu, le joueur qui mène révèle ses cartes en premier. En cas d'égalité, tes cartes d'abord (en duel, celles de l'hôte).</li>
       <li>4 cartes maximum par joueur et par lieu.</li>
       <li>Au tour 1, avant de poser une carte, tu peux <b>changer ta main</b> une fois : tes cartes repartent dans le deck, qui est mélangé, et tu en pioches autant. Pas en duel entre amis.</li>
@@ -637,7 +675,7 @@ function render(){
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
   /* le code de salon en cours de saisie survit aux redessins (le salon commun en provoque à chaque arrivée ou départ) */
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
-  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
+  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
   document.body.classList.toggle("hasdock",screen!=="play");
   document.body.classList.toggle("inplay",screen==="play");
   setTimeout(()=>FX.decorate(app),30);
@@ -660,6 +698,10 @@ document.addEventListener("pointermove",e=>{ const el=e.target.closest&&e.target
 ["pointerup","pointercancel"].forEach(t=>document.addEventListener(t,e=>{ if(e.pointerType!=="mouse") tiltReset(); }));
 document.addEventListener("pointerdown", ()=>{ if(!bgmArmed){ bgmArmed=true; music(); } });
 /* curseurs de volume : réglage en direct, sans redessiner l'écran pendant le glissement */
+/* Recherche de la collection : on ne redessine que la grille (pas tout l'écran), pour garder le clavier et la saisie */
+let searchTimer=0;
+document.addEventListener("input", e=>{ const t=e.target; if(!t||t.id!=="coll-search") return; searchQ=t.value; clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>{ const g=document.getElementById("collgrid"), i=document.getElementById("collinfo"); if(g){ g.innerHTML=collGridHTML(); translateDOM(g); } if(i){ i.innerHTML=collInfoHTML(); translateDOM(i); } },140); });
 document.addEventListener("input", e=>{ const k=e.target&&e.target.dataset&&e.target.dataset.vol; if(!k) return; P[k]=Math.max(0,Math.min(100,+e.target.value||0));
   const b=document.querySelector(`[data-volv="${k}"]`); if(b) b.textContent=P[k];
   if(k==="vm"&&bgm) mRamp(bgm,mVol(),.1); if(k==="vs"&&SFXG) SFXG.gain.value=P.vs/100; });
@@ -804,7 +846,9 @@ document.addEventListener("click", e=>{
     case "fcost": costFilter=el.dataset.f; sfx("click"); render(); return;
     case "frar": rarFilter=el.dataset.f; sfx("click"); render(); return;
     case "fown": ownFilter=el.dataset.f; sfx("click"); render(); return;
-    case "freset": deckFilter=costFilter=rarFilter=ownFilter="all"; sfx("click"); render(); return;
+    case "freset": deckFilter=costFilter=rarFilter=ownFilter="all"; searchQ=""; sfx("click"); render(); return;
+    case "filtopen": filtOpen=true; sfx("click"); render(); return;
+    case "filtclose": if(el.classList.contains("veil")&&e.target.closest(".filtpanel")) return; filtOpen=false; sfx("click"); render(); return;
     case "toggle": { const id=el.dataset.id;
       const clash=P.deck.find(x=>x!==id&&charOf(x)===charOf(id)&&!(["yarden","yarden_d"].includes(x)&&["yarden","yarden_d"].includes(id)));
       if(P.deck.includes(id)){ P.deck=P.deck.filter(x=>x!==id); deckMsg=pruneUL(); sfx("undo"); }
@@ -814,7 +858,6 @@ document.addEventListener("click", e=>{
       else if(P.deck.length<ECO.deckSize){ P.deck.push(id); deckMsg=""; sfx("select"); }
       else { deckMsg="Ton deck est plein : retire d'abord une carte."; sfx("debuff"); }
       save(); render(); return; }
-    case "deckout": { const id=el.dataset.id; P.deck=P.deck.filter(x=>x!==id); deckMsg=pruneUL(); sfx("undo"); save(); render(); return; }
     case "close": S.over.closed=true; render(); return;
     case "pileview": if(S){ gz="p"+el.dataset.p; sfx("select"); render(); } return;
   }

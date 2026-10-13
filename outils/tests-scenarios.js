@@ -153,9 +153,10 @@ async function inPage() {
   { const tick = ms => new Promise(r => setTimeout(r, ms)), $ = x => document.querySelector(x), $$ = x => [...document.querySelectorAll(x)];
     const normal = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id));
     P.owned = normal.filter((_, i) => i % 2 === 0).concat(["ulya"]); P.deck = []; P.tuto = true; tutoStep = -1; P.starter = true;
-    window.render = realRender; screen = "deck"; deckFilter = costFilter = rarFilter = ownFilter = "all"; render();
-    const shown = () => $$(".grid > *").length, avail = () => POOL.filter(id => SHOWN(id)).length;
+    window.render = realRender; screen = "deck"; deckFilter = costFilter = rarFilter = ownFilter = "all"; searchQ = ""; filtOpen = true; render();
+    const shown = () => $$("#collgrid > *").length, avail = () => POOL.filter(id => SHOWN(id)).length;
     const clickChip = (act, f) => { const b = $(`[data-act=${act}][data-f="${f}"]`); if(b) b.click(); return !!b; };
+    const shownN = () => $$("#collgrid > *").length;
     T("Filtres : sans filtre, toute la collection affichée", shown() === avail(), `${shown()} / ${avail()}`);
     T("Filtres : les 4 rangées de puces existent (faction, coût 0 à 6+, rareté, possession)", !!$("[data-act=filter]") && $$("[data-act=fcost]").length === 8 && $$("[data-act=frar]").length === 6 && $$("[data-act=fown]").length === 3, "");
     clickChip("fcost", "3"); const n3 = POOL.filter(id => SHOWN(id) && CARDS[id].cost === 3).length;
@@ -174,7 +175,41 @@ async function inPage() {
     clickChip("frar", "U"); clickChip("fcost", "0");
     T("Filtres : aucune carte correspondante → message clair", shown() === 0 || !!$(".grid .hint"), shown() + " affichées");
     $("[data-act=freset]").click();
-    T("Filtres : « Réinitialiser les filtres » remet tout à zéro", shown() === avail() && !$("[data-act=freset]") && costFilter === "all" && rarFilter === "all" && ownFilter === "all" && deckFilter === "all", "");
+    T("Filtres : « Réinitialiser les filtres » remet tout à zéro", shown() === avail() && $("[data-act=freset]").disabled && costFilter === "all" && rarFilter === "all" && ownFilter === "all" && deckFilter === "all", "");
+    /* 9b. Collection : lire avant d'ajouter, mini-deck, recherche par mot-clé, panneau Filtrer */
+    filtOpen = false; deckFilter = costFilter = rarFilter = ownFilter = "all"; searchQ = ""; P.deck = []; render();
+    T("Collection : le bouton Filtrer ouvre le panneau des choix (au lieu de tout afficher)", !$("[data-act=fcost]") && !!$("[data-act=filtopen]"), "");
+    $("[data-act=filtopen]").click(); T("Collection : le panneau contient faction, coût, rareté, possession et « Voir N cartes »", !!$("[data-act=fcost]") && !!$("[data-act=filtclose].primary"), "");
+    clickChip("fcost", "2"); $("[data-act=filtclose].primary").click();
+    T("Collection : après fermeture, le bouton Filtrer indique le nombre de filtres (1)", /1/.test($("[data-act=filtopen]").textContent) && filtOpen === false, $("[data-act=filtopen]").textContent);
+    $("[data-act=freset]").click(); filtOpen = false; render();
+    T("Collection : le mini-deck affiche les 12 cases", $$("#dmini .dm").length === 12, "");
+    const owned = P.owned.filter(id => !ULof(id)), one = owned[0];
+    const card1 = $(`.pick .pickmain[data-id="${one}"]`) || $(".pick .pickmain");
+    const id1 = card1.dataset.id; card1.click();
+    T("Collection : toucher une carte l'ouvre en grand SANS l'ajouter au deck", zoomId === id1 && !P.deck.includes(id1), `zoom ${zoomId}`);
+    T("Collection : la carte en grand propose « Ajouter au deck »", /Ajouter au deck/.test($(".zoominfo").textContent), "");
+    $(".zoominfo [data-act=toggle]").click();
+    T("Collection : « Ajouter au deck » l'ajoute, puis propose « Retirer du deck »", P.deck.includes(id1) && /Retirer du deck/.test($(".zoominfo").textContent), "");
+    $("[data-act=unzoom].ghost, .zoominfo [data-act=unzoom]").click(); render();
+    const dm = $(`#dmini .dm[data-id="${id1}"]`); dm.click();
+    T("Collection : toucher une carte du mini-deck la lit, elle ne disparaît pas du deck", zoomId === id1 && P.deck.includes(id1), "");
+    $(".zoominfo [data-act=unzoom]").click(); render();
+    const strip = $(`.strip [data-act=zoom][data-id="${id1}"]`); if(strip) strip.click();
+    T("Collection : toucher une carte du deck (grande rangée) la lit, elle ne disparaît pas", !!strip && zoomId === id1 && P.deck.includes(id1), "");
+    $(".zoominfo [data-act=unzoom]").click(); render();
+    $(`.pick .qadd[data-id="${id1}"]`).click();
+    T("Collection : le bouton « ✓ Deck » retire la carte d'un geste", !P.deck.includes(id1), "");
+    $(`.pick .qadd[data-id="${id1}"]`).click();
+    T("Collection : le bouton « + Deck » ajoute la carte d'un geste", P.deck.includes(id1), "");
+    const withFx = POOL.filter(id => SHOWN(id) && P.owned.includes(id) && /défausse/i.test(CARDS[id].fx || "")).length, input = $("#coll-search");
+    input.value = "defausse"; input.dispatchEvent(new Event("input", { bubbles: true })); await tick(300);
+    const found = $$("#collgrid .pickmain").map(b => b.dataset.id);
+    T("Collection : la recherche par mot-clé trouve les cartes dont l'effet contient « défausse » (sans accent)", found.length > 3 && found.every(id => normQ(CARDS[id].fx + " " + CARDS[id].name).includes("defausse")), `${found.length} cartes`);
+    input.value = "xyz-introuvable"; input.dispatchEvent(new Event("input", { bubbles: true })); await tick(300);
+    T("Collection : recherche sans résultat → message clair", !!$("#collgrid .hint"), "");
+    input.value = ""; input.dispatchEvent(new Event("input", { bubbles: true })); await tick(300); searchQ = "";
+    T("Collection : recherche vidée → toute la collection revient", shownN() === POOL.filter(id => SHOWN(id)).length, `${shownN()}`);
     window.render = () => {}; screen = "home";
   }
   /* 10. Accueil : le bandeau de saison mène au paquet d'édition, en tête de la boutique et surligné */

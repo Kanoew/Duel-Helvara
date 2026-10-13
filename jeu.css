@@ -251,6 +251,31 @@ pre{background:var(--deep);border:1px solid var(--line);border-radius:10px;paddi
 .pick.in .full{box-shadow:0 0 0 2px var(--me)}
 .pick .tag{position:absolute;top:8px;right:8px;z-index:2;background:var(--me);color:#06121b;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
 .pick.off{opacity:.55}
+.pickmain{display:block;width:100%;border:0;padding:0;background:none;text-align:left;border-radius:12px;cursor:pointer;color:inherit}
+.qadd{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:4;background:rgba(10,14,22,.82);color:var(--frost);border:1px solid rgba(255,255,255,.35);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.04em;padding:4px 9px;cursor:pointer;white-space:nowrap}
+.qadd.on{background:var(--me);color:#06121b;border-color:var(--me)}
+.pick.off .qadd:not(.on){opacity:.7}
+/* Mini-deck et recherche : barre collée en haut de l'écran pendant qu'on fait défiler la collection */
+.collbar2{position:sticky;top:0;z-index:4;background:rgba(10,14,24,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:8px 0 8px;margin:0 -2px 6px;border-bottom:1px solid var(--line)}
+.dmrow{display:flex;align-items:center;gap:8px}
+.dmini{flex:1;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px}
+.dm{position:relative;aspect-ratio:2/3;border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.22);padding:0;background:none;cursor:pointer;display:block}
+.dm.empty{border:1px dashed var(--line);cursor:default;background:rgba(255,255,255,.03)}
+.dm .art{position:absolute;inset:0}
+.dm .c{position:absolute;left:1px;top:1px;font-size:9px;line-height:1;font-weight:700;background:var(--warm);color:#1b1206;border-radius:3px;padding:1px 3px}
+.dmcount{font-family:var(--display);font-size:15px;font-weight:400;min-width:38px;text-align:right;color:var(--mist)}
+.dmcount.ok{color:#9fe0b0}
+.srow{display:flex;gap:8px;margin-top:8px}
+.srow input{flex:1;min-width:0;background:rgba(17,24,39,.9);border:1px solid var(--line);border-radius:999px;padding:9px 14px;color:var(--frost);font:inherit;font-size:14px}
+.srow input:focus{outline:2px solid var(--warm);outline-offset:1px}
+.srow .ghost{white-space:nowrap}
+.srow .ghost.on{border-color:var(--warm);color:var(--warm)}
+.filtpanel{max-height:90vh;overflow:auto;width:min(440px,100%)}
+.filtpanel .fgroup .chips{flex-wrap:wrap;overflow:visible;margin-right:0;padding-right:0}
+.filtpanel .fgroup{flex-direction:column;gap:2px}
+.filtpanel .row2{margin-top:10px}
+.deckstate{margin:6px 0 2px;font-size:13px;color:var(--mist)}.deckstate.in{color:#9fe0b0}
+.deckmsg{margin:2px 0 6px;color:var(--warm);font-size:13px}
 .full.locked .art{filter:grayscale(1) brightness(.35)}
 .full .lock{position:absolute;inset:0;display:grid;place-items:center;z-index:2;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);text-align:center;padding:10px}
 
@@ -801,3 +826,6 @@ body.ec-draw #app{filter:brightness(.75);transition:filter .6s}
 .t-btns{display:flex;flex-direction:column;gap:8px;width:100%}
 .t-btns button{width:100%}
 @media (prefers-reduced-motion:reduce){.t-pack,.t-pack::after,.t-slot::before,.t-slot .t-mini,.t-spin,.t-focus.sheen .t-bfront::after{animation:none!important}}
+.zoominfo>.primary{width:100%;margin:6px 0}
+.tuto ul.tbl{margin:8px 0 4px;padding-left:18px;text-align:left;font-size:13.5px;line-height:1.45;display:flex;flex-direction:column;gap:5px;color:var(--text,#e3eaf4)}
+.tuto ul.tbl li::marker{color:var(--warm)}
