@@ -31,7 +31,8 @@ const CORE_V = sha(html + fs.readFileSync(path.join(ROOT, "manifest.json"))).sli
 const tagged = [...html.matchAll(/(?:<script[^>]*\ssrc=|<link[^>]*rel="stylesheet"[^>]*\shref=)"([^"]+)"/g)].map(m => m[1]).filter(u => !/^(https?:)?\/\//.test(u));
 const preCore = ["index.html", "manifest.json", ...tagged].filter((u, i, a) => a.indexOf(u) === i);
 const preMedia = mediaFiles.filter(f => /^fonts\/.*\.woff2$/.test(f) || /^icones\//.test(f) || /^images\/(fond[a-z_]*|pack|reflet)\.webp$/.test(f) || /^images\/rangs\//.test(f) || f === "images/lieux/inconnu.webp");
-const swBlock = "/* VERSIONS-AUTO-DEBUT */\nconst CORE_VERSION = " + JSON.stringify(CORE_V) + ";\nconst MEDIA_VERSION = " + JSON.stringify(MEDIA_V) + ";\nconst PRECACHE_CORE = " + JSON.stringify(preCore) + ";\nconst PRECACHE_MEDIA = " + JSON.stringify(preMedia) + ";\n/* VERSIONS-AUTO-FIN */";
+const preLazy = mediaFiles.filter(f => /^images\/(avatars|lieux)\/.*\.webp$/.test(f) && !preMedia.includes(f)).map(f => /^images\/avatars\//.test(f) ? f + "?v=7" : f);
+const swBlock = "/* VERSIONS-AUTO-DEBUT */\nconst CORE_VERSION = " + JSON.stringify(CORE_V) + ";\nconst MEDIA_VERSION = " + JSON.stringify(MEDIA_V) + ";\nconst PRECACHE_CORE = " + JSON.stringify(preCore) + ";\nconst PRECACHE_MEDIA = " + JSON.stringify(preMedia) + ";\nconst PRECACHE_LAZY = " + JSON.stringify(preLazy) + ";\n/* VERSIONS-AUTO-FIN */";
 const SW = path.join(ROOT, "sw.js"); let sw = fs.readFileSync(SW, "utf8");
 const swNew = sw.replace(/\/\* VERSIONS-AUTO-DEBUT \*\/[\s\S]*?\/\* VERSIONS-AUTO-FIN \*\//, () => swBlock);
 if (!/VERSIONS-AUTO-DEBUT/.test(sw)) console.log("Attention : sw.js est le service worker de SECOURS (outils/sw-secours.js) : la PWA est coupée chez les joueurs. Pour la rétablir, remettre le vrai sw.js.");
