@@ -77,7 +77,7 @@ Tous peuvent être relancés sans danger (sauf `nettoyage.sql`, voir plus bas). 
 | Ordre | Fichier | À quoi il sert |
 |---|---|---|
 | 1 | `supabase.sql` | Tables de base (sauvegardes, classement), règles d'accès, suppression de compte. |
-| 2 | `classement-securise.sql` | Classement non falsifiable : les joueurs n'écrivent plus eux-mêmes dans `board`, tout passe par `board_submit()`. |
+| 2 | `classement-securise.sql` | Classement borné (rythme et gains limités par le serveur) : les joueurs n'écrivent plus eux-mêmes dans `board`, tout passe par `board_submit()`. |
 | 3 | `classement-allege.sql` | Lecture rapide du classement (100 meilleurs). Après le 2. |
 | 4 | `retours-stats.sql` | Pouces 👍 👎, cartes jugées injustes, statistiques de victoire par carte. Indépendant des précédents. Lecture : Table Editor → schéma `public` → vues `v_taux_victoire_cartes`, `v_cartes_signalees`, `v_retours_par_jour`. |
 | 5 | `comptes-fantomes.sql` | Supprime chaque nuit les comptes anonymes qui n'ont jamais joué (nécessite pg_cron). |

@@ -146,13 +146,16 @@ function blitzHTML(){
 const BUILD="alpha-0.7", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
-const mpTok=()=>Math.random().toString(36).slice(2,10);
+/* Jetons et codes de salon : crypto.getRandomValues (pas Math.random). Code = LIEU- + 6 caractères sans I, L, O ni 0/1 (31 symboles, tirage sans biais). */
+const MP_ALPHA="23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+function mpRandInt(max){ const lim=256-(256%max); for(;;){ const b=crypto.getRandomValues(new Uint8Array(1))[0]; if(b<lim) return b%max; } }
+const mpTok=()=>Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,"0")).join("");
 function mpSession(){ try{ const s=JSON.parse(localStorage.getItem(MP_KEY)); return s&&s.mp&&Date.now()-s.at<3*36e5?s:null; }catch(e){ return null; } }
 function mpSaveSession(s){ try{ if(s){ s.at=Date.now(); localStorage.setItem(MP_KEY,JSON.stringify(s)); } else localStorage.removeItem(MP_KEY); }catch(e){} }
 /* Temps réel : plus de salon commun où tout le monde voit tout le monde. On ne se connecte que pour un duel :
    un canal par code de salon (« roomC », deux joueurs), et le canal de la file d'attente (« roomQ ») seulement
    pendant une recherche. Un joueur qui joue contre l'IA n'ouvre aucune connexion en direct. */
-const rtReady=()=>!!(window.claude&&window.claude.use), rtTok={c:0,q:0}, MP_CODE=/^[A-Z]+-\d{4}$/;
+const rtReady=()=>!!(window.claude&&window.claude.use), rtTok={c:0,q:0}, MP_CODE=/^[A-Z]+-(?:\d{4}|[2-9A-HJKMNP-Z]{6})$/;   /* nouveau format (6 caractères) et ancien (4 chiffres : une reprise de session déjà enregistrée continue de marcher) */
 const RT_FAIL="Le salon en direct est injoignable pour l'instant. Vérifie ta connexion internet, puis réessaie.";
 async function rtOpen(kind,name){
   const cur=kind==="c"?roomC:roomQ; if(cur&&cur.name===name) return cur;
@@ -172,14 +175,14 @@ function mpClear(){ myMp=null; mpMsg=""; rtClose("c"); }
 function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck]}; }
 async function mpCreate(){
   if(!rtReady()||!deckReady()||mpConn) return; myMp=null; mpMsg=""; mpConn=true; render();
-  const code=MP_PLACES[Math.floor(Math.random()*MP_PLACES.length)]+"-"+(1000+Math.floor(Math.random()*9000));
+  const code=MP_PLACES[mpRandInt(MP_PLACES.length)]+"-"+Array.from({length:6},()=>MP_ALPHA[mpRandInt(MP_ALPHA.length)]).join("");
   const r=await rtOpen("c","helvara-room-"+code); mpConn=false;
   if(!r){ mpMsg=RT_FAIL; render(); return; }
   mpPush(mpBase("host",code)); sfx("click"); render();
 }
 function mpJoin(){
   const i=document.getElementById("mp-code"); const code=(i&&i.value||"").trim().toUpperCase().replace(/\s+/g,"");
-  if(!/^[A-Z]+-\d{4}$/.test(code)){ mpMsg="Le code ressemble à OUCHY-4821."; render(); return; }
+  if(!MP_CODE.test(code)){ mpMsg="Le code ressemble à OUCHY-K7M4QX."; render(); return; }
   mpJoinCode(code);
 }
 async function mpJoinCode(code){
@@ -222,7 +225,7 @@ function mqTick(){
   }
   const others=mqOthers(), same=others.filter(p=>p.presence.q.ver===BUILD);
   /* invité par quelqu'un : on rejoint son salon */
-  const inv=same.find(p=>p.presence.q.with===mq.tok&&typeof p.presence.q.room==="string"&&/^[A-Z]+-\d{4}$/.test(p.presence.q.room));
+  const inv=same.find(p=>p.presence.q.with===mq.tok&&typeof p.presence.q.room==="string"&&MP_CODE.test(p.presence.q.room));
   /* on rejoint son salon d'abord, et on ne quitte la file qu'une fois dedans (sinon l'hôte croit que tu es parti) */
   if(inv){ if(mq.joining) return; mq.joining=true; const me=mq; mpJoinCode(inv.presence.q.room).then(ok=>{ if(ok&&mq===me) mqStop(""); else if(mq===me) me.joining=false; }); return; }
   const free=same.filter(p=>!p.presence.q.with).map(p=>p.presence.q.tok);
@@ -344,7 +347,7 @@ function duelHTML(){
       ${s?`<div class="notice">Un duel contre ${esc(s.oppNick||"un ami")} peut être repris. <span class="row2" style="margin-top:8px;display:flex"><button class="primary" data-act="mpresume">Reprendre</button><button class="ghost" data-act="mpforget">Oublier</button></span></div>`:""}
       ${mpConn?`<p class="hint">Connexion au salon…</p>`:""}
       <button class="primary" data-act="mpcreate">Créer un salon</button>
-      <div class="mpjoin"><input id="mp-code" class="mpinput" maxlength="12" placeholder="OUCHY-4821" autocomplete="off" aria-label="Code du salon"><button class="ghost" data-act="mpjoin">Rejoindre</button></div>
+      <div class="mpjoin"><input id="mp-code" class="mpinput" maxlength="24" placeholder="OUCHY-K7M4QX" autocomplete="off" aria-label="Code du salon"><button class="ghost" data-act="mpjoin">Rejoindre</button></div>
       ${mpMsg?`<p style="color:var(--warm)">${esc(mpMsg)}</p>`:""}
     </section>${onlineHTML()}${invite}`;
   }

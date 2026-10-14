@@ -180,7 +180,7 @@
     "Ce salon est déjà complet.":"This room is already full.", "Connecté à":"Connected to", ". La partie commence…":". The game is starting…",
     "Salon introuvable pour l'instant. Vérifie le code, ou attends que ton ami le crée.":"Room not found yet. Check the code, or wait for your friend to create it.",
     "Copier le code":"Copy the code", "Quitter le salon":"Leave the room", "Copié":"Copied", "Revanche":"Rematch", "Abandonner":"Forfeit",
-    "Connexion au salon perdue. Recharge la page.":"Lost connection to the room. Reload the page.", "Le code ressemble à OUCHY-4821.":"The code looks like OUCHY-4821.",
+    "Connexion au salon perdue. Recharge la page.":"Lost connection to the room. Reload the page.", "Le code ressemble à OUCHY-K7M4QX.":"The code looks like OUCHY-K7M4QX.",
     "Duel entre amis · hors classement":"Duel with friends · unranked", "Quitter le duel":"Leave the duel",
     "déconnecté, en attente de son retour":"disconnected, waiting for them to return", "· a terminé son tour":"· has ended their turn",
     /* blitz */

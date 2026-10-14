@@ -1,4 +1,4 @@
--- Duel d'Helvara : classement non falsifiable.
+-- Duel d'Helvara : classement borné (le serveur limite le rythme et les gains ; il ne peut pas vérifier qu'une partie a eu lieu).
 -- À coller dans Supabase → SQL Editor → New query → Run, APRÈS supabase.sql.
 -- Le script peut être relancé sans danger.
 --
