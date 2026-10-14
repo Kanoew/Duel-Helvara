@@ -862,3 +862,4 @@ body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 .syncb.ok{color:#8fe3a8;border-color:rgba(143,227,168,.4)}
 .syncb.fail{color:#ffb48a;border-color:rgba(255,180,138,.5)}
 @media (prefers-reduced-motion:reduce){ .syncb{transition:none} }
+.synclast{margin-top:4px;opacity:.85}

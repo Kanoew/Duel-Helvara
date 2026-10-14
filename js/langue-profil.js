@@ -292,6 +292,16 @@ function syncShow(kind){
   syncEl.textContent=trUI(txt); syncEl.className="syncb on "+kind;
   if(kind==="ok") syncT=setTimeout(()=>syncShow(null),2000);
 }
+let lastSaveAt=0;
+function lastSaveText(){
+  if(!dbDoc) return "Dernière sauvegarde : sur cet appareil seulement";
+  if(dirty||writing) return "Dernière sauvegarde : envoi en cours…";
+  if(!lastSaveAt) return "Dernière sauvegarde : aucune depuis l'ouverture";
+  const s=Math.max(0,Math.round((Date.now()-lastSaveAt)/1000));
+  return s<5?"Dernière sauvegarde : à l'instant":s<60?`Dernière sauvegarde : il y a ${s} s`:`Dernière sauvegarde : il y a ${Math.round(s/60)} min`;
+}
+function syncLine(){ const el=document.getElementById("synclast"); if(el) el.textContent=trUI(lastSaveText()); }
+setInterval(syncLine,3000);
 function save(){ if(window.__wiped) return; if(P.decks&&P.decks[P.di]) P.decks[P.di].cards=[...P.deck]; P.at=Date.now(); lsWrite(); dirty=true; clearTimeout(saveTimer); saveTimer=setTimeout(flush,500); }
 async function flush(){
   if(!dbDoc) return;
@@ -299,11 +309,11 @@ async function flush(){
   writing=true; dirty=false; clearTimeout(saveTimer);
   clearTimeout(syncSlow); syncSlow=setTimeout(()=>{ if(writing&&!document.hidden) syncShow("wait"); },1200);
   let okSend=false;
-  try{ await dbDoc.set(dataOf()); store="cloud"; retryMs=3000; okSend=true; }
+  try{ await dbDoc.set(dataOf()); store="cloud"; retryMs=3000; okSend=true; lastSaveAt=Date.now(); }
   catch(e){ store="local"; dirty=true; saveTimer=setTimeout(flush,retryMs); retryMs=Math.min(60000,retryMs*2); }
   clearTimeout(syncSlow);
   if(okSend){ if(!dirty&&!again) syncShow("ok"); } else syncShow("fail");
-  writing=false;
+  writing=false; syncLine();
   if(again){ again=false; flush(); }
 }
 function flushNow(){ if(!window.__wiped&&dirty&&dbDoc) flush(); }
@@ -328,6 +338,9 @@ async function initStore(){
 
 function accountHTML(){
   const h=window.helvara;
+  return accountMain(h)+` <div class="synclast" id="synclast">${esc(trUI(lastSaveText()))}</div>`;
+}
+function accountMain(h){
   if(store==="cloud"&&h&&h.google) return `Progression sauvegardée sur ton compte Google${h.email?` (${esc(h.email)})`:""}. <button class="toggle" data-act="glogout">Se déconnecter</button>`;
   if(store==="cloud") return `Progression sauvegardée pour cet appareil. <button class="toggle" data-act="glogin">Se connecter avec Google</button> pour la retrouver partout.`;
   return `Progression sauvegardée sur cet appareil.${h&&h.error?` <span class="hint">${esc(h.error)}</span>`:""}`;
