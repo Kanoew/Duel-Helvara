@@ -138,7 +138,7 @@
     "L'Agent de Thot adverse a":"The enemy Agent of Thoth has", "affaibli":"weakened",
     "Céleste : son chiffre est passé en rouge. Pose":"Céleste: her number turned red. Play",
     "au Lac Ouchy : elle copie la puissance de la carte adverse la plus forte du lieu. Appui long sur une carte pour la voir en grand.":"at Lake Ouchy: she copies the Power of the strongest enemy card there. Long-press a card to see it full-size.",
-    "Tu as des cartes dans les 3 lieux :":"You have cards in all 3 locations:", "gagne +4 en arrivant. Pose-la au Sous-gare.":"gains +4 on arrival. Play her at the Underground.",
+    "Tu as des cartes dans les 3 lieux :":"You have cards in all 3 locations:", "gagne +4 de puissance en arrivant. Pose-la au Sous-gare.":"gains +4 Power on arrival. Play her at the Underground.",
     "Dernier tour. Pose le":"Last turn. Play the", "au Lac Ouchy. À la fin, celui qui mène sur 2 lieux sur 3 gagne.":"at Lake Ouchy. At the end, whoever leads at 2 locations out of 3 wins.",
     "C'est bon : touche":"All set: tap", "Pas encore : pose d'abord":"Not yet: first place", "), puis":"), then", "), puis touche":"), then tap", "Règles complètes":"Full rules", "Cette partie t'a plu ?":"Did you enjoy this game?", "Une carte m'a paru injuste":"A card seemed unfair", "Quelle carte t'a paru injuste ?":"Which card seemed unfair?", "Merci pour ton retour 🖤":"Thanks for your feedback 🖤", "J'ai aimé":"I liked it", "Je n'ai pas aimé":"I didn't like it", "Fin du tour":"End turn",
     "Tu connais maintenant l'essentiel : l'énergie, les lieux, la révélation, les bonus en vert et les malus en rouge.":"You now know the essentials: energy, locations, reveals, bonuses in green and penalties in red.",

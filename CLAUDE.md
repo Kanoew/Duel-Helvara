@@ -397,7 +397,7 @@ On **oublie la fusion par collection** : une fusion ne se gagne plus en réuniss
 - Idées de cartes : Kratos et Zélos (autres enfants de Styx) ; une ultra-légendaire de faction pour Helvara, Désir et Primordial.
 
 ## Textes d'effets (13 octobre 2026)
-- Règle : tout bonus ou malus de puissance s'écrit « +N de puissance » / « −N de puissance » (EN : « +N Power »), avec qui le reçoit quand c'est la carte elle-même (« Apsu gagne +6 de puissance »). Appliqué à toutes les cartes et à 6 lieux ; ne change que les mots, jamais l'effet. À respecter pour toute nouvelle carte.
+- **Règle (révisée le 14 octobre 2026)** : « +N de puissance » **sans sujet** = la carte elle-même (« Sinon, +4 de puissance. »). On nomme le bénéficiaire seulement quand c'est une **autre** carte (« tes autres cartes ici ont +1 de puissance », « la prochaine carte que tu révèles gagne +3 de puissance »). Même règle pour les malus (« −2 de puissance à la carte adverse la plus forte ici ») ; une perte s'écrit « perd N de puissance ». EN : « +N Power », même logique. Appliquée à tous les textes (FR et EN, cartes sorties comprises) : ne change que les mots, jamais l'effet. À respecter pour toute nouvelle carte.
 - Code couleur des mots-clés (`fxH()` dans `js/interface.js`, styles `.kw-*` dans `jeu.css`) : Révélation (corail ✦), Continu (vert ∞), Fatalité (rouge ✠), en FR et en EN. Un nouveau mot-clé : l'ajouter à `FXK` et lui donner une couleur.
 - Glisser-déposer : soulever une carte de la main vers le haut et la lâcher sur un lieu (`stageSel()`, bloc « Glisser-déposer » de `js/interface.js`) ; le toucher reste possible, un glissement de côté fait défiler la main.
 - Idée en attente (Jordan) : bouton « Lore » renvoyant vers le chapitre 1 (Wattpad ou version comics). Liens à fournir.

@@ -453,7 +453,7 @@ const TUT={
    2:{req:[["felix",1]],t:"Le <b>Lac Ouchy</b> vient d'apparaître. Chaque lieu a sa règle : ici, ta première carte laisse un Reflet de 2. Pose <b>Félix</b> au Lac Ouchy : ta prochaine carte coûtera 1 de moins. Tu as maintenant 2 énergie, même si tu n'avais pas tout dépensé au tour 1."},
    3:{req:[["celeste",2],["passante",0]],t:"Céleste coûte 3, mais Félix et le <b>Sous-gare</b> la font passer à 1. Pose <b>Céleste</b> au Sous-gare, puis la <b>Passante</b> à la Ruelle. Tu peux jouer plusieurs cartes tant que tu as de l'énergie."},
    4:{req:[["izzy",1]],t:"L'Agent de Thot adverse a <b>affaibli</b> Céleste : son chiffre est passé en rouge. Pose <b>Izzy</b> au Lac Ouchy : elle copie la puissance de la carte adverse la plus forte du lieu. Appui long sur une carte pour la voir en grand."},
-   5:{req:[["yarden",2]],t:"Tu as des cartes dans les 3 lieux : <b>Yarden Weiss</b> gagne +4 en arrivant. Pose-la au Sous-gare."},
+   5:{req:[["yarden",2]],t:"Tu as des cartes dans les 3 lieux : <b>Yarden Weiss</b> gagne +4 de puissance en arrivant. Pose-la au Sous-gare."},
    6:{req:[["colosse",1]],t:"Dernier tour. Pose le <b>Colosse du Léman</b> au Lac Ouchy. À la fin, celui qui mène sur 2 lieux sur 3 gagne."}
   }
 };
