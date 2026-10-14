@@ -257,3 +257,38 @@ Notes : Ananké n'existait pas dans le premier rapport (carte cachée à l'époq
 - ✅ secours : la page s'est rechargée une fois, sans boucle
 - ✅ secours : le jeu fonctionne normalement ensuite
 - ✅ aucune erreur de page
+
+## 6. Analyse d'Ananké (14 octobre 2026, même simulation : 6000 parties, graine 20261012, 12 000 decks)
+
+Aucune modification : lecture seulement. Un deck compte comme « 8+ Primordial » s'il a au moins 8 cartes Primordial (Ananké comprise, puisque la règle l'exige). Victoire = parties gagnées sur parties jouées avec ce deck (nulles : moins de 1 %).
+
+| Groupe de decks | Decks | Victoire |
+|---|---:|---:|
+| a) 8+ Primordial **avec** Ananké | 936 | **62,4 %** |
+| b) 8+ Primordial **sans** Ananké | 265 | **56,2 %** |
+| ↳ b1) dont avec une autre ultra-légendaire (fusion) | 150 | 63,3 % |
+| ↳ b2) dont sans aucune ultra-légendaire | 115 | 47,0 % |
+| Primordial dominant, sans aucune ultra-légendaire | 937 | 49,8 % |
+| c) Ananké **posée** | 370 | **78,4 %** |
+| c) Ananké **restée en main** (jamais posée) | 566 | **51,9 %** |
+
+**Lecture.**
+- Le 62,4 % ne vient **pas** de la force des decks Primordial : sans ultra-légendaire, un deck Primordial gagne 49,8 % (47,0 % avec 8+ Primordial), donc dans la moyenne.
+- Quand Ananké reste en main (jamais posée), le deck gagne 51,9 % : à peine au-dessus de la moyenne. C'est donc bien elle qui fait la différence : 78,4 % quand elle est posée.
+- En revanche, elle n'est pas isolée : les decks Primordial qui portent une **autre** ultra-légendaire gagnent 63,3 %, comme les siens. Ananké se comporte comme les autres ultra-légendaires Primordial (Yarden X Apsu, etc.) : c'est le groupe « deck Primordial + ultra » qui est fort, pas elle seule.
+- Précaution : « posée » n'est pas tirée au hasard (l'IA la pose quand elle l'a en main au tour 6 et qu'elle aide), et « en main » mélange « jamais piochée » et « piochée mais gardée ». Ça gonfle un peu l'écart posée / en main.
+- Pour comparaison, les decks avec Nike (autre ultra de faction) gagnent 44,2 %.
+
+### Victoire moyenne par faction dominante du deck
+
+Faction dominante = celle qui a le plus de cartes (jetons exclus). « Égalité » = deux factions à égalité en tête.
+
+| Faction dominante | Decks | Victoire |
+|---|---:|---:|
+| Primordial | 2917 | 55,2 % |
+| Helvara | 1946 | 50,5 % |
+| Désir | 2913 | 48,5 % |
+| Égalité entre deux factions | 1435 | 46,9 % |
+| Jugement | 2789 | 45,9 % |
+
+Primordial dominant : 62,4 % avec Ananké (936 decks), 51,8 % sans Ananké (1981 decks). Moyenne générale : 49,6 %.

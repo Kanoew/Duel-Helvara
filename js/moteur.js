@@ -439,7 +439,7 @@ function revealFx(s,li,c,opts={}){
 
 /* ======= IA ======= */
 const RES=new Set(["hel","hel_r","ulhel","hades","loviatar"]);
-const HITS=["bia","circe","ulcirce","qetesh","qetesh_r","pele_r","ulqetjor_r","poseidon","uloshun","tyr","medee_h","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
+const HITS=["bia","circe","qetesh","qetesh_r","pele_r","ulqetjor_r","poseidon","uloshun","tyr","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
 const DESTROYERS=new Set(["anat","anubis","boucher","durga","ereshkigal","esquille","ficelle","izzy_h","lilith","maree","nergal_h","nyx","nyx_h","rusalka","sekhmet","sekhmet_n","troll","ulnem","uloshun","yarden_d"]);
 const NEEDS_MATES=["susanoo","ulaph","oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
 /* Synergies connues de l'IA : [carte qui prépare, cartes qui en profitent, 1 si elles doivent partager le lieu] */
@@ -448,6 +448,8 @@ const AI_PAIRS=[["yarden",["apsu","apsu_n","yarden_d"]],["freyr",["freya"],1],["
 const AI_PREP={}, AI_PAY={};
 for(const [a,bs,loc] of AI_PAIRS){ (AI_PREP[a]=AI_PREP[a]||[]).push(...bs); for(const x of bs) (AI_PAY[x]=AI_PAY[x]||[]).push({a,loc:!!loc}); }
 /* Cartes adverses qui visent la plus forte : l'IA évite alors de tout miser sur une seule grosse carte */
+/* Cartes adverses qui affaiblissent (−N de puissance) : Amaterasu les neutralise */
+const AI_WEAK=new Set(["thot","artemis","tyr","hathor","ishtar","skadi","ixchel","balor","pele","pele_r","ulpele_r","nergal","araignee","ares","ares_h","mouche","medee","medee_h","set","bia","scathach","ecorche","andraste"]);
 const AI_WARY=new Set(["nyx","nyx_h","durga","oya","ixchel","lilith","anubis","izzy_h","uloshun","ulnem","qetesh","qetesh_r","mohini","thot","medee_h"]);
 /* L'IA compare toutes les combinaisons de sa main qui tiennent dans son énergie (128 au plus). Pour chacune, elle estime
    la puissance ajoutée dans chaque lieu, puis sa probabilité de gagner 2 lieux sur 3 face à ce que l'adversaire peut encore poser.
@@ -514,7 +516,18 @@ function aiPlan(me="e",tierOv){
     if(c.id==="ulpele_r"){ /* −1 à toutes les cartes adverses des 3 lieux : tour 6 avec une autre carte, quand l'adversaire a le plus de cartes en jeu */
       const nf=foesN[0]+foesN[1]+foesN[2]; hit+=nf*.8; if(S.turn<6) adj-=3; if(ctx.plays.length) adj+=1.5; if(nf<3) adj-=2; }
     if(c.id==="ulnem"){ const fs=Math.max(0,...S.board[op][li].filter(x=>x.rev).map(x=>cardPow(op,li,x))), own=S.board[me][li].filter(x=>x.rev), ms=Math.max(0,...own.map(x=>cardPow(me,li,x)));
-      if(foes){ hit+=fs-2.5; pow-=ms; pow+=2*Math.max(0,own.length-(own.length?1:0)); } }
+      if(foes){ hit+=fs-2.5; pow-=ms; pow+=2*Math.max(0,own.length-(own.length?1:0)+(ctx.pend[li]?ctx.pend[li]*.7:0)); adj+=1.5; } }
+    /* Nyx X Circé : toutes les cartes adverses ici deviennent des Pourceaux (puissance 1) : on retire leur puissance moins 1 chacune */
+    if(c.id==="ulcirce"){ const fo=S.board[op][li].filter(x=>x.rev&&!fated(x)&&!x.neg); if(fo.length&&!shielded(op,li)) hit+=fo.reduce((a,x)=>a+Math.max(0,cardPow(op,li,x)-1),0)+.5; else adj-=2; }
+    /* Médée, Mariée Spectrale : le poison retire 1 par fin de tour (7 − tour fins de tour restantes) à la carte adverse la plus forte ici, aux deux plus fortes avec Hécate */
+    if(c.id==="medee_h"){ const fp=S.board[op][li].filter(x=>x.rev&&!fated(x)).map(x=>cardPow(op,li,x)).sort((a,b)=>b-a), k=Math.max(0,7-S.turn);
+      if(fp.length){ hit+=Math.min(Math.max(0,fp[0]),k)+((onBoard("hecate")||ctx.plays.some(x=>x.c.id==="hecate"))&&fp[1]>0?Math.min(fp[1],k):0); if(S.turn<=4) adj+=1; } else adj-=1.5; }
+    /* Yarden Dragonification : +2 par autre carte Primordiale de ton côté (déjà là, posée ce tour, ou encore en main) */
+    if(c.id==="yarden_d"){ const pr=x=>CARDS[x.id].fac==="primordial"&&!CARDS[x.id].token; let n=0; for(const col of S.board[me]) for(const x of col) if(x.rev&&pr(x)) n++;
+      n+=ctx.plays.filter(x=>pr(x.c)).length; n+=.5*hand.filter(x=>x!==c&&pr(x)&&!ctx.plays.some(y=>y.c===x)).length; pow+=2*n; }
+    /* Amaterasu : ses effets protègent tes cartes des affaiblissements, dans les 3 lieux : plus il y a de cartes à protéger (ou d'affaiblissements chez l'adversaire), plus elle vaut */
+    if(c.id==="amaterasu"){ const mine=S.board[me].reduce((a,col)=>a+col.filter(x=>x.rev).length,0)+ctx.plays.length, weakeners=seen.filter(id=>AI_WEAK.has(id)).length;
+      pow+=Math.min(4,.7*mine)+(weakeners?2+Math.min(2,weakeners*.5):0); }
     if(c.id==="ulqetyar"){ let n=0; for(let i=0;i<3;i++){ const f=new Set(S.board[me][i].filter(x=>x.rev).map(x=>CARDS[x.id].fac)); for(const x of ctx.plays) if(x.li===i) f.add(CARDS[x.c.id].fac); if(i===li) f.add("desir"); if(f.has("desir")&&f.has("primordial")) n++; } pow+=3*n; }
     /* Résurrections : valeur de ce qui revient, si la place le permet */
     if(RES.has(c.id)){ const room=Math.max(0,capOf(me,li)-S.board[me][li].length-ctx.pend[li]-1), dp=(S.discardPile&&S.discardPile[me])||[], gv=(S.graveyard&&S.graveyard[me])||[], bp=id=>CARDS[id].pow+(c.id==="ulhel"&&charOf(id)==="baldur"?5:0);

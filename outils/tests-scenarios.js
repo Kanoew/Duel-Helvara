@@ -412,6 +412,15 @@ async function inPage() {
   fresh(); S.turn = 6; S.energy = S.energyE = 6; { for (const li of [0, 1, 2]) { put("p", li, plain[li], 3); put("p", li, plain[li + 3], 2); } put("e", 0, plain[0], 1);
     const pj = card("ulpele_r"), x = card(plain[4]); S.hand.e = [pj, x]; const plan = aiPlan("e", 5);
     T("IA : Pele X Jordan jouée au tour 6, avec une autre carte, face à beaucoup de cartes adverses", plan.some(y => y.c === pj) && plan.length >= 2, JSON.stringify(plan.map(y => [y.c.id, y.li]))); }
+
+  /* IA : évaluation de Nyx X Circé (lieu aux grosses cartes adverses), Yarden Dragonification, Médée Mariée Spectrale */
+  fresh(); S.turn = 6; S.energy = S.energyE = 6; { put("p", 0, plain[0], 1); put("p", 1, plain[1], 9); put("p", 1, plain[2], 8); put("p", 2, plain[3], 1); put("e", 1, plain[4], 3);
+    const c = card("ulcirce"); S.hand.e = [c]; const plan = aiPlan("e", 5); T("IA : Nyx X Circé jouée sur le lieu des grosses cartes adverses (17 de puissance à retirer)", plan.length === 1 && plan[0].li === 1, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+  fresh(); S.turn = 5; S.energy = S.energyE = 6; { put("e", 0, "troll", 5); put("e", 0, "esquille", 1); put("p", 0, plain[0], 1); put("p", 1, plain[1], 8); put("p", 2, plain[2], 1);
+    const c = card("yarden_d"); S.hand.e = [c]; const plan = aiPlan("e", 5); T("IA : Yarden Dragonification posée avec des cartes Primordiales de son côté", plan.length === 1 && plan[0].c === c, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+  fresh(); S.turn = 4; S.energy = S.energyE = 4; { put("p", 0, plain[0], 7); put("p", 0, plain[1], 2); put("p", 1, plain[2], 1);
+    const c = card("medee_h"); S.hand.e = [c]; const plan = aiPlan("e", 5); T("IA : Médée Mariée Spectrale posée tôt, face à des cartes adverses à empoisonner", plan.length === 1 && plan[0].c === c, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+  T("Le Seigneur de la marée noire : 6/7, effet inchangé", CARDS.maree.cost === 6 && CARDS.maree.pow === 7 && /détruit les cartes adverses de coût 2 ou moins ici/.test(CARDS.maree.fx), "");
   return res;
 }
 
