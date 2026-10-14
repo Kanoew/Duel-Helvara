@@ -49,7 +49,7 @@ const today=()=>window.__today||dayKey();
 const REL=id=>!CARDS[id].rel||today()>=CARDS[id].rel;
 const avail=()=>POOL.filter(REL);
 const PACK=(ex)=>POOL.filter(id=>REL(id)&&CARDS[id].r!=="U"&&(!CARDS[id].ex||CARDS[id].ex===ex));
-const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike comprise",quest:{k:"jugement",n:50}},{id:"ananke",req:[],fac:"primordial",min:8,n:"8 cartes Primordial, Ananké comprise",quest:{k:"primordial",n:50}},{id:"ulya",req:["yarden","apsu"],n:"Yarden Weiss et Apsu"},{id:"ulji",req:[["jordan","jordan_n"],"izzy"],n:"Jordan et Izzy"},
+const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike comprise",quest:{k:"jugement",n:50}},{id:"ananke",req:[],fac:"primordial",min:8,n:"8 cartes Primordial, Ananké comprise",quest:{k:"primordial",n:50}},{id:"hedone",req:[],fac:"desir",min:8,n:"8 cartes Désir, Hédoné comprise",quest:{k:"desir",n:50}},{id:"ulya",req:["yarden","apsu"],n:"Yarden Weiss et Apsu"},{id:"ulji",req:[["jordan","jordan_n"],"izzy"],n:"Jordan et Izzy"},
   {id:"ulaph",req:["aphrodite","yarden"],n:"Aphrodite et Yarden Weiss"},{id:"ulcal",req:["calypso",["jordan","jordan_n"]],n:"Calypso et Jordan"},{id:"ulnem",req:["nemesis",["jordan","jordan_n"]],n:"Nemesis et Jordan"},
   {id:"ulcirce",req:["nyx","circe"],n:"Nyx et Circé"},{id:"uloshun",req:["nyx","oshun"],n:"Nyx et Oshun"},
   {id:"ulqetjor",req:["qetesh",["jordan","jordan_n"]],n:"Qetesh et Jordan"},{id:"ulqetyar",req:["qetesh","yarden"],n:"Qetesh et Yarden Weiss"},

@@ -312,6 +312,7 @@ const FX=(()=>{
     styx:     {loc:[["rise",{c1:"60,70,90",c2:"5,8,14",h:.55,c3:"190,150,255",rings:4}],["sparkle",{col:"180,230,220",n:10}]]},
     promethee:{loc:[["burst",{col:["255,150,50","255,200,90","255,240,200"],up:true,n:36}],["flicker",{col:"255,140,40",y:.7}]]},
     ananke:   {loc:[["smoke",{col:"40,20,70",conv:true,n:16}],["chains",{col:"255,205,120"}],["sparkle",{col:"255,215,140",n:12}]], screen:[["dust",{col:GOLD}]], tint:"15,8,30"},
+    hedone:   {loc:[["rise",{c1:"255,190,70",c2:"90,40,5",h:.5,c3:"255,230,160"}],["chains",{col:"255,205,120"}],["sparkle",{col:"255,215,140",n:14}]], screen:[["petals",{col:["255,200,90","240,150,60","255,230,170"],thin:true}],["dust",{col:GOLD}]], tint:"30,15,5"},
     nike:     {loc:[["rays",{col:"255,215,140"}],["rings",{col:"255,220,150",n:3}]], screen:[["petals",{col:["240,200,120","45,40,48","255,230,170"],thin:true}],["rain",{col:"200,215,240"}],["dust",{col:GOLD}]], tint:"20,25,45"},
     /* lieux, à leur révélation */
     l_ouchy:  {loc:[["rise",{c1:"110,170,220",c2:"20,50,90",h:.25,rings:5}]]},

@@ -270,6 +270,93 @@ async function inPage() {
   /* Rappels des séries précédentes */
   fresh(); S.turn = 6; S.energy = 12; { const n = card("nemesis"); S.hand.p = [n]; const a = canStage(n, 0); S.turn = 5; T("Nemesis : injouable au tour 6, jouable au tour 5", !a && canStage(n, 0), ""); }
   fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }
+
+  /* ===== Ananké (Fatalité : rien ne peut l'atteindre ; fin de partie : puissance adverse ici +1) ===== */
+  /* A1. Ananké révélée en premier, l'adversaire pose ensuite 10 de puissance au même endroit → elle gagne quand même le lieu */
+  fresh(); S.turn = 6; { const a = card("ananke"), big = card(plain[0], 10); S.hand.p = [a]; S.hand.e = [big];
+    await resolveTurn([{ c: a, li: 0 }], [{ c: big, li: 0 }], false);
+    T("Ananké : révélée avant 10 de puissance adverse, elle gagne le lieu (11 contre 10)", cardPow("p", 0, a) === 11 && total("p", 0) === 11 && total("e", 0) === 10 && leader(0) === "p", `Ananké ${cardPow("p", 0, a)}, lieu ${total("p", 0)} contre ${total("e", 0)}`); }
+  /* A1b. L'ordre ne change rien : l'adversaire était déjà là avant elle */
+  fresh(); S.turn = 6; { put("e", 0, plain[0], 10); const a = card("ananke"); S.hand.p = [a];
+    await resolveTurn([{ c: a, li: 0 }], [], false);
+    T("Ananké : même résultat si l'adversaire était déjà posé (11 contre 10)", cardPow("p", 0, a) === 11 && leader(0) === "p", cardPow("p", 0, a)); }
+  /* A1c. Pendant la partie (avant la fin) elle reste à 1 ; la puissance de fin s'affiche en direct dans le plateau */
+  fresh(); S.turn = 4; { put("e", 0, plain[0], 6); const a = card("ananke"); S.hand.p = [a];
+    S.board.p[0].push(a); reveal("p", 0, a); const pre = cardPow("p", 0, a); const live7 = ankEnd("p", 0, a); const html = mini("p", 0, a, false);
+    T("Ananké : à 1 pendant la partie, la puissance de fin (7) est annoncée en direct", pre === 1 && live7 === 7 && html.includes("fatb") && html.includes("✠ 7"), `${pre}, ${live7}`);
+    put("e", 0, plain[1], 2); T("Ananké : l'indicateur se met à jour (9)", mini("p", 0, a, false).includes("✠ 9"), ""); }
+  /* A2. Qetesh, Calypso, Oya, Lilith, Poséidon, Nyx, Mohini : aucun effet sur elle, l'effet passe à la carte suivante */
+  const ananke6 = async (eff, check, nom, o = {}) => { fresh(); S.turn = 4; const a = put("e", 0, "ananke", 3), x = put("e", 0, plain[0], 2); const c = card(eff); S.hand.p = [c];
+    await resolveTurn([{ c, li: 0 }], [], false); const ok = check(a, x);
+    T(`Ananké : ${nom} ne l'atteint pas, l'effet passe à la carte suivante`, ok && S.board.e[0].includes(a) && !a.charm && !a.captive && !a.neg && a.pow === 3 && a.id === "ananke", `${eff} : ${JSON.stringify({ ok, ch: a.charm, cap: a.captive, neg: a.neg, pow: a.pow })}`); };
+  await ananke6("qetesh", (a, x) => x.charm === "p", "Qetesh (charme)");
+  await ananke6("calypso", (a, x) => !!x.captive, "Calypso (captive)");
+  await ananke6("oya", (a, x) => x.neg && x.pow === 1, "Oya (transformée)");
+  await ananke6("lilith", (a, x) => S.board.p[0].includes(x), "Lilith (volée)");
+  await ananke6("poseidon", (a, x) => S.hand.e.some(h => h.id === x.id) && !S.board.e[0].includes(x), "Poséidon (renvoyée en main)");
+  await ananke6("nyx", (a, x) => !S.board.e[0].includes(x), "Nyx (détruite)");
+  await ananke6("mohini", (a, x) => x.neg, "Mohini (effets retirés)");
+  await ananke6("circe", (a, x) => x.id === "pourceau", "Circé (transformée)");
+  await ananke6("esquille", (a, x) => !S.board.e[0].includes(x), "L'Esquille (détruite)");
+  fresh(); S.turn = 4; { const a = put("e", 0, "ananke", 3), x = put("e", 1, plain[0], 2); const c = card("set"); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false);
+    T("Ananké : Set (déplacement) ne la bouge pas", S.board.e[0].includes(a), ""); }
+  /* A3. Nemesis adverse au même lieu → la règle « le moins de puissance gagne » s'applique, Ananké perd le lieu */
+  fresh(); S.turn = 6; { put("e", 0, "nemesis"); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
+    T("Ananké : avec une Nemesis adverse au même lieu, elle perd le lieu", leader(0) === "e" && nemInv(0), `${total("p", 0)} contre ${total("e", 0)}`); }
+  /* A4. Apsu adverse posée après elle → Ananké reste à 1 ; Apsu posée avant elle ne change rien ; Apsu, Veillée des Chaînes pareil */
+  for (const id of ["apsu", "apsu_n"]) { fresh(); S.turn = 6; { const a = card("ananke"), ap = card(id); S.hand.p = [a]; S.hand.e = [ap]; await resolveTurn([{ c: a, li: 0 }], [{ c: ap, li: 0 }], false);
+      T(`Ananké : ${id} adverse posée après elle → elle reste à 1`, a.neg && cardPow("p", 0, a) === 1, `${cardPow("p", 0, a)}, neg ${a.neg}`); }
+    fresh(); S.turn = 6; { put("e", 0, id); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
+      T(`Ananké : ${id} déjà posée avant elle → elle garde sa Fatalité`, !a.neg && cardPow("p", 0, a) === total("e", 0) + 1, `${cardPow("p", 0, a)} contre ${total("e", 0)}`); } }
+  /* A5. Deux Ananké face à face : pas de boucle infinie */
+  fresh(); S.turn = 6; { const a = put("p", 0, "ananke"), b = put("e", 0, "ananke"); S.final = true; const x = cardPow("p", 0, a), y = cardPow("e", 0, b); T("Deux Ananké face à face : calcul fini", Number.isFinite(x) && Number.isFinite(y), `${x} / ${y}`); S.final = false; }
+  /* A6. IA : jamais sur un lieu avec une Nemesis adverse ; au tour 6 sur le lieu où elle perd */
+  fresh(); S.turn = 6; S.energy = S.energyE = 6; { put("p", 0, "nemesis"); put("p", 1, plain[0], 5); put("e", 1, plain[1], 8); put("e", 2, plain[2], 3);
+    const a = card("ananke"); S.hand.e = [a]; const plan = aiPlan("e", 5); const at = plan.find(x => x.c === a);
+    T("IA : Ananké jouée, mais jamais sur le lieu de la Nemesis adverse", !!at && at.li !== 0, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+
+  /* ===== Hédoné (Continu : à la fin de chaque tour, attire la plus faible adverse d'un autre lieu et la charme, 2 fois) ===== */
+  const hedFresh = () => { fresh(); put("e", 1, plain[0], 1); put("e", 1, plain[1], 3); put("e", 2, plain[2], 2); };
+  /* H1. Posée au tour 5 → 2 charmes (fins des tours 5 et 6) */
+  hedFresh(); S.turn = 5; { const h = card("hedone"); S.hand.p = [h]; await resolveTurn([{ c: h, li: 0 }], [], false);
+    const n1 = S.board.e[0].length, pw1 = S.board.e[0].map(c => c.pow).join(); const ch1 = S.board.e[0].every(c => charmOf(c) === "p" && c.charmBy === h.uid);
+    S.over = null; S.turn = 6; await resolveTurn([], [], false);
+    T("Hédoné posée au tour 5 : 1 charme à la fin du tour 5 (la plus faible, 1) puis 2 à la fin du tour 6 (2)", n1 === 1 && pw1 === "1" && ch1 && h.hed === 2 && S.board.e[0].map(c => c.pow).join() === "1,2" && S.board.e[0].every(c => charmOf(c) === "p"), `${n1} / ${pw1} / hed ${h.hed}`);
+    T("Hédoné : les cartes charmées comptent pour moi et pas pour l'adversaire", total("p", 0) === 2 + 1 + 2 && total("e", 0) === 0 && total("e", 1) === 3 && total("e", 2) === 0, `${total("p", 0)} / ${total("e", 0)}`);
+    T("Hédoné : affichage 2/2 et fil doré sur les cartes charmées", mini("p", 0, h, false).includes("2/2") && mini("e", 0, S.board.e[0][0], false).includes("charmed"), ""); }
+  /* H2. Posée au tour 6 → 1 charme seulement */
+  hedFresh(); S.turn = 6; { const h = card("hedone"); S.hand.p = [h]; await resolveTurn([{ c: h, li: 0 }], [], false);
+    T("Hédoné posée au tour 6 : 1 seul charme", h.hed === 1 && S.board.e[0].length === 1, `hed ${h.hed}, ${S.board.e[0].length}`); }
+  /* H3. Hédoné détruite par L'Esquille → les charmes s'arrêtent (les cartes restent là, leur puissance compte de nouveau pour l'adversaire) */
+  hedFresh(); S.turn = 4; { const h = put("p", 0, "hedone"); put("p", 0, plain[3], 9); h.hed = 1; const x = put("e", 0, plain[4], 4); x.charm = "p"; x.charmBy = h.uid;
+    const before = total("e", 0); const es = card("esquille"); S.hand.e = [es]; await resolveTurn([], [{ c: es, li: 0 }], false);
+    T("Hédoné détruite par L'Esquille : le charme s'arrête, la carte reste dans le lieu et compte pour l'adversaire", !S.board.p[0].includes(h) && S.board.e[0].includes(x) && charmOf(x) === null && before === 0 && total("e", 0) === 5, `avant ${before}, après ${total("e", 0)}`);
+    T("Hédoné détruite : plus aucun charme à la fin du tour", S.board.e[0].filter(c => charmOf(c)).length === 0 && S.board.e[0].length >= 1, ""); }
+  /* H3b. Hédoné détruite avant la fin du tour (pas encore de charme) → aucun charme n'est posé */
+  hedFresh(); S.turn = 4; { const h = put("p", 0, "hedone"); put("p", 0, plain[3], 9); const es = card("esquille"); S.hand.e = [es]; await resolveTurn([], [{ c: es, li: 0 }], false);
+    T("Hédoné détruite en cours de tour : aucune carte attirée", !S.board.p[0].includes(h) && S.board.e[0].length === 1, `${S.board.e[0].length}`); }
+  /* H4. Lieu adverse plein → rien, et ça ne compte pas dans les 2 fois */
+  fresh(); S.turn = 4; { const h = put("p", 0, "hedone"); for (let i = 0; i < 4; i++) put("e", 0, plain[i], 5); put("e", 1, plain[5], 1);
+    S.hand.p = []; await resolveTurn([], [], false);
+    T("Hédoné : lieu adverse plein → rien ne se passe, le compteur reste à 0", S.board.e[0].length === 4 && S.board.e[1].length === 1 && !h.hed, `hed ${h.hed}`);
+    S.board.e[0].pop(); S.turn = 4; await resolveTurn([], [], false);
+    T("Hédoné : une place se libère → le charme a lieu ensuite (et compte)", h.hed === 1 && S.board.e[0].length === 4 && S.board.e[1].length === 0, `hed ${h.hed}`); }
+  /* H5. Ananké n'est jamais attirée */
+  fresh(); S.turn = 4; { const h = put("p", 0, "hedone"); const a = put("e", 1, "ananke"); await resolveTurn([], [], false);
+    T("Hédoné : seule Ananké ailleurs → rien n'est attiré", S.board.e[1].includes(a) && !h.hed && !a.charm, `hed ${h.hed}`); }
+  fresh(); S.turn = 4; { const h = put("p", 0, "hedone"); const a = put("e", 1, "ananke"), x = put("e", 2, plain[0], 5); await resolveTurn([], [], false);
+    T("Hédoné : Ananké (plus faible) ignorée, la carte suivante est attirée", S.board.e[1].includes(a) && S.board.e[0].includes(x) && x.charm === "p", ""); }
+  /* H6. Égalité de puissance : l'une des plus faibles, au hasard (jamais une carte plus forte) */
+  fresh(); S.turn = 4; { const h = put("p", 0, "hedone"); const x = put("e", 1, plain[0], 2), y = put("e", 2, plain[1], 2), z = put("e", 2, plain[2], 6); await resolveTurn([], [], false);
+    const got = S.board.e[0][0]; T("Hédoné : égalité de puissance → une des deux plus faibles, jamais la plus forte", got === x || got === y, got && got.pow); }
+  /* H7. Hédoné neutralisée (Apsu) : plus de charme */
+  fresh(); S.turn = 4; { const h = put("p", 0, "hedone"); put("e", 1, plain[0], 2); const ap = card("apsu"); S.hand.e = [ap]; await resolveTurn([], [{ c: ap, li: 0 }], false);
+    T("Hédoné sans effet (Apsu) : aucune carte attirée", h.neg && !h.hed, `neg ${h.neg}, hed ${h.hed}`); }
+  /* H8. IA : pose Hédoné avec de la place chez l'adversaire */
+  fresh(); S.turn = 5; S.energy = S.energyE = 6; { put("p", 1, plain[0], 2); put("p", 2, plain[1], 2); for (let i = 0; i < 4; i++) put("p", 0, plain[i + 2], 1); const h = card("hedone"); S.hand.e = [h];
+    const plan = aiPlan("e", 5); const at = plan.find(x => x.c === h); T("IA : Hédoné jouée sur un lieu où l'adversaire a de la place (pas le lieu plein)", !!at && at.li !== 0, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+  /* H9. Données : ultra-légendaire de faction Désir, journal des factions */
+  { const u = ULof("hedone"); T("Hédoné : ultra-légendaire de faction Désir (8 cartes, 50 parties au journal)", u && u.fac === "desir" && u.min === 8 && u.quest.k === "desir" && u.quest.n === 50 && !u.req.length && CARDS.hedone.r === "U" && CARDS.hedone.cost === 4 && CARDS.hedone.pow === 2, ""); }
   return res;
 }
 

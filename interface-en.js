@@ -10,7 +10,7 @@
 
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
-    [/^prend la puissance adverse \((\d+)\), \+1$/, (m,n)=>`takes the enemy Power (${n}), +1`],
+    [/^Fatalité : rien ne peut l'atteindre$/, ()=>"Fate: nothing can affect her"],
     [/^dépense (\d+) énergie, \+(\d+)$/, (m,a,b)=>`spends ${a} energy, +${b}`],
     [/^prend (.+) en main$/, (m,a)=>a==="une carte"?"takes a card into hand":`takes ${a} into hand`],
     [/^l'adversaire perd son énergie conservée$/, ()=>"the opponent loses their stored energy"],
@@ -226,7 +226,7 @@
     "Tour":"Turn", "énergie":"energy", "énergie ·":"energy ·", "⚖ Serment":"⚖ Oath", "Changer ma main":"Redraw my hand", "Révélation…":"Revealing…",
     "Nouvelle partie":"New game", "Lieu inconnu":"Unknown location", "Effet arrêté":"Effect stopped", "Verrouillé":"Locked",
     "Silence : tu ne peux pas jouer ici":"Silence: you can't play here", "Silence adverse":"Enemy silence", "Nemesis : le plus faible gagne":"Nemesis: the weakest wins",
-    "Touche un lieu pour la poser.":"Tap a location to play it.", "Effets annulés.":"Effects cancelled.", "Effet arrêté par Perséphone.":"Effect stopped by Persephone.",
+    "Touche un lieu pour la poser.":"Tap a location to play it.", "Charmée : sa puissance compte pour toi.":"Charmed: its Power counts for you.", "Charmée : sa puissance compte pour l'adversaire.":"Charmed: its Power counts for the opponent.", "Fatalité : puissance en fin de partie":"Fate: end-of-game Power", "Charmes":"Charms", "Effets annulés.":"Effects cancelled.", "Effet arrêté par Perséphone.":"Effect stopped by Persephone.",
     "Touche une carte de ta main puis un lieu pour la poser.":"Tap a card in your hand, then a location to play it.", "Tu peux aussi la glisser vers le haut sur un lieu.":"You can also drag it upwards onto a location.", "Appui long":"Long-press",
     "sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre.":"a card or a location to see it full-size. Tap a card played this turn to take it back.",
     "Main vide.":"Empty hand.", "Puissance :":"Power:", "Cette carte a perdu ses effets.":"This card has lost its effects.",
@@ -412,6 +412,9 @@
     [/^Konohanasakuya-Hime · la floraison est passée \((.+)\)$/, (m,w)=>`Konohanasakuya-hime · the blossom has passed (${who(w)})`],
     [/^Poison de Médée · −1 à (.+) \((.+)\)$/, (m,a,w)=>`Medea's poison · −1 to ${a} (${who(w)})`],
     [/^Thor récupère Mjölnir : \+2 \((.+)\)$/, (m,w)=>`Thor gets Mjölnir back: +2 (${who(w)})`],
+    [/^Puissance en fin de partie : (\d+)\.$/, (m,n)=>`End-of-game Power: ${n}.`],
+    [/^Charmes : (\d+\/2)\.$/, (m,n)=>`Charms: ${n}.`],
+    [/^Hédoné attire (.+) et la charme \((.+)\)$/, (m,a,w)=>`Hedone pulls ${a} and charms it (${who(w)})`],
     [/^Minuit · (.+) charme (.+) \((.+)\)$/, (m,a,t,w)=>`Midnight · ${a} charms ${t} (${who(w)})`],
     [/^Le glas sonne : \+(\d+) à (\d+) cartes? \((.+)\)$/, (m,v,n,w)=>`The knell tolls: +${v} to ${n} ${s(n,"card")} (${who(w)})`],
     [/^Le Tombeau rend (\d+) cartes? \((.+)\)$/, (m,n,w)=>`The Tomb gives back ${n} ${s(n,"card")} (${who(w)})`],
@@ -450,7 +453,7 @@
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."
       },
-      ULS:{nike:"8 Judgement cards, Nike included",ananke:"8 Primordial cards, Ananke included",ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur",ulpele_r:"Pele and Jordan",ulqetjor_r:"Qetesh of the New Year and Jordan",ulsomnambule:"The Sleepwalker and The Queen",ularchiviste:"The Archivist and The Proprietress",nike_v:"8 Judgement cards, Nike of Valentine's Day included",ulqetjor_v:"Qetesh of Valentine's Day and Jordan",ulprombia:"Prometheus and Bia",ulheradio:"Hera and Dionysus",ulposathe:"Poseidon and Athena",ulnikebia:"Nike and Bia",ulmaatset:"Ma'at and Set",ulprompan:"Prometheus and Pandora",ulinaere:"Inanna and Ereshkigal",ulnikejor_v:"Nike of Valentine's Day and Jordan",ulaphares:"Aphrodite and Ares",ultyphgaia:"Typhon and Gaia",ularesathe:"Ares and Athena",ulbaldere:"Baldur and Ereshkigal",ulbaldfrigg:"Baldur and Frigg",ulsusama:"Susanoo and Amaterasu",ulcircal:"Circe and Calypso",uloshoya:"Oshun and Oya",ulhadper:"Hades and Persephone"}
+      ULS:{nike:"8 Judgement cards, Nike included",ananke:"8 Primordial cards, Ananke included",hedone:"8 Desire cards, Hedone included",ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur",ulpele_r:"Pele and Jordan",ulqetjor_r:"Qetesh of the New Year and Jordan",ulsomnambule:"The Sleepwalker and The Queen",ularchiviste:"The Archivist and The Proprietress",nike_v:"8 Judgement cards, Nike of Valentine's Day included",ulqetjor_v:"Qetesh of Valentine's Day and Jordan",ulprombia:"Prometheus and Bia",ulheradio:"Hera and Dionysus",ulposathe:"Poseidon and Athena",ulnikebia:"Nike and Bia",ulmaatset:"Ma'at and Set",ulprompan:"Prometheus and Pandora",ulinaere:"Inanna and Ereshkigal",ulnikejor_v:"Nike of Valentine's Day and Jordan",ulaphares:"Aphrodite and Ares",ultyphgaia:"Typhon and Gaia",ularesathe:"Ares and Athena",ulbaldere:"Baldur and Ereshkigal",ulbaldfrigg:"Baldur and Frigg",ulsusama:"Susanoo and Amaterasu",ulcircal:"Circe and Calypso",uloshoya:"Oshun and Oya",ulhadper:"Hades and Persephone"}
     }
   };
 })();

@@ -89,7 +89,9 @@ function inPageSetup(o) {
   /* mode ciblé : deux cartes de la liste, tirées au hasard, ouvrent chaque deck */
   const forcedPick = () => { const a = o.cartes.filter(id => CARDS[id] && REL(id)), out = []; while (out.length < Math.min(2, a.length)) { const x = pick(a); if (!out.includes(x) && !clash(out, x)) out.push(x); } return out; };
   function genDeck() {
-    const fac = pick(Object.keys(FAC)), bias = pick([0, 0, 1.5, 3]), forced = o.cartes.length ? forcedPick() : [];
+    const forced = o.cartes.length ? forcedPick() : [];
+    /* une ultra-légendaire de faction (Nike, Ananké, Hédoné…) exige 8 cartes de sa faction : le deck est bâti autour d'elle */
+    const fu = forced.map(ULof).find(u => u && u.fac), fac = fu ? fu.fac : pick(Object.keys(FAC)), bias = fu ? 99 : pick([0, 0, 1.5, 3]);
     for (let tries = 0; tries < 8; tries++) {
       let deck = [...forced];
       const u = us.length && Math.random() < .45 ? pick(us) : null;

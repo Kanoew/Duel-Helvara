@@ -101,6 +101,8 @@ const cap=li=>(locIs(li,"ruelle")?2:4);
 const capOf=(s,li)=>Math.max(0,cap(li)-((S.cond&&S.cond[s][li])||0));
 const muted=(s,li)=>!!(S.mute&&S.mute.some(m=>m.s===s&&m.li===li&&m.t===S.turn));
 const nemInv=li=>(["p","e"].reduce((n,s)=>n+S.board[s][li].filter(o=>live(o)&&o.id==="nemesis").length,0))%2===1;
+/* Charme : celui de Qetesh dure jusqu'à la fin ; celui d'Hédoné (charmBy) cesse dès qu'elle quitte le jeu ou perd ses effets */
+const charmOf=c=>c.charm&&(!c.charmBy||captorLive(c.charmBy))?c.charm:null;
 function captorLive(uid){ for(const s of ["p","e"]) for(const col of S.board[s]) for(const o of col) if(o.uid===uid&&live(o)) return true; return false; }
 const stagedAt=li=>S.staged.filter(x=>x.li===li).length;
 const live=(c)=>c.rev&&!c.neg;
@@ -108,7 +110,7 @@ const onSide=(s,id)=>S.board[s].some(col=>col.some(c=>c.rev&&c.id===id));
 const inPlay=id=>["p","e"].some(s=>S.board[s].some(col=>col.some(c=>c.rev&&c.id===id)));
 const hasHere=(s,li,id)=>S.board[s][li].some(c=>live(c)&&c.id===id);
 const shielded=(s,li)=>hasHere(s,li,"eir")||hasHere(s,li,"ulcal");               /* Eir : ni détruites ni affaiblies */
-const untargetable=(by,s,c)=>by!==s && c.id==="uzume" && !c.neg; /* Uzume : effets adverses */
+const untargetable=(by,s,c)=>by!==s && ((c.id==="uzume" && !c.neg) || fated(c)); /* Uzume et Ananké (Fatalité) : aucun effet adverse ne les vise, il passe à la cible suivante */
 function costOf(s,c,li,isFirst){ return c.free?0:costFor(s,c.id,li,isFirst); }
 function costFor(s,id,li,isFirst){ let c=CARDS[id].cost; if(id==="ulya") c-=S.hand[s].filter(x=>x.id!=="ulya").length; if(isFirst) c-=S.disc[s]; if(locIs(li,"sousgare")) c-=1; if(locIs(li,"encheres")) c+=1; return Math.max(0,c); }
 function used(){ return S.staged.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf("p",x.c,x.li,i===0)),0); }
@@ -121,8 +123,13 @@ function canStage(c,li){
   if(S.board.p[li].length+stagedAt(li)>=capOf("p",li)) return false;
   return used()+costOf("p",c,li,S.staged.length===0)<=S.energy;
 }
+/* Ananké, Fatalité : en fin de partie (S.final, après toutes les révélations et fins de tour du tour 6), sa puissance devient la puissance totale adverse ici +1.
+   Deux Ananké face à face : la seconde compte pour 1 dans le calcul de la première (garde ANK, pas de boucle). */
+let ANK=0;
+function ankEnd(s,li,c){ if(ANK) return c.pow; ANK=1; try{ return total(opp(s),li)+1; } finally{ ANK=0; } }
 function cardPow(s,li,c){
   if(!c.rev) return 0;
+  if(S.final&&fated(c)&&c.id==="ananke") return ankEnd(s,li,c);
   if(c.captive&&captorLive(c.captive)) return 0;
   let p=c.pow; const d=CARDS[c.id];
   if(!fated(c)) for(const o of S.board[s][li]) if(o!==c && live(o) && o.id==="mouche") p-=1;
@@ -154,7 +161,7 @@ function cardPow(s,li,c){
 }
 function total(s,li){
   const o=opp(s);
-  let t=S.board[s][li].reduce((a,c)=>a+(c.charm===o?0:cardPow(s,li,c)),0)+S.board[o][li].reduce((a,c)=>a+(c.charm===s?cardPow(o,li,c):0),0);
+  let t=S.board[s][li].reduce((a,c)=>a+(charmOf(c)===o?0:cardPow(s,li,c)),0)+S.board[o][li].reduce((a,c)=>a+(charmOf(c)===s?cardPow(o,li,c):0),0);
   for(const i of [li-1,li+1]) if(i>=0&&i<3) t+=2*S.board[s][i].filter(c=>live(c)&&c.id==="graffeur").length;
   if(locIs(li,"cathedrale")){ const a=S.board[s][li].filter(c=>c.rev).length, b=S.board[opp(s)][li].filter(c=>c.rev).length; if(a>0&&a<b) t+=3; }
   return t;
@@ -177,8 +184,23 @@ function bury(s,c){ piles(); if(real(c)) S.graveyard[s].push(c.id);
 /* Qetesh du Nouvel An, minuit : la carte adverse la plus forte ici de coût 5 ou moins est charmée (renvoie la cible ou null) */
 function midnightCharm(s,li,c){
   const o=opp(s);
-  const t=S.board[o][li].filter(x=>x.rev&&!x.charm&&!untargetable(s,o,x)&&CARDS[x.id].cost<=5).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];
-  if(t) t.charm=s; return t||null; }
+  const t=S.board[o][li].filter(x=>x.rev&&!charmOf(x)&&!untargetable(s,o,x)&&CARDS[x.id].cost<=5).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];
+  if(t){ t.charm=s; delete t.charmBy; } return t||null; }
+/* Hédoné, Continu : à la fin de chaque tour, elle attire ici la carte adverse la plus faible d'un AUTRE lieu (s'il y a de la place de son côté adverse)
+   et la charme tant qu'elle reste en jeu ; 2 fois au plus (compteur c.hed). Rien à faire : pas de place, pas de cible = ne compte pas.
+   Les cartes insaisissables (Ananké, Uzume) ne sont jamais attirées ; égalité de puissance : gPick. `first` fixe l'ordre des deux camps (identique chez les deux joueurs en duel). */
+function hedoneTurn(first){
+  let n=0;
+  for(const s of [first,opp(first)]) for(let li=0;li<3;li++) for(const h of S.board[s][li].slice()){
+    if(h.id!=="hedone"||!live(h)||(h.hed||0)>=2||S.locs[li].locked) continue;
+    const o=opp(s); if(S.board[o][li].length>=capOf(o,li)) continue;
+    const pool=[]; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&!charmOf(x)) pool.push([i,x,cardPow(o,i,x)]);
+    if(!pool.length) continue;
+    const mn=Math.min(...pool.map(q=>q[2])), [i,t]=gPick(pool.filter(q=>q[2]===mn));
+    S.board[o][i]=S.board[o][i].filter(x=>x!==t); S.board[o][li].push(t); t.fresh=true; flonHook(li,t);
+    t.charm=s; t.charmBy=h.uid; h.hed=(h.hed||0)+1; n++;
+    log(`Hédoné attire ${nm(t)} et la charme (${who(s)})`); sfx("legend"); }
+  return n; }
 /* Ressusciter : la carte revient révélée, à sa puissance de base, sans Révélation (sauf withReveal). */
 function resurrect(s,id,li,from,opts={}){
   if(S.locs[li].locked&&!opts.anyLoc) return null; if(S.board[s][li].length>=capOf(s,li)) return null;
@@ -194,7 +216,7 @@ function resurrectAll(s,opts={}){ piles(); let n=0; const ids=gShuffle(S.discard
 /* Source de l'effet en cours : Baldur ne cède qu'aux effets adverses de coût 2 ou moins (le gui). */
 let SRC=null;
 const baldurSafe=(s,c)=>c.id==="baldur"&&!c.neg&&!(SRC&&(SRC.s===s||SRC.cost<=2));
-/* Ananké, Fatalité : ni détruite, ni déplacée, ni affaiblie (Continu : Apsu ou Mohini la privent de cette protection) */
+/* Ananké, Fatalité : rien ne peut l'atteindre (ni détruite, déplacée, affaiblie, charmée, captive, transformée, volée, renvoyée en main : voir `untargetable`). Seul Apsu, en lui retirant ses effets (neg), la prive de cette protection ; Nemesis, elle, inverse normalement le lieu. */
 const fated=c=>c.id==="ananke"&&!c.neg;
 const noWeak=c=>((c.id==="ecorche"||c.id==="jordan")&&!c.neg)||c.noweak||c.ward||fated(c); /* l'Écorché, Jordan, le Tatoueur, Hel X Baldur */
 function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)||baldurSafe(s,c)) return false; c.pow-=n; return true; }
@@ -203,7 +225,7 @@ function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)||baldurSafe(s
    (Un effet de son propre camp, comme la Ficelle Dévorante, ou la Faille ne la ramènent pas.) */
 function styxReturn(s,li,c){
   if(!real(c)||CARDS[c.id].fac!=="jugement"||!SRC||SRC.s===s||!S.board[s][li].some(x=>live(x)&&x.id==="styx")) return false;
-  c.rev=false; c.neg=false; c.fresh=false; c.midnight=0; c.risen=false; delete c.charm; delete c.captive; delete c.ward;
+  c.rev=false; c.neg=false; c.fresh=false; c.midnight=0; c.risen=false; delete c.charm; delete c.charmBy; delete c.captive; delete c.ward;
   if(S.hand[s].length<7) S.hand[s].push(c); else { S.discarded=(S.discarded||0)+1; piles(); S.discardPile[s].push(c.id); }
   return true; }
 /* Une carte détruite va au cimetière (ou revient en main grâce à Styx) */
@@ -219,7 +241,7 @@ const cirqueSafe=(s,li,c)=>shielded(s,li)||sunlit(s)||noWeak(c)||(!c.neg&&(c.id=
 /* Dante : chaque carte détruite dans son lieu, des deux côtés, lui donne +1 */
 function danteHook(li){ for(const side of ["p","e"]) for(const d of S.board[side][li]) if(live(d)&&d.id==="dante"){ d.pow+=1; (d.mods=d.mods||[]).push({v:1,src:"Dante"}); log(`Dante · +1 (${who(side)})`); } }
 /* Médée : sa prochaine carte adverse jouée ici perd 2 (les deux suivantes avec Hécate) */
-function medeeHook(s,li,c){ if(!S.board[s][li].includes(c)) return; const o=opp(s);
+function medeeHook(s,li,c){ if(!S.board[s][li].includes(c)||fated(c)) return; const o=opp(s);
   for(const m of S.board[o][li]) if(live(m)&&m.id==="medee"&&(m.mdHit||0)<(onSide(o,"hecate")?2:1)){
     m.mdHit=(m.mdHit||0)+1; const prev=SRC; SRC={s:o,cost:CARDS.medee.cost};
     const ok=!untargetable(o,s,c)&&weaken(s,li,c,2); SRC=prev;
@@ -262,7 +284,7 @@ function revealFx(s,li,c,opts={}){
     case "mendiant": { const t=gPick(S.hand[s]); if(t){ discard(s,t); note=`défausse ${nm(t)}`; } break; }
     case "voleuse": { const t=gPick(S.hand[o]); if(t){ discard(o,t); note=`${who(o)} défausse ${nm(t)}`; snd="void"; } break; }
     case "sansvoix": if(S.turn<6){ (S.mute=S.mute||[]).push({s:o,li,t:S.turn+1}); note="silence au prochain tour"; snd="lock"; } break;
-    case "chasseur": { const t=strongest(foes,o,li); if(t&&S.board[s][li].length<capOf(s,li)){ const e=mk(t.id); e.rev=true; e.fresh=true; e.neg=true; e.echo=true; e.pow=Math.max(0,pw(o,li,t))-(locIs(li,"tour")&&CARDS[t.id].pow>=5&&!CARDS[t.id].token?2:0); S.board[s][li].push(e); note=`Écho ${/^[aeiouyéèêâîh]/i.test(nm(t))?"d’":"de "}${nm(t)} (${pw(o,li,t)})`; snd="void"; } break; }
+    case "chasseur": { const t=strongest(foes.filter(x=>!fated(x)),o,li); if(t&&S.board[s][li].length<capOf(s,li)){ const e=mk(t.id); e.rev=true; e.fresh=true; e.neg=true; e.echo=true; e.pow=Math.max(0,pw(o,li,t))-(locIs(li,"tour")&&CARDS[t.id].pow>=5&&!CARDS[t.id].token?2:0); S.board[s][li].push(e); note=`Écho ${/^[aeiouyéèêâîh]/i.test(nm(t))?"d’":"de "}${nm(t)} (${pw(o,li,t)})`; snd="void"; } break; }
     case "set": { let n=0, w=0; for(const t of gShuffle(targets.filter(x=>!fated(x))).slice(0,2)){ const sp=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(!sp.length) continue; const i=gPick(sp); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); n++;
         if(weaken(o,i,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Set"}); w++; } }
       if(n){ note=`disperse ${n} carte${n>1?"s":""}`+(w?`, −1 à ${w}`:""); snd="debuff"; } break; }
@@ -295,7 +317,7 @@ function revealFx(s,li,c,opts={}){
     case "bia": { const res=(S.bonus[o]||0)>0||((S.unspent&&S.unspent[o])>0&&S.board[o].some(col=>col.some(x=>live(x)&&x.id==="promethee")));
       if(res){ S.bonus[o]=0; if(S.biaBlock) S.biaBlock[o]=true; note="l'adversaire perd son énergie conservée"; snd="debuff"; }
       else { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Bia"}); note=`−1 à ${nm(t)}`; snd="debuff"; } } break; }
-    case "ananke": { const t=total(o,li)+1, v=t-(cardPow(s,li,c)-c.pow); if(v!==c.pow){ (c.mods=c.mods||[]).push({v:v-c.pow,src:"Ananké"}); c.pow=v; } note=`prend la puissance adverse (${t-1}), +1`; snd="buff"; break; }
+    case "ananke": note="Fatalité : rien ne peut l'atteindre"; snd="legend"; break;
     case "nike": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k); break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(6); snd=foes.length?"void":snd; break; }
     case "lilith": { const t=strongest(targets.filter(x=>!fated(x)&&pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
@@ -344,7 +366,7 @@ function revealFx(s,li,c,opts={}){
       if(n){ note=`le reflux emporte ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
     case "circe": case "ulcirce": { let n=0; if(!shielded(o,li)) for(const t of targets.filter(x=>!fated(x))) if(c.id==="ulcirce"||pw(o,li,t)<=3){ t.orig=t.id; t.id="pourceau"; t.pow=1; t.neg=true; t.mods=[]; n++; }
       if(n){ note=`${n} Pourceau${n>1?"x":""}`; snd="void"; } break; }
-    case "qetesh": { const t=strongest(targets.filter(x=>pw(o,li,x)<=4&&!x.charm),o,li); if(t){ t.charm=s; note=`charme ${nm(t)}`; snd="void"; } break; }
+    case "qetesh": { const t=strongest(targets.filter(x=>pw(o,li,x)<=4&&!charmOf(x)),o,li); if(t){ t.charm=s; delete t.charmBy; note=`charme ${nm(t)}`; snd="void"; } break; }
     case "oshun": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[s][i]) if(x!==c&&x.rev){ x.pow+=1; n++; } if(n){ note=`+1 à ${n} carte${n>1?"s":""}`; snd="buff"; } break; }
     case "scathach": { const sp=[0,1,2].filter(i=>i!==li&&!S.locs[i].locked&&S.board[o][i].length<capOf(o,i)); if(sp.length){ const i=gPick(sp); const m=mk("ombre"); m.rev=true; m.fresh=true; m.neg=true; S.board[o][i].push(m); note=`Ombre → ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
     case "uloshun": { const t=strongest(targets,o,li); if(!t) break; const v=Math.ceil(Math.max(0,pw(o,li,t))/2);
@@ -357,7 +379,7 @@ function revealFx(s,li,c,opts={}){
     case "pele_r": { let n=0; for(let i=0;i<3;i++){ const t=strongest(S.board[o][i].filter(x=>x.rev&&!untargetable(s,o,x)),o,i); if(t&&weaken(o,i,t,2)) n++; } if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "ulpele_r": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "qetesh_r": c.midnight=S.turn+1; note="minuit : charmera la carte la plus forte au tour suivant"; snd="void"; break;
-    case "ulqetjor_r": { const t=strongest(targets.filter(x=>CARDS[x.id].cost<=5&&!x.charm),o,li); if(t){ t.charm=s; note=`charme ${nm(t)}`; snd="void"; } break; }
+    case "ulqetjor_r": { const t=strongest(targets.filter(x=>CARDS[x.id].cost<=5&&!charmOf(x)),o,li); if(t){ t.charm=s; delete t.charmBy; note=`charme ${nm(t)}`; snd="void"; } break; }
     case "cronos": { const ts=S.hand[s].filter(x=>CARDS[x.id].cost<=1); ts.forEach(x=>discard(s,x)); if(ts.length){ c.pow+=2*ts.length; (c.mods=c.mods||[]).push({v:2*ts.length,src:"Cronos"}); note=`défausse ${ts.map(nm).join(" et ")}, +${2*ts.length}`; snd="void"; } break; }
     case "izanami": { const low=S.hand[s].length?Math.min(...S.hand[s].map(x=>CARDS[x.id].pow)):null; const t=low==null?null:gPick(S.hand[s].filter(x=>CARDS[x.id].pow===low)); if(t){ discard(s,t); note=`défausse ${nm(t)}`; snd="void"; } break; }
     case "loki": { const lost=[]; for(const side of [s,o]){ const hi=S.hand[side].length?Math.max(...S.hand[side].map(x=>CARDS[x.id].cost)):null; const t=hi==null?null:gPick(S.hand[side].filter(x=>CARDS[x.id].cost===hi)); if(t){ discard(side,t); lost.push(nm(t)); } } if(lost.length){ note=`chacun défausse sa plus chère : ${lost.join(" et ")}`; snd="void"; } break; }
@@ -475,7 +497,13 @@ function aiPlan(me="e",tierOv){
     if(c.id==="nemesis") adj+=(diff>0&&diff<12)?5:-6;
     if(c.id==="mouche") pow-=mates;
     if(c.id==="nike") pow+=ctx.plays.length*2;
-    if(c.id==="ananke") pow+=op0[li];
+    if(c.id==="ananke"){ /* fin de partie : puissance adverse ici +1 (elle gagne le lieu). Jamais avec une Nemesis adverse ; seulement au tour 6 si possible (un Apsu adverse posé plus tard lui retirerait tout) */
+      if(S.board[op][li].some(x=>live(x)&&x.id==="nemesis")) return null;
+      pow=op0[li]+opFut[li]+1; if(S.turn<6) adj-=5; }
+    if(c.id==="hedone"){ /* 2 charmes (tours 5 et 6) si elle est posée au tour 5 au plus tard ; il faut de la place chez l'adversaire ici et des cartes adverses ailleurs */
+      const room=capOf(op,li)-S.board[op][li].length, others=[0,1,2].some(i=>i!==li&&S.board[op][i].some(x=>x.rev));
+      const n=Math.min(2,7-S.turn); if(room>0&&others) pow+=2.5*n+(room>=2?1:0); else adj-=2;
+      if(S.turn<=5) adj+=1; }
     if(c.id==="pandore") pow+=2*Math.max(0,ctx.en-cost);   /* jouée en dernier : elle dépense tout ce qui reste */
     if(c.id==="qetesh_r"&&S.turn>=6) adj-=6;               /* le charme n'arrive qu'au tour suivant */
     if(c.id==="ulqetjor_r") pow+=2*mates;
@@ -508,10 +536,13 @@ function aiPlan(me="e",tierOv){
       S.unspent={p:0,e:0,...(S.unspent||{})}; S.unspent[me]=Math.max(0,(me==="e"?S.energyE:S.energy)-plays.reduce((a,x,i)=>a+costOf(me,x.c,x.li,i===0),0));
       for(const {c,li} of plays){ const x=S.hand[me].find(y=>y.uid===c.uid); if(!x) continue; S.hand[me]=S.hand[me].filter(y=>y!==x); S.board[me][li].push(x); reveal(me,li,x); }
       if(keep.turn<6) for(const {c,li} of plays) if(c.id==="qetesh_r"){ const x=S.board[me][li].find(y=>y.uid===c.uid); if(x&&live(x)) midnightCharm(me,li,x); }
-      out={m:[0,1,2].map(li=>total(me,li)),o:[0,1,2].map(li=>total(op,li)),inv:[0,1,2].map(li=>nemInv(li))};
+      out={m:[0,1,2].map(li=>total(me,li)),o:[0,1,2].map(li=>total(op,li)),inv:[0,1,2].map(li=>nemInv(li)),ank:[0,1,2].map(li=>S.board[me][li].some(x=>x.id==='ananke'&&live(x)))};
+      /* Hédoné : sa fin de tour n'est pas jouée ici ; on ajoute ce qu'elle rapportera (cartes adverses attirées, comme dans place()) */
+      for(const {c,li} of plays) if(c.id==="hedone"){ const x=S.board[me][li].find(y=>y.uid===c.uid); if(!x||!live(x)) continue;
+        const room=capOf(op,li)-S.board[op][li].length, others=[0,1,2].some(i=>i!==li&&S.board[op][i].some(y=>y.rev)); if(room>0&&others) out.m[li]+=2.5*Math.min(2,7-S.turn); }
     }catch(e){ out=null; } finally{ S=keep; quiet=kq; }
     return out; };
-  const exactP=r=>{ const p=[0,1,2].map(li=>{ let m=r.m[li]+meFut[li]-(r.o[li]+opFut[li]); if(r.inv[li]) m=-m; return 1/(1+Math.exp(-1.6*m/sd)); });
+  const exactP=r=>{ const p=[0,1,2].map(li=>{ let m=r.m[li]+meFut[li]-(r.o[li]+opFut[li]); if(r.inv[li]) m=-m; if(r.ank&&r.ank[li]&&S.turn>=6) return r.inv[li]?.03:.95; return 1/(1+Math.exp(-1.6*m/sd)); });
     return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
   const cands=[];
   for(let mask=0;mask<(1<<hand.length);mask++){
@@ -625,6 +656,8 @@ async function resolveTurn(mine, theirs, animate){
   if(S.turn<6) for(const s of ["p","e"]) if(unspent[s]>0&&!S.biaBlock[s]&&S.board[s].some(col=>col.some(c=>live(c)&&c.id==="promethee"))){
     const k=Math.min(10,unspent[s]); S.bonus[s]+=k; log(`Prométhée garde ${k} énergie en réserve (${who(s)})`); sfx("buff"); if(animate){ const li=S.board[s].findIndex(col=>col.some(c=>live(c)&&c.id==="promethee")); if(li>=0) FX.play("promethee",{li}); } }
   if(S.turn>=2&&S.turn<=4) aiOath();
+  if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
+  if(S.turn>=6) S.final=true;   /* Ananké : la puissance de fin de partie se calcule maintenant, après tout le reste */
   render(); await wait(300);
   for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) c.fresh=false;
   S.busy=false;
