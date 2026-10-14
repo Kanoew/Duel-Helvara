@@ -281,13 +281,28 @@ let dbDoc=null, store="local", writing=false, again=false, saveTimer=null, lastP
    si elle est plus récente et appartient au même joueur (OWNER_KEY) : un envoi raté (réseau, téléphone en veille)
    ne fait plus perdre un achat quand la page est rechargée. Un envoi raté est retenté, et envoyé tout de suite quand la page se cache. */
 let dirty=false, retryMs=3000;
+/* Pastille « Sauvegarde » (hors de #app, donc jamais effacée par render()) : « Sauvegarde… » si l'envoi dure,
+   « Sauvegardé ✓ » 2 s après un envoi réussi, « Envoi en attente… » tant qu'un envoi a échoué (il est retenté). */
+let syncEl=null, syncT=null, syncSlow=null;
+function syncShow(kind){
+  clearTimeout(syncT);
+  if(!kind){ if(syncEl) syncEl.className="syncb"; return; }
+  if(!syncEl){ syncEl=document.createElement("div"); syncEl.setAttribute("role","status"); syncEl.setAttribute("aria-live","polite"); document.body.appendChild(syncEl); }
+  const txt={wait:"Sauvegarde…",ok:"Sauvegardé ✓",fail:"Envoi en attente… (retenté)"}[kind];
+  syncEl.textContent=trUI(txt); syncEl.className="syncb on "+kind;
+  if(kind==="ok") syncT=setTimeout(()=>syncShow(null),2000);
+}
 function save(){ if(window.__wiped) return; if(P.decks&&P.decks[P.di]) P.decks[P.di].cards=[...P.deck]; P.at=Date.now(); lsWrite(); dirty=true; clearTimeout(saveTimer); saveTimer=setTimeout(flush,500); }
 async function flush(){
   if(!dbDoc) return;
   if(writing){ again=true; return; }
   writing=true; dirty=false; clearTimeout(saveTimer);
-  try{ await dbDoc.set(dataOf()); store="cloud"; retryMs=3000; }
+  clearTimeout(syncSlow); syncSlow=setTimeout(()=>{ if(writing&&!document.hidden) syncShow("wait"); },1200);
+  let okSend=false;
+  try{ await dbDoc.set(dataOf()); store="cloud"; retryMs=3000; okSend=true; }
   catch(e){ store="local"; dirty=true; saveTimer=setTimeout(flush,retryMs); retryMs=Math.min(60000,retryMs*2); }
+  clearTimeout(syncSlow);
+  if(okSend){ if(!dirty&&!again) syncShow("ok"); } else syncShow("fail");
   writing=false;
   if(again){ again=false; flush(); }
 }
