@@ -111,7 +111,7 @@ function bzGame(){ const r=P.bz.run; if(!r||r.over||r.deck.length<12) return;
     deck:{p:shuffle(r.deck.map(mk)), e:[]}, aiTier:t, aiFac:null,
     staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
     log:[], sel:null, info:null, busy:false, over:null, blitz:true};
-  const ai=aiDeck(t,true); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac;
+  const ai=aiDeck(t,true,true); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac;   /* Blitz : pas d'ultra-légendaire, adversaire compris */
   for(let i=0;i<3;i++){draw("p");draw("e");}
   log(`Blitz · match ${r.wins+1}/3 · adversaire ${FAC[ai.fac].n}, niveau ${TIERS[t]}`);
   screen="play"; startTurn(); }

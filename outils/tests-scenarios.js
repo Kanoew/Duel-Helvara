@@ -421,6 +421,14 @@ async function inPage() {
   fresh(); S.turn = 4; S.energy = S.energyE = 4; { put("p", 0, plain[0], 7); put("p", 0, plain[1], 2); put("p", 1, plain[2], 1);
     const c = card("medee_h"); S.hand.e = [c]; const plan = aiPlan("e", 5); T("IA : Médée Mariée Spectrale posée tôt, face à des cartes adverses à empoisonner", plan.length === 1 && plan[0].c === c, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
   T("Le Seigneur de la marée noire : 6/7, effet inchangé", CARDS.maree.cost === 6 && CARDS.maree.pow === 7 && /détruit les cartes adverses de coût 2 ou moins ici/.test(CARDS.maree.fx), "");
+
+  /* Blitz : aucune ultra-légendaire, ni pour le joueur ni pour l'adversaire (palier 4 à 6, 300 decks) */
+  { P.owned = Object.keys(CARDS).filter(id => !CARDS[id].token); let withUL = 0, blitzUL = 0;
+    for (let i = 0; i < 300; i++) { for (const t of [4, 6]) { if (aiDeck(t, true).deck.some(id => ULof(id))) withUL++; if (aiDeck(t, true, true).deck.some(id => ULof(id) || CARDS[id].r === "U")) blitzUL++; } }
+    T("Blitz : l'IA du palier 4 à 6 n'a jamais d'ultra-légendaire (alors que le mode normal peut en avoir)", blitzUL === 0 && withUL > 0, `Blitz ${blitzUL} / normal ${withUL}`);
+    P.bz = { day: "", used: false, run: { deck: ["coursier", "felix", "celeste", "izzy", ...Object.keys(CARDS).filter(id => !CARDS[id].token && CARDS[id].r === "C" && !["coursier", "felix", "celeste", "izzy"].includes(id)).slice(0, 8)], opts: [], wins: 2, over: false, gain: 0 } };
+    let bad = 0; for (let i = 0; i < 100; i++) { bzGame(); if ([...S.deck.e, ...S.deck.p].some(c => CARDS[c.id].r === "U")) bad++; }
+    T("Blitz : le vrai déroulement (bzGame, match 3 sur 3) ne distribue aucune ultra-légendaire (100 parties)", bad === 0, `${bad} partie(s) avec une ultra-légendaire`); P.bz = { day: "", used: false, run: null }; }
   return res;
 }
 

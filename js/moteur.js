@@ -13,7 +13,7 @@ function diffPow(m,src){ for(const s of ["p","e"]) for(const col of S.board[s]) 
 const opp=s=>s==="p"?"e":"p";
 const deckReady=()=>P.deck.length===ECO.deckSize;
 
-function aiDeck(t,full){
+function aiDeck(t,full,noUL){   /* noUL : le Blitz n'a aucune ultra-légendaire, ni pour le joueur ni pour l'IA */
   const own=full?4:Math.max(2,...P.owned.map(id=>RVAL[CARDS[id].r]));
   const cap=Math.min([1,2,3,3,4,4,4][t],own);
   const pool=PACK().filter(id=>RVAL[CARDS[id].r]<=cap);
@@ -29,7 +29,7 @@ function aiDeck(t,full){
   for(const id of deck.slice()){ const mates=[...(AI_PREP[id]||[]),...(AI_PAY[id]||[]).map(p=>p.a)].filter(x=>inPool.has(x)&&!deck.some(y=>charOf(y)===charOf(x)));
     if(mates.length&&!paired(id)){ const k=weakest(); if(k>=0&&deck[k]!==id) deck[k]=mates[0]; } }
   /* palier 4 et plus : une ultra-légendaire si le deck remplit ses conditions */
-  if(t>=4){ for(const u of shuffle(ULS.filter(u=>REL(u.id)))){ if(!ulOk(u,deck)) continue; const need=new Set(u.req.flat()); let k=-1; deck.forEach((x,i)=>{ if(!need.has(x)&&!paired(x)&&CARDS[x].fac!==u.fac&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k<0) deck.forEach((x,i)=>{ if(!need.has(x)&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k>=0){ const was=deck[k]; deck[k]=u.id; if(ulOk(u,deck)) break; deck[k]=was; } } }
+  if(t>=4&&!noUL){ for(const u of shuffle(ULS.filter(u=>REL(u.id)))){ if(!ulOk(u,deck)) continue; const need=new Set(u.req.flat()); let k=-1; deck.forEach((x,i)=>{ if(!need.has(x)&&!paired(x)&&CARDS[x].fac!==u.fac&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k<0) deck.forEach((x,i)=>{ if(!need.has(x)&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k>=0){ const was=deck[k]; deck[k]=u.id; if(ulOk(u,deck)) break; deck[k]=was; } } }
   return {deck:deck.slice(0,ECO.deckSize),fac};
 }
 function newGame(){
