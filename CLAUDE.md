@@ -43,7 +43,8 @@ Réponses en **français**.
 | `vendor/supabase.js` | Bibliothèque Supabase en local (le CDN est bloqué) |
 | `README.md` | Présentation du jeu sur GitHub (français et anglais), lien de jeu et Discord |
 | `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor |
-| `outils/equilibrage.js`, `rapport-cartes.md`, `rapport-cible.md` | Outil d'équilibrage (IA contre IA avec le vrai moteur, hors du jeu), son rapport complet et son rapport ciblé (`--cartes`) |
+| `outils/equilibrage.js` | Outil d'équilibrage (IA contre IA avec le vrai moteur, hors du jeu). Il écrit `rapport-cartes.md` (complet) ou `rapport-cible.md` (`--cartes`) à la racine : **ces rapports ne sont plus versionnés** (`.gitignore`, supprimés le 14 octobre : périmés dès qu'une carte ou l'IA change, et régénérés en 10 à 50 s). Les anciennes versions restent dans l'historique git. |
+| `comparatif.md` | Comparatif du 14 octobre (avant/après depuis le 12 octobre, cartes hors zone, analyse d'Ananké) : photo à un instant, à jeter une fois lue |
 | `outils/tests-scenarios.js` | Tests de scénarios fixes (quelques secondes, `node outils/tests-scenarios.js`) : Nike + Aphrodite, Styx, Set, Prométhée + Pandore… **À relancer après toute modification du moteur** |
 | `images/` | Illustrations des cartes (`<id>.webp`) |
 | `images/avatars/` | Portraits carrés (`<id>.webp`) |
@@ -245,7 +246,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 
 ## Outil d'équilibrage (12 octobre, audit étape 5)
 
-- **Lancer** : `node outils/equilibrage.js` (2000 parties par défaut, ~10 s) ou `--parties 6000` ; options dans l'en-tête du script (`--palier`, `--date`, `--inclure-cachees`, `--graine`, `--ouvriers`, `--sortie`, `--brut`). Écrit `rapport-cartes.md` à la racine. Nécessite Playwright et Chromium (voir Tests).
+- **Lancer** : `node outils/equilibrage.js` (2000 parties par défaut, ~10 s) ou `--parties 6000` ; options dans l'en-tête du script (`--palier`, `--date`, `--inclure-cachees`, `--graine`, `--ouvriers`, `--sortie`, `--brut`). Écrit `rapport-cartes.md` à la racine (non versionné). Nécessite Playwright et Chromium (voir Tests).
 - **Principe** : charge `index.html` dans Chromium sans réseau (faux Supabase) et fait jouer `aiPlan("p")` contre `aiPlan("e")` avec le vrai moteur (`newGame`, `resolveTurn`, `finish`). Seuls l'affichage, le son et la sauvegarde sont neutralisés (`render`, `sfx`, `save`, `pushHist`, `qProg`…). **Rien du moteur n'est recopié** : si le moteur change, l'outil suit. Le deck adverse passe par un `aiDeck` remplacé le temps de `newGame()`.
 - **Decks** : tirés au hasard avec les règles du jeu (une version par personnage, une seule ultra-légendaire dont les conditions sont remplies), faction dominante, courbe de coûts raisonnable ; 1 sur 4 vient d'`aiDeck(palier, true)`. **Reproductible** : une graine par partie (`--graine`), mêmes parties quel que soit le nombre d'ouvriers (testé : 400 parties identiques avec 2 et 3 ouvriers). Pour rester reproductible, chaque partie remet `RNG`, `P.lv`, `P.streak`… à un état fixe.
 - **Rapport** : santé du moteur (erreurs, puissances NaN, erreurs de console), répartition rareté × coût (toutes les cartes, sorties, pas sorties), statistiques par carte (victoire en deck et posée, taux de pose, puissance de fin, survie, tour de pose), victoire par coût, rareté et faction, liste de TOUTES les cartes pas encore sorties avec leurs valeurs provisoires, effets qui se ressemblent (familles, formulations presque identiques, même cible). **Ne propose aucun chiffre.**
