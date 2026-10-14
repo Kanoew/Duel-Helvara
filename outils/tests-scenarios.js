@@ -357,6 +357,61 @@ async function inPage() {
     const plan = aiPlan("e", 5); const at = plan.find(x => x.c === h); T("IA : Hédoné jouée sur un lieu où l'adversaire a de la place (pas le lieu plein)", !!at && at.li !== 0, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
   /* H9. Données : ultra-légendaire de faction Désir, journal des factions */
   { const u = ULof("hedone"); T("Hédoné : ultra-légendaire de faction Désir (8 cartes, 50 parties au journal)", u && u.fac === "desir" && u.min === 8 && u.quest.k === "desir" && u.quest.n === 50 && !u.req.length && CARDS.hedone.r === "U" && CARDS.hedone.cost === 4 && CARDS.hedone.pow === 2, ""); }
+
+  /* ===== Équilibrage de décembre (14 octobre 2026) ===== */
+  /* trois cartes sans effet de puissance de base distincte (les cartes provisoires sont toutes 3/3) */
+  const hi = plain[10], mid = plain[11], lo = plain[12]; CARDS[hi].pow = 3; CARDS[mid].pow = 2; CARDS[lo].pow = 1;
+  /* D1. Hel au tour 6, 3 cartes en main, rien défaussé avant → elle défausse sa main et ressuscite les 2 plus fortes */
+  fresh(); S.turn = 6; { const hel = card("hel"), a = card(hi), b = card(mid), c = card(lo); S.hand.p = [hel, a, b, c]; S.discarded = 0;
+    await resolveTurn([{ c: hel, li: 0 }], [], false);
+    const ids = S.board.p[0].filter(x => x.risen).map(x => x.id).sort().join();
+    T("Hel : main défaussée (3), les 2 plus fortes ressuscitées, la 3e reste en défausse, main vide", ids === [hi, mid].sort().join() && S.discardPile.p.length === 1 && S.discardPile.p[0] === lo && S.hand.p.length === 0 && S.discarded === 3, `${ids} / défausse ${S.discardPile.p} / compteur ${S.discarded}`);
+    T("Hel : les cartes ressuscitées n'ont pas de Révélation rejouée et gardent leur puissance de base", S.board.p[0].filter(x => x.risen).every(x => x.rev && x.pow === CARDS[x.id].pow), ""); }
+  /* D2. Une seule place libre → une seule carte ressuscitée */
+  fresh(); S.turn = 6; { put("p", 0, plain[5], 1); put("p", 0, plain[6], 1); const hel = card("hel"); S.hand.p = [hel, card(hi), card(mid), card(lo)];
+    await resolveTurn([{ c: hel, li: 0 }], [], false);
+    T("Hel avec 1 seule place libre : 1 seule carte ressuscitée", S.board.p[0].filter(x => x.risen).length === 1 && S.board.p[0].length === 4, `${S.board.p[0].filter(x => x.risen).length} ressuscitée(s)`); }
+  /* D2b. Hel compte pour Fange (défausses) ; Izanami : les ressuscitées ont +2 */
+  fresh(); S.turn = 6; { const fa = put("p", 1, "fange"); const iz = put("p", 1, "izanami"); const hel = card("hel"); S.hand.p = [hel, card(hi), card(mid), card(lo)]; S.discarded = 0;
+    await resolveTurn([{ c: hel, li: 0 }], [], false); const r = S.board.p[0].find(x => x.risen);
+    T("Hel : les 3 défausses comptent pour Fange (+3)", S.discarded === 3 && cardPow("p", 1, fa) === CARDS.fange.pow + 3, `${cardPow("p", 1, fa)}`);
+    T("Izanami en jeu + Hel : les cartes ressuscitées ont +2", r && cardPow("p", 0, r) === CARDS[r.id].pow + 2, r && cardPow("p", 0, r)); }
+  /* D3. Loviatar posée aux tours 4, 5, 6 : la carte ressuscitée perd 2, 1, 0 (−1 au début de chaque tour suivant) */
+  const base = CARDS[hi].pow;
+  for (const [t, perte] of [[4, 2], [5, 1], [6, 0]]) { fresh(); S.turn = t; { S.discardPile.p = [hi]; const lv = card("loviatar"); S.hand.p = [lv];
+      await resolveTurn([{ c: lv, li: 0 }], [], false); const r0 = S.board.p[0].find(x => x.risen); const sk0 = r0 && r0.sick;
+      if (t === 4) { S.over = null; await resolveTurn([], [], false); }
+      const r = S.board.p[0].find(x => x.risen);
+      T(`Loviatar posée au tour ${t} : la carte ressuscitée perd ${perte} (${base} → ${base - perte}), sans Révélation`, r && r.pow === base - perte && r.sick === 0 && r.id === hi, `pow ${r && r.pow}, compteur de départ ${sk0}`); } }
+  fresh(); S.turn = 4; { S.discardPile.p = [hi]; const lv = card("loviatar"); S.hand.p = [lv]; await resolveTurn([{ c: lv, li: 0 }], [], false); const r = S.board.p[0].find(x => x.risen);
+    T("Loviatar : indicateur de maladie 2 → 1 → 0 sur la carte ressuscitée", r && r.sick === 1 && mini("p", 0, r, false).includes("🤒 1"), `compteur ${r && r.sick}`); }
+  /* D4. Loviatar et Hadès sans carte à ressusciter → +3 chacune */
+  for (const [id, base0] of [["loviatar", 3], ["hades", 4]]) { fresh(); S.turn = 4; { const c = card(id); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false);
+      T(`${id === "hades" ? "Hadès" : "Loviatar"} sans carte à ressusciter : +3 de puissance`, c.pow === base0 + 3, c.pow); } }
+  fresh(); S.turn = 4; { S.graveyard.p = [hi]; const c = card("hades"); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false);
+    T("Hadès avec une carte détruite : elle revient (pas de +3)", c.pow === 4 && S.board.p[0].some(x => x.risen && x.id === hi), c.pow); }
+  /* D5. Qetesh du Nouvel An : puissance (lue au déclenchement), plus le coût */
+  fresh(); S.turn = 4; { const big = put("e", 0, "calypso", 9); const q = card("qetesh_r"); S.hand.p = [q];   /* Calypso coûte 5 : coût 5 mais puissance 9 */
+    await resolveTurn([{ c: q, li: 0 }], [], false); T("Qetesh du Nouvel An : carte de coût 5 et de puissance 9 → pas de charme", !charmOf(big) && !big.charm, ""); }
+  fresh(); S.turn = 4; { const e5 = put("e", 0, plain[0], 5), e9 = put("e", 0, plain[1], 9); const q = card("qetesh_r"); S.hand.p = [q];
+    await resolveTurn([{ c: q, li: 0 }], [], false); T("Qetesh du Nouvel An : carte de puissance 5 → charmée (la 9 est ignorée)", charmOf(e5) === "p" && !charmOf(e9), ""); }
+  fresh(); S.turn = 4; { const e3 = put("e", 0, "calypso", 3); const q = card("qetesh_r"); S.hand.p = [q];   /* coût 5, puissance 3 : charmée */
+    await resolveTurn([{ c: q, li: 0 }], [], false); T("Qetesh du Nouvel An : carte de coût 5 mais de puissance 3 → charmée", charmOf(e3) === "p", ""); }
+  /* D5b. Qetesh X Jordan du Nouvel An : charme à puissance 5 ou moins, Continu +1 */
+  fresh(); S.turn = 5; { const a = put("e", 0, plain[0], 6), b = put("e", 0, plain[1], 4), m = put("p", 0, plain[2], 2); const u = card("ulqetjor_r"); S.hand.p = [u];
+    await resolveTurn([{ c: u, li: 0 }], [], false);
+    T("Qetesh X Jordan du Nouvel An : charme la plus forte de puissance 5 ou moins (la 6 est ignorée)", charmOf(b) === "p" && !charmOf(a), "");
+    T("Qetesh X Jordan du Nouvel An : tes autres cartes ici ont +1", cardPow("p", 0, m) === 3, cardPow("p", 0, m)); }
+  /* D6. Pele X Jordan au tour 6 : −1 à toutes les cartes adverses déjà révélées, dans les 3 lieux */
+  fresh(); S.turn = 6; { const es = [0, 1, 2].map(li => put("e", li, plain[li], 3)); const pj = card("ulpele_r"); S.hand.p = [pj];
+    await resolveTurn([{ c: pj, li: 0 }], [], false);
+    T("Pele X Jordan : −1 à toutes les cartes adverses des 3 lieux (3 → 2)", es.every(x => x.pow === 2), es.map(x => x.pow).join()); }
+  /* D7. Données et IA */
+  { const d = id => CARDS[id]; T("Statistiques décembre : Hel 6/3, Loviatar 4/3, Hadès 4/4, Circé 4/3, Nyx X Oshun 6/2, Sekhmet N 4/4, Éos N 2/2, Qetesh N 5/3, Qetesh X Jordan N 6/4, Pele X Jordan 2/1",
+      [["hel", 6, 3], ["loviatar", 4, 3], ["hades", 4, 4], ["circe", 4, 3], ["uloshun", 6, 2], ["sekhmet_n", 4, 4], ["eos_r", 2, 2], ["qetesh_r", 5, 3], ["ulqetjor_r", 6, 4], ["ulpele_r", 2, 1]].every(([id, c, p]) => d(id).cost === c && d(id).pow === p), ""); }
+  fresh(); S.turn = 6; S.energy = S.energyE = 6; { for (const li of [0, 1, 2]) { put("p", li, plain[li], 3); put("p", li, plain[li + 3], 2); } put("e", 0, plain[0], 1);
+    const pj = card("ulpele_r"), x = card(plain[4]); S.hand.e = [pj, x]; const plan = aiPlan("e", 5);
+    T("IA : Pele X Jordan jouée au tour 6, avec une autre carte, face à beaucoup de cartes adverses", plan.some(y => y.c === pj) && plan.length >= 2, JSON.stringify(plan.map(y => [y.c.id, y.li]))); }
   return res;
 }
 

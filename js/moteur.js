@@ -92,6 +92,8 @@ function startTurn(){
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(c.midnight===S.turn){ c.midnight=0;
     if(!live(c)) continue; const t=midnightCharm(s,li,c);
     if(t){ log(`Minuit · ${nm(c)} charme ${nm(t)} (${who(s)})`); sfx("legend"); } }
+  /* Loviatar : la carte ressuscitée malade perd 1 au début de chacun des tours restants (compteur c.sick) */
+  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(c.sick>0){ c.sick--; c.pow-=1; (c.mods=c.mods||[]).push({v:-1,src:"Loviatar (maladie)"}); log(`Maladie · ${nm(c)} perd 1 (${who(s)})`); }
   draw("p"); draw("e"); S.sel=null; render();
 }
 
@@ -148,7 +150,7 @@ function cardPow(s,li,c){
     if(c.id==="yarden_d") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&o.rev&&CARDS[o.id].fac==="primordial"&&!CARDS[o.id].token) p+=2;
   }
   for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&live(o)&&o.id==="ulqetjor") p+=1;
-  for(const o of S.board[s][li]) if(o!==c&&live(o)&&o.id==="ulqetjor_r") p+=2;
+  for(const o of S.board[s][li]) if(o!==c&&live(o)&&o.id==="ulqetjor_r") p+=1;
   if(c.risen&&S.board[s].some(col=>col.some(o=>live(o)&&o.id==="izanami"))) p+=2; /* Izanami : tes cartes ressuscitées */
   if(locIs(li,"domaine")&&JPARTNERS.has(c.id)) p+=2;
   if(!shielded(s,li)&&!sunlit(s)&&!noWeak(c)&&!(c.id==="baldur"&&!c.neg)) p-=S.board[opp(s)][li].filter(o=>live(o)&&o.id==="hathor").length;
@@ -181,10 +183,10 @@ const real=c=>!CARDS[c.id].token&&!c.echo;
 function discard(s,c){ if(s==="p"&&qLive()) qProg("disc3"); S.hand[s]=S.hand[s].filter(x=>x!==c); S.discarded=(S.discarded||0)+1; piles(); if(real(c)) S.discardPile[s].push(c.id); }
 function bury(s,c){ piles(); if(real(c)) S.graveyard[s].push(c.id);
   if(c.id==="mjolnir"&&c.thor){ for(const col of S.board[s]) for(const t of col) if(t.uid===c.thor&&live(t)){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Mjölnir"}); log(`Thor récupère Mjölnir : +2 (${who(s)})`); } } }
-/* Qetesh du Nouvel An, minuit : la carte adverse la plus forte ici de coût 5 ou moins est charmée (renvoie la cible ou null) */
+/* Qetesh du Nouvel An, minuit : la carte adverse la plus forte ici de puissance 5 ou moins (lue maintenant) est charmée (renvoie la cible ou null) */
 function midnightCharm(s,li,c){
   const o=opp(s);
-  const t=S.board[o][li].filter(x=>x.rev&&!charmOf(x)&&!untargetable(s,o,x)&&CARDS[x.id].cost<=5).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];
+  const t=S.board[o][li].filter(x=>x.rev&&!charmOf(x)&&!untargetable(s,o,x)&&cardPow(o,li,x)<=5).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];
   if(t){ t.charm=s; delete t.charmBy; } return t||null; }
 /* Hédoné, Continu : à la fin de chaque tour, elle attire ici la carte adverse la plus faible d'un AUTRE lieu (s'il y a de la place de son côté adverse)
    et la charme tant qu'elle reste en jeu ; 2 fois au plus (compteur c.hed). Rien à faire : pas de place, pas de cible = ne compte pas.
@@ -206,7 +208,7 @@ function resurrect(s,id,li,from,opts={}){
   if(S.locs[li].locked&&!opts.anyLoc) return null; if(S.board[s][li].length>=capOf(s,li)) return null;
   const pile=from==="grave"?S.graveyard[s]:S.discardPile[s]; const k=pile.lastIndexOf(id); if(k<0) return null; pile.splice(k,1);
   const c=mk(id); c.fresh=true; c.risen=true; S.board[s][li].push(c);
-  if(opts.ward) c.ward=true; if(opts.sick){ c.pow-=opts.sick; c.mods.push({v:-opts.sick,src:"Loviatar"}); }
+  if(opts.ward) c.ward=true; if(opts.sick!=null) c.sick=opts.sick;   /* Loviatar : −1 au début de chacun des tours restants (voir startTurn) */
   if(opts.withReveal) reveal(s,li,c); else c.rev=true;
   return c;
 }
@@ -225,7 +227,7 @@ function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)||baldurSafe(s
    (Un effet de son propre camp, comme la Ficelle Dévorante, ou la Faille ne la ramènent pas.) */
 function styxReturn(s,li,c){
   if(!real(c)||CARDS[c.id].fac!=="jugement"||!SRC||SRC.s===s||!S.board[s][li].some(x=>live(x)&&x.id==="styx")) return false;
-  c.rev=false; c.neg=false; c.fresh=false; c.midnight=0; c.risen=false; delete c.charm; delete c.charmBy; delete c.captive; delete c.ward;
+  c.rev=false; c.neg=false; c.fresh=false; c.midnight=0; c.risen=false; c.sick=0; delete c.charm; delete c.charmBy; delete c.captive; delete c.ward;
   if(S.hand[s].length<7) S.hand[s].push(c); else { S.discarded=(S.discarded||0)+1; piles(); S.discardPile[s].push(c.id); }
   return true; }
 /* Une carte détruite va au cimetière (ou revient en main grâce à Styx) */
@@ -353,13 +355,15 @@ function revealFx(s,li,c,opts={}){
     case "heimdall": { let n=0; const lk=[0,1,2].filter(i=>i!==li&&S.locs[i].locked);
       for(const t of mates.filter(x=>!fated(x))){ const i=lk.find(i=>S.board[s][i].length<capOf(s,i)); if(i==null) break; S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); n++; }
       if(n){ note=`${n} carte${n>1?"s":""} passe${n>1?"nt":""} par le Bifröst`; snd="buff"; } else buffSelf(2); break; }
-    case "hel": { const ids=S.discardPile[s].slice().sort((a,b)=>CARDS[b].pow-CARDS[a].pow||CARDS[b].cost-CARDS[a].cost); let n=0; for(const id of ids){ if(n>=3) break; if(resurrect(s,id,li,"discard")) n++; else break; } if(n){ note=`ressuscite ${n} carte${n>1?"s":""}`; snd="void"; } break; }
+    case "hel": { const hd=S.hand[s].slice(); hd.forEach(x=>discard(s,x));   /* sa main est défaussée d'abord : ces cartes peuvent revenir */
+      const ids=S.discardPile[s].slice().sort((a,b)=>CARDS[b].pow-CARDS[a].pow||CARDS[b].cost-CARDS[a].cost); let n=0; for(const id of ids){ if(n>=2) break; if(resurrect(s,id,li,"discard")) n++; else break; }
+      if(hd.length||n){ note=(hd.length?`défausse ${hd.length} carte${hd.length>1?"s":""}`:"")+(hd.length&&n?", ":"")+(n?`ressuscite ${n} carte${n>1?"s":""}`:""); snd="void"; } break; }
     case "ulhel": { const all=S.discardPile[s].map(id=>[id,"discard"]).concat(S.graveyard[s].map(id=>[id,"grave"])).sort((a,b)=>CARDS[b[0]].pow-CARDS[a[0]].pow||CARDS[b[0]].cost-CARDS[a[0]].cost);
       if(all.length){ const r=resurrect(s,all[0][0],li,"discard"===all[0][1]?"discard":"grave",{ward:true,withReveal:true});
         if(r){ note=`ressuscite ${nm(r)}, intouchable`; if(charOf(r.id)==="baldur"){ r.pow+=5; (r.mods=r.mods||[]).push({v:5,src:"Hel X Baldur"}); note+=", +5"; } snd="void"; } } break; }
     case "hel_r": { const ids=S.discardPile[s].slice().sort((a,b)=>CARDS[b].cost-CARDS[a].cost); if(ids.length&&S.board[s][li].length<capOf(s,li)){ const r=resurrect(s,ids[0],li,"discard",{withReveal:true}); if(r){ note=`ressuscite ${nm(r)}`; snd="void"; } } break; }
-    case "loviatar": { const id=S.discardPile[s][S.discardPile[s].length-1]; if(id){ const r=resurrect(s,id,li,"discard",{sick:2}); if(r){ note=`${nm(r)} revient malade (−2)`; snd="void"; } } break; }
-    case "hades": { const ids=S.graveyard[s].slice().sort((a,b)=>CARDS[b].pow-CARDS[a].pow); if(ids.length){ const r=resurrect(s,ids[0],li,"grave"); if(r){ note=`ressuscite ${nm(r)}`; snd="void"; } } break; }
+    case "loviatar": { const id=S.discardPile[s][S.discardPile[s].length-1]; if(id){ const r=resurrect(s,id,li,"discard",{sick:Math.max(0,Math.min(2,6-S.turn))}); if(r){ note=`${nm(r)} revient malade`; snd="void"; } } else buffSelf(3); break; }
+    case "hades": { const ids=S.graveyard[s].slice().sort((a,b)=>CARDS[b].pow-CARDS[a].pow); if(ids.length){ const r=resurrect(s,ids[0],li,"grave"); if(r){ note=`ressuscite ${nm(r)}`; snd="void"; } } else buffSelf(3); break; }
     case "dionysos": { const lost=[]; for(const side of [s,o]){ draw(side); const t=gPick(S.hand[side]); if(t){ discard(side,t); lost.push(nm(t)); } } note=lost.length?`l'ivresse fait défausser ${lost.join(" et ")}`:"pioche 1"; snd="void"; break; }
     case "poseidon": { let n=0; for(const t of targets.filter(x=>CARDS[x.id].cost<=3)){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); if(!real(t)) continue; n++;
         if(S.hand[o].length<7) S.hand[o].push(mk(t.id)); else { S.discarded=(S.discarded||0)+1; S.discardPile[o].push(t.id); } }
@@ -379,7 +383,7 @@ function revealFx(s,li,c,opts={}){
     case "pele_r": { let n=0; for(let i=0;i<3;i++){ const t=strongest(S.board[o][i].filter(x=>x.rev&&!untargetable(s,o,x)),o,i); if(t&&weaken(o,i,t,2)) n++; } if(n){ note=`−2 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "ulpele_r": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "qetesh_r": c.midnight=S.turn+1; note="minuit : charmera la carte la plus forte au tour suivant"; snd="void"; break;
-    case "ulqetjor_r": { const t=strongest(targets.filter(x=>CARDS[x.id].cost<=5&&!charmOf(x)),o,li); if(t){ t.charm=s; delete t.charmBy; note=`charme ${nm(t)}`; snd="void"; } break; }
+    case "ulqetjor_r": { const t=strongest(targets.filter(x=>pw(o,li,x)<=5&&!charmOf(x)),o,li); if(t){ t.charm=s; delete t.charmBy; note=`charme ${nm(t)}`; snd="void"; } break; }
     case "cronos": { const ts=S.hand[s].filter(x=>CARDS[x.id].cost<=1); ts.forEach(x=>discard(s,x)); if(ts.length){ c.pow+=2*ts.length; (c.mods=c.mods||[]).push({v:2*ts.length,src:"Cronos"}); note=`défausse ${ts.map(nm).join(" et ")}, +${2*ts.length}`; snd="void"; } break; }
     case "izanami": { const low=S.hand[s].length?Math.min(...S.hand[s].map(x=>CARDS[x.id].pow)):null; const t=low==null?null:gPick(S.hand[s].filter(x=>CARDS[x.id].pow===low)); if(t){ discard(s,t); note=`défausse ${nm(t)}`; snd="void"; } break; }
     case "loki": { const lost=[]; for(const side of [s,o]){ const hi=S.hand[side].length?Math.max(...S.hand[side].map(x=>CARDS[x.id].cost)):null; const t=hi==null?null:gPick(S.hand[side].filter(x=>CARDS[x.id].cost===hi)); if(t){ discard(side,t); lost.push(nm(t)); } } if(lost.length){ note=`chacun défausse sa plus chère : ${lost.join(" et ")}`; snd="void"; } break; }
@@ -435,7 +439,7 @@ function revealFx(s,li,c,opts={}){
 
 /* ======= IA ======= */
 const RES=new Set(["hel","hel_r","ulhel","hades","loviatar"]);
-const HITS=["bia","circe","ulcirce","qetesh","qetesh_r","pele_r","ulpele_r","ulqetjor_r","poseidon","uloshun","tyr","medee_h","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
+const HITS=["bia","circe","ulcirce","qetesh","qetesh_r","pele_r","ulqetjor_r","poseidon","uloshun","tyr","medee_h","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
 const DESTROYERS=new Set(["anat","anubis","boucher","durga","ereshkigal","esquille","ficelle","izzy_h","lilith","maree","nergal_h","nyx","nyx_h","rusalka","sekhmet","sekhmet_n","troll","ulnem","uloshun","yarden_d"]);
 const NEEDS_MATES=["susanoo","ulaph","oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
 /* Synergies connues de l'IA : [carte qui prépare, cartes qui en profitent, 1 si elles doivent partager le lieu] */
@@ -506,18 +510,24 @@ function aiPlan(me="e",tierOv){
       if(S.turn<=5) adj+=1; }
     if(c.id==="pandore") pow+=2*Math.max(0,ctx.en-cost);   /* jouée en dernier : elle dépense tout ce qui reste */
     if(c.id==="qetesh_r"&&S.turn>=6) adj-=6;               /* le charme n'arrive qu'au tour suivant */
-    if(c.id==="ulqetjor_r") pow+=2*mates;
+    if(c.id==="ulqetjor_r") pow+=mates;
+    if(c.id==="ulpele_r"){ /* −1 à toutes les cartes adverses des 3 lieux : tour 6 avec une autre carte, quand l'adversaire a le plus de cartes en jeu */
+      const nf=foesN[0]+foesN[1]+foesN[2]; hit+=nf*.8; if(S.turn<6) adj-=3; if(ctx.plays.length) adj+=1.5; if(nf<3) adj-=2; }
     if(c.id==="ulnem"){ const fs=Math.max(0,...S.board[op][li].filter(x=>x.rev).map(x=>cardPow(op,li,x))), own=S.board[me][li].filter(x=>x.rev), ms=Math.max(0,...own.map(x=>cardPow(me,li,x)));
       if(foes){ hit+=fs-2.5; pow-=ms; pow+=2*Math.max(0,own.length-(own.length?1:0)); } }
     if(c.id==="ulqetyar"){ let n=0; for(let i=0;i<3;i++){ const f=new Set(S.board[me][i].filter(x=>x.rev).map(x=>CARDS[x.id].fac)); for(const x of ctx.plays) if(x.li===i) f.add(CARDS[x.c.id].fac); if(i===li) f.add("desir"); if(f.has("desir")&&f.has("primordial")) n++; } pow+=3*n; }
     /* Résurrections : valeur de ce qui revient, si la place le permet */
     if(RES.has(c.id)){ const room=Math.max(0,capOf(me,li)-S.board[me][li].length-ctx.pend[li]-1), dp=(S.discardPile&&S.discardPile[me])||[], gv=(S.graveyard&&S.graveyard[me])||[], bp=id=>CARDS[id].pow+(c.id==="ulhel"&&charOf(id)==="baldur"?5:0);
       const byPow=ids=>ids.map(bp).sort((a,b)=>b-a);
-      if(c.id==="hel") pow+=byPow(dp).slice(0,Math.min(3,room)).reduce((a,v)=>a+v,0);
+      if(c.id==="hel"){ /* sa main (hors cartes déjà prévues ce tour) est défaussée, puis les 2 plus fortes défaussées reviennent : au tour 6 de préférence */
+        const dh=hand.filter(x=>x!==c&&!ctx.plays.some(y=>y.c===x)); pow+=byPow(dp.concat(dh.filter(x=>!CARDS[x.id].token).map(x=>x.id))).slice(0,Math.min(2,room)).reduce((a,v)=>a+v,0); adj-=0.8*dh.length; if(S.turn<6) adj-=3; }
       else if(c.id==="hel_r"&&room&&dp.length) pow+=Math.max(...dp.map(id=>CARDS[id].pow));
-      else if(c.id==="loviatar"&&room&&dp.length) pow+=Math.max(0,CARDS[dp[dp.length-1]].pow-2);
-      else if(c.id==="hades"&&room&&gv.length) pow+=Math.max(...gv.map(id=>CARDS[id].pow));
+      else if(c.id==="loviatar"){ if(!dp.length) pow+=3; else if(room) pow+=Math.max(0,CARDS[dp[dp.length-1]].pow-Math.min(2,6-S.turn)); if(S.turn<5) adj-=2; }   /* malade : −1 par tour restant, donc tard */
+      else if(c.id==="hades"){ if(!gv.length) pow+=3; else if(room) pow+=Math.max(...gv.map(id=>CARDS[id].pow)); }
       else if(c.id==="ulhel"&&room&&(dp.length||gv.length)) pow+=Math.max(...byPow(dp.concat(gv))); }
+    /* fusions posées trop rarement par rapport à ce qu'elles rapportent (mesure du 14 octobre : 8 à 12 % des decks) */
+    if(c.id==="ulhel"&&((S.discardPile[me]||[]).length||(S.graveyard[me]||[]).length)) adj+=6;
+    if(c.id==="ulqetyar") adj+=6;
     if(c.id==="cronos") pow+=2*hand.filter(x=>x!==c&&CARDS[x.id].cost<=1&&!ctx.plays.some(y=>y.c===x)).length;
     if(c.id==="izanami") adj-=hand.length>1?1:0;
     if(c.id==="loki"&&S.hand[op].length>=2) hit+=1.5;

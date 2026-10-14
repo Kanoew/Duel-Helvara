@@ -557,8 +557,9 @@ function mini(s,li,c,staged){
   const chm=!staged&&charmOf(c)?" charmed":"";
   /* Ananké : « Fatalité » + puissance qu'elle aura en fin de partie (en direct) ; Hédoné : compteur de charmes */
   const fat=!staged&&!S.final&&c.id==="ananke"&&c.rev&&fated(c)?`<span class="fatb" title="Fatalité : puissance en fin de partie">✠ ${ankEnd(s,li,c)}</span>`:"";
+  const sick=!staged&&c.sick>0?`<span class="sickb" title="Malade : −1 au début de chacun des tours suivants">🤒 ${c.sick}</span>`:"";
   const hed=!staged&&c.id==="hedone"&&c.rev?`<span class="hedb" title="Charmes">${c.hed||0}/2</span>`:"";
-  return `<button class="mini${CARDS[c.id].r==="U"?" holo":""}${chm}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}${fat}${hed}<span class="pw ${cls}">${p}</span></button>`;
+  return `<button class="mini${CARDS[c.id].r==="U"?" holo":""}${chm}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}${fat}${hed}${sick}<span class="pw ${cls}">${p}</span></button>`;
 }
 function sideHTML(s,li){
   const items=S.board[s][li].map(c=>mini(s,li,c,s==="p"&&!c.rev));

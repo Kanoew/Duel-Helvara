@@ -83,8 +83,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-grad
 .mini .art{position:absolute;inset:0}
 .mini .pw{position:absolute;right:3px;bottom:3px;min-width:20px;height:20px;padding:0 4px;border-radius:10px;background:rgba(6,10,18,.85);font-family:var(--display);font-size:13px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
 .mini .midn{position:absolute;left:3px;top:3px;font-size:12px;line-height:1;filter:drop-shadow(0 0 3px #b48cff);pointer-events:none}
-.mini .fatb,.mini .hedb{position:absolute;left:3px;top:3px;height:16px;padding:0 4px;border-radius:8px;background:rgba(6,10,18,.85);font-family:var(--display);font-size:11px;line-height:16px;pointer-events:none}
+.mini .fatb,.mini .hedb,.mini .sickb{position:absolute;left:3px;top:3px;height:16px;padding:0 4px;border-radius:8px;background:rgba(6,10,18,.85);font-family:var(--display);font-size:11px;line-height:16px;pointer-events:none}
 .mini .fatb{color:#ff9a9a;border:1px solid rgba(255,120,120,.55)}
+.mini .sickb{color:#b9e6a0;border:1px solid rgba(160,220,130,.55)}
 .mini .hedb{color:#ffd27a;border:1px solid rgba(255,205,110,.6)}
 /* carte charmée : fil doré qui la relie à celle qui la tient */
 .mini.charmed::before{content:"";position:absolute;inset:0;z-index:1;border:2px dotted rgba(255,205,110,.95);border-radius:inherit;box-shadow:inset 0 0 10px rgba(255,190,80,.75),0 0 8px rgba(255,190,80,.55);pointer-events:none;animation:chmpulse 2.2s ease-in-out infinite}
