@@ -257,7 +257,7 @@ const LOCS = {
   flon:      {name:"Le Flon", img:"images/lieux/flon.webp", fx:"Les cartes qui arrivent ici par un déplacement gagnent +2 de puissance.", rel:"2026-10-12"},
   escaliers: {name:"Les Escaliers du Marché", img:"images/lieux/escaliers.webp", fx:"Les cartes Helvara ont +2 de puissance ici.", rel:"2026-10-12"},
   encheres:  {name:"Le Bureau des enchères", img:"images/lieux/encheres.webp", fx:"Les cartes jouées ici coûtent 1 de plus et ont +2 de puissance.", rel:"2026-10-12"},
-  faille:    {name:"La Faille", img:"images/lieux/faille.webp", fx:"Fin du tour 4 : détruit la carte la plus faible de chaque côté. Les cartes protégées (Eir, Ame-no-Uzume, Baldur) y résistent."},
+  faille:    {name:"La Faille", img:"images/lieux/faille.webp", fx:"Fin du tour 4 : détruit la carte la plus faible de chaque côté. Les cartes protégées y échappent."},
   archives:  {name:"Archives de Thot", img:"images/lieux/archives.webp", fx:"Quand tu joues une carte ici, pioche 1 carte."},
   cathedrale:{name:"Cathédrale d'Helvara", img:"images/lieux/cathedrale.webp", fx:"Les divinités observent : le côté avec moins de cartes ici gagne +3 de puissance."}
 };

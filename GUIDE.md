@@ -2,7 +2,7 @@
 
 Adresse du jeu une fois publié : **https://kanoew.github.io/Duel-Helvara/**
 
-Le fichier `config.js` est déjà rempli avec ton projet Supabase. Il reste quatre étapes, à faire dans l'ordre.
+Le fichier `config.js` est déjà rempli avec ton projet Supabase. Ce guide sert à **refaire l'installation** (nouveau projet Supabase, nouveau compte Google…) ou à retrouver une étape. Le jeu est déjà en ligne ; les quatre étapes ci-dessous se font dans l'ordre, puis la section « Scripts SQL » liste tout ce qu'il faut coller dans Supabase.
 
 ---
 
@@ -10,7 +10,7 @@ Le fichier `config.js` est déjà rempli avec ton projet Supabase. Il reste quat
 
 1. Ouvre ton projet sur https://supabase.com/dashboard.
 2. Menu de gauche : **SQL Editor** → **New query**.
-3. Copie tout le contenu de `supabase.sql` (dans ce dépôt), colle-le, puis clique **Run**. Le message attendu est « Success. No rows returned ».
+3. Copie tout le contenu de `supabase.sql` (dans ce dépôt), colle-le, puis clique **Run**. Le message attendu est « Success. No rows returned ». Lance ensuite les autres scripts, dans l'ordre indiqué dans la section « Scripts SQL » plus bas.
 4. Menu **Authentication** → **Sign In / Providers** :
    - active **Allow anonymous sign-ins**, puis **Save** ;
    - active **Allow manual linking**, puis **Save**. Ça permet de passer d'une partie « appareil » à un compte Google sans rien perdre.
@@ -22,8 +22,8 @@ Dès cette étape, le jeu fonctionne : sauvegarde, classement et duels. Seule la
 
 ## 2. GitHub Pages : publier le site (3 min)
 
-> Ton dépôt est **privé**. Avec un compte GitHub gratuit, Pages ne marche que sur un dépôt **public**.
-> Les clés de `config.js` peuvent être publiques sans danger : ce sont les règles de `supabase.sql` qui protègent les données.
+> Avec un compte GitHub gratuit, Pages ne marche que sur un dépôt **public** (c'est le cas aujourd'hui : le site est déjà publié, et chaque envoi sur `main` le met à jour en 1 à 2 minutes).
+> Les clés de `config.js` peuvent être publiques sans danger : ce sont les règles des scripts SQL qui protègent les données. Le code secret Google, lui, ne va **jamais** dans le dépôt.
 
 1. Sur https://github.com/Kanoew/Duel-Helvara → **Settings**.
 2. Tout en bas de **General** → **Danger Zone** → **Change visibility** → **Public**.
@@ -63,10 +63,25 @@ Ne mets jamais le code secret dans le dépôt : il va uniquement dans Supabase.
 | Symptôme | Cause probable |
 |---|---|
 | « Connexion impossible : Anonymous sign-ins are disabled » | Étape 1.4 : connexions anonymes non activées. |
-| Classement vide, rien ne se sauvegarde | Le script `supabase.sql` n'a pas été lancé (étape 1.3). |
+| Classement vide, rien ne se sauvegarde | Le script `supabase.sql` n'a pas été lancé (étape 1.3), ou `classement-securise.sql` n'a pas été lancé après lui. |
+| Le jeu n'envoie ni pouces ni statistiques | `retours-stats.sql` pas lancé, ou connexions anonymes désactivées. |
+| Après une mise à jour, une ancienne page reste affichée | Recharge la page (l'appli installée se recharge toute seule une fois, hors partie). |
 | Google affiche « redirect_uri_mismatch » | L'URI de redirection de l'étape 3.4 est mal recopiée. |
 | Après Google, retour sur le jeu sans être connecté | Adresse du jeu absente des Redirect URLs (étape 1.5). |
 | Page 404 sur github.io | Pages pas encore activé, ou dépôt encore privé (étape 2). |
+
+## Scripts SQL à coller dans Supabase (SQL Editor → New query → Run)
+
+Tous peuvent être relancés sans danger (sauf `nettoyage.sql`, voir plus bas). Message attendu : « Success. No rows returned ».
+
+| Ordre | Fichier | À quoi il sert |
+|---|---|---|
+| 1 | `supabase.sql` | Tables de base (sauvegardes, classement), règles d'accès, suppression de compte. |
+| 2 | `classement-securise.sql` | Classement non falsifiable : les joueurs n'écrivent plus eux-mêmes dans `board`, tout passe par `board_submit()`. |
+| 3 | `classement-allege.sql` | Lecture rapide du classement (100 meilleurs). Après le 2. |
+| 4 | `retours-stats.sql` | Pouces 👍 👎, cartes jugées injustes, statistiques de victoire par carte. Indépendant des précédents. Lecture : Table Editor → schéma `public` → vues `v_taux_victoire_cartes`, `v_cartes_signalees`, `v_retours_par_jour`. |
+| 5 | `comptes-fantomes.sql` | Supprime chaque nuit les comptes anonymes qui n'ont jamais joué (nécessite pg_cron). |
+| à la demande | `nettoyage.sql` | **Ne pas le lancer en entier** : le bloc 2 vide les anonymes du classement. Le bloc 3 applique les durées de conservation (12 mois anonymes, 24 mois Google). |
 
 ## Ce qui a changé par rapport à l'artefact
 

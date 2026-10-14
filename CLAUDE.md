@@ -44,7 +44,6 @@ Réponses en **français**.
 | `README.md` | Présentation du jeu sur GitHub (français et anglais), lien de jeu et Discord |
 | `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor |
 | `outils/equilibrage.js` | Outil d'équilibrage (IA contre IA avec le vrai moteur, hors du jeu). Il écrit `rapport-cartes.md` (complet) ou `rapport-cible.md` (`--cartes`) à la racine : **ces rapports ne sont plus versionnés** (`.gitignore`, supprimés le 14 octobre : périmés dès qu'une carte ou l'IA change, et régénérés en 10 à 50 s). Les anciennes versions restent dans l'historique git. |
-| `comparatif.md` | Comparatif du 14 octobre (avant/après depuis le 12 octobre, cartes hors zone, analyse d'Ananké) : photo à un instant, à jeter une fois lue |
 | `outils/tests-scenarios.js` | Tests de scénarios fixes (quelques secondes, `node outils/tests-scenarios.js`) : Nike + Aphrodite, Styx, Set, Prométhée + Pandore… **À relancer après toute modification du moteur** |
 | `images/` | Illustrations des cartes (`<id>.webp`) |
 | `images/avatars/` | Portraits carrés (`<id>.webp`) |
@@ -368,7 +367,7 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 
 ### 5e série (14 octobre 2026) : même règle, ne pas revenir dessus sans l'accord de Jordan
 
-`BUILD` : `alpha-0.7`. Comparatif complet : `comparatif.md` (avant/après depuis le 12 octobre, cartes hors zone, poses sous 15 %, analyse d'Ananké).
+`BUILD` : `alpha-0.7`. Le comparatif avant/après (`comparatif.md`, supprimé ensuite) est dans l'historique git (commit `57fb23e`).
 - **Le Seigneur de la marée noire** 6/7 (avant 6/8), effet inchangé (il était à +8,2 d'écart, 57,8 %). Il remplace « 6/8 » de la ligne du 1er novembre du calendrier.
 - **Ananké (analyse, rien modifié)** : 62,4 % en deck, mais 78,4 % posée et 51,9 % restée en main ; les decks Primordial sans ultra-légendaire sont dans la moyenne (49,8 %), les decks Primordial avec une autre ultra-légendaire gagnent aussi 63,3 % : c'est la combinaison « Primordial + ultra » qui est forte, Ananké comprise. À surveiller (zone > +8 : +12,8).
 - **IA** (`place()`), cartes inchangées : Nyx X Circé (retire la puissance de toutes les cartes adverses du lieu moins 1 chacune), Médée Mariée Spectrale (poison : 1 par fin de tour restante, aux deux plus fortes avec Hécate), Yarden Dragonification (+2 par Primordiale déjà là, posée ce tour ou en main), Amaterasu (valeur selon le nombre de cartes à protéger et les affaiblisseurs vus, liste `AI_WEAK`), Nemesis X Jordan (cartes posées ce tour comptées, petit bonus). Mesure ciblée `--cartes amaterasu,ulnem,yarden_d,ulcirce,medee_h,maree --parties 1000` : pose Amaterasu 17 → 14 %, Nemesis X Jordan 11 → 14 %, Yarden Dragonification 9 → 10 %, Nyx X Circé 24 → 30 %, Médée Mariée Spectrale 16 → 16 %. **L'amélioration est modeste** : testées seules en main, ces cartes sont toujours jouées ; leur faible taux de pose vient surtout de la concurrence (une seule carte à 6 d'énergie au tour 6, 75 % de chances seulement de l'avoir piochée) et, pour Amaterasu, Yarden Dragonification, Médée Mariée Spectrale et Nemesis X Jordan, du fait qu'elles gagnent **moins** que la moyenne quand elles sont posées (33 à 43 %) : l'IA ne se trompe sans doute pas en les gardant. Seule Nyx X Circé gagne beaucoup posée (72 %).

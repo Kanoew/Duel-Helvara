@@ -195,7 +195,7 @@ window.HELVARA_EN = {
     sousgare:{n:"Underground, 4B", fx:"Félix gives credit: cards played here cost 1 less."},
     ruelle:{n:"The Alley", fx:"Where it all began. 2 cards maximum per player."},
     tour:{n:"Ouchy, 16th Floor", fx:"Izzy's place: cards with base Power 5+ have +2 Power here."},
-    faille:{n:"The Rift", fx:"End of turn 4: destroy the weakest card on each side. Protected cards (Eir, Ame-no-Uzume, Baldur) resist it."},
+    faille:{n:"The Rift", fx:"End of turn 4: destroy the weakest card on each side. Protected cards are spared."},
     domaine:{n:"The Creator's Domain", fx:"Cards that form a Fusion with Jordan have +2 Power here."},
     tombeau:{n:"The Tomb", fx:"End of turn 6: each player summons here their discarded cards, at random, while there is room."},
     archives:{n:"Archives of Thoth", fx:"When you play a card here, draw 1 card."},
