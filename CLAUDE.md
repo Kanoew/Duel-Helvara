@@ -1,6 +1,6 @@
 # Duel d'Helvara : mémo de reprise
 
-Jeu de cartes web façon Marvel Snap (3 lieux, 6 tours, énergie = numéro du tour, effets Révélation et Continu).
+Jeu de cartes web à lieux (3 lieux, 6 tours, énergie = numéro du tour, effets Révélation et Continu).
 Univers et lore : ceux de Jordan (pseudo GitHub **Kanoew**). Tiamat est une présence, pas un personnage.
 Réponses en **français**.
 
