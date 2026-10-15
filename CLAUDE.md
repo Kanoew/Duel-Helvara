@@ -27,6 +27,7 @@ Réponses en **français**.
 |---|---|
 | `index.html` | Coquille de la page (en-tête, CSP, balises qui chargent les fichiers ci-dessous, avec `?v=<empreinte>`) |
 | `jeu.css` | Tous les styles du jeu (à la racine : ses `url("images/…")` sont relatifs à la page) |
+| `js/bac-a-sable.js` | Bac à sable `?date=AAAA-MM-JJ` (date simulée, toutes les cartes, rien de sauvegardé) ; **chargé avant `js/cartes.js`** ; voir « Bac à sable » |
 | `js/cartes.js` | Données : `CARDS`, `LOCS`, `FAC`, `RAR` |
 | `js/langue-profil.js` | Langue (`trUI`, `translateDOM`), `ULS` (fusions), `DROPS`, rangs, sauvegarde, journal des factions, classement |
 | `js/sons-effets.js` | Sons, effets visuels (`FX`, `MIX`), cinématiques (fusion, faction, fin de partie) |
@@ -46,6 +47,7 @@ Réponses en **français**.
 | `README.md` | Présentation du jeu sur GitHub (français et anglais), lien de jeu et Discord |
 | `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor |
 | `outils/equilibrage.js` | Outil d'équilibrage (IA contre IA avec le vrai moteur, hors du jeu). Il écrit `rapport-cartes.md` (complet) ou `rapport-cible.md` (`--cartes`) à la racine : **ces rapports ne sont plus versionnés** (`.gitignore`, supprimés le 14 octobre : périmés dès qu'une carte ou l'IA change, et régénérés en 10 à 50 s). Les anciennes versions restent dans l'historique git. |
+| `outils/tests-bac-a-sable.js` | Test du bac à sable (le vrai profil ne bouge jamais, aucun appel au compte) : `node outils/tests-bac-a-sable.js` |
 | `outils/tests-holo.js` | Test de l'effet holo (zoom, paquet, replis, destruction) : `node outils/tests-holo.js` |
 | `outils/tests-scenarios.js` | Tests de scénarios fixes (quelques secondes, `node outils/tests-scenarios.js`) : Nike + Aphrodite, Styx, Set, Prométhée + Pandore… **À relancer après toute modification du moteur** |
 | `images/` | Illustrations des cartes (`<id>.webp`) |
@@ -414,6 +416,14 @@ Effet réservé aux **ultra-légendaires de faction** (4 au plus d'ici février)
 - **Ratio** : les couches sont en 1060 × 1580 (0,6709) ; le cadre des cartes du jeu est en 2/3 (0,6667). L'effet garde son ratio (aucune déformation) : il est environ 0,6 % plus court que l'image fixe (3 px à 340 px de large).
 - **À savoir** : la carte holo n'affiche **ni coût, ni puissance, ni nom** (c'est une illustration pleine) : dans le zoom ils sont dans l'encadré d'info, dans le paquet seule la bannière « Ultra-légendaire » reste. Décision de Jordan à prendre.
 - Tests : `node outils/tests-holo.js` (22 vérifications : zoom, redessins sans doublon, glissement qui ne ferme pas, `destroy()`, carte sans entrée, production, manifest ou image manquants, mouvement réduit, paquet, « Passer »). Le test du doigt sur Android (fluidité, défilement hors de la carte) reste à faire par Jordan.
+
+## Bac à sable `?date=AAAA-MM-JJ` (15 octobre 2026, demande de Jordan)
+
+Ouvrir `https://kanoew.github.io/Duel-Helvara/?date=2027-02-05` simule cette date (de 2026-10-01 à 2030-12-31 ; autre valeur ignorée) pour **voir et jouer les cartes pas encore sorties, avec leurs effets et leur holo**, sur téléphone, sans rien casser.
+- **Profil neuf, jetable** (`sandboxSetup()`, appelée par `boot()`) : toutes les cartes, 99 999 CHF, tutoriel fait, journal des factions rempli, 4 decks préremplis. **Le vrai profil n'est ni lu ni modifié.**
+- **Rien n'est écrit** : `window.__wiped = true` (même garde-fou que la suppression de compte) coupe `save()` **et `lsWrite()`** (le chargement écrivait le vrai profil local si les quêtes changeaient : bug trouvé par le test et corrigé) ; `initStore()` ne fait rien (le compte n'est pas lu) ; `window.claude = null` (pas de salons en ligne, classement ni statistiques) ; les réglages cachent « Supprimer mon compte » et « Exporter mes données ».
+- **Bandeau** doré en haut : date simulée, champ de date + « Changer », « Quitter » (retour au jeu normal). Les dates de sortie du calendrier se testent donc en changeant la date (Ananké 2026-12-01, Hédoné 2027-01-15, La Source 2027-02-01…).
+- À ne pas faire : ajouter une écriture (stockage, compte) sans la garde `window.__wiped`. Test : `node outils/tests-bac-a-sable.js` (15 vérifications dont : stockage local identique avant/après une partie complète et tous les écrans, aucun appel au compte).
 
 ## Durcissement (14 octobre 2026, audit)
 - **Codes de salon** : `LIEU-` + 6 caractères de `23456789ABCDEFGHJKMNPQRSTUVWXYZ` (31 symboles, ~887 millions de codes par lieu, `mpRandInt` sans biais) ; codes et jetons (`mpTok`, 16 caractères hexadécimaux) tirés avec `crypto.getRandomValues`, plus `Math.random`. `MP_CODE` accepte aussi l'ancien format à 4 chiffres : une reprise de session déjà enregistrée dans le navigateur continue de marcher. Champ de saisie : `maxlength` 24 (les 12 d'avant coupaient déjà `SOUSGARE-1234`).

@@ -87,7 +87,7 @@ function sheetHTML(){
     <div class="setrow"><span>Cinématiques</span><button class="toggle" data-act="cine" aria-pressed="${P.cine!==false}">${P.cine!==false?"Activée":"Coupée"}</button></div>
     <div class="setrow"><span>Tutoriel</span><button class="toggle" data-act="tuto">Revoir le tutoriel</button></div>
     <div class="setacc hint">${accountHTML()}</div>
-    <div class="setrow"><span>Mes données</span><span class="footbtns"><button class="toggle" data-act="gexport">Exporter mes données</button><button class="toggle" data-act="gdelete">Supprimer mon compte</button></span></div>
+    ${window.__sandbox?"":`<div class="setrow"><span>Mes données</span><span class="footbtns"><button class="toggle" data-act="gexport">Exporter mes données</button><button class="toggle" data-act="gdelete">Supprimer mon compte</button></span></div>`}
     <div class="setacc hint legal"><a href="${LANG==='en'?'privacy.html':'confidentialite.html'}" target="_blank" rel="noopener">Confidentialité</a> · <a href="${LANG==='en'?'terms.html':'conditions.html'}" target="_blank" rel="noopener">Conditions et mentions légales</a> · <a href="${LANG==='en'?'credits-en.html':'credits.html'}" target="_blank" rel="noopener">Crédits</a></div></section>`;
   return `<div class="veil" data-act="sheetclose"><div class="sheet" data-act="sheetin">${body}<button class="ghost" data-act="sheetclose">Fermer</button></div></div>`;
 }
@@ -980,6 +980,7 @@ document.addEventListener("keydown", e=>{
 /* ======= DÉMARRAGE ======= */
 window.claude?.hot?.snapshot?.(()=>({S:S&&S.mp?null:S,uidN,games,screen:screen==='play'&&S&&S.mp?'home':screen}));
 function boot(d){
+  sandboxSetup();
   applyLang();
   if(d && d.S!==undefined){ S=(d.S&&d.S.bonus)?d.S:null; uidN=d.uidN||0; games=d.games||0; screen=d.screen||"home"; if(S) S.busy=false; }
   render(); initStore().finally(()=>{ storeReady=true; claimDaily(); render(); preloadDeck(); }); initRoom();

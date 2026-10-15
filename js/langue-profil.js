@@ -220,7 +220,7 @@ function clean(p){
   return out;
 }
 function lsRead(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)); }catch(e){ return null; } }
-function lsWrite(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(dataOf())); }catch(e){} }
+function lsWrite(){ if(window.__wiped) return; try{ localStorage.setItem(SAVE_KEY, JSON.stringify(dataOf())); }catch(e){} }
 function dataOf(){ const {_migrated,...d}=P; return d; }
 let seasonNote="";
 function checkSeason(){
@@ -320,6 +320,7 @@ function flushNow(){ if(!window.__wiped&&dirty&&dbDoc) flush(); }
 document.addEventListener("visibilitychange", ()=>{ if(document.hidden) flushNow(); });
 addEventListener("pagehide", flushNow);
 async function initStore(){
+  if(window.__sandbox) return;   /* bac à sable (?date=) : ni lecture ni écriture du compte */
   try{
     if(!window.claude || !window.claude.use) { if(P._migrated) save(); return; }
     const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
@@ -337,6 +338,7 @@ async function initStore(){
 }
 
 function accountHTML(){
+  if(window.__sandbox) return "Mode test : rien n'est sauvegardé (ni sur cet appareil, ni sur ton compte).";
   const h=window.helvara;
   return accountMain(h)+` <div class="synclast" id="synclast">${esc(trUI(lastSaveText()))}</div>`;
 }

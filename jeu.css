@@ -879,3 +879,7 @@ body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 .holotest .ht-menu[hidden]{display:none}
 .holo-poster{position:absolute;left:0;top:50%;width:100%;transform:translateY(-50%);overflow:hidden;border-radius:12px;background:#070a10}
 .holo-poster img{position:absolute;inset:0;width:100%;height:100%;display:block;max-width:none;transform:scale(1.06)}
+.sandbar{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:5px 10px;background:#3b2a05;color:#ffd98a;font:600 12px system-ui,sans-serif;border-bottom:1px solid #b58a2a}
+.sandbar input,.sandbar button{font:inherit;padding:2px 6px;border-radius:6px;border:1px solid #b58a2a;background:#1a1203;color:#ffd98a}
+.sandbar a{color:#ffd98a;margin-left:auto}
+body:has(.sandbar) #app{padding-top:62px}
