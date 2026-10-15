@@ -410,7 +410,7 @@ function fanPickHTML(){
 /* --- carte agrandie --- */
 function zoomHTML(){
   if(!zoomId) return ""; const d=CARDS[zoomId], F=FAC[d.fac], R=RAR[d.r];
-  return `<div class="veil" data-act="unzoom"><div class="zoomwrap">${fullCard(zoomId,"big")}
+  return `<div class="veil" data-act="unzoom"><div class="zoomwrap">${holoDir(zoomId)?`<div class="holoslot" id="holoslot" data-act="holoin">${fullCard(zoomId,"big")}</div>`:fullCard(zoomId,"big")}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(zoomId)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
     ${screen==="deck"&&P.owned.includes(zoomId)&&!d.token?`<p class="deckstate ${P.deck.includes(zoomId)?"in":""}">${P.deck.includes(zoomId)?`Dans ton deck · ${P.deck.length}/${ECO.deckSize}`:`Pas dans ton deck · ${P.deck.length}/${ECO.deckSize}`}</p>${deckMsg?`<p class="deckmsg">${deckMsg}</p>`:""}<button class="primary" data-act="toggle" data-id="${zoomId}">${P.deck.includes(zoomId)?"Retirer du deck":"Ajouter au deck"}</button>`:""}
     <div class="row2"><button class="ghost" data-act="unzoom">Fermer</button>${P.owned.includes(zoomId)&&P.avatar!==zoomId?`<button class="ghost" data-act="avset" data-id="${zoomId}">En faire mon avatar</button>`:""}</div></div></div></div>`;
@@ -692,6 +692,7 @@ function gzHTML(){
     <button class="ghost" data-act="gzclose">Fermer</button></div></div></div>`;
 }
 
+let zoomHolo=null;
 function render(){
   const app=document.getElementById("app");
   { const se=season(); if(se) document.documentElement.dataset.season=se; else delete document.documentElement.dataset.season; }
@@ -701,7 +702,10 @@ function render(){
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
   /* le code de salon en cours de saisie survit aux redessins (le salon commun en provoque à chaque arrivée ou départ) */
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
+  /* effet holo du zoom : détaché pendant le redessin puis remis dans le nouveau conteneur ; détruit si le zoom est fermé ou change de carte */
+  const holoKeep=zoomHolo&&zoomHolo.id===zoomId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
+  { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,zoomId); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }
   document.body.classList.toggle("hasdock",screen!=="play");
   document.body.classList.toggle("inplay",screen==="play");
   setTimeout(()=>FX.decorate(app),30);
@@ -855,7 +859,7 @@ document.addEventListener("click", e=>{
   switch(act){
     case "sheet": sheet=sheet===el.dataset.s?null:el.dataset.s; sfx("click"); render(); return;
     case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; sheet=null; render(); return;
-    case "sheetin": return;
+    case "sheetin": case "holoin": return;
     case "go": { const to=el.dataset.to; packFocus=null; if(to==="board"||to==="home") lbRefresh(); sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
     case "play": sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": screen="play"; sfx("click"); render(); return;

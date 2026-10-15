@@ -1,0 +1,57 @@
+{
+  "aspect": [
+    1060,
+    1580
+  ],
+  "layers": [
+    {
+      "src": "layer0.webp",
+      "amp": -0.003
+    },
+    {
+      "src": "layer1.webp",
+      "amp": 0.0035,
+      "foils": [
+        {
+          "type": "prism",
+          "mask": "foil1-0.webp"
+        },
+        {
+          "type": "gold",
+          "mask": "foil1-1.webp"
+        }
+      ]
+    },
+    {
+      "src": "layer2.webp",
+      "amp": 0.006,
+      "foils": [
+        {
+          "type": "gold",
+          "mask": "foil2-0.webp"
+        }
+      ]
+    },
+    {
+      "src": "layer3.webp",
+      "amp": 0.011,
+      "foils": [
+        {
+          "type": "gold",
+          "mask": "foil3-0.webp"
+        }
+      ]
+    }
+  ],
+  "backAfter": 2,
+  "fx": {
+    "back": {
+      "sparks": 50
+    },
+    "front": {
+      "sparks": 26,
+      "petals": 14,
+      "hearts": 6
+    }
+  }
+}

@@ -48,6 +48,7 @@ function ouvrirTirage(op){
   const statusEl = $(".t-status"), skipBtn = $(".t-skip"), pack = $(".t-pack"), fan = $(".t-fan"), dim = $(".t-dim"), skyCv = $(".t-sky"),
         focus = $(".t-focus"), cv = $(".t-fx"), flashEl = $(".t-flash"), banner = $(".t-banner"), badge = $(".t-badge"), endEl = $(".t-end");
 
+  let curHolo = null; /* effet holo de la carte en cours de révélation (Ultra-légendaires de faction qui en ont un) */
   let state = "pack", opened = 0, current = -1, skipped = false, closed = false, twinkle = 0, raf = 0;
   const timers = new Set();
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -264,6 +265,7 @@ function ouvrirTirage(op){
     focus.getAnimations().forEach(a => a.cancel());
     Object.assign(focus.style, { left: fx + "px", top: fy + "px", width: W + "px", height: H + "px" });
     focus.innerHTML = `<div class="t-glow" style="--gc:${L.glow}"></div><div class="t-shaker"><div class="t-inner">${backHTML(c.r)}${bigFront(c)}</div></div>`;
+    curHolo = holoMount(focus.querySelector(".t-bfront"), c.id, { idle: true });
     const glow = focus.querySelector(".t-glow"), shaker = focus.querySelector(".t-shaker"), inner = focus.querySelector(".t-inner"), neb = focus.querySelector(".t-neb");
     const sr = root.getBoundingClientRect(), r = slot.getBoundingClientRect();
     const start = `translate(${r.left - sr.left - fx}px,${r.top - sr.top - fy}px) scale(${r.width / W})`;
@@ -406,7 +408,7 @@ function ouvrirTirage(op){
     if(closed) return;
     slot.style.visibility = "";
     anim(slot.querySelector(".t-dealer"), [{ transform: "scale(1.18)" }, { transform: "scale(.96)", offset: .6 }, { transform: "none" }], { duration: 260 });
-    focus.hidden = true; focus.getAnimations().forEach(a => a.cancel()); focus.innerHTML = "";
+    focus.hidden = true; focus.getAnimations().forEach(a => a.cancel()); holoKill(curHolo); curHolo = null; focus.innerHTML = "";
     afterOpen();
   }
   function markOpen(i){
@@ -444,7 +446,7 @@ function ouvrirTirage(op){
     root.getAnimations({ subtree: true }).forEach(a => { try{ a.cancel(); }catch(e){} });
     timers.forEach(t => clearTimeout(t)); timers.clear();
     parts = []; waves = []; skyStop(); sky.freeze = false; sky.burst = false; sky.I = 0; sky.flare = 0;
-    focus.hidden = true; focus.innerHTML = ""; fan.classList.remove("focusing");
+    focus.hidden = true; holoKill(curHolo); curHolo = null; focus.innerHTML = ""; fan.classList.remove("focusing");
     banner.style.opacity = 0; badge.style.opacity = 0; dim.style.opacity = 0; flashEl.style.opacity = 0; root.style.transform = "";
     pack.hidden = true; fan.hidden = false;
     [...fan.children].forEach((s, i) => { s.style.visibility = ""; s.querySelector(".t-dealer").style.opacity = ""; s.querySelector(".t-dealer").style.transform = ""; markOpen(i); });
@@ -453,7 +455,7 @@ function ouvrirTirage(op){
 
   /* ---------- Fermeture ---------- */
   function destroy(){
-    if(closed) return; closed = true;
+    if(closed) return; closed = true; holoKill(curHolo); curHolo = null;
     clearInterval(twinkle); timers.forEach(t => clearTimeout(t)); timers.clear();
     removeEventListener("resize", sizeCanvas); document.removeEventListener("keydown", onKey);
     root.remove();

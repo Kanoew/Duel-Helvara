@@ -21,6 +21,13 @@ html = html.replace(/(<script[^>]*\ssrc=|<link[^>]*rel="stylesheet"[^>]*\shref=)
   n++; if (v !== old) stale.push(file);
   return `${pre}"${file}${v}"`;
 });
+/* module chargé à la demande (import dynamique) : l'empreinte est dans l'attribut data-mod de sa balise */
+html = html.replace(/(\sdata-mod=)"([^"?]+)(\?v=[0-9a-f]+)?"/g, (m, pre, file, old) => {
+  const p = path.join(ROOT, file); if (!fs.existsSync(p)) { console.error("Fichier introuvable : " + file); process.exitCode = 1; return m; }
+  const v = "?v=" + crypto.createHash("sha1").update(fs.readFileSync(p)).digest("hex").slice(0, 8);
+  n++; if (v !== old) stale.push(file);
+  return `${pre}"${file}${v}"`;
+});
 /* ---- service worker : versions des caches et listes de préchargement ---- */
 const sha = b => crypto.createHash("sha1").update(b).digest("hex");
 const walk = (d, o = []) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) { if (e.name !== "readme") walk(p, o); } else o.push(p); } return o; };

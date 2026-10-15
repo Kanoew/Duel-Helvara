@@ -1,0 +1,42 @@
+{
+  "aspect": [
+    1060,
+    1580
+  ],
+  "layers": [
+    {
+      "src": "layer0.webp",
+      "amp": -0.004,
+      "foils": [
+        {
+          "type": "gold",
+          "mask": "foil0-0.webp"
+        }
+      ]
+    },
+    {
+      "src": "layer1.webp",
+      "amp": 0.011,
+      "foils": [
+        {
+          "type": "shimmer",
+          "mask": "foil1-0.webp"
+        },
+        {
+          "type": "gold",
+          "mask": "foil1-1.webp"
+        }
+      ]
+    }
+  ],
+  "backAfter": 0,
+  "fx": {
+    "back": {
+      "stars": 90
+    },
+    "front": {
+      "sparks": 22,
+      "stars": 10
+    }
+  }
+}

@@ -863,3 +863,11 @@ body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 .syncb.fail{color:#ffb48a;border-color:rgba(255,180,138,.5)}
 @media (prefers-reduced-motion:reduce){ .syncb{transition:none} }
 .synclast{margin-top:4px;opacity:.85}
+/* Effet holo 2.5D (zoom d'une ultra-légendaire de faction, révélation de paquet) : l'image fixe reste tant que l'effet n'est pas prêt */
+.holoslot{width:min(340px,82vw);display:flex;justify-content:center}
+.holoslot .full.big{width:100%}
+.holoslot.holo-on>.full{display:none}
+.holohost{width:100%}
+.t-bfront.holo-on>.t-full{display:none}
+.t-bfront .holohost{width:100%}
+.t-bfront .hc-card{touch-action:auto}
