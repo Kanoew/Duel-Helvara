@@ -521,7 +521,7 @@ async function inPage() {
       const plan = aiPlan("e", 5), ids = plan.map(x => x.c.id); T("IA : Nike posée après Mā'at et Apollon", ids.includes("nike") && ids.indexOf("nike") === ids.length - 1 && ids.length === 3, ids.join()); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("p", 0, "maat"); put("p", 1, cheapNJ); put("p", 2, "vesta"); const z = card("zeus"); S.hand.e = [z];
       const plan = aiPlan("e", 5); T("IA : Zeus joué au tour 5 face à 3 cartes adverses de coût ≤ 1", plan.some(x => x.c === z), JSON.stringify(plan.map(x => x.c.id))); }
-    /* J13. IA autour de Nike (16 octobre) : petites cartes gardées pour son tour, Nike au tour 6, Zeus pour rejouer les petites cartes, deck construit autour d'elle */
+    /* J13. IA autour de Nike (15 octobre) : petites cartes gardées pour son tour, Nike au tour 6, Zeus pour rejouer les petites cartes, deck construit autour d'elle */
     const other3 = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id)) || "athena";
     fresh(); S.turn = 3; S.energy = S.energyE = 3; { const n = card("nike"), m = card("maat"), a = card("apollon"), o3 = card(other3); S.hand.e = [n, m, a, o3];
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 3 → Mā'at et Apollon gardés pour son tour", !ids.includes("maat") && !ids.includes("apollon") && !ids.includes("nike"), ids.join() || "rien"); }
