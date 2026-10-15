@@ -128,7 +128,8 @@ function costOf(s,c,li,isFirst,jf){ return c.free?0:costFor(s,c.id,li,isFirst,jf
 function costFor(s,id,li,isFirst,jf){ let c=CARDS[id].cost; if(id==="ulya") c-=S.hand[s].filter(x=>x.id!=="ulya").length; if(isFirst) c-=S.disc[s]; if(jf&&vestaT(id)&&vestaOn(s)) c-=1; if(locIs(li,"sousgare")) c-=1; if(locIs(li,"encheres")) c+=1; return Math.max(0,c); }
 function used(){ return S.staged.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf("p",x.c,x.li,i===0,jugFirst(S.staged,i))),0); }
 /* Nemesis ne peut pas être jouée au tour 6, même avec de l'énergie en réserve (Prométhée) */
-const banned=c=>c.id==="nemesis"&&S.turn>=6;
+/* Règle de design : les cartes qui verrouillent un lieu (Nemesis, Cronos, Ananké) ne peuvent pas être jouées au tour 6, même avec de l'énergie gardée (Prométhée) */
+const banned=c=>(c.id==="nemesis"||c.id==="cronos"||c.id==="ananke")&&S.turn>=6;
 function canStage(c,li){
   if(S&&S.tut){ if(!tutReq().some(([id,l])=>id===c.id&&l===li&&!S.staged.some(x=>x.c.id===id))) return false; }
   if(!c||S.locs[li].locked||muted("p",li)) return false;
@@ -411,7 +412,10 @@ function revealFx(s,li,c,opts={}){
     case "ulpele_r": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "qetesh_r": c.midnight=S.turn+1; note="minuit : charmera la carte la plus forte au tour suivant"; snd="void"; break;
     case "ulqetjor_r": { const t=strongest(targets.filter(x=>pw(o,li,x)<=5&&!charmOf(x)),o,li); if(t){ t.charm=s; delete t.charmBy; note=`charme ${nm(t)}`; snd="void"; } break; }
-    case "cronos": { const ts=S.hand[s].filter(x=>CARDS[x.id].cost<=1); ts.forEach(x=>discard(s,x)); if(ts.length){ c.pow+=2*ts.length; (c.mods=c.mods||[]).push({v:2*ts.length,src:"Cronos"}); note=`défausse ${ts.map(nm).join(" et ")}, +${2*ts.length}`; snd="void"; } break; }
+    case "echidna": { const ts=S.hand[s].filter(x=>CARDS[x.id].cost<=1); ts.forEach(x=>discard(s,x)); if(ts.length){ c.pow+=2*ts.length; (c.mods=c.mods||[]).push({v:2*ts.length,src:"Echidna"}); note=`défausse ${ts.map(nm).join(" et ")}, +${2*ts.length}`; snd="void"; } break; }
+    case "cronos": { /* dévore les deux autres lieux : toutes les cartes, des deux côtés, révélées ou non (protections normales : Fatalité, Eir, Calypso X Jordan, Sauvabelin, Baldur…) ; Styx d'un lieu est détruite en dernier pour que ses cartes Jugement adverses reviennent encore */
+      let n=0; for(let i=0;i<3;i++){ if(i===li) continue; for(const side of [o,s]){ const cs=S.board[side][i].slice().sort((a,b)=>(a.id==="styx")-(b.id==="styx")); for(const x of cs) if(destroy(side,i,x)) n++; } }
+      if(n){ note=`dévore ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "izanami": { const low=S.hand[s].length?Math.min(...S.hand[s].map(x=>CARDS[x.id].pow)):null; const t=low==null?null:gPick(S.hand[s].filter(x=>CARDS[x.id].pow===low)); if(t){ discard(s,t); note=`défausse ${nm(t)}`; snd="void"; } break; }
     case "loki": { const lost=[]; for(const side of [s,o]){ const hi=S.hand[side].length?Math.max(...S.hand[side].map(x=>CARDS[x.id].cost)):null; const t=hi==null?null:gPick(S.hand[side].filter(x=>CARDS[x.id].cost===hi)); if(t){ discard(side,t); lost.push(nm(t)); } } if(lost.length){ note=`chacun défausse sa plus chère : ${lost.join(" et ")}`; snd="void"; } break; }
     case "ares": { let n=0; for(const x of targets) if(weaken(o,li,x,1)) n++; if(n){ c.pow+=n; note=`−1 à ${n}, +${n}`; snd="debuff"; } break; }
@@ -550,9 +554,10 @@ function aiPlan(me="e",tierOv){
       hit+=foeP; pow-=lost; if(foeN>=2||mineN>=2) adj+=2; adj+=S.turn===5?2:S.turn===6?-1:0;
       /* avec Nike en attente : la foudre ramène les petites cartes Jugement en main pour les rejouer avant elle au tour suivant */
       if(nikeWait&&S.turn===5){ let back=0; for(let i=0;i<3;i++) for(const x of S.board[me][i]) if(x.rev&&smallJ(x)&&!shielded(me,i)&&!locIs(i,"sauvabelin")) back++; if(back>=2) adj+=2+1.5*Math.min(4,back); } }
-    if(c.id==="ananke"){ /* fin de partie : puissance adverse ici +1 (elle gagne le lieu). Jamais avec une Nemesis adverse ; seulement au tour 6 si possible (un Apsu adverse posé plus tard lui retirerait tout) */
+    if(c.id==="ananke"){ /* fin de partie : puissance adverse ici +1 (elle gagne le lieu). Jamais avec une Nemesis adverse */
       if(S.board[op][li].some(x=>live(x)&&x.id==="nemesis")) return null;
-      pow=op0[li]+opFut[li]+1; if(S.turn<6) adj-=5; }
+      /* 4/1, jamais au tour 6 : au tour 4 ou 5, là où l'adversaire a déjà beaucoup de puissance et peu de place pour poser un contre */
+      const room=Math.max(0,capOf(op,li)-S.board[op][li].length); pow=op0[li]+opFut[li]*(room?0.6:0)+1; adj+=(S.turn>=4?2:-4)+(room<=0?3:room===1?1:-1); }
     if(c.id==="hedone"){ /* 2 charmes (tours 5 et 6) si elle est posée au tour 5 au plus tard ; il faut de la place chez l'adversaire ici et des cartes adverses ailleurs */
       const room=capOf(op,li)-S.board[op][li].length, others=[0,1,2].some(i=>i!==li&&S.board[op][i].some(x=>x.rev));
       const n=Math.min(2,7-S.turn); if(room>0&&others) pow+=2.5*n+(room>=2?1:0); else adj-=2;
@@ -591,7 +596,14 @@ function aiPlan(me="e",tierOv){
     /* fusions posées trop rarement par rapport à ce qu'elles rapportent (mesure du 14 octobre : 8 à 12 % des decks) */
     if(c.id==="ulhel"&&((S.discardPile[me]||[]).length||(S.graveyard[me]||[]).length)) adj+=6;
     if(c.id==="ulqetyar") adj+=6;
-    if(c.id==="cronos") pow+=2*hand.filter(x=>x!==c&&CARDS[x.id].cost<=1&&!ctx.plays.some(y=>y.c===x)).length;
+    if(c.id==="echidna") pow+=2*hand.filter(x=>x!==c&&CARDS[x.id].cost<=1&&!ctx.plays.some(y=>y.c===x)).length;
+    if(c.id==="cronos"){ /* au tour 5, sur un lieu qu'elle mène, quand elle perd ou est à égalité ailleurs, avec au moins 2 petites cartes pour le tour 6 ; jamais si elle mène déjà deux lieux */
+      if(diffs.filter(d=>d<0).length>=2) return null;
+      const others=[0,1,2].filter(i=>i!==li); let foeP=0, mineP=0;
+      for(const i of others){ for(const x of S.board[op][i]) if(x.rev) foeP+=Math.max(0,cardPow(op,i,x)); for(const x of S.board[me][i]) if(x.rev) mineP+=Math.max(0,cardPow(me,i,x)); }
+      hit+=foeP*.6; pow-=mineP*.6;
+      adj+=S.turn===5?3:-6; if(diffs[li]<0) adj+=6; else adj-=10; if(others.every(i=>diffs[i]>=0)) adj+=3;
+      adj+=hand.filter(x=>x!==c&&CARDS[x.id].cost<=1).length>=2?2:-2; }
     if(c.id==="izanami") adj-=hand.length>1?1:0;
     if(c.id==="loki"&&S.hand[op].length>=2) hit+=1.5;
     if(wary&&d.pow>=6&&!S.board[me][li].length&&!ctx.pend[li]) adj-=1.5;
@@ -615,7 +627,7 @@ function aiPlan(me="e",tierOv){
         const room=capOf(op,li)-S.board[op][li].length, others=[0,1,2].some(i=>i!==li&&S.board[op][i].some(y=>y.rev)); if(room>0&&others) out.m[li]+=2.5*Math.min(2,7-S.turn); }
     }catch(e){ out=null; } finally{ S=keep; quiet=kq; }
     return out; };
-  const exactP=r=>{ const p=[0,1,2].map(li=>{ let m=r.m[li]+meFut[li]-(r.o[li]+opFut[li]); if(r.inv[li]) m=-m; if(r.ank&&r.ank[li]&&S.turn>=6) return r.inv[li]?.03:.95; return 1/(1+Math.exp(-1.6*m/sd)); });
+  const exactP=r=>{ const p=[0,1,2].map(li=>{ let m=r.m[li]+meFut[li]-(r.o[li]+opFut[li]); if(r.inv[li]) m=-m; if(r.ank&&r.ank[li]) return r.inv[li]?.03:(capOf(op,li)-S.board[op][li].length<=0?.95:.8); return 1/(1+Math.exp(-1.6*m/sd)); });
     return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
   const cands=[];
   for(let mask=0;mask<(1<<hand.length);mask++){

@@ -326,8 +326,8 @@ async function inPage() {
     T("Ananké posée après une Qetesh et une Calypso adverses : ni charmée ni captive", !a.charm && !a.captive && !a.neg, JSON.stringify({ ch: a.charm, cap: !!a.captive })); }
   /* A5. Deux Ananké face à face : pas de boucle infinie */
   fresh(); S.turn = 6; { const a = put("p", 0, "ananke"), b = put("e", 0, "ananke"); S.final = true; const x = cardPow("p", 0, a), y = cardPow("e", 0, b); T("Deux Ananké face à face : calcul fini", Number.isFinite(x) && Number.isFinite(y), `${x} / ${y}`); S.final = false; }
-  /* A6. IA : jamais sur un lieu avec une Nemesis adverse ; au tour 6 sur le lieu où elle perd */
-  fresh(); S.turn = 6; S.energy = S.energyE = 6; { put("p", 0, "nemesis"); put("p", 1, plain[0], 5); put("e", 1, plain[1], 8); put("e", 2, plain[2], 3);
+  /* A6. IA : jamais sur un lieu avec une Nemesis adverse (tour 5 : elle ne se joue plus au tour 6) */
+  fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("p", 0, "nemesis"); put("p", 1, plain[0], 5); put("e", 1, plain[1], 8); put("e", 2, plain[2], 3);
     const a = card("ananke"); S.hand.e = [a]; const plan = aiPlan("e", 5); const at = plan.find(x => x.c === a);
     T("IA : Ananké jouée, mais jamais sur le lieu de la Nemesis adverse", !!at && at.li !== 0, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
 
@@ -552,6 +552,44 @@ async function inPage() {
     { let n = 0, ok = 0; for (let i = 0; i < 400; i++) { const d = aiDeck(5, true).deck; if (!d.includes("nike")) continue; n++; if (d.filter(id => CARDS[id].fac === "jugement" && CARDS[id].cost <= 1 && id !== "nike").length >= 3) ok++; }
       /* rarement 2 seulement : quand les autres cartes du deck sont toutes liées à une synergie, elles ne sont pas remplacées */
       T("IA : un deck de l'IA avec Nike emporte au moins 3 petites cartes Jugement (au moins 95 % des decks)", n > 0 && ok >= .95 * n, `${ok}/${n}`); }
+  }
+
+
+  /* ===== Ananké 4/1 et Cronos (15 octobre) : les cartes qui verrouillent un lieu ne se jouent pas au tour 6 ; Echidna reprend l'ancien effet de Cronos ===== */
+  { const stage = (id, turn, en) => { fresh(); S.turn = turn; S.energy = en; const c = card(id); S.hand.p = [c]; S.staged = []; return canStage(c, 0); };
+    T("Ananké : injouable au tour 6 (6 et 10 d'énergie, Prométhée), jouable aux tours 4 et 5", !stage("ananke", 6, 6) && !stage("ananke", 6, 10) && stage("ananke", 4, 4) && stage("ananke", 5, 5));
+    T("Cronos : injouable au tour 6 (même avec 10 d'énergie), jouable au tour 5", !stage("cronos", 6, 6) && !stage("cronos", 6, 10) && stage("cronos", 5, 5));
+    T("Données : Ananké 4/1 ; Cronos Jugement légendaire 5/3 (14 décembre) ; Echidna Primordial 3/3, effet de défausse", CARDS.ananke.cost === 4 && CARDS.ananke.pow === 1 && CARDS.cronos.fac === "jugement" && CARDS.cronos.r === "L" && CARDS.cronos.cost === 5 && CARDS.cronos.pow === 3 && CARDS.cronos.rel === "2026-12-14" && CARDS.echidna.fac === "primordial" && /défausse les cartes de coût 1/.test(CARDS.echidna.fx));
+    /* Ananké posée au tour 4, Qetesh adverse au tour 5 → charmée */
+    fresh(); S.turn = 4; { const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); S.turn = 5; const q = card("qetesh"); S.hand.e = [q]; await resolveTurn([], [{ c: q, li: 0 }], false);
+      T("Ananké posée au tour 4, Qetesh adverse au tour 5 : charmée", a.charm === "e", a.charm); }
+    /* Ananké posée au tour 5 sur un lieu adverse plein → plus aucun contre possible, elle gagne */
+    fresh(); S.turn = 5; { for (let k = 0; k < capOf("e", 0); k++) put("e", 0, plain[k], 3); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
+      const full = S.board.e[0].length >= capOf("e", 0); S.final = true; const v = cardPow("p", 0, a), w = leader(0); S.final = false;
+      T("Ananké posée au tour 5 face à un lieu adverse plein : aucune place pour un contre, elle gagne le lieu", full && w === "p" && v === total("e", 0) + 1, `${v} contre ${total("e", 0)}, plein ${full}`); }
+    /* Cronos au tour 5 : les deux autres lieux sont vidés, des deux côtés ; son lieu intact */
+    fresh(); S.turn = 5; { const k0 = put("p", 0, plain[0], 2), e0 = put("e", 0, plain[1], 3); put("p", 1, plain[2], 2); put("e", 1, plain[3], 4); put("p", 2, "fleche"); put("e", 2, plain[4], 1);
+      const cr = card("cronos"); S.hand.p = [cr]; const d0 = S.destroyed; await resolveTurn([{ c: cr, li: 0 }], [], false);
+      T("Cronos : les deux autres lieux sont vides des deux côtés, son lieu intact, 4 destructions comptées", !S.board.p[1].length && !S.board.e[1].length && !S.board.p[2].length && !S.board.e[2].length && S.board.p[0].includes(k0) && S.board.e[0].includes(e0) && S.destroyed - d0 === 4, `${S.destroyed - d0} détruites`); }
+    /* Ananké et les cartes protégées par Eir survivent */
+    fresh(); S.turn = 5; { const an = put("e", 1, "ananke"), x = put("e", 1, plain[0], 2), eir = put("e", 2, "eir"), y = put("e", 2, plain[1], 2); const cr = card("cronos"); S.hand.p = [cr]; await resolveTurn([{ c: cr, li: 0 }], [], false);
+      T("Cronos : Ananké (Fatalité) survit, les autres cartes de son lieu non ; le lieu d'Eir est protégé", S.board.e[1].includes(an) && !S.board.e[1].includes(x) && S.board.e[2].includes(eir) && S.board.e[2].includes(y), JSON.stringify(S.board.e.map(l => l.map(c => c.id)))); }
+    /* Styx adverse : ses cartes Jugement détruites par Cronos reviennent dans sa main ; les miennes non */
+    fresh(); S.turn = 5; { put("e", 1, "styx"); put("e", 1, "athena", 3); put("p", 2, "vesta"); const cr = card("cronos"); S.hand.p = [cr]; S.hand.e = []; S.deck.p = []; S.deck.e = []; await resolveTurn([{ c: cr, li: 0 }], [], false);
+      T("Cronos face à Styx adverse : Athéna revient dans la main adverse ; ma Vesta ne revient pas", S.hand.e.some(c => c.id === "athena") && !S.hand.p.some(c => c.id === "vesta") && S.graveyard.p.includes("vesta"), `main adverse : ${S.hand.e.map(c => c.id).join()}`); }
+    /* Cronos au tour 5, puis au tour 6 : Mā'at + Flèche + Vesta + Nike dans un lieu vidé, Aphrodite ensuite (dans l'autre lieu vidé : 4 cartes au plus par lieu) */
+    fresh(); S.turn = 5; { put("e", 1, plain[0], 3); put("e", 2, plain[1], 3); const cr = card("cronos"); S.hand.p = [cr]; await resolveTurn([{ c: cr, li: 0 }], [], false);
+      S.turn = 6; S.energy = 6; const m = card("maat"), f = card("fleche"), v = card("vesta"), n = card("nike"), ap = card("aphrodite"); S.hand.p = [m, f, v, n, ap];
+      await resolveTurn([{ c: m, li: 1 }, { c: f, li: 1 }, { c: v, li: 1 }, { c: n, li: 1 }, { c: ap, li: 2 }], [], false);
+      T("Après Cronos : Nike calcule normalement dans un lieu vidé (2 + 3 × 2, rejouée par Aphrodite : 14)", n.pow === 14, n.pow); }
+    /* Echidna : défausse les cartes de coût 0 ou 1 de ta main, +2 chacune */
+    fresh(); S.turn = 4; { const e = card("echidna"); S.hand.p = [e, card("fleche"), card("maat"), card("athena")]; await resolveTurn([{ c: e, li: 0 }], [], false);
+      T("Echidna : défausse les 2 cartes de coût 0 ou 1 (+4), garde les autres", e.pow === 7 && S.discardPile.p.length === 1 && S.hand.p.some(c => c.id === "athena") && !S.hand.p.some(c => c.id === "maat"), `${e.pow}, défausse ${S.discardPile.p.join()}`); }
+    /* IA : Cronos au tour 5 quand elle mène un lieu et perd les deux autres, avec 2 petites cartes ; jamais si elle mène déjà deux lieux */
+    fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("e", 0, plain[0], 6); put("p", 0, plain[1], 2); put("p", 1, plain[2], 6); put("p", 2, plain[3], 6); const cr = card("cronos"); S.hand.e = [cr, card("maat"), card("vesta")];
+      const plan = aiPlan("e", 5), at = plan.find(x => x.c === cr); T("IA : Cronos joué au tour 5 sur le lieu qu'elle mène, quand elle perd les deux autres", !!at && at.li === 0, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+    fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("e", 0, plain[0], 6); put("e", 1, plain[1], 6); put("p", 2, plain[2], 6); const cr = card("cronos"); S.hand.e = [cr];
+      const plan = aiPlan("e", 5); T("IA : jamais Cronos quand elle mène déjà deux lieux", !plan.some(x => x.c === cr), JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
   }
 
   return res;

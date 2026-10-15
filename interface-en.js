@@ -11,6 +11,7 @@
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
     [/^Fatalité : ni détruite ni déplacée$/, ()=>"Fate: neither destroyed nor moved"],
+    [/^dévore (\d+) cartes?$/, (m,n)=>`devours ${n} ${s(n,"card")}`],
     [/^Flèche d'Apollon ajoutée à la main$/, ()=>"Apollo's Arrow added to hand"],
     [/^main pleine : Flèche perdue$/, ()=>"hand full: Arrow lost"],
     [/^Arme d'Héphaïstos forgée dans la main$/, ()=>"Hephaestus's Weapon forged into hand"],
@@ -467,7 +468,7 @@
       },
       DROPS:{
         nov15:"Prometheus keeps the fire, Pandora opens the box, Athena guides your hand, and Styx watches over her daughters: Bia, and Nike, the first faction ultra-legendary. Ma'at, Apollo and Vesta prepare her way. She is earned by playing 50 games with 8 Judgement cards: the Faction journal is already counting.",
-        dec14:"Zeus hurls his lightning, Hephaestus forges his weapons, Tsukuyomi watches over his own… while the Star Fold opens for Christmas.",
+        dec14:"Zeus hurls his lightning, Hephaestus forges his weapons, Tsukuyomi watches over his own, Cronus devours… while the Star Fold opens for Christmas.",
         dec26:"Odin, Thor, Hel, Baldur, Hades, Poseidon, Circe, Qetesh, the people of Lausanne… five new fusions and the Creator's Domain.",
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."

@@ -295,6 +295,7 @@ const FX=(()=>{
     nemesis:  {loc:[["vortex",{col:["170,190,230","230,235,255"],rev:true}],["rings",{col:"200,215,255"}]]},
     mohini:   {loc:[["vortex",{col:["255,150,200","255,210,230"]}],["sparkle",{col:"255,200,230"}]]},
     carillonneur:{loc:[["rings",{col:GOLD,n:4}],["flicker",{col:GOLD,y:.15}]]},
+    cronos:   {loc:[["vortex",{col:["150,110,70","90,60,40","220,170,110"]}],["smoke",{col:"60,50,45"}],["flicker",{col:"200,150,90",y:.3}]]},
     zeus:     {loc:[["burst",{col:["255,245,200","200,220,255","255,255,255"]}],["rays",{col:"230,235,255",n:4}],["flicker",{col:"210,225,255",y:.2}]]},
     odin:     {loc:[["smoke",{col:"120,130,150"}],["rays",{col:"200,215,235",n:3}]]},
     hel:      {loc:[["smoke",{col:"120,170,210"}],["sparkle",{col:"200,230,255"}]]},
