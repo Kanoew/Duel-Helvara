@@ -40,8 +40,10 @@ const rarN=id=>{ const u=ULof(id); return u&&u.fac?"Ultra-légendaire de faction
 const rc=d=>(d.r==="R"||d.r==="E"||d.r==="L")&&!d.token?` r-${d.r}`:"";
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
-  const fx=/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
-  return `<div class="full ${extra}${d.r==="U"?" holo":""}${rc(d)}${fx}">${art(id)}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
+  /* carte holo en grand : l'image fixe n'a plus les animations d'ultra-légendaire (reflet arc-en-ciel, ambiance, inclinaison) : l'effet holo prend la suite et elles apparaissaient quelques instants avant de disparaître */
+  const hp=/\bbig\b/.test(extra)&&d.r==="U"&&!!holoDir(id);
+  const fx=!hp&&/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
+  return `<div class="full ${extra}${d.r==="U"&&!hp?" holo":""}${hp?" holopre":""}${rc(d)}${fx}">${art(id)}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${fxH(d.fx)}</div>`:""}</div>
     <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }

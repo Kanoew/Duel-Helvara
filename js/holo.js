@@ -25,7 +25,7 @@ function holoMount(slot, id, opts) {
       h.card = card; h.el = el;
       /* l'image fixe reste sous l'effet pendant son fondu d'apparition (0,25 s) : sinon un creux sombre apparaît au premier chargement */
       setTimeout(() => { if (!h.dead) slot.classList.add("holo-on"); }, 350);
-    } catch (e) { if (el) el.remove(); }
+    } catch (e) { if (el) el.remove(); const f = slot.querySelector(".full.holopre"); if (f) { f.classList.remove("holopre"); f.classList.add("holo"); } }   /* repli : l'image fixe retrouve son reflet d'ultra-légendaire */
   })();
   return h;
 }
