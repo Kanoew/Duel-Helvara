@@ -266,6 +266,7 @@ function ouvrirTirage(op){
     Object.assign(focus.style, { left: fx + "px", top: fy + "px", width: W + "px", height: H + "px" });
     focus.innerHTML = `<div class="t-glow" style="--gc:${L.glow}"></div><div class="t-shaker"><div class="t-inner">${backHTML(c.r)}${bigFront(c)}</div></div>`;
     let holoOver = null;
+    const posterP = holoDir(c.id) ? holoPoster(c.id) : null;
     if(holoDir(c.id)){ holoOver = document.createElement("div"); holoOver.className = "t-holoover"; focus.appendChild(holoOver); curHolo = holoMount(holoOver, c.id, { idle: true }); }
     const glow = focus.querySelector(".t-glow"), shaker = focus.querySelector(".t-shaker"), inner = focus.querySelector(".t-inner"), neb = focus.querySelector(".t-neb");
     const sr = root.getBoundingClientRect(), r = slot.getBoundingClientRect();
@@ -328,7 +329,9 @@ function ouvrirTirage(op){
     }
     if(closed || skipped) return;
 
-    /* 3 · Révélation */
+    /* 3 · Révélation : une carte holo se retourne sur son image à plat (pas sur l'image fixe, qui change au moment où l'effet prend la suite) */
+    if(posterP){ const box = await posterP; const bf = focus.querySelector(".t-bfront"); if(box && bf && !closed && !skipped) bf.replaceChildren(box); }
+    if(closed || skipped) return;
     const flip = d => anim(inner, [{ transform: "rotateY(0deg)" }, { transform: "rotateY(196deg)", offset: .78 }, { transform: "rotateY(180deg)" }], { duration: d, easing: "cubic-bezier(.3,0,.2,1)" });
     if(c.r === "R" || c.r === "E" || c.r === "L" || c.r === "U") sfxQ(heavy ? "legend" : "rare");
     if(c.r === "C"){

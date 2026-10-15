@@ -64,6 +64,7 @@ srv.listen(0, async () => {
     await p.evaluate(`tutoStep=-1;P.tuto=true;screen="shop";render();ouvrirTirage({res:[{id:"nike",isNew:true,v:0},{id:"yarden",isNew:true,v:0},{id:"hedone",isNew:true,v:0}],name:"Test",img:"images/pack.webp",pid:"x",price:100});`);
     await p.waitForTimeout(600); await p.locator(".t-pack").click({ force: true }); await p.waitForTimeout(2500); await p.locator(".t-slot:nth-child(1)").click({ force: true }); await p.waitForTimeout(5200);
     check("paquet : l'effet tourne à plat, par-dessus la carte révélée (hors de la carte en 3D)", await n(p, ".t-holoover.on .hc-card.hc-ready") === 1 && await n(p, ".t-bfront .hc-card") === 0);
+    check("paquet : la carte holo se retourne sur son image à plat (sans le texte de l'image fixe)", await n(p, ".t-bfront .holo-poster") === 1 && await n(p, ".t-bfront .band") === 0);
     await p.locator(".t-skip").click({ force: true }).catch(() => {}); await p.waitForTimeout(800);
     check("paquet : « Passer » détruit l'effet", await n(p, ".hc-card") === 0);
     check("paquet : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();

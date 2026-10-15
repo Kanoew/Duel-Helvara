@@ -4,7 +4,7 @@
    Si le module, le manifest ou une image ne charge pas, rien ne change à l'écran (l'image fixe reste). */
 const HOLO = {};
 /* Cartes de test : ouvrir le jeu avec ?holo=test affiche les 4 exemples à la place des 4 ultra-légendaires de faction. */
-const HOLO_TEST = { nike: "exemple-1", ananke: "exemple-2", hedone: "exemple-3", nike_v: "exemple-4" };
+const HOLO_TEST = { nike: "exemple-1", ananke: "exemple-3", hedone: "exemple-2", nike_v: "exemple-4" };
 const HOLO_TESTON = /[?&]holo=test\b/.test(location.search);
 const HOLO_MOD = (document.currentScript && document.currentScript.dataset.mod) || "js/holo-card.js";
 const holoDir = id => (HOLO_TESTON ? HOLO_TEST : HOLO)[id] || null;
@@ -26,6 +26,18 @@ function holoMount(slot, id, opts) {
     } catch (e) { if (el) el.remove(); }
   })();
   return h;
+}
+/* Image à plat de la carte holo (les couches empilées, sans mouvement) : sert de face à la carte qui se retourne dans l'ouverture de paquet,
+   pour que l'effet, posé ensuite par-dessus, prenne la suite sans changement d'image (l'image fixe du jeu a le nom, le coût et le texte). Renvoie null si indisponible. */
+async function holoPoster(id) {
+  const dir = holoDir(id); if (!dir) return null;
+  try {
+    const r = await fetch("images/holo/" + dir + "/manifest.json"); if (!r.ok) return null;
+    const m = await r.json(), box = document.createElement("div"); box.className = "holo-poster"; box.style.aspectRatio = m.aspect[0] + " / " + m.aspect[1];
+    const imgs = m.layers.map(L => { const im = new Image(); im.alt = ""; im.src = "images/holo/" + dir + "/" + L.src; box.appendChild(im); return im; });
+    await Promise.all(imgs.map(im => im.decode()));
+    return box;
+  } catch (e) { return null; }
 }
 function holoKill(h) {
   if (!h) return; h.dead = true;
