@@ -868,6 +868,7 @@ body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 .holoslot .full.big{width:100%}
 .holoslot.holo-on>.full{display:none}
 .holohost{width:100%}
+.holohost .hc-card{transition:opacity .9s ease}
 .holoslot:not(.holo-on)>.holohost{position:absolute;left:0;top:0;pointer-events:none}
 /* paquet : l'effet est posé à plat par-dessus la carte retournée, une fois le retournement fini (dans la carte en 3D, des couches disparaissaient par moments sur téléphone) */
 .t-holoover{position:absolute;inset:0;display:flex;align-items:center;pointer-events:none;visibility:hidden}

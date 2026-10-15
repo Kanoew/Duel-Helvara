@@ -23,8 +23,8 @@ function holoMount(slot, id, opts) {
       const card = await mod.HoloCard.load(el, "images/holo/" + dir + "/manifest.json", Object.assign({ radius: 12 }, opts));
       if (h.dead) { card.destroy(); el.remove(); return; }
       h.card = card; h.el = el;
-      /* l'image fixe reste sous l'effet pendant son fondu d'apparition (0,25 s) : sinon un creux sombre apparaît au premier chargement */
-      setTimeout(() => { if (!h.dead) slot.classList.add("holo-on"); }, 350);
+      /* l'image fixe reste sous l'effet pendant son fondu d'apparition (0,9 s, fondu enchaîné lent) : sinon un creux sombre apparaît au premier chargement */
+      setTimeout(() => { if (!h.dead) slot.classList.add("holo-on"); }, 950);
     } catch (e) { if (el) el.remove(); const f = slot.querySelector(".full.holopre"); if (f) { f.classList.remove("holopre"); f.classList.add("holo"); } }   /* repli : l'image fixe retrouve son reflet d'ultra-légendaire */
   })();
   return h;

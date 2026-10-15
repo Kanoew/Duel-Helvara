@@ -25,7 +25,7 @@ srv.listen(0, async () => {
     check("zoom : l'image fixe d'une carte holo n'a pas les animations d'ultra-légendaire (elles s'affichaient puis disparaissaient)", await p.evaluate(() => { const f = document.querySelector("#holoslot>.full"); return !!f && !f.classList.contains("holo") && !f.classList.contains("tilt") && !f.classList.contains("amb") && f.classList.contains("holopre"); }));
     await p.waitForSelector(".hc-card.hc-ready"); const sous = await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display);
     check("zoom : l'image fixe reste sous l'effet pendant son fondu (pas de creux sombre au premier chargement)", sous !== "none", sous);
-    await p.waitForTimeout(700);
+    await p.waitForTimeout(1400);
     check("zoom : l'effet est prêt et l'image fixe est cachée ensuite", await n(p, ".hc-card.hc-ready") === 1 && await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display === "none"));
     await p.evaluate("render();render();"); await p.waitForTimeout(300);
     check("zoom : des redessins n'empilent pas d'instances", await n(p, ".hc-card") === 1);
