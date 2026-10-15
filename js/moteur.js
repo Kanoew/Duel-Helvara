@@ -152,7 +152,7 @@ function cardPow(s,li,c){
   if(!c.neg){
     if(c.id==="costumes" && inPlay("thot")) p+=4;
     if(c.id==="freyr" && hasHere(s,li,"freya")) p+=2;
-    if(c.id==="tsukuyomi" && S.board[s].some(col=>col.some(x=>x.rev&&(charOf(x.id)==="amaterasu"||charOf(x.id)==="susanoo")))) p+=2;
+    if(c.id==="tsukuyomi" && S.board[s][li].some(x=>x!==c&&x.rev&&CARDS[x.id].fac==="jugement")) p+=2;
     if(c.id==="freya" && hasHere(s,li,"freyr")) p+=4;
     if(c.id==="selene" && S.turn>=5) p+=3;
     if(c.id==="nergal" && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="ereshkigal"))) p+=3; /* continu */
@@ -535,13 +535,13 @@ function aiPlan(me="e",tierOv){
     if(c.id==="mouche") pow-=mates;
     if(c.id==="nike"){ pow+=ctx.plays.length*2;
       /* au tour 6 de préférence ; plus tôt seulement avec au moins 3 cartes jouées avant elle (Vesta, Prométhée) */
-      if(S.turn<6&&ctx.plays.length<3) adj-=14; }
+      if(S.turn<6&&ctx.plays.length<3) adj-=20; }
     if(nikeWait&&!ctx.nike&&smallJ(c)&&S.turn<6&&!zeusPlan&&hand.length<7) adj-=nikeHand?8:4;
     /* vague Jugement (15 novembre, 14 décembre) */
     if(c.id==="maat"&&(mates||S.board[me][li].some(x=>x.rev))) pow+=1;
     if((c.id==="apollon"||c.id==="hephaistos")&&hand.length-ctx.plays.length<=7) adj+=c.id==="apollon"?1.5:2;
     if(c.id==="vesta"&&S.turn<6&&hand.some(x=>x!==c&&CARDS[x.id].fac==="jugement"&&!ctx.plays.some(y=>y.c===x))) adj+=1.5;
-    if(c.id==="tsukuyomi"&&(S.board[me].some(col=>col.some(x=>x.rev&&["amaterasu","susanoo"].includes(charOf(x.id))))||ctx.plays.some(x=>["amaterasu","susanoo"].includes(charOf(x.c.id))))) pow+=2;
+    if(c.id==="tsukuyomi"&&(S.board[me][li].some(x=>x.rev&&CARDS[x.id].fac==="jugement")||ctx.plays.some(x=>x.li===li&&CARDS[x.c.id].fac==="jugement")||hand.some(x=>x!==c&&CARDS[x.id].fac==="jugement"&&!ctx.plays.some(y=>y.c===x)))) pow+=2;
     if(c.id==="zeus"){ /* la foudre : cartes de coût 1 ou moins des deux côtés ; les tiennes (Jugement) reviennent en main. De préférence au tour 5 */
       let foeP=0, foeN=0, mineN=0, lost=0;
       for(let i=0;i<3;i++){ for(const x of S.board[op][i]) if(x.rev&&CARDS[x.id].cost<=1&&!untargetable(me,op,x)&&!shielded(op,i)&&!locIs(i,"sauvabelin")){ foeP+=Math.max(0,cardPow(op,i,x)); foeN++; }

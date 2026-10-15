@@ -74,7 +74,7 @@ window.HELVARA_EN = {
     apollon:{n:"Apollo", fx:"On Reveal: add an Apollo's Arrow (cost 0, Power 1) to your hand."},
     vesta:{fx:"On Reveal: your next Judgement card costs 1 less."},
     hephaistos:{n:"Hephaestus", fx:"On Reveal: forge a Hephaestus's Weapon (cost 1, Power 2) into your hand."},
-    tsukuyomi:{fx:"Ongoing: +2 Power if Amaterasu or Susanoo is on your side."},
+    tsukuyomi:{fx:"Ongoing: +2 Power if you have another Judgement card here."},
     zeus:{fx:"On Reveal: lightning destroys every card that costs 1 or less, on both sides, in all 3 locations. Your Judgement cards destroyed this way return to your hand."},
     nike:{fx:"On Reveal: +2 Power for each other card you played before her this turn. Requires 8 Judgement cards in the deck, Nike included."},
     ulya:{fx:"Costs 1 less for each other card in your hand. On Reveal: +1 Power for each card left in your hand. Requires Yarden Weiss and Apsu in the deck."},

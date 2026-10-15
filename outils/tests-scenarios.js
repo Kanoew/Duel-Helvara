@@ -28,12 +28,12 @@ async function inPage() {
   const find = (s, id) => { for (let li = 0; li < 3; li++) for (const c of S.board[s][li]) if (c.id === id) return c; return null; };
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
-  /* 1. Nike + Aphrodite : 2 cartes à 1, Nike, Aphrodite au tour 6 → Nike finit à 9 */
+  /* 1. Nike + Aphrodite : 2 cartes à 1, Nike (3/2), Aphrodite au tour 6 → Nike finit à 10 */
   fresh(); S.turn = 6; { const a = card(plain[0], 1), b = card(plain[1], 1), n = card("nike"), ap = card("aphrodite"); S.hand.p = [a, b, n, ap];
-    await resolveTurn([a, b, n, ap].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Nike + Aphrodite : Nike finit à 9", nk && nk.pow === 9, nk && nk.pow); }
+    await resolveTurn([a, b, n, ap].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Nike + Aphrodite : Nike finit à 10", nk && nk.pow === 10, nk && nk.pow); }
   /* 1b. Aphrodite posée AVANT Nike : elle ne compte pas parmi les cartes jouées avant Nike */
   fresh(); S.turn = 5; { const a = card(plain[0], 1), ap = card("aphrodite"), n = card("nike"); S.hand.p = [a, ap, n];
-    await resolveTurn([a, ap, n].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Aphrodite posée avant Nike : Nike +2 seulement", nk && nk.pow === 3, nk && nk.pow); }
+    await resolveTurn([a, ap, n].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Aphrodite posée avant Nike : Nike +2 seulement (4)", nk && nk.pow === 4, nk && nk.pow); }
   /* 2. Aphrodite seule en début de tour → aucun effet */
   fresh(); S.turn = 4; { const ap = card("aphrodite"); S.hand.p = [ap]; const before = JSON.stringify(S.board);
     await resolveTurn([{ c: ap, li: 0 }], [], false); const a = find("p", "aphrodite"); T("Aphrodite seule : aucun effet", a && a.pow === 2 && S.board.p.flat().length === 1 && !before.includes('"id":"aphrodite"'), a && a.pow); }
@@ -461,11 +461,11 @@ async function inPage() {
   /* ===== Renfort Jugement (15 novembre et 14 décembre 2026) : Mā'at, Apollon, Vesta, Héphaïstos, Tsukuyomi, Zeus ===== */
   { const cheapNJ = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost <= 1 && /^Révélation/.test(CARDS[id].fx || "") && !ULof(id));
     const filler = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)).slice(0, 7);
-    /* J1. Tour 6 : Mā'at (0) + Flèche (0) + Vesta (1, réduite à 0) + Apollon (1) + Nike (3) → Nike finit à 9, 4 d'énergie en tout */
+    /* J1. Tour 6 : Mā'at (0) + Flèche (0) + Vesta (1, réduite à 0) + Apollon (1) + Nike (3) → Nike finit à 10, 4 d'énergie en tout */
     fresh(); S.turn = 6; S.energy = 6; S.vesta = { p: 1, e: 0 }; { const m = card("maat"), f = card("fleche"), v = card("vesta"), a = card("apollon"), n = card("nike"); S.hand.p = [m, f, v, a, n];
       const plays = [m, f, v, a, n].map(c => ({ c, li: 0 })); S.staged = plays.slice(); const u = used(); S.staged = [];
       await resolveTurn(plays, [], false); const nk = find("p", "nike");
-      T("Tour 6 : Mā'at + Flèche + Vesta + Apollon puis Nike → Nike finit à 9", nk && nk.pow === 9, nk && nk.pow);
+      T("Tour 6 : Mā'at + Flèche + Vesta + Apollon puis Nike → Nike finit à 10", nk && nk.pow === 10, nk && nk.pow);
       T("Tour 6 : ces 5 cartes coûtent 4 d'énergie (Vesta du tour précédent : −1 sur la première carte Jugement de coût 1 ou plus)", u === 4, u);
       T("Apollon : la Flèche arrive en main après sa Révélation", S.hand.p.some(x => x.id === "fleche"), S.hand.p.map(x => x.id).join()); }
     /* J1b. Vesta en attente : Nike coûte 2 si elle est la première carte Jugement de coût 1 ou plus */
@@ -509,9 +509,11 @@ async function inPage() {
     fresh(); { const a = put("p", 0, "athena", 4), b = put("p", 0, "vesta", 2); const m = card("maat"); S.hand.p = [m]; await resolveTurn([{ c: m, li: 0 }], [], false);
       T("Mā'at : +1 à l'autre carte la plus faible ici", b.pow === 3 && a.pow === 4 && find("p", "maat").pow === 1, `${b.pow}/${a.pow}`); }
     fresh(); { const m = card("maat"); S.hand.p = [m]; await resolveTurn([{ c: m, li: 0 }], [], false); T("Mā'at seule : rien ne se passe", find("p", "maat").pow === 1); }
-    /* J10. Tsukuyomi : +2 si Amaterasu ou Susanoo est de ton côté, dans n'importe quel lieu */
-    fresh(); { const t = put("p", 0, "tsukuyomi"); const p0 = cardPow("p", 0, t); put("e", 1, "amaterasu"); const p1 = cardPow("p", 0, t); put("p", 2, "susanoo"); const p2 = cardPow("p", 0, t);
-      T("Tsukuyomi : 2 seule, 2 avec Amaterasu adverse, 4 avec Susanoo de ton côté dans un autre lieu", p0 === 2 && p1 === 2 && p2 === 4, `${p0}/${p1}/${p2}`); }
+    /* J10. Tsukuyomi : +2 si tu as une autre carte Jugement ici (15 octobre : remplace Amaterasu / Susanoo) */
+    fresh(); { const t = put("p", 0, "tsukuyomi"); const p0 = cardPow("p", 0, t); put("p", 1, "athena"); const p1 = cardPow("p", 0, t); put("e", 0, "athena"); const p2 = cardPow("p", 0, t);
+      put("p", 0, plain.find(id => CARDS[id].fac !== "jugement") || "coursier"); const p3 = cardPow("p", 0, t); put("p", 0, "fleche"); const p4 = cardPow("p", 0, t);
+      T("Tsukuyomi : 2 seule, 2 avec une Jugement ailleurs ou chez l'adversaire, 2 avec une autre faction ici, 4 avec une Jugement ici (jeton compris)", p0 === 2 && p1 === 2 && p2 === 2 && p3 === 2 && p4 === 4, `${p0}/${p1}/${p2}/${p3}/${p4}`); }
+    T("Nike : 3/2", CARDS.nike.cost === 3 && CARDS.nike.pow === 2);
     /* J11. Données, dates et jetons */
     T("Renfort Jugement : coûts, puissances, raretés et dates", CARDS.maat.cost === 0 && CARDS.maat.pow === 1 && CARDS.maat.r === "C" && CARDS.apollon.cost === 1 && CARDS.apollon.r === "R" && CARDS.vesta.pow === 2 && CARDS.hephaistos.cost === 2 && CARDS.tsukuyomi.r === "C" && CARDS.zeus.cost === 5 && CARDS.zeus.pow === 4 && CARDS.zeus.r === "L"
       && ["maat", "apollon", "vesta"].every(id => CARDS[id].rel === "2026-11-15" && CARDS[id].soon === "2026-11-10") && ["hephaistos", "tsukuyomi", "zeus"].every(id => CARDS[id].rel === "2026-12-14" && CARDS[id].soon === "2026-12-09") && ["maat", "apollon", "vesta", "hephaistos", "tsukuyomi", "zeus"].every(id => CARDS[id].fac === "jugement"));
