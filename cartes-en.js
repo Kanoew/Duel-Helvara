@@ -124,6 +124,7 @@ window.HELVARA_EN = {
     izanami:{fx:"On Reveal: discard the weakest card in your hand. Ongoing: your resurrected cards have +2 Power."}, loki:{fx:"On Reveal: each player discards the most expensive card in their hand."},
     effigie:{n:"The Effigy"}, reflet_noir:{n:"The Black Reflection"}, enfant:{n:"The Child Without School"},
     ananke:{n:"Ananke", fx:"Fate: nothing can affect her. End of game: her Power becomes the opponent's total Power here, +1 Power. Requires 8 Primordial cards in the deck, Ananke included."},
+    source:{n:"The Source", fx:"Ongoing: the Reveals of your other Helvara cards played here trigger twice. Requires 8 Helvara cards in the deck, The Source included."},
     hedone:{n:"Hedone", fx:"Ongoing: at the end of each turn, pulls the opponent's weakest card from another location here, if there is room, and charms it while Hedone stays in play. 2 times max. Requires 8 Desire cards in the deck, Hedone included."},
     possedee:{n:"The Possessed"}, musicien:{n:"The Musician"}, voyante:{n:"The Seer"}, penitente:{n:"The Penitent"},
     gaia:{n:"Gaia"}, maat:{n:"Ma'at"}, hera:{n:"Hera"}, hephaistos:{n:"Hephaestus"},

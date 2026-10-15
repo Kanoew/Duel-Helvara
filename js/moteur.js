@@ -256,6 +256,9 @@ function reveal(s,li,c){
   const prevSrc=SRC; SRC={s,cost:CARDS[c.id].cost};
   try{ revealFx(s,li,c); } finally { SRC=prevSrc; }
   if(!isAph(c)) (S.lastRev=S.lastRev||{p:null,e:null})[s]=c;   /* Aphrodite rejoue la dernière Révélation du tour */
+  /* La Source : les Révélations de tes autres cartes Helvara jouées dans son lieu se déclenchent deux fois (si elle est déjà en jeu, révélée et sans effets annulés) */
+  if(CARDS[c.id].fac==="helvara"&&c.id!=="source"&&replayable(c)&&S.board[s][li].some(x=>x!==c&&x.id==="source"&&live(x))){
+    log(`La Source · Révélation de ${nm(c)} rejouée (${who(s)})`); replayFx(s,li,c); }
 }
 const isAph=c=>charOf(c.id)==="aphrodite"||c.id==="ulaph";
 /* Rejouer la Révélation d'une carte déjà posée (Aphrodite) : ni Brigid, ni effets de lieu à la pose */
@@ -510,6 +513,9 @@ function aiPlan(me="e",tierOv){
       const room=capOf(op,li)-S.board[op][li].length, others=[0,1,2].some(i=>i!==li&&S.board[op][i].some(x=>x.rev));
       const n=Math.min(2,7-S.turn); if(room>0&&others) pow+=2.5*n+(room>=2?1:0); else adj-=2;
       if(S.turn<=5) adj+=1; }
+    if(c.id==="source"){ /* ses effets doublent les Révélations des autres cartes Helvara posées APRÈS elle ici (ce tour ou plus tard) */
+      const withFx=x=>x!==c&&CARDS[x.id].fac==="helvara"&&/Révélation/.test(CARDS[x.id].fx||"");
+      const n=hand.filter(withFx).length; adj+=Math.min(4,1.5*n)+(S.turn<=4?1:-1); }
     if(c.id==="pandore") pow+=2*Math.max(0,ctx.en-cost);   /* jouée en dernier : elle dépense tout ce qui reste */
     if(c.id==="qetesh_r"&&S.turn>=6) adj-=6;               /* le charme n'arrive qu'au tour suivant */
     if(c.id==="ulqetjor_r") pow+=mates;

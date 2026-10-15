@@ -429,6 +429,34 @@ async function inPage() {
     P.bz = { day: "", used: false, run: { deck: ["coursier", "felix", "celeste", "izzy", ...Object.keys(CARDS).filter(id => !CARDS[id].token && CARDS[id].r === "C" && !["coursier", "felix", "celeste", "izzy"].includes(id)).slice(0, 8)], opts: [], wins: 2, over: false, gain: 0 } };
     let bad = 0; for (let i = 0; i < 100; i++) { bzGame(); if ([...S.deck.e, ...S.deck.p].some(c => CARDS[c.id].r === "U")) bad++; }
     T("Blitz : le vrai déroulement (bzGame, match 3 sur 3) ne distribue aucune ultra-légendaire (100 parties)", bad === 0, `${bad} partie(s) avec une ultra-légendaire`); P.bz = { day: "", used: false, run: null }; }
+  /* ===== La Source (15 octobre 2026) : les Révélations de tes autres cartes Helvara jouées ici se déclenchent deux fois ===== */
+  { const base = plain[20]; CARDS[base].pow = 5;
+    /* S1. Source déjà en jeu, tatoueur (Helvara, +1 à la plus forte ici) posé ici → 2 déclenchements */
+    fresh(); S.turn = 4; { put("p", 0, "source"); const big = put("p", 0, base, 5); const t = card("tatoueur"); S.hand.p = [t]; await resolveTurn([{ c: t, li: 0 }], [], false);
+      T("La Source : la Révélation d'une carte Helvara jouée ici se déclenche deux fois (+2 au lieu de +1)", big.pow === 7, big.pow); }
+    /* S2. Source posée le même tour mais révélée avant (ordre de pose) → doublée ; révélée après → une seule fois */
+    fresh(); S.turn = 4; { const big = put("p", 0, base, 5); const src = card("source"), t = card("tatoueur"); S.hand.p = [src, t]; await resolveTurn([{ c: src, li: 0 }, { c: t, li: 0 }], [], false);
+      T("La Source posée juste avant la carte : doublée", big.pow === 7, big.pow); }
+    fresh(); S.turn = 4; { const big = put("p", 0, base, 5); const src = card("source"), t = card("tatoueur"); S.hand.p = [t, src]; await resolveTurn([{ c: t, li: 0 }, { c: src, li: 0 }], [], false);
+      T("La Source révélée après la carte : une seule fois (+1)", big.pow === 6, big.pow); }
+    /* S3. Un autre lieu, la Source adverse, la Source sans effets : une seule fois */
+    fresh(); S.turn = 4; { put("p", 0, "source"); const big = put("p", 1, base, 5); const t = card("tatoueur"); S.hand.p = [t]; await resolveTurn([{ c: t, li: 1 }], [], false);
+      T("La Source : sans effet sur un autre lieu (+1 seulement)", big.pow === 6, big.pow); }
+    fresh(); S.turn = 4; { put("e", 0, "source"); const big = put("p", 0, base, 5); const t = card("tatoueur"); S.hand.p = [t]; await resolveTurn([{ c: t, li: 0 }], [], false);
+      T("La Source adverse ne double pas mes Révélations", big.pow === 6, big.pow); }
+    fresh(); S.turn = 4; { const src = put("p", 0, "source"); src.neg = true; const big = put("p", 0, base, 5); const t = card("tatoueur"); S.hand.p = [t]; await resolveTurn([{ c: t, li: 0 }], [], false);
+      T("La Source sans effets (annulée) : une seule fois", big.pow === 6, big.pow); }
+    /* S4. Une carte d'une autre faction n'est pas doublée */
+    fresh(); S.turn = 4; { put("p", 0, "source"); const big = put("p", 0, base, 5); const hasFx = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "helvara" && /^Révélation : \+\d+ de puissance\.?$/.test(CARDS[id].fx || "") && CARDS[id].cost <= 3 && CARDS[id].rel < "2027");
+      if (hasFx) { const c = card(hasFx); S.hand.p = [c]; const before = c.pow; await resolveTurn([{ c, li: 0 }], [], false); const gain = c.pow - before; T("La Source : une Révélation d'une autre faction (" + hasFx + ") n'est pas doublée", gain === Number(/\+(\d+)/.exec(CARDS[hasFx].fx)[1]), gain); }
+      else T("La Source : autre faction non doublée (aucune carte de test simple, contrôle sauté)", true); }
+    /* S5. Données et IA */
+    { const u = ULof("source"); T("La Source : ultra-légendaire de faction Helvara 3/2 (8 cartes, 50 parties au journal), sortie le 1er février 2027", u && u.fac === "helvara" && u.min === 8 && u.quest.k === "helvara" && u.quest.n === 50 && !u.req.length && CARDS.source.r === "U" && CARDS.source.cost === 3 && CARDS.source.pow === 2 && CARDS.source.rel === "2027-02-01" && CARDS.source.soon === "2027-01-27"); }
+    T("Dates des ultra-légendaires de faction : Ananké 1er décembre, Hédoné 15 janvier", CARDS.ananke.rel === "2026-12-01" && CARDS.hedone.rel === "2027-01-15" && CARDS.hedone.soon === "2027-01-10");
+    fresh(); S.turn = 3; S.energy = S.energyE = 5; { const src = card("source"), t = card("tatoueur"), v = card("voleuse"); S.hand.e = [src, t, v];
+      const plan = aiPlan("e", 5); T("IA : La Source est jouée quand la main compte des cartes Helvara à Révélation", plan.some(x => x.c === src), JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+  }
+
   return res;
 }
 

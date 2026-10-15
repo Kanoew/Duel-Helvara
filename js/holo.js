@@ -2,9 +2,9 @@
    Affiché seulement dans le zoom d'une carte et à la révélation d'un paquet, jamais sur le plateau, la main ou les listes.
    Activé par donnée : HOLO = { id de carte : dossier sous images/holo/ }. Une carte sans entrée garde son image fixe.
    Si le module, le manifest ou une image ne charge pas, rien ne change à l'écran (l'image fixe reste). */
-const HOLO = { nike: "nike", ananke: "ananke", hedone: "hedone", nike_v: "nike-saint-valentin" };
-/* Mode test : ouvrir le jeu avec ?holo=test ajoute l'effet de Carla (carte pas encore dans le jeu) sur la carte Yarden Weiss, pour voir son foil électrique. */
-const HOLO_TEST = { yarden: "carla" };
+const HOLO = { nike: "nike", ananke: "ananke", hedone: "hedone", nike_v: "nike-saint-valentin", source: "carla" };
+/* Mode test : ouvrir le jeu avec ?holo=test ajoute un bouton « Test holo » (zoom et faux paquet sans posséder les cartes) ; cette table sert à y ajouter des cartes d'essai. */
+const HOLO_TEST = {};
 const HOLO_TESTON = /[?&]holo=test\b/.test(location.search);
 const HOLO_MOD = (document.currentScript && document.currentScript.dataset.mod) || "js/holo-card.js";
 const holoDir = id => (HOLO_TESTON && HOLO_TEST[id]) || HOLO[id] || null;
@@ -50,7 +50,7 @@ function holoKill(h) {
 if (HOLO_TESTON) addEventListener("DOMContentLoaded", () => {
   const box = document.createElement("div"); box.className = "holotest";
   box.innerHTML = '<button type="button" class="ht-toggle">Test holo</button><div class="ht-menu" hidden>' +
-    Object.keys(Object.assign({}, HOLO, HOLO_TEST)).map(id => '<button type="button" data-z="' + id + '">Zoom : ' + (HOLO_TEST[id] ? "Carla (sur " + CARDS[id].name + ")" : CARDS[id].name) + "</button>").join("") +
+    Object.keys(Object.assign({}, HOLO, HOLO_TEST)).map(id => '<button type="button" data-z="' + id + '">Zoom : ' + CARDS[id].name + "</button>").join("") +
     '<button type="button" data-pack="1">Faux paquet (4 cartes)</button></div>';
   document.body.appendChild(box);
   const menu = box.querySelector(".ht-menu");

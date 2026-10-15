@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Test de l'effet holo 2.5D (zoom et ouverture de paquet) : node outils/tests-holo.js
-   Utilise les vraies cartes holo de images/holo/ ; ?holo=test ajoute Carla sur la carte Yarden Weiss. Nécessite Playwright et Chromium (voir CLAUDE.md, « Tests »). */
+   Utilise les vraies cartes holo de images/holo/ ; ?holo=test ajoute le bouton « Test holo ». Nécessite Playwright et Chromium (voir CLAUDE.md, « Tests »). */
 "use strict";
 const { chromium } = require("/opt/node-tools/node_modules/playwright"), http = require("http"), fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, ".."), T = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".webp": "image/webp", ".json": "application/json", ".woff2": "font/woff2", ".png": "image/png", ".mp3": "audio/mpeg" };
@@ -17,7 +17,7 @@ srv.listen(0, async () => {
     if (o.route) await o.route(p);
     await p.goto("http://localhost:" + port + url); await p.waitForTimeout(900); p.ctx = ctx; return p;
   }
-  const zoom = (p, id) => p.evaluate(`P.owned=[...new Set([...P.owned,"nike","ananke","hedone","nike_v","yarden","amaterasu"])];tutoStep=-1;P.tuto=true;screen="deck";zoomId="${id}";render();`);
+  const zoom = (p, id) => p.evaluate(`P.owned=[...new Set([...P.owned,"nike","ananke","hedone","nike_v","source","yarden","amaterasu"])];tutoStep=-1;P.tuto=true;screen="deck";zoomId="${id}";render();`);
   const n = (p, s) => p.evaluate(s => document.querySelectorAll(s).length, s);
   try {
     /* zoom */
@@ -48,10 +48,8 @@ srv.listen(0, async () => {
     check("production : une carte sans entrée ne télécharge rien de holo", await n(p, "#holoslot") === 0 && !req.some(u => /holo/.test(u))); 
     await zoom(p, "nike"); await p.waitForTimeout(2200);
     check("production : Nike (entrée de la table HOLO) affiche l'effet, sans ?holo=test", await n(p, ".hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs);
-    await zoom(p, "yarden"); await p.waitForTimeout(500);
-    check("production : l'effet de Carla n'apparaît qu'en mode test (Yarden reste normale)", await n(p, "#holoslot") === 0); await p.ctx.close();
-    p = await page("/index.html?holo=test"); await zoom(p, "yarden"); await p.waitForTimeout(2200);
-    check("mode test : l'effet de Carla (foil électrique « volt ») s'affiche sans erreur", await n(p, ".hc-card.hc-ready") === 1 && await n(p, ".hc-volt") >= 1 && p.errs.length === 0, p.errs); await p.ctx.close();
+    await zoom(p, "source"); await p.waitForTimeout(2200);
+    check("production : La Source (Carla, foil électrique « volt ») affiche l'effet sans erreur", await n(p, ".hc-card.hc-ready") === 1 && await n(p, ".hc-volt") >= 1 && p.errs.length === 0, p.errs); await p.ctx.close();
     /* chargement lent : l'image fixe garde sa taille pendant que l'effet se charge (elle rétrécissait à côté du conteneur de l'effet) */
     p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/nike/manifest.json", async r => { await new Promise(k => setTimeout(k, 1500)); r.continue(); }) });
     await zoom(p, "nike"); await p.waitForTimeout(400);
