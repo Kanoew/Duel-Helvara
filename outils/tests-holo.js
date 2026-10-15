@@ -32,6 +32,15 @@ srv.listen(0, async () => {
     await p.evaluate("zoomId=null;render();"); await p.waitForTimeout(300);
     check("zoom : destroy() à la fermeture (plus de carte, plus de jeton)", await n(p, ".hc-card") === 0 && await p.evaluate(() => zoomHolo === null));
     check("zoom : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
+    /* panneau de test : zoom et faux paquet sans posséder les cartes, rien de sauvegardé */
+    p = await page("/index.html?holo=test"); const avant = await p.evaluate(() => JSON.stringify(dataOf()));
+    await p.locator(".ht-toggle").click(); await p.locator('[data-z="hedone"]').click(); await p.waitForTimeout(2000);
+    check("panneau de test : zoom d'une carte pas encore sortie, effet prêt", await n(p, ".hc-card.hc-ready") === 1);
+    await p.evaluate("zoomId=null;render();");
+    await p.locator(".ht-toggle").click(); await p.locator("[data-pack]").click(); await p.waitForTimeout(500);
+    check("panneau de test : le faux paquet s'ouvre, rien n'est modifié dans la sauvegarde", await n(p, "#tirage") === 1 && await p.evaluate(() => JSON.stringify(dataOf())) === avant);
+    await p.evaluate("document.querySelector('.t-skip').click()"); await p.waitForTimeout(400); check("panneau de test : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
+    p = await page("/index.html"); check("production : pas de panneau de test", await n(p, ".holotest") === 0); await p.ctx.close();
     /* carte sans holo et production */
     p = await page("/index.html?holo=test"); await zoom(p, "yarden"); await p.waitForTimeout(500);
     check("carte sans entrée : affichage inchangé", await n(p, "#holoslot") === 0 && await n(p, ".hc-card") === 0); await p.ctx.close();

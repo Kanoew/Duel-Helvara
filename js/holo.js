@@ -32,3 +32,21 @@ function holoKill(h) {
   if (h.card) { try { h.card.destroy(); } catch (e) {} h.card = null; }
   if (h.el) { h.el.remove(); h.el = null; }
 }
+
+/* Mode test (?holo=test) : un petit bouton « Test holo » ouvre un panneau pour voir l'effet sans posséder les cartes
+   (elles ne sont pas encore sorties) : zoom des 4 exemples et faux paquet. Rien n'est acheté ni sauvegardé. */
+if (HOLO_TESTON) addEventListener("DOMContentLoaded", () => {
+  const box = document.createElement("div"); box.className = "holotest";
+  box.innerHTML = '<button type="button" class="ht-toggle">Test holo</button><div class="ht-menu" hidden>' +
+    Object.keys(HOLO_TEST).map(id => '<button type="button" data-z="' + id + '">Zoom : ' + CARDS[id].name + "</button>").join("") +
+    '<button type="button" data-pack="1">Faux paquet (4 cartes)</button></div>';
+  document.body.appendChild(box);
+  const menu = box.querySelector(".ht-menu");
+  box.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.classList.contains("ht-toggle")) { menu.hidden = !menu.hidden; return; }
+    menu.hidden = true;
+    if (b.dataset.z) { zoomId = b.dataset.z; render(); }
+    else if (b.dataset.pack) ouvrirTirage({ res: Object.keys(HOLO_TEST).map(id => ({ id, isNew: true, v: 0 })), name: "Test", img: "images/pack.webp", pid: null, price: 0 });
+  });
+});
