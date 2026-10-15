@@ -66,8 +66,9 @@ const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike com
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
 const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, Psyché, Amaterasu, La Mère de Cendre… et la première ultra-légendaire, Yarden X Apsu."},
   {id:"nov26",rel:"2026-11-01",soon:"2026-10-27",hint:"Nemesis, Anubis, Susanoo, Aphrodite, Médée, la Voleuse du Flon… et trois nouvelles fusions : Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."},
-  {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée garde le feu, Pandore ouvre la boîte, Athéna guide ta main, et Styx veille sur ses filles : Bia, et Nike, la première ultra-légendaire de faction. Elle se gagne en jouant 50 parties avec 8 cartes Jugement : le Journal des factions compte déjà."},
-  {id:"dec26",rel:"2026-12-01",soon:"2026-11-26",hint:"Odin, Thor, Hel, Baldur, Hadès, Poséidon, Circé, Qetesh, les gens de Lausanne… cinq nouvelles fusions, le Domaine du Créateur."}];
+  {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée garde le feu, Pandore ouvre la boîte, Athéna guide ta main, et Styx veille sur ses filles : Bia, et Nike, la première ultra-légendaire de faction. Mā‘at, Apollon et Vesta lui préparent le chemin. Elle se gagne en jouant 50 parties avec 8 cartes Jugement : le Journal des factions compte déjà."},
+  {id:"dec26",rel:"2026-12-01",soon:"2026-11-26",hint:"Odin, Thor, Hel, Baldur, Hadès, Poséidon, Circé, Qetesh, les gens de Lausanne… cinq nouvelles fusions, le Domaine du Créateur."},
+  {id:"dec14",rel:"2026-12-14",soon:"2026-12-09",hint:"Zeus lance la foudre, Héphaïstos forge ses armes, Tsukuyomi rejoint Amaterasu et Susanoo… et le Pli de l'Étoile s'ouvre pour Noël."}];
 const hasReq=(list,r)=>Array.isArray(r)?r.some(x=>list.includes(x)):list.includes(r);
 const ULof=id=>ULS.find(u=>u.id===id);
 /* Journal des factions : les ultra-légendaires de faction se gagnent en jouant.

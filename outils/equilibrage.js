@@ -222,6 +222,24 @@ function aggregate(games) {
   return { S, ok, nul, pWins };
 }
 
+/* Victoire par faction dominante du deck (la faction qui a le plus de cartes ; égalité : « mixte ») */
+function byDominant(games, byId) {
+  const F = {};
+  for (const g of games) { if (!g.res) continue;
+    for (const side of ["p", "e"]) { const deck = side === "p" ? g.dp : g.de, n = {};
+      for (const id of deck) { const f = byId[id] && byId[id].fac; if (f) n[f] = (n[f] || 0) + 1; }
+      const top = Object.entries(n).sort((a, b) => b[1] - a[1]), k = top.length > 1 && top[0][1] === top[1][1] ? "mixte" : top[0][0];
+      const r = g.res === "draw" ? "d" : (g.res === "win") === (side === "p") ? "w" : "l"; const f = F[k] || (F[k] = { n: 0, w: 0, l: 0, d: 0 }); f.n++; f[r]++; } }
+  return F;
+}
+function dominantTable(games, data, byId) {
+  const F = byDominant(games, byId), L = [`### Victoire par faction dominante du deck
+`, `| Faction dominante | Decks | Victoire | Défaite | Nulle |
+|---|---:|---:|---:|---:|`];
+  for (const [k, f] of Object.entries(F).sort((a, b) => b[1].w / b[1].n - a[1].w / a[1].n)) L.push(`| ${k === "mixte" ? "Mixte (égalité)" : (data.facs[k] || k)} | ${f.n}${f.n < 100 ? " ⚠" : ""} | ${num(100 * f.w / f.n)} % | ${num(100 * f.l / f.n)} % | ${num(100 * f.d / f.n)} % |`);
+  return L.join("\n") + "\n";
+}
+
 /* ------------------------------------------------- familles d'effets */
 const STOP = new Set("de du des la le les un une et à au aux en sur sa son ses qui que si ne pas ou d l n s se ce cette ces tes ta ton leur leurs y".split(" "));
 const FAMILIES = [
@@ -285,6 +303,7 @@ function reportCible(data, games, pageErrors, secs) {
     L.push(`| ${md(c.name)} | \`${id}\` | ${c.cost} | ${c.pow} | ${s.dk}${s.dk < 100 ? " ⚠" : ""} | ${num(100 * s.w / s.dk)} % | ${pct(s.pl, s.dk, 0)} % | ${pct(s.plw, s.pl)} % | ${s.alive ? num(s.powSum / s.alive) : "–"} | ${pct(s.alive, s.pl, 0)} % | ${s.pl ? num(s.turnSum / s.pl) : "–"} |`);
   }
   L.push(`\nCamp qui révèle en premier : ${pct(A.pWins, A.ok)} % de victoires (nulles : ${pct(A.nul, A.ok)} %).\n`);
+  L.push(dominantTable(games, data, byId));
   return L.join("\n");
 }
 
@@ -353,6 +372,7 @@ function report(data, games, pageErrors, secs) {
   out(`### Victoire selon le coût et la rareté (cartes dans le deck, toutes cartes confondues)\n`);
   const grp = (keyf, keys, label, nameOf) => { out(`| ${label} | Cartes | Decks | Victoire (deck) | Pose |\n|---|---:|---:|---:|---:|`); for (const k of keys) { const rs = rows.filter(x => keyf(x.c) === k); const dk = rs.reduce((a, x) => a + x.s.dk, 0), w = rs.reduce((a, x) => a + x.s.w, 0), pl = rs.reduce((a, x) => a + x.s.pl, 0); if (dk) out(`| ${k === +k ? k : (nameOf || (x => RN[x]))(k)} | ${rs.length} | ${dk} | ${pct(w, dk)} % | ${pct(pl, dk, 0)} % |`); } out(""); };
   grp(c => c.cost, [...new Set(rows.map(x => x.c.cost))].sort((a, b) => a - b), "Coût"); grp(c => c.r, RK, "Rareté"); grp(c => c.fac, Object.keys(data.facs), "Faction", k => data.facs[k]);
+  out(""); out(dominantTable(games, data, byId));
 
   /* cartes pas encore sorties */
   const fut = cards.filter(c => !isRel(c)).sort((a, b) => (a.rel || "").localeCompare(b.rel || "") || a.cost - b.cost || a.name.localeCompare(b.name, "fr"));

@@ -608,7 +608,7 @@ function infoHTML(){
 function handHTML(){
   return S.hand.p.map(c=>{
     const d=CARDS[c.id], any=[0,1,2].some(li=>canStage(c,li));
-    const cheapest=Math.min(...[0,1,2].map(li=>costOf("p",c,li,S.staged.length===0)));
+    const cheapest=Math.min(...[0,1,2].map(li=>costOf("p",c,li,S.staged.length===0,jugFirst(S.staged,S.staged.length))));
     return `<button class="hc${d.r==="U"?" holo":""}${rc(d)}${S.sel===c.uid?" sel":""}${any||S.busy?"":" no"}${S.tut&&tutReq().some(([id])=>id===c.id)&&!S.staged.some(x=>x.c.id===c.id)?" tutreq":""}" data-act="hand" data-uid="${c.uid}" data-lp="c${c.uid}" aria-label="${d.name}, coût ${d.cost}, puissance ${c.pow}">
       ${art(c.id)}<span class="cost${cheapest<d.cost?" cut":""}">${cheapest}</span><span class="nm">${d.name}</span><span class="pw ${c.pow>d.pow?"up":c.pow<d.pow?"down":""}">${c.pow}</span></button>`;
   }).join("")||`<div class="m" style="color:var(--mist);padding:20px 4px">Main vide.</div>`;
@@ -662,7 +662,7 @@ function gameHTML(){
     ${oathOK()&&S.oath==null&&!S.busy?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
     ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
   </div>
-  ${S.disc.p||S.bonus.p?`<div class="mods">${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
+  ${S.disc.p||S.bonus.p||vestaOn("p")?`<div class="mods">${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
   <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${pilesHTML()}</div>
   ${aiOathBar()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}

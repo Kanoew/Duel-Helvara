@@ -113,9 +113,14 @@ const inPlay=id=>["p","e"].some(s=>S.board[s].some(col=>col.some(c=>c.rev&&c.id=
 const hasHere=(s,li,id)=>S.board[s][li].some(c=>live(c)&&c.id===id);
 const shielded=(s,li)=>hasHere(s,li,"eir")||hasHere(s,li,"ulcal");               /* Eir : ni détruites ni affaiblies */
 const untargetable=(by,s,c)=>by!==s && ((c.id==="uzume" && !c.neg) || fated(c)); /* Uzume et Ananké (Fatalité) : aucun effet adverse ne les vise, il passe à la cible suivante */
-function costOf(s,c,li,isFirst){ return c.free?0:costFor(s,c.id,li,isFirst); }
-function costFor(s,id,li,isFirst){ let c=CARDS[id].cost; if(id==="ulya") c-=S.hand[s].filter(x=>x.id!=="ulya").length; if(isFirst) c-=S.disc[s]; if(locIs(li,"sousgare")) c-=1; if(locIs(li,"encheres")) c+=1; return Math.max(0,c); }
-function used(){ return S.staged.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf("p",x.c,x.li,i===0)),0); }
+/* Vesta : ta prochaine carte Jugement coûte 1 de moins (une seule carte : la première carte Jugement de coût 1 ou plus posée dans l'ordre,
+   pour que la réduction ne se perde pas sur une carte à 0 comme Mā‘at ou la Flèche d'Apollon ; minimum 0) */
+const vestaOn=s=>!!(S.vesta&&S.vesta[s]);
+const vestaT=id=>CARDS[id].fac==="jugement"&&CARDS[id].cost>=1;
+const jugFirst=(list,i)=>!list.slice(0,i).some(x=>vestaT((x.c||x).id));
+function costOf(s,c,li,isFirst,jf){ return c.free?0:costFor(s,c.id,li,isFirst,jf); }
+function costFor(s,id,li,isFirst,jf){ let c=CARDS[id].cost; if(id==="ulya") c-=S.hand[s].filter(x=>x.id!=="ulya").length; if(isFirst) c-=S.disc[s]; if(jf&&vestaT(id)&&vestaOn(s)) c-=1; if(locIs(li,"sousgare")) c-=1; if(locIs(li,"encheres")) c+=1; return Math.max(0,c); }
+function used(){ return S.staged.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf("p",x.c,x.li,i===0,jugFirst(S.staged,i))),0); }
 /* Nemesis ne peut pas être jouée au tour 6, même avec de l'énergie en réserve (Prométhée) */
 const banned=c=>c.id==="nemesis"&&S.turn>=6;
 function canStage(c,li){
@@ -123,7 +128,7 @@ function canStage(c,li){
   if(!c||S.locs[li].locked||muted("p",li)) return false;
   if(banned(c)) return false;
   if(S.board.p[li].length+stagedAt(li)>=capOf("p",li)) return false;
-  return used()+costOf("p",c,li,S.staged.length===0)<=S.energy;
+  return used()+costOf("p",c,li,S.staged.length===0,jugFirst(S.staged,S.staged.length))<=S.energy;
 }
 /* Ananké, Fatalité : en fin de partie (S.final, après toutes les révélations et fins de tour du tour 6), sa puissance devient la puissance totale adverse ici +1.
    Deux Ananké face à face : la seconde compte pour 1 dans le calcul de la première (garde ANK, pas de boucle). */
@@ -141,6 +146,7 @@ function cardPow(s,li,c){
   if(!c.neg){
     if(c.id==="costumes" && inPlay("thot")) p+=4;
     if(c.id==="freyr" && hasHere(s,li,"freya")) p+=2;
+    if(c.id==="tsukuyomi" && S.board[s].some(col=>col.some(x=>x.rev&&(charOf(x.id)==="amaterasu"||charOf(x.id)==="susanoo")))) p+=2;
     if(c.id==="freya" && hasHere(s,li,"freyr")) p+=4;
     if(c.id==="selene" && S.turn>=5) p+=3;
     if(c.id==="nergal" && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="ereshkigal"))) p+=3; /* continu */
@@ -309,6 +315,17 @@ function revealFx(s,li,c,opts={}){
     case "ulnem": { let n=0; const a=strongest(targets,o,li); if(a&&destroy(o,li,a)) n++; const b=strongest(mates,s,li); if(b&&destroy(s,li,b)) n++; S.board[s][li].filter(x=>x!==c&&x.rev).forEach(x=>x.pow+=2); note=`justice : ${n} carte${n>1?"s":""} détruite${n>1?"s":""}`; snd="destroy"; break; }
     case "coursier": draw(s); note="pioche 1 carte"; break;
     case "felix": S.disc[s]=1; note="prochaine carte −1"; break;
+    case "maat": { const t=weakest(mates.filter(x=>!fated(x)),s,li); if(t){ t.pow+=1; (t.mods=t.mods||[]).push({v:1,src:"Mā‘at"}); note=`+1 à ${nm(t)}`; snd="buff"; } break; }
+    case "apollon": if(S.hand[s].length<7){ S.hand[s].push(mk("fleche")); note="Flèche d'Apollon ajoutée à la main"; } else note="main pleine : Flèche perdue"; break;
+    case "hephaistos": if(S.hand[s].length<7){ S.hand[s].push(mk("arme")); note="Arme d'Héphaïstos forgée dans la main"; } else note="main pleine : Arme perdue"; break;
+    case "vesta": (S.vesta=S.vesta||{p:0,e:0})[s]=1; note="prochaine carte Jugement −1"; break;
+    case "zeus": { /* la foudre : toutes les cartes de coût imprimé 1 ou moins, des deux côtés, dans les 3 lieux (protections normales) ; tes cartes Jugement reviennent en main, à leur puissance de base */
+      let n=0, back=0; piles();
+      for(const side of [s,o]) for(let i=0;i<3;i++) for(const x of S.board[side][i].slice()){
+        if(x===c||!x.rev||CARDS[x.id].cost>1||(side===o&&untargetable(s,o,x))) continue;
+        if(!destroy(side,i,x)) continue; n++;
+        if(side===s&&CARDS[x.id].fac==="jugement"&&S.hand[s].length<7){ if(real(x)){ const g=S.graveyard[s], k=g.lastIndexOf(x.id); if(k>=0) g.splice(k,1); } S.hand[s].push(mk(x.id)); back++; } }
+      if(n){ note=`la foudre détruit ${n} carte${n>1?"s":""}`+(back?`, ${back} revien${back>1?"nent":"t"} en main`:""); snd="destroy"; } break; }
     case "remi": if(S.destroyed+(S.discarded||0)) buffSelf(2*(S.destroyed+(S.discarded||0))); break;
     case "celeste": if(total(s,li)-cardPow(s,li,c)<=total(o,li)) buffSelf(3); break;
     case "vasseur": c.pay=S.turn+2; note=S.turn+2<=6?`paiera au tour ${S.turn+2}`:"ne sera jamais payé"; break;
@@ -477,7 +494,7 @@ function aiPlan(me="e",tierOv){
   const place=(c,li,ctx)=>{
     const d=CARDS[c.id];
     if(S.locs[li].locked||muted(me,li)||banned(c)||S.board[me][li].length+ctx.pend[li]>=capOf(me,li)) return null;
-    const cost=costOf(me,c,li,ctx.first); if(cost>ctx.en) return null;
+    const cost=costOf(me,c,li,ctx.first,ctx.jf); if(cost>ctx.en) return null;
     const diff=diffs[li], foes=foesN[li], mates=matesN[li]+ctx.pend[li];
     let pow=c.pow+NZ.get(c)[li], hit=0, adj=0;
     if(locIs(li,"tour")&&d.pow>=5) pow+=2;
@@ -506,6 +523,16 @@ function aiPlan(me="e",tierOv){
     if(c.id==="nemesis") adj+=(diff>0&&diff<12)?5:-6;
     if(c.id==="mouche") pow-=mates;
     if(c.id==="nike") pow+=ctx.plays.length*2;
+    /* vague Jugement (15 novembre, 14 décembre) */
+    if(c.id==="maat"&&(mates||S.board[me][li].some(x=>x.rev))) pow+=1;
+    if((c.id==="apollon"||c.id==="hephaistos")&&hand.length-ctx.plays.length<=7) adj+=c.id==="apollon"?1.5:2;
+    if(c.id==="vesta"&&S.turn<6&&hand.some(x=>x!==c&&CARDS[x.id].fac==="jugement"&&!ctx.plays.some(y=>y.c===x))) adj+=1.5;
+    if(c.id==="tsukuyomi"&&(S.board[me].some(col=>col.some(x=>x.rev&&["amaterasu","susanoo"].includes(charOf(x.id))))||ctx.plays.some(x=>["amaterasu","susanoo"].includes(charOf(x.c.id))))) pow+=2;
+    if(c.id==="zeus"){ /* la foudre : cartes de coût 1 ou moins des deux côtés ; les tiennes (Jugement) reviennent en main. De préférence au tour 5 */
+      let foeP=0, foeN=0, mineN=0, lost=0;
+      for(let i=0;i<3;i++){ for(const x of S.board[op][i]) if(x.rev&&CARDS[x.id].cost<=1&&!untargetable(me,op,x)&&!shielded(op,i)&&!locIs(i,"sauvabelin")){ foeP+=Math.max(0,cardPow(op,i,x)); foeN++; }
+        for(const x of S.board[me][i]) if(x.rev&&CARDS[x.id].cost<=1&&!shielded(me,i)&&!locIs(i,"sauvabelin")){ mineN++; const v=Math.max(0,cardPow(me,i,x)); lost+=CARDS[x.id].fac==="jugement"?v*.5:v; } }
+      hit+=foeP; pow-=lost; if(foeN>=2||mineN>=2) adj+=2; adj+=S.turn===5?2:S.turn===6?-1:0; }
     if(c.id==="ananke"){ /* fin de partie : puissance adverse ici +1 (elle gagne le lieu). Jamais avec une Nemesis adverse ; seulement au tour 6 si possible (un Apsu adverse posé plus tard lui retirerait tout) */
       if(S.board[op][li].some(x=>live(x)&&x.id==="nemesis")) return null;
       pow=op0[li]+opFut[li]+1; if(S.turn<6) adj-=5; }
@@ -562,7 +589,7 @@ function aiPlan(me="e",tierOv){
   const sim=plays=>{ const keep=S, kq=quiet; let out=null;
     try{ quiet=true; S=structuredClone(keep);
       S.lastRev={p:null,e:null}; S.turnPlays={...(S.turnPlays||{}),[me]:plays.map(({c})=>S.hand[me].find(y=>y.uid===c.uid)).filter(Boolean)};
-      S.unspent={p:0,e:0,...(S.unspent||{})}; S.unspent[me]=Math.max(0,(me==="e"?S.energyE:S.energy)-plays.reduce((a,x,i)=>a+costOf(me,x.c,x.li,i===0),0));
+      S.unspent={p:0,e:0,...(S.unspent||{})}; S.unspent[me]=Math.max(0,(me==="e"?S.energyE:S.energy)-plays.reduce((a,x,i)=>a+costOf(me,x.c,x.li,i===0,jugFirst(plays,i)),0));
       for(const {c,li} of plays){ const x=S.hand[me].find(y=>y.uid===c.uid); if(!x) continue; S.hand[me]=S.hand[me].filter(y=>y!==x); S.board[me][li].push(x); reveal(me,li,x); }
       if(keep.turn<6) for(const {c,li} of plays) if(c.id==="qetesh_r"){ const x=S.board[me][li].find(y=>y.uid===c.uid); if(x&&live(x)) midnightCharm(me,li,x); }
       out={m:[0,1,2].map(li=>total(me,li)),o:[0,1,2].map(li=>total(op,li)),inv:[0,1,2].map(li=>nemInv(li)),ank:[0,1,2].map(li=>S.board[me][li].some(x=>x.id==='ananke'&&live(x)))};
@@ -575,12 +602,12 @@ function aiPlan(me="e",tierOv){
     return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
   const cands=[];
   for(let mask=0;mask<(1<<hand.length);mask++){
-    const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,plays:[],pend:[0,0,0]}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
+    const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,jf:true,plays:[],pend:[0,0,0]}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
     for(const c of cs){ let bp=null;
       /* chaque carte va là où elle fait le plus monter la probabilité de victoire */
       for(let li=0;li<3;li++){ const r=place(c,li,ctx); if(!r) continue; add[li]+=r.pow; hit[li]+=r.hit; const v=winP(add,hit)*100+r.adj; add[li]-=r.pow; hit[li]-=r.hit; if(!bp||v>bp.v) bp={...r,li,v}; }
       if(!bp){ ok=false; break; }
-      ctx.plays.push({c,li:bp.li}); ctx.en-=bp.cost; ctx.pend[bp.li]++; ctx.first=false; add[bp.li]+=bp.pow; hit[bp.li]+=bp.hit; adj+=bp.adj; }
+      ctx.plays.push({c,li:bp.li}); ctx.en-=bp.cost; ctx.pend[bp.li]++; ctx.first=false; if(vestaT(c.id)) ctx.jf=false; add[bp.li]+=bp.pow; hit[bp.li]+=bp.hit; adj+=bp.adj; }
     if(!ok) continue;
     let bonus=adj;
     /* garder une carte pour plus tard : bonus aux tours 2 à 5 si elle attend sa préparation ou le tour 6 */
@@ -613,7 +640,7 @@ async function resolveTurn(mine, theirs, animate){
   const wait=ms=>animate?sleep(ms):Promise.resolve();
   S.busy=true; S.sel=null; S.info=null; S.staged=[]; S.nudge=false; S.lastRev={p:null,e:null};
   /* Prométhée : énergie non dépensée ; Nike : ordre dans lequel chaque joueur a posé ses cartes (l'IA garde Nike pour la fin) */
-  const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0)),0);
+  const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0,jugFirst(list,i))),0);
   const unspent=S.unspent={p:Math.max(0,S.energy-spent("p",mine)),e:Math.max(0,S.energyE-spent("e",theirs))}; S.biaBlock={p:false,e:false};
   S.turnPlays={p:mine.map(x=>x.c),e:(S.mp?theirs:[...theirs.filter(x=>x.c.id!=="nike"),...theirs.filter(x=>x.c.id==="nike")]).map(x=>x.c)};
   S.hand.p=S.hand.p.filter(c=>!mine.some(x=>x.c===c));
@@ -622,6 +649,8 @@ async function resolveTurn(mine, theirs, animate){
     const cd=x=>CARDS[x.c.id]; qProg("cheap5",mine.filter(x=>cd(x).cost>=1&&cd(x).cost<=2).length); qProg("helv4",mine.filter(x=>cd(x).fac==="helvara").length);
     if(S.turn===6&&mine.some(x=>cd(x).cost>=6)) qProg("six6"); if(mine.some(x=>cd(x).r==="U")) qProg("fusion"); } }
   if(theirs.length) S.disc.e=0;
+  /* Vesta : la réduction est prise par la première carte Jugement de coût 1 ou plus jouée (avant les Révélations : une Vesta jouée ce tour vaut pour la suite) */
+  S.vesta=S.vesta||{p:0,e:0}; for(const [k,l] of [["p",mine],["e",theirs]]) if(l.some(x=>vestaT(x.c.id))) S.vesta[k]=0;
   for(const x of mine){ S.board.p[x.li].push(x.c); if(!CARDS[x.c.id].token) (S.played=S.played||[]).push([x.c.id,S.locs[x.li].id]); }
   for(const x of theirs) S.board.e[x.li].push(x.c);
   render();

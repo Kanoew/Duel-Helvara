@@ -11,6 +11,12 @@
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
     [/^Fatalité : rien ne peut l'atteindre$/, ()=>"Fate: nothing can affect her"],
+    [/^Flèche d'Apollon ajoutée à la main$/, ()=>"Apollo's Arrow added to hand"],
+    [/^main pleine : Flèche perdue$/, ()=>"hand full: Arrow lost"],
+    [/^Arme d'Héphaïstos forgée dans la main$/, ()=>"Hephaestus's Weapon forged into hand"],
+    [/^main pleine : Arme perdue$/, ()=>"hand full: Weapon lost"],
+    [/^prochaine carte Jugement −1$/, ()=>"next Judgement card −1"],
+    [/^la foudre détruit (\d+) cartes?(?:, (\d+) revien(?:nen)?t en main)?$/, (m,n,b)=>`lightning destroys ${n} ${s(n,"card")}`+(b?`, ${b} ${+b>1?"return":"returns"} to hand`:"")],
     [/^dépense (\d+) énergie, \+(\d+)$/, (m,a,b)=>`spends ${a} energy, +${b}`],
     [/^prend (.+) en main$/, (m,a)=>a==="une carte"?"takes a card into hand":`takes ${a} into hand`],
     [/^l'adversaire perd son énergie conservée$/, ()=>"the opponent loses their stored energy"],
@@ -388,6 +394,7 @@
     [/^toi (-?\d+)$/, (m,n)=>`you ${n}`],
     [/^adversaire (-?\d+)$/, (m,n)=>`opponent ${n}`],
     [/^prochaine carte −(\d+)$/, (m,n)=>`next card −${n}`],
+    [/^prochaine carte Jugement −1$/, ()=>"next Judgement card −1"],
     [/^\+(\d+) au prochain tour$/, (m,n)=>`+${n} next turn`],
     [/^Coût (-?\d+) · Puissance (-?\d+)(.*)$/, (m,c,p,r)=>`Cost ${c} · Power ${p}${r===" · Pas d'effet."?" · No effect.":r}`],
     [/^Coût (-?\d+) · puissance de base (-?\d+)( · actuelle)?$/, (m,c,p,a)=>`Cost ${c} · base Power ${p}${a?" · current":""}`],
@@ -458,7 +465,8 @@
         nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel, Eos, Pele and Qetesh in their New Year's Eve versions.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
       },
       DROPS:{
-        nov15:"Prometheus keeps the fire, Pandora opens the box, Athena guides your hand, and Styx watches over her daughters: Bia, and Nike, the first faction ultra-legendary. She is earned by playing 50 games with 8 Judgement cards: the Faction journal is already counting.",
+        nov15:"Prometheus keeps the fire, Pandora opens the box, Athena guides your hand, and Styx watches over her daughters: Bia, and Nike, the first faction ultra-legendary. Ma'at, Apollo and Vesta prepare her way. She is earned by playing 50 games with 8 Judgement cards: the Faction journal is already counting.",
+        dec14:"Zeus hurls his lightning, Hephaestus forges his weapons, and Tsukuyomi joins Amaterasu and Susanoo… while the Star Fold opens for Christmas.",
         dec26:"Odin, Thor, Hel, Baldur, Hades, Poseidon, Circe, Qetesh, the people of Lausanne… five new fusions and the Creator's Domain.",
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."

@@ -457,6 +457,72 @@ async function inPage() {
       const plan = aiPlan("e", 5); T("IA : La Source est jouée quand la main compte des cartes Helvara à Révélation", plan.some(x => x.c === src), JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
   }
 
+
+  /* ===== Renfort Jugement (15 novembre et 14 décembre 2026) : Mā'at, Apollon, Vesta, Héphaïstos, Tsukuyomi, Zeus ===== */
+  { const cheapNJ = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost <= 1 && /^Révélation/.test(CARDS[id].fx || "") && !ULof(id));
+    const filler = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)).slice(0, 7);
+    /* J1. Tour 6 : Mā'at (0) + Flèche (0) + Vesta (1, réduite à 0) + Apollon (1) + Nike (3) → Nike finit à 9, 4 d'énergie en tout */
+    fresh(); S.turn = 6; S.energy = 6; S.vesta = { p: 1, e: 0 }; { const m = card("maat"), f = card("fleche"), v = card("vesta"), a = card("apollon"), n = card("nike"); S.hand.p = [m, f, v, a, n];
+      const plays = [m, f, v, a, n].map(c => ({ c, li: 0 })); S.staged = plays.slice(); const u = used(); S.staged = [];
+      await resolveTurn(plays, [], false); const nk = find("p", "nike");
+      T("Tour 6 : Mā'at + Flèche + Vesta + Apollon puis Nike → Nike finit à 9", nk && nk.pow === 9, nk && nk.pow);
+      T("Tour 6 : ces 5 cartes coûtent 4 d'énergie (Vesta du tour précédent : −1 sur la première carte Jugement de coût 1 ou plus)", u === 4, u);
+      T("Apollon : la Flèche arrive en main après sa Révélation", S.hand.p.some(x => x.id === "fleche"), S.hand.p.map(x => x.id).join()); }
+    /* J1b. Vesta en attente : Nike coûte 2 si elle est la première carte Jugement de coût 1 ou plus */
+    fresh(); S.vesta = { p: 1, e: 0 }; T("Vesta : Nike coûte 2 grâce à la réduction", costFor("p", "nike", 0, false, true) === 2 && costFor("p", "nike", 0, false, false) === 3, costFor("p", "nike", 0, false, true));
+    /* J2. Apollon avec la main pleine (7 cartes) : pas de Flèche */
+    fresh(); { const a = card("apollon"); S.hand.p = [a, ...filler.map(id => card(id))]; await resolveTurn([{ c: a, li: 0 }], [], false);
+      T("Apollon, main pleine : pas de Flèche", S.hand.p.length === 7 && !S.hand.p.some(x => x.id === "fleche"), S.hand.p.length); }
+    fresh(); { const h = card("hephaistos"); S.hand.p = [h]; await resolveTurn([{ c: h, li: 0 }], [], false); const w = S.hand.p.find(x => x.id === "arme");
+      T("Héphaïstos : une Arme d'Héphaïstos (coût 1, puissance 2) arrive en main", w && w.pow === 2 && CARDS.arme.cost === 1, w && w.pow); }
+    /* J3. Vesta : seulement la prochaine carte Jugement (pas les autres factions), et elle reste active tant qu'aucune n'est jouée */
+    fresh(); S.turn = 2; S.energy = 2; { const v = card("vesta"); S.hand.p = [v]; await resolveTurn([{ c: v, li: 0 }], [], false); }
+    { const other = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost === 3 && !ULof(id));
+      T("Vesta : la réduction ne touche pas une carte d'une autre faction", costFor("p", other, 0, false, true) === 3 && costFor("p", "athena", 0, false, true) === CARDS.athena.cost - 1, costFor("p", other, 0, false, true));
+      S.turn = 3; S.energy = 3; const o = card(other); S.hand.p = [o]; await resolveTurn([{ c: o, li: 1 }], [], false);
+      T("Vesta : toujours active après une carte d'une autre faction", vestaOn("p"));
+      S.turn = 4; S.energy = 4; const at = card("athena"); S.hand.p = [at]; await resolveTurn([{ c: at, li: 2 }], [], false);
+      T("Vesta : consommée par la carte Jugement suivante", !vestaOn("p")); }
+    /* J4. Zeus : cartes de coût 0 et 1 des deux côtés détruites ; mes cartes Jugement reviennent en main à leur puissance de base ; celles de l'adversaire vont au cimetière */
+    fresh(); S.turn = 5; { const m = put("p", 0, "maat", 6), v = put("p", 0, "vesta"), f = put("p", 1, "fleche"), nj = put("p", 2, cheapNJ), em = put("e", 0, "maat"), enj = put("e", 1, cheapNJ), big = put("e", 1, "athena");
+      const z = card("zeus"); S.hand.p = [z]; S.deck.p = []; const d0 = S.destroyed; await resolveTurn([{ c: z, li: 1 }], [], false);
+      const ids = S.hand.p.map(x => x.id).sort().join();
+      T("Zeus : mes cartes Jugement de coût ≤ 1 (Mā'at, Vesta, Flèche) reviennent en main", ids === ["fleche", "maat", "vesta"].sort().join(), ids);
+      T("Zeus : elles reviennent à leur puissance de base (Mā'at à 1, pas 6)", (S.hand.p.find(x => x.id === "maat") || {}).pow === 1);
+      T("Zeus : ma carte d'une autre faction et les cartes adverses de coût ≤ 1 vont au cimetière", S.graveyard.p.includes(cheapNJ) && S.graveyard.e.includes("maat") && S.graveyard.e.includes(cheapNJ) && !S.graveyard.p.includes("maat"), JSON.stringify(S.graveyard));
+      T("Zeus : une carte de coût 2 ou plus reste en jeu, et les 6 destructions comptent", S.board.e[1].includes(big) && S.destroyed - d0 === 6, S.destroyed - d0); }
+    /* J5. Zeus puis rejouer Apollon → nouvelle Flèche */
+    fresh(); S.turn = 5; { put("p", 0, "apollon"); const z = card("zeus"); S.hand.p = [z]; await resolveTurn([{ c: z, li: 1 }], [], false);
+      const a = S.hand.p.find(x => x.id === "apollon"); S.turn = 6; S.energy = 6; await resolveTurn([{ c: a, li: 0 }], [], false);
+      T("Zeus puis Apollon rejoué : nouvelle Flèche en main", S.hand.p.some(x => x.id === "fleche"), S.hand.p.map(x => x.id).join()); }
+    /* J6. Zeus face à Ananké et à Eir : rien ne bouge */
+    fresh(); S.turn = 5; { const an = put("e", 0, "ananke"), eir = put("e", 2, "eir"), prot = put("e", 2, cheapNJ), myEir = put("p", 2, "eir"), myM = put("p", 2, "maat");
+      const z = card("zeus"); S.hand.p = [z]; await resolveTurn([{ c: z, li: 1 }], [], false);
+      T("Zeus : Ananké et les cartes protégées par Eir (des deux côtés) ne bougent pas", S.board.e[0].includes(an) && S.board.e[2].includes(prot) && S.board.p[2].includes(myM), JSON.stringify(S.board.e.map(c => c.map(x => x.id)))); }
+    /* J7. Zeus + Styx : aucune carte ne revient deux fois */
+    fresh(); S.turn = 5; { put("p", 0, "styx"); put("p", 0, "maat"); const z = card("zeus"); S.hand.p = [z]; await resolveTurn([{ c: z, li: 1 }], [], false);
+      T("Zeus + Styx : Mā'at revient une seule fois en main", S.hand.p.filter(x => x.id === "maat").length === 1 && !S.graveyard.p.includes("maat"), S.hand.p.map(x => x.id).join()); }
+    /* J8. Zeus avec la main pleine : la carte Jugement en trop reste au cimetière */
+    fresh(); S.turn = 5; { put("p", 0, "maat"); const z = card("zeus"); S.hand.p = [z, ...filler.map(id => card(id))]; await resolveTurn([{ c: z, li: 1 }], [], false);
+      T("Zeus, main pleine : Mā'at reste au cimetière", S.graveyard.p.includes("maat") && S.hand.p.length === 7, S.hand.p.length); }
+    /* J9. Mā'at : +1 à ton autre carte la plus faible ici ; seule, rien */
+    fresh(); { const a = put("p", 0, "athena", 4), b = put("p", 0, "vesta", 2); const m = card("maat"); S.hand.p = [m]; await resolveTurn([{ c: m, li: 0 }], [], false);
+      T("Mā'at : +1 à l'autre carte la plus faible ici", b.pow === 3 && a.pow === 4 && find("p", "maat").pow === 1, `${b.pow}/${a.pow}`); }
+    fresh(); { const m = card("maat"); S.hand.p = [m]; await resolveTurn([{ c: m, li: 0 }], [], false); T("Mā'at seule : rien ne se passe", find("p", "maat").pow === 1); }
+    /* J10. Tsukuyomi : +2 si Amaterasu ou Susanoo est de ton côté, dans n'importe quel lieu */
+    fresh(); { const t = put("p", 0, "tsukuyomi"); const p0 = cardPow("p", 0, t); put("e", 1, "amaterasu"); const p1 = cardPow("p", 0, t); put("p", 2, "susanoo"); const p2 = cardPow("p", 0, t);
+      T("Tsukuyomi : 2 seule, 2 avec Amaterasu adverse, 4 avec Susanoo de ton côté dans un autre lieu", p0 === 2 && p1 === 2 && p2 === 4, `${p0}/${p1}/${p2}`); }
+    /* J11. Données, dates et jetons */
+    T("Renfort Jugement : coûts, puissances, raretés et dates", CARDS.maat.cost === 0 && CARDS.maat.pow === 1 && CARDS.maat.r === "C" && CARDS.apollon.cost === 1 && CARDS.apollon.r === "R" && CARDS.vesta.pow === 2 && CARDS.hephaistos.cost === 2 && CARDS.tsukuyomi.r === "C" && CARDS.zeus.cost === 5 && CARDS.zeus.pow === 4 && CARDS.zeus.r === "L"
+      && ["maat", "apollon", "vesta"].every(id => CARDS[id].rel === "2026-11-15" && CARDS[id].soon === "2026-11-10") && ["hephaistos", "tsukuyomi", "zeus"].every(id => CARDS[id].rel === "2026-12-14" && CARDS[id].soon === "2026-12-09") && ["maat", "apollon", "vesta", "hephaistos", "tsukuyomi", "zeus"].every(id => CARDS[id].fac === "jugement"));
+    T("Jetons Flèche et Arme : Jugement, hors collection et paquets", CARDS.fleche.token && CARDS.arme.token && !POOL.includes("fleche") && !POOL.includes("arme") && CARDS.fleche.fac === "jugement");
+    /* J12. IA : Nike après les cartes à 0 et 1 ; Zeus joué quand l'adversaire a plusieurs cartes bon marché */
+    fresh(); S.turn = 5; S.energy = S.energyE = 5; { const m = card("maat"), a = card("apollon"), n = card("nike"); S.hand.e = [n, m, a];
+      const plan = aiPlan("e", 5), ids = plan.map(x => x.c.id); T("IA : Nike posée après Mā'at et Apollon", ids.includes("nike") && ids.indexOf("nike") === ids.length - 1 && ids.length === 3, ids.join()); }
+    fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("p", 0, "maat"); put("p", 1, cheapNJ); put("p", 2, "vesta"); const z = card("zeus"); S.hand.e = [z];
+      const plan = aiPlan("e", 5); T("IA : Zeus joué au tour 5 face à 3 cartes adverses de coût ≤ 1", plan.some(x => x.c === z), JSON.stringify(plan.map(x => x.c.id))); }
+  }
+
   return res;
 }
 
