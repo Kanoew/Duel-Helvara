@@ -521,6 +521,19 @@ async function inPage() {
       const plan = aiPlan("e", 5), ids = plan.map(x => x.c.id); T("IA : Nike posée après Mā'at et Apollon", ids.includes("nike") && ids.indexOf("nike") === ids.length - 1 && ids.length === 3, ids.join()); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("p", 0, "maat"); put("p", 1, cheapNJ); put("p", 2, "vesta"); const z = card("zeus"); S.hand.e = [z];
       const plan = aiPlan("e", 5); T("IA : Zeus joué au tour 5 face à 3 cartes adverses de coût ≤ 1", plan.some(x => x.c === z), JSON.stringify(plan.map(x => x.c.id))); }
+    /* J13. IA autour de Nike (16 octobre) : petites cartes gardées pour son tour, Nike au tour 6, Zeus pour rejouer les petites cartes, deck construit autour d'elle */
+    const other3 = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id)) || "athena";
+    fresh(); S.turn = 3; S.energy = S.energyE = 3; { const n = card("nike"), m = card("maat"), a = card("apollon"), o3 = card(other3); S.hand.e = [n, m, a, o3];
+      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 3 → Mā'at et Apollon gardés pour son tour", !ids.includes("maat") && !ids.includes("apollon") && !ids.includes("nike"), ids.join() || "rien"); }
+    fresh(); S.turn = 4; S.energy = S.energyE = 4; { const n = card("nike"), m = card("maat"); S.hand.e = [n, m];
+      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : pas de Nike au tour 4 avec moins de 3 cartes devant elle", !ids.includes("nike"), ids.join() || "rien"); }
+    fresh(); S.turn = 6; S.energy = S.energyE = 6; { const hs = ["maat", "vesta", "apollon", "fleche", "nike"].map(id => card(id)); S.hand.e = hs;
+      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : au tour 6, Nike jouée en dernier avec au moins 3 cartes devant elle", ids[ids.length - 1] === "nike" && ids.length >= 4, ids.join()); }
+    fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("e", 0, "maat"); put("e", 1, "vesta"); const z = card("zeus"), n = card("nike"); S.hand.e = [z, n];
+      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main, 2 petites cartes Jugement en jeu → Zeus au tour 5 (elles reviendront avant Nike)", ids.includes("zeus") && !ids.includes("nike"), ids.join() || "rien"); }
+    { let n = 0, ok = 0; for (let i = 0; i < 400; i++) { const d = aiDeck(5, true).deck; if (!d.includes("nike")) continue; n++; if (d.filter(id => CARDS[id].fac === "jugement" && CARDS[id].cost <= 1 && id !== "nike").length >= 3) ok++; }
+      /* rarement 2 seulement : quand les autres cartes du deck sont toutes liées à une synergie, elles ne sont pas remplacées */
+      T("IA : un deck de l'IA avec Nike emporte au moins 3 petites cartes Jugement (au moins 95 % des decks)", n > 0 && ok >= .95 * n, `${ok}/${n}`); }
   }
 
   return res;

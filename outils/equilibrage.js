@@ -122,7 +122,10 @@ function inPageSetup(o) {
         try { newGame(); } finally { window.aiDeck = keep; }
         const pl = { p: [], e: [] }, bad = [];
         for (let t = 1; t <= 6 && !S.over; t++) {
+          const smallIn = side => S.hand[side].filter(c => CARDS[c.id].fac === "jugement" && CARDS[c.id].cost <= 1 && c.id !== "nike").length;
+          const hp = smallIn("p"), he = smallIn("e");
           const pp = aiPlan("p", o.palier), pe = aiPlan("e", o.palier);
+          if (pp.some(x => x.c.id === "nike")) (rec.nh = rec.nh || []).push(hp); if (pe.some(x => x.c.id === "nike")) (rec.nh = rec.nh || []).push(he);
           for (const x of pp) pl.p.push([x.c.id, S.locs[x.li].id, t]);
           for (const x of pe) pl.e.push([x.c.id, S.locs[x.li].id, t]);
           await resolveTurn(pp, pe, false);
@@ -232,6 +235,26 @@ function byDominant(games, byId) {
       const r = g.res === "draw" ? "d" : (g.res === "win") === (side === "p") ? "w" : "l"; const f = F[k] || (F[k] = { n: 0, w: 0, l: 0, d: 0 }); f.n++; f[r]++; } }
   return F;
 }
+/* Nike : cartes jouées avant elle dans son tour (sans les Aphrodite, comme le moteur), puissance de fin, tour de pose ;
+   tour moyen de pose des petites cartes Jugement (coût 0 ou 1) et des jetons Flèche / Arme */
+const SMALL_J = ["maat", "apollon", "vesta", "tsukuyomi", "fleche", "arme"];
+function nikeBlock(games, byId) {
+  let n = 0, before = 0, alive = 0, pw = 0, ge3 = 0, nh = 0, nhN = 0; const turns = {}, sm = {};
+  for (const g of games) { if (!g.res) continue; for (const k of g.nh || []) { nh += k; nhN++; }
+    for (const side of ["p", "e"]) { const plays = side === "p" ? g.pl : g.el, fin = g.fin[side], withNike = (side === "p" ? g.dp : g.de).includes("nike");
+      plays.forEach(([id, , t], i) => {
+        if (SMALL_J.includes(id) && withNike) { const x = sm[id] || (sm[id] = { n: 0, t: 0 }); x.n++; x.t += t; }
+        if (id !== "nike") return;
+        const b = plays.slice(0, i).filter(([k, , u]) => u === t && !/^aphrodite/.test(k) && k !== "ulaph").length;
+        n++; before += b; if (b >= 3) ge3++; turns[t] = (turns[t] || 0) + 1;
+        const f = fin.find(x => x[0] === "nike"); if (f) { alive++; pw += f[1]; } }); } }
+  const L = [`### Nike et les petites cartes Jugement\n`];
+  if (!n) L.push("Nike n'a jamais été posée.\n");
+  else L.push(`- **Nike posée** ${n} fois · **cartes jouées avant elle dans son tour : ${num(before / n, 2)}** en moyenne (au moins 3 : ${pct(ge3, n, 0)} %) · **puissance de fin : ${alive ? num(pw / alive) : "–"}** · tour de pose : ${[1, 2, 3, 4, 5, 6].filter(t => turns[t]).map(t => `T${t} ${pct(turns[t], n, 0)} %`).join(", ")} · petites cartes Jugement en main au moment de la jouer : ${nhN ? num(nh / nhN, 2) : "–"}`);
+  const parts = SMALL_J.filter(id => sm[id]).map(id => `${byId[id] ? md(byId[id].name) : id} ${num(sm[id].t / sm[id].n)}`);
+  if (parts.length) L.push(`- **Tour moyen de pose, dans les decks avec Nike** : ${parts.join(" · ")}`);
+  return L.join("\n") + "\n";
+}
 function dominantTable(games, data, byId) {
   const F = byDominant(games, byId), L = [`### Victoire par faction dominante du deck
 `, `| Faction dominante | Decks | Victoire | Défaite | Nulle |
@@ -304,6 +327,7 @@ function reportCible(data, games, pageErrors, secs) {
   }
   L.push(`\nCamp qui révèle en premier : ${pct(A.pWins, A.ok)} % de victoires (nulles : ${pct(A.nul, A.ok)} %).\n`);
   L.push(dominantTable(games, data, byId));
+  L.push(nikeBlock(games, byId));
   return L.join("\n");
 }
 
@@ -372,7 +396,7 @@ function report(data, games, pageErrors, secs) {
   out(`### Victoire selon le coût et la rareté (cartes dans le deck, toutes cartes confondues)\n`);
   const grp = (keyf, keys, label, nameOf) => { out(`| ${label} | Cartes | Decks | Victoire (deck) | Pose |\n|---|---:|---:|---:|---:|`); for (const k of keys) { const rs = rows.filter(x => keyf(x.c) === k); const dk = rs.reduce((a, x) => a + x.s.dk, 0), w = rs.reduce((a, x) => a + x.s.w, 0), pl = rs.reduce((a, x) => a + x.s.pl, 0); if (dk) out(`| ${k === +k ? k : (nameOf || (x => RN[x]))(k)} | ${rs.length} | ${dk} | ${pct(w, dk)} % | ${pct(pl, dk, 0)} % |`); } out(""); };
   grp(c => c.cost, [...new Set(rows.map(x => x.c.cost))].sort((a, b) => a - b), "Coût"); grp(c => c.r, RK, "Rareté"); grp(c => c.fac, Object.keys(data.facs), "Faction", k => data.facs[k]);
-  out(""); out(dominantTable(games, data, byId));
+  out(""); out(dominantTable(games, data, byId)); out(nikeBlock(games, byId));
 
   /* cartes pas encore sorties */
   const fut = cards.filter(c => !isRel(c)).sort((a, b) => (a.rel || "").localeCompare(b.rel || "") || a.cost - b.cost || a.name.localeCompare(b.name, "fr"));

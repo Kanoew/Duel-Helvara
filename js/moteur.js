@@ -30,6 +30,12 @@ function aiDeck(t,full,noUL){   /* noUL : le Blitz n'a aucune ultra-légendaire,
     if(mates.length&&!paired(id)){ const k=weakest(); if(k>=0&&deck[k]!==id) deck[k]=mates[0]; } }
   /* palier 4 et plus : une ultra-légendaire si le deck remplit ses conditions */
   if(t>=4&&!noUL){ for(const u of shuffle(ULS.filter(u=>REL(u.id)))){ if(!ulOk(u,deck)) continue; const need=new Set(u.req.flat()); let k=-1; deck.forEach((x,i)=>{ if(!need.has(x)&&!paired(x)&&CARDS[x].fac!==u.fac&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k<0) deck.forEach((x,i)=>{ if(!need.has(x)&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k>=0){ const was=deck[k]; deck[k]=u.id; if(ulOk(u,deck)) break; deck[k]=was; } } }
+  /* Nike : le deck emporte jusqu'à 3 petites cartes Jugement (coût 0 ou 1) à jouer avant elle, à la place de ses cartes les plus faibles */
+  if(deck.includes("nike")){ const sj=id=>CARDS[id].fac==="jugement"&&CARDS[id].cost<=1&&id!=="nike", u=ULof("nike");
+    let have=deck.filter(sj).length;
+    for(const id of pool.filter(x=>sj(x)&&!deck.some(y=>charOf(y)===charOf(x))).sort((a,b)=>sc[b]-sc[a])){ if(have>=3) break;
+      let k=-1; deck.forEach((x,i)=>{ if(x!=="nike"&&!sj(x)&&!paired(x)&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k<0) break;
+      const was=deck[k]; deck[k]=id; if(u&&!ulOk(u,deck)){ deck[k]=was; break; } have++; } }
   return {deck:deck.slice(0,ECO.deckSize),fac};
 }
 function newGame(){
@@ -478,6 +484,11 @@ function aiPlan(me="e",tierOv){
   if(S.tut&&me==="e"){ return (TUT.plays[S.turn]||[]).map(([id,li])=>({c:S.hand.e.find(x=>x.id===id),li})).filter(x=>x.c); }
   const op=opp(me), t=tierOv!=null?tierOv:(S.aiTier||0), noise=[3,2.4,1.8,1.4,1,.6,.3][t];
   const en0=me==="e"?S.energyE:S.energy, hand=S.hand[me].slice(0,7);
+  /* Nike : les petites cartes Jugement (coût 0 ou 1, jetons Flèche et Arme compris) sont gardées pour le tour de Nike et jouées avant elle.
+     Nike attend (en main, ou encore dans le deck) ; Zeus en main avant le tour 5 : pas besoin de garder, la foudre les ramènera en main. */
+  const smallJ=c=>CARDS[c.id].fac==="jugement"&&CARDS[c.id].cost<=1&&c.id!=="nike";
+  const nikeHand=hand.some(x=>x.id==="nike"), nikeWait=!S.board[me].some(col=>col.some(x=>x.id==="nike"))&&(nikeHand||(S.deck[me]||[]).some(x=>x.id==="nike"));
+  const zeusPlan=hand.some(x=>x.id==="zeus")&&S.turn<5;
   if(!hand.length) return [];
   const me0=[0,1,2].map(li=>total(me,li)), op0=[0,1,2].map(li=>total(op,li)), diffs=[0,1,2].map(li=>op0[li]-me0[li]);
   const foesN=[0,1,2].map(li=>S.board[op][li].filter(x=>x.rev).length), matesN=[0,1,2].map(li=>S.board[me][li].filter(x=>x.rev).length);
@@ -522,7 +533,10 @@ function aiPlan(me="e",tierOv){
     if(locIs(li,"faille")&&S.turn<=4&&d.pow<=2) pow-=d.pow;
     if(c.id==="nemesis") adj+=(diff>0&&diff<12)?5:-6;
     if(c.id==="mouche") pow-=mates;
-    if(c.id==="nike") pow+=ctx.plays.length*2;
+    if(c.id==="nike"){ pow+=ctx.plays.length*2;
+      /* au tour 6 de préférence ; plus tôt seulement avec au moins 3 cartes jouées avant elle (Vesta, Prométhée) */
+      if(S.turn<6&&ctx.plays.length<3) adj-=14; }
+    if(nikeWait&&!ctx.nike&&smallJ(c)&&S.turn<6&&!zeusPlan&&hand.length<7) adj-=nikeHand?8:4;
     /* vague Jugement (15 novembre, 14 décembre) */
     if(c.id==="maat"&&(mates||S.board[me][li].some(x=>x.rev))) pow+=1;
     if((c.id==="apollon"||c.id==="hephaistos")&&hand.length-ctx.plays.length<=7) adj+=c.id==="apollon"?1.5:2;
@@ -532,7 +546,9 @@ function aiPlan(me="e",tierOv){
       let foeP=0, foeN=0, mineN=0, lost=0;
       for(let i=0;i<3;i++){ for(const x of S.board[op][i]) if(x.rev&&CARDS[x.id].cost<=1&&!untargetable(me,op,x)&&!shielded(op,i)&&!locIs(i,"sauvabelin")){ foeP+=Math.max(0,cardPow(op,i,x)); foeN++; }
         for(const x of S.board[me][i]) if(x.rev&&CARDS[x.id].cost<=1&&!shielded(me,i)&&!locIs(i,"sauvabelin")){ mineN++; const v=Math.max(0,cardPow(me,i,x)); lost+=CARDS[x.id].fac==="jugement"?v*.5:v; } }
-      hit+=foeP; pow-=lost; if(foeN>=2||mineN>=2) adj+=2; adj+=S.turn===5?2:S.turn===6?-1:0; }
+      hit+=foeP; pow-=lost; if(foeN>=2||mineN>=2) adj+=2; adj+=S.turn===5?2:S.turn===6?-1:0;
+      /* avec Nike en attente : la foudre ramène les petites cartes Jugement en main pour les rejouer avant elle au tour suivant */
+      if(nikeWait&&S.turn===5){ let back=0; for(let i=0;i<3;i++) for(const x of S.board[me][i]) if(x.rev&&smallJ(x)&&!shielded(me,i)&&!locIs(i,"sauvabelin")) back++; if(back>=2) adj+=2+1.5*Math.min(4,back); } }
     if(c.id==="ananke"){ /* fin de partie : puissance adverse ici +1 (elle gagne le lieu). Jamais avec une Nemesis adverse ; seulement au tour 6 si possible (un Apsu adverse posé plus tard lui retirerait tout) */
       if(S.board[op][li].some(x=>live(x)&&x.id==="nemesis")) return null;
       pow=op0[li]+opFut[li]+1; if(S.turn<6) adj-=5; }
@@ -602,7 +618,7 @@ function aiPlan(me="e",tierOv){
     return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
   const cands=[];
   for(let mask=0;mask<(1<<hand.length);mask++){
-    const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,jf:true,plays:[],pend:[0,0,0]}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
+    const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,jf:true,plays:[],pend:[0,0,0],nike:cs.some(x=>x.id==="nike")}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
     for(const c of cs){ let bp=null;
       /* chaque carte va là où elle fait le plus monter la probabilité de victoire */
       for(let li=0;li<3;li++){ const r=place(c,li,ctx); if(!r) continue; add[li]+=r.pow; hit[li]+=r.hit; const v=winP(add,hit)*100+r.adj; add[li]-=r.pow; hit[li]-=r.hit; if(!bp||v>bp.v) bp={...r,li,v}; }
