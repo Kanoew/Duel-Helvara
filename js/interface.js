@@ -296,8 +296,8 @@ const COST_KEYS=["0","1","2","3","4","5","6"], RAR_KEYS=["C","R","E","L","U"];
 const filtersOn=()=>filtCount()>0||normQ(searchQ).trim()!=="";
 /* Recherche par mot-clé : tous les mots doivent se trouver dans le nom, l'effet, la faction ou la rareté (sans accents ni majuscules) */
 const normQ=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
-function searchOK(id){
-  const w=normQ(searchQ).split(/\s+/).filter(Boolean); if(!w.length) return true;
+function searchOK(id,q=searchQ){
+  const w=normQ(q).split(/\s+/).filter(Boolean); if(!w.length) return true;
   const d=CARDS[id], hay=normQ([d.name,d.fx,FAC[d.fac].n,RAR[d.r].n,"cout "+d.cost,"puissance "+d.pow].join(" "));
   return w.every(x=>hay.includes(x));
 }
@@ -410,13 +410,22 @@ function shopHTML(){
 
 /* --- ouverture de pack --- */
 /* --- vitrine de l'accueil --- */
+/* Vitrine : recherche par mot-clé (même règle que la collection) et filtre par faction ; seule la grille est redessinée à la frappe (le clavier reste ouvert) */
+let fanQ="", fanFac="all", fanTimer=null;
+function fanGridHTML(){
+  const ids=POOL.filter(id=>P.owned.includes(id)&&searchOK(id,fanQ)&&(fanFac==="all"||CARDS[id].fac===fanFac)).sort((a,b)=>CARDS[b].cost-CARDS[a].cost||CARDS[a].name.localeCompare(CARDS[b].name));
+  if(!ids.length) return `<p class="hint">Aucune carte ne correspond à ces filtres.</p>`;
+  return ids.map(id=>{ const k=fanPick.indexOf(id);
+      return `<button class="fanopt ${k>=0?"on":""}" data-act="fantoggle" data-id="${id}" aria-pressed="${k>=0}" aria-label="${CARDS[id].name}"><span class="thumb">${art(id)}<span class="cost">${CARDS[id].cost}</span><span class="pw">${CARDS[id].pow}</span></span>${k>=0?`<span class="fannum">${k+1}</span>`:""}</button>`; }).join("");
+}
 function fanPickHTML(){
   if(!fanPick) return "";
-  const ids=POOL.filter(id=>P.owned.includes(id)).sort((a,b)=>CARDS[b].cost-CARDS[a].cost||CARDS[a].name.localeCompare(CARDS[b].name));
+  const chip=(k,n,col)=>`<button class="chipbtn" aria-pressed="${fanFac===k}" data-act="fanfac" data-f="${k}" ${col?`style="--cc:${col}"`:""}>${n}</button>`;
   return `<div class="veil"><div class="result avpanel" role="dialog" aria-label="Cartes affichées">
     <h2>Ta vitrine</h2><p class="hint">Choisis les 3 cartes affichées sur l'accueil · ${fanPick.length}/3. La première choisie passe au centre.</p>
-    <div class="fangrid">${ids.map(id=>{ const k=fanPick.indexOf(id);
-      return `<button class="fanopt ${k>=0?"on":""}" data-act="fantoggle" data-id="${id}" aria-pressed="${k>=0}" aria-label="${CARDS[id].name}"><span class="thumb">${art(id)}<span class="cost">${CARDS[id].cost}</span><span class="pw">${CARDS[id].pow}</span></span>${k>=0?`<span class="fannum">${k+1}</span>`:""}</button>`; }).join("")}</div>
+    <div class="fanbar"><input id="fan-search" type="search" value="${esc(fanQ)}" placeholder="Rechercher : nom, effet, mot-clé…" aria-label="Rechercher une carte" autocomplete="off" enterkeyhint="search">
+      <div class="chips">${chip("all","Toutes")}${Object.entries(FAC).map(([k,v])=>chip(k,v.n,v.c)).join("")}</div></div>
+    <div class="fangrid" id="fangrid">${fanGridHTML()}</div>
     <div class="row2"><button class="ghost" data-act="fanclose">Annuler</button><button class="primary" data-act="fansave" ${fanPick.length===3?"":"disabled"}>Valider</button></div>
   </div></div>`;
 }
@@ -745,6 +754,8 @@ document.addEventListener("pointerdown", ()=>{ if(!bgmArmed){ bgmArmed=true; mus
 /* curseurs de volume : réglage en direct, sans redessiner l'écran pendant le glissement */
 /* Recherche de la collection : on ne redessine que la grille (pas tout l'écran), pour garder le clavier et la saisie */
 let searchTimer=0;
+document.addEventListener("input", e=>{ const t=e.target; if(!t||t.id!=="fan-search") return; fanQ=t.value; clearTimeout(fanTimer);
+  fanTimer=setTimeout(()=>{ const g=document.getElementById("fangrid"); if(g){ g.innerHTML=fanGridHTML(); translateDOM(g); } },140); });
 document.addEventListener("input", e=>{ const t=e.target; if(!t||t.id!=="coll-search") return; searchQ=t.value; clearTimeout(searchTimer);
   searchTimer=setTimeout(()=>{ const g=document.getElementById("collgrid"), i=document.getElementById("collinfo"); if(g){ g.innerHTML=collGridHTML(); translateDOM(g); } if(i){ i.innerHTML=collInfoHTML(); translateDOM(i); } },140); });
 document.addEventListener("input", e=>{ const k=e.target&&e.target.dataset&&e.target.dataset.vol; if(!k) return; P[k]=Math.max(0,Math.min(100,+e.target.value||0));
@@ -894,7 +905,8 @@ document.addEventListener("click", e=>{
       const opts=Object.keys(QDEF).filter(id=>!!QDEF[id].small===small&&id!==q.id&&id!==other&&qOk(id)); if(opts.length){ P.q.list[i]=mkQuest(pickRand(opts),Math.floor(Math.random()*1e5)); P.q.rr=true; save(); sfx("click"); } } render(); return; }
     case "wclaim": { if(P.wq&&!P.wq.c&&P.wq.p>=WQ.n){ P.wq.c=true; P.chf+=WQ.r; save(); sfx("coin"); } render(); return; }
     case "claim": { const q=P.q&&P.q.list[+el.dataset.i]; if(q&&!q.c&&q.p>=QDEF[q.id].n){ q.c=true; P.chf+=QDEF[q.id].r; save(); sfx("coin"); } render(); return; }
-    case "fanpick": fanPick=P.fan.filter(id=>P.owned.includes(id)); sfx("click"); render(); return;
+    case "fanpick": fanPick=P.fan.filter(id=>P.owned.includes(id)); fanQ=""; fanFac="all"; sfx("click"); render(); return;
+    case "fanfac": fanFac=el.dataset.f||"all"; sfx("click"); render(); return;
     case "fantoggle": { const id=el.dataset.id; if(fanPick.includes(id)) fanPick=fanPick.filter(x=>x!==id); else if(fanPick.length<3) fanPick.push(id); sfx("select"); render(); return; }
     case "fanclose": fanPick=null; render(); return;
     case "fansave": if(fanPick.length===3){ P.fan=[...fanPick]; save(); sfx("buff"); } fanPick=null; render(); return;

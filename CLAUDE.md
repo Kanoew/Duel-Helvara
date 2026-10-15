@@ -266,6 +266,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 - **Filtrer** (`filtHTML`, comme dans un tableur) : le bouton ouvre un panneau avec faction (`deckFilter`), coût 0 à 6+ (`costFilter`), rareté C/R/E/L/Ultra (`rarFilter`) et possession Toutes/Possédées/Manquantes (`ownFilter`), qui se combinent ; le bouton affiche le nombre de filtres (« Filtrer · 2 ») ; « Voir N cartes » ferme, « Réinitialiser » remet tout (recherche comprise). Prédicat unique : `collMatch(id)`. Les filtres vivent le temps de la session (variables de `sons-effets.js`).
 - **Tutoriel** : l'écran d'accueil du tutoriel explique l'énergie (« au tour N, tu as N énergie, elle ne se cumule pas »), l'origine des lieux (univers d'Helvara, inspiré de Lausanne : **formulation à faire confirmer par Jordan**) et Révélation / Continu ; les étapes 1 et 2 le rappellent ; les règles aussi.
 - Testés dans `outils/tests-scenarios.js` (panneau, mini-deck, lecture avant ajout, `+ Deck`, recherche sans accents).
+- **Vitrine de l'accueil** (« Choisir mes cartes », `fanPickHTML`, 15 octobre, demande de Jordan) : champ de recherche (`#fan-search`, même règle que la collection via `searchOK(id,fanQ)`, seule la grille `#fangrid` est redessinée à la frappe) et filtre par faction (`fanFac`, action `fanfac`) ; remis à zéro à chaque ouverture.
 
 ## Accueil : bandeau de saison → paquet d'édition (12 octobre 2026)
 
