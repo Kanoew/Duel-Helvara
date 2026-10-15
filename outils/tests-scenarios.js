@@ -271,7 +271,7 @@ async function inPage() {
   fresh(); S.turn = 6; S.energy = 12; { const n = card("nemesis"); S.hand.p = [n]; const a = canStage(n, 0); S.turn = 5; T("Nemesis : injouable au tour 6, jouable au tour 5", !a && canStage(n, 0), ""); }
   fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }
 
-  /* ===== Ananké (Fatalité : rien ne peut l'atteindre ; fin de partie : puissance adverse ici +1) ===== */
+  /* ===== Ananké (Fatalité : ni détruite ni déplacée (15 octobre, 2e version) ; fin de partie : puissance adverse ici +1) ===== */
   /* A1. Ananké révélée en premier, l'adversaire pose ensuite 10 de puissance au même endroit → elle gagne quand même le lieu */
   fresh(); S.turn = 6; { const a = card("ananke"), big = card(plain[0], 10); S.hand.p = [a]; S.hand.e = [big];
     await resolveTurn([{ c: a, li: 0 }], [{ c: big, li: 0 }], false);
@@ -285,29 +285,45 @@ async function inPage() {
     S.board.p[0].push(a); reveal("p", 0, a); const pre = cardPow("p", 0, a); const live7 = ankEnd("p", 0, a); const html = mini("p", 0, a, false);
     T("Ananké : à 1 pendant la partie, la puissance de fin (7) est annoncée en direct", pre === 1 && live7 === 7 && html.includes("fatb") && html.includes("✠ 7"), `${pre}, ${live7}`);
     put("e", 0, plain[1], 2); T("Ananké : l'indicateur se met à jour (9)", mini("p", 0, a, false).includes("✠ 9"), ""); }
-  /* A2. Qetesh, Calypso, Oya, Lilith, Poséidon, Nyx, Mohini : aucun effet sur elle, l'effet passe à la carte suivante */
-  const ananke6 = async (eff, check, nom, o = {}) => { fresh(); S.turn = 4; const a = put("e", 0, "ananke", 3), x = put("e", 0, plain[0], 2); const c = card(eff); S.hand.p = [c];
-    await resolveTurn([{ c, li: 0 }], [], false); const ok = check(a, x);
-    T(`Ananké : ${nom} ne l'atteint pas, l'effet passe à la carte suivante`, ok && S.board.e[0].includes(a) && !a.charm && !a.captive && !a.neg && a.pow === 3 && a.id === "ananke", `${eff} : ${JSON.stringify({ ok, ch: a.charm, cap: a.captive, neg: a.neg, pow: a.pow })}`); };
-  await ananke6("qetesh", (a, x) => x.charm === "p", "Qetesh (charme)");
-  await ananke6("calypso", (a, x) => !!x.captive, "Calypso (captive)");
-  await ananke6("oya", (a, x) => x.neg && x.pow === 1, "Oya (transformée)");
-  await ananke6("lilith", (a, x) => S.board.p[0].includes(x), "Lilith (volée)");
-  await ananke6("poseidon", (a, x) => S.hand.e.some(h => h.id === x.id) && !S.board.e[0].includes(x), "Poséidon (renvoyée en main)");
-  await ananke6("nyx", (a, x) => !S.board.e[0].includes(x), "Nyx (détruite)");
-  await ananke6("mohini", (a, x) => x.neg, "Mohini (effets retirés)");
-  await ananke6("circe", (a, x) => x.id === "pourceau", "Circé (transformée)");
-  await ananke6("esquille", (a, x) => !S.board.e[0].includes(x), "L'Esquille (détruite)");
-  fresh(); S.turn = 4; { const a = put("e", 0, "ananke", 3), x = put("e", 1, plain[0], 2); const c = card("set"); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false);
-    T("Ananké : Set (déplacement) ne la bouge pas", S.board.e[0].includes(a), ""); }
+  /* A2. (15 octobre, 2e version) Le charme, la captivité, la transformation, le vol et la perte d'effet l'atteignent ; la destruction et le déplacement jamais */
+  const anankeHit = async (eff, check, nom, apow = 3) => { fresh(); S.turn = 4; const a = put("e", 0, "ananke", apow), x = put("e", 0, plain[0], 2); const c = card(eff); S.hand.p = [c];
+    await resolveTurn([{ c, li: 0 }], [], false); T(`Ananké : ${nom} l'atteint`, check(a, x), `${eff} : ${JSON.stringify({ ch: a.charm, cap: !!a.captive, neg: a.neg, pow: a.pow, id: a.id })}`); };
+  await anankeHit("qetesh", a => a.charm === "p", "Qetesh (charme)");
+  await anankeHit("calypso", a => !!a.captive, "Calypso (captive)");
+  await anankeHit("oya", a => a.neg && a.pow === 1, "Oya (transformée)");
+  await anankeHit("circe", a => a.id === "pourceau", "Circé (transformée)");
+  await anankeHit("lilith", a => S.board.p[0].includes(a), "Lilith (volée)");
+  await anankeHit("mohini", a => a.neg, "Mohini (effets retirés)");
+  await anankeHit("apsu", a => a.neg, "Apsu (effets retirés)");
+  const anankeSafe = async (eff, nom, apow = 3, xli = 0) => { fresh(); S.turn = 4; const a = put("e", 0, "ananke", apow), x = put("e", xli, plain[0], 2); const c = card(eff); S.hand.p = [c];
+    await resolveTurn([{ c, li: 0 }], [], false); T(`Ananké : ${nom} ne l'atteint pas`, S.board.e[0].includes(a) && a.id === "ananke" && !a.neg, `${eff} : ${JSON.stringify(S.board.e.map(l => l.map(y => y.id)))}`); };
+  await anankeSafe("nyx", "Nyx (destruction de la plus forte)");
+  await anankeSafe("esquille", "L'Esquille (destruction de la plus faible)", 1);
+  await anankeSafe("zeus", "Zeus (foudre)");
+  await anankeSafe("set", "Set (dispersion)", 3, 1);
+  await anankeSafe("poseidon", "Poséidon (renvoi en main)");
+  fresh(); S.turn = 4; { const a = put("e", 1, "ananke", 1), h = put("p", 0, "hedone"); S.board.e[0] = []; await resolveTurn([], [], false);
+    T("Ananké : Hédoné ne l'attire pas", S.board.e[1].includes(a) && !a.charm, ""); }
+  /* A2b. Fin de partie : charmée, volée, captive, transformée, sans effet */
+  fresh(); S.turn = 6; { const a = put("e", 0, "ananke"), y = put("e", 0, plain[0], 5); put("p", 0, plain[1], 4); a.charm = "p"; S.final = true; const v = cardPow("e", 0, a), tp = total("p", 0), te = total("e", 0); S.final = false;
+    T("Ananké charmée : puissance = total de son propriétaire ici + 1, et elle compte pour celui qui l'a charmée", v === 6 && tp === 10 && te === 5, `${v} · toi ${tp} · adversaire ${te}`); }
+  fresh(); S.turn = 4; { const a = put("e", 0, "ananke", 3); put("e", 0, plain[0], 2); const l = card("lilith"); S.hand.p = [l]; await resolveTurn([{ c: l, li: 0 }], [], false); put("e", 0, plain[1], 4);
+    S.final = true; const v = cardPow("p", 0, a), te = total("e", 0); S.final = false; T("Ananké volée (Lilith) : elle calcule pour son nouveau propriétaire (total adverse + 1)", S.board.p[0].includes(a) && v === te + 1, `${v} contre ${te}`); }
+  fresh(); S.turn = 6; { const a = put("e", 0, "ananke"), cal = put("p", 0, "calypso"); put("p", 0, plain[1], 4); a.captive = cal.uid; S.final = true; const v = cardPow("e", 0, a); S.final = false;
+    T("Ananké captive (Calypso en jeu) : 0, même en fin de partie", v === 0, v); }
+  fresh(); S.turn = 6; { const a = put("e", 0, "ananke"); put("p", 0, plain[1], 4); const o = card("oya"); S.hand.p = [o]; await resolveTurn([{ c: o, li: 0 }], [], false); S.final = true; const v = cardPow("e", 0, a); S.final = false;
+    T("Ananké transformée (Oya) : puissance 1, sans effet en fin de partie", v === 1 && a.neg, v); }
   /* A3. Nemesis adverse au même lieu → la règle « le moins de puissance gagne » s'applique, Ananké perd le lieu */
   fresh(); S.turn = 6; { put("e", 0, "nemesis"); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
     T("Ananké : avec une Nemesis adverse au même lieu, elle perd le lieu", leader(0) === "e" && nemInv(0), `${total("p", 0)} contre ${total("e", 0)}`); }
-  /* A4. Apsu adverse posée après elle → Ananké reste à 1 ; Apsu posée avant elle ne change rien ; Apsu, Veillée des Chaînes pareil */
+  /* A4. Apsu adverse posée après elle ou déjà là → Ananké reste à 1 ; Apsu, Veillée des Chaînes pareil */
   for (const id of ["apsu", "apsu_n"]) { fresh(); S.turn = 6; { const a = card("ananke"), ap = card(id); S.hand.p = [a]; S.hand.e = [ap]; await resolveTurn([{ c: a, li: 0 }], [{ c: ap, li: 0 }], false);
       T(`Ananké : ${id} adverse posée après elle → elle reste à 1`, a.neg && cardPow("p", 0, a) === 1, `${cardPow("p", 0, a)}, neg ${a.neg}`); }
-    fresh(); S.turn = 6; { put("e", 0, id); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
-      T(`Ananké : ${id} déjà posée avant elle → elle garde sa Fatalité`, !a.neg && cardPow("p", 0, a) === total("e", 0) + 1, `${cardPow("p", 0, a)} contre ${total("e", 0)}`); } }
+    fresh(); S.turn = 6; { put("e", 0, id); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); S.final = true; const v = cardPow("p", 0, a); S.final = false;
+      T(`Ananké : ${id} déjà posée avant elle → elle perd aussi ses effets et reste à 1 (quel que soit l'ordre)`, a.neg && v === 1, `${v}, neg ${a.neg}`); } }
+  /* A4b. IA : jamais en face d'une Qetesh, d'une Calypso ou d'un Apsu adverse (15 octobre) */
+  fresh(); S.turn = 6; S.energy = S.energyE = 6; { put("p", 0, "qetesh"); put("p", 1, "calypso"); const a = card("ananke"); S.hand.e = [a];
+    const plan = aiPlan("e", 5), at = plan.find(x => x.c === a); T("IA : Ananké jamais en face d'une Qetesh ou d'une Calypso adverse", !at || at.li === 2, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
   /* A5. Deux Ananké face à face : pas de boucle infinie */
   fresh(); S.turn = 6; { const a = put("p", 0, "ananke"), b = put("e", 0, "ananke"); S.final = true; const x = cardPow("p", 0, a), y = cardPow("e", 0, b); T("Deux Ananké face à face : calcul fini", Number.isFinite(x) && Number.isFinite(y), `${x} / ${y}`); S.final = false; }
   /* A6. IA : jamais sur un lieu avec une Nemesis adverse ; au tour 6 sur le lieu où elle perd */
@@ -385,11 +401,11 @@ async function inPage() {
       T(`Loviatar posée au tour ${t} : la carte ressuscitée perd ${perte} (${base} → ${base - perte}), sans Révélation`, r && r.pow === base - perte && r.sick === 0 && r.id === hi, `pow ${r && r.pow}, compteur de départ ${sk0}`); } }
   fresh(); S.turn = 4; { S.discardPile.p = [hi]; const lv = card("loviatar"); S.hand.p = [lv]; await resolveTurn([{ c: lv, li: 0 }], [], false); const r = S.board.p[0].find(x => x.risen);
     T("Loviatar : indicateur de maladie 2 → 1 → 0 sur la carte ressuscitée", r && r.sick === 1 && mini("p", 0, r, false).includes("🤒 1"), `compteur ${r && r.sick}`); }
-  /* D4. Loviatar et Hadès sans carte à ressusciter → +3 chacune */
+  /* D4. Loviatar (+3) et Hadès (+2 depuis le 15 octobre) sans carte à ressusciter */
   for (const [id, base0] of [["loviatar", 3], ["hades", 4]]) { fresh(); S.turn = 4; { const c = card(id); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false);
-      T(`${id === "hades" ? "Hadès" : "Loviatar"} sans carte à ressusciter : +3 de puissance`, c.pow === base0 + 3, c.pow); } }
+      const g = id === "hades" ? 2 : 3; T(`${id === "hades" ? "Hadès" : "Loviatar"} sans carte à ressusciter : +${g} de puissance`, c.pow === base0 + g, c.pow); } }
   fresh(); S.turn = 4; { S.graveyard.p = [hi]; const c = card("hades"); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false);
-    T("Hadès avec une carte détruite : elle revient (pas de +3)", c.pow === 4 && S.board.p[0].some(x => x.risen && x.id === hi), c.pow); }
+    T("Hadès avec une carte détruite : elle revient (pas de +2)", c.pow === 4 && S.board.p[0].some(x => x.risen && x.id === hi), c.pow); }
   /* D5. Qetesh du Nouvel An : puissance (lue au déclenchement), plus le coût */
   fresh(); S.turn = 4; { const big = put("e", 0, "calypso", 9); const q = card("qetesh_r"); S.hand.p = [q];   /* Calypso coûte 5 : coût 5 mais puissance 9 */
     await resolveTurn([{ c: q, li: 0 }], [], false); T("Qetesh du Nouvel An : carte de coût 5 et de puissance 9 → pas de charme", !charmOf(big) && !big.charm, ""); }

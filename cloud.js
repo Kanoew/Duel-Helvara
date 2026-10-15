@@ -131,8 +131,10 @@
       const r = await sb.rpc("feedback_submit", { p_kind:kind, p_card:card || null, p_mode:mode || null, p_build:build || null });
       if(r.error) throw fail(r.error);
     },
-    async stats(mode, result, plays){
-      const r = await sb.rpc("stats_submit", { p_mode:mode, p_result:result, p_plays:plays });
+    async stats(mode, result, plays, opp){
+      let r = await sb.rpc("stats_submit", { p_mode:mode, p_result:result, p_plays:plays, p_opp:opp === "humain" ? "humain" : "ia" });
+      /* stats-adversaire.sql pas encore lancé dans Supabase : l'ancienne fonction (sans adversaire) */
+      if(r.error && r.error.code === "PGRST202") r = await sb.rpc("stats_submit", { p_mode:mode, p_result:result, p_plays:plays });
       if(r.error) throw fail(r.error);
     },
     /* Classement : les 100 meilleurs de la saison (+ quelques joueurs du mois d'avant) et ta ligne, triés par la base.

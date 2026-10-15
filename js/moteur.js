@@ -118,7 +118,7 @@ const onSide=(s,id)=>S.board[s].some(col=>col.some(c=>c.rev&&c.id===id));
 const inPlay=id=>["p","e"].some(s=>S.board[s].some(col=>col.some(c=>c.rev&&c.id===id)));
 const hasHere=(s,li,id)=>S.board[s][li].some(c=>live(c)&&c.id===id);
 const shielded=(s,li)=>hasHere(s,li,"eir")||hasHere(s,li,"ulcal");               /* Eir : ni détruites ni affaiblies */
-const untargetable=(by,s,c)=>by!==s && ((c.id==="uzume" && !c.neg) || fated(c)); /* Uzume et Ananké (Fatalité) : aucun effet adverse ne les vise, il passe à la cible suivante */
+const untargetable=(by,s,c)=>by!==s && c.id==="uzume" && !c.neg; /* Uzume : aucun effet adverse ne la vise, il passe à la cible suivante (Ananké : voir `fated`, seulement destruction et déplacement) */
 /* Vesta : ta prochaine carte Jugement coûte 1 de moins (une seule carte : la première carte Jugement de coût 1 ou plus posée dans l'ordre,
    pour que la réduction ne se perde pas sur une carte à 0 comme Mā‘at ou la Flèche d'Apollon ; minimum 0) */
 const vestaOn=s=>!!(S.vesta&&S.vesta[s]);
@@ -139,13 +139,14 @@ function canStage(c,li){
 /* Ananké, Fatalité : en fin de partie (S.final, après toutes les révélations et fins de tour du tour 6), sa puissance devient la puissance totale adverse ici +1.
    Deux Ananké face à face : la seconde compte pour 1 dans le calcul de la première (garde ANK, pas de boucle). */
 let ANK=0;
-function ankEnd(s,li,c){ if(ANK) return c.pow; ANK=1; try{ return total(opp(s),li)+1; } finally{ ANK=0; } }
+/* charmée (Qetesh) : elle compte pour celui qui l'a charmée, donc sa puissance est celle de SON adversaire, le joueur qui la possède, +1 */
+function ankEnd(s,li,c){ if(ANK) return c.pow; ANK=1; try{ return total(opp(charmOf(c)||s),li)+1; } finally{ ANK=0; } }
 function cardPow(s,li,c){
   if(!c.rev) return 0;
+  if(c.captive&&captorLive(c.captive)) return 0;   /* captive (Calypso) : 0, Ananké comprise, même en fin de partie */
   if(S.final&&fated(c)&&c.id==="ananke") return ankEnd(s,li,c);
-  if(c.captive&&captorLive(c.captive)) return 0;
   let p=c.pow; const d=CARDS[c.id];
-  if(!fated(c)) for(const o of S.board[s][li]) if(o!==c && live(o) && o.id==="mouche") p-=1;
+  for(const o of S.board[s][li]) if(o!==c && live(o) && o.id==="mouche") p-=1;
   for(const o of S.board[s][li]) if(o!==c && live(o) && o.id==="ulcal") p+=2;
   for(const o of S.board[s][li]) if(o!==c && live(o) && o.id==="ishara") p+=1;
   if(d.fac==="helvara") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c && live(o) && o.id==="doyenne") p+=1;
@@ -169,7 +170,7 @@ function cardPow(s,li,c){
   if(locIs(li,"tour") && d.pow>=5 && !d.token) p+=2;
   if(locIs(li,"encheres") && !d.token) p+=2;
   if(locIs(li,"escaliers") && d.fac==="helvara" && !d.token) p+=2;
-  if(!fated(c)&&S.board[opp(s)][li].some(o=>live(o)&&o.id==="chernobog")) p=Math.min(p,d.pow);
+  if(S.board[opp(s)][li].some(o=>live(o)&&o.id==="chernobog")) p=Math.min(p,d.pow);
   if(hasHere(s,li,"psyche")) p=Math.max(1,p);
   return p;
 }
@@ -208,7 +209,7 @@ function hedoneTurn(first){
   for(const s of [first,opp(first)]) for(let li=0;li<3;li++) for(const h of S.board[s][li].slice()){
     if(h.id!=="hedone"||!live(h)||(h.hed||0)>=2||S.locs[li].locked) continue;
     const o=opp(s); if(S.board[o][li].length>=capOf(o,li)) continue;
-    const pool=[]; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&!charmOf(x)) pool.push([i,x,cardPow(o,i,x)]);
+    const pool=[]; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&!fated(x)&&!charmOf(x)) pool.push([i,x,cardPow(o,i,x)]);
     if(!pool.length) continue;
     const mn=Math.min(...pool.map(q=>q[2])), [i,t]=gPick(pool.filter(q=>q[2]===mn));
     S.board[o][i]=S.board[o][i].filter(x=>x!==t); S.board[o][li].push(t); t.fresh=true; flonHook(li,t);
@@ -230,9 +231,9 @@ function resurrectAll(s,opts={}){ piles(); let n=0; const ids=gShuffle(S.discard
 /* Source de l'effet en cours : Baldur ne cède qu'aux effets adverses de coût 2 ou moins (le gui). */
 let SRC=null;
 const baldurSafe=(s,c)=>c.id==="baldur"&&!c.neg&&!(SRC&&(SRC.s===s||SRC.cost<=2));
-/* Ananké, Fatalité : rien ne peut l'atteindre (ni détruite, déplacée, affaiblie, charmée, captive, transformée, volée, renvoyée en main : voir `untargetable`). Seul Apsu, en lui retirant ses effets (neg), la prive de cette protection ; Nemesis, elle, inverse normalement le lieu. */
+/* Ananké, Fatalité (15 octobre, 2e version) : elle ne peut être ni détruite ni déplacée (renvoi en main, dispersion, attraction d'Hédoné compris), par aucun effet. Tout le reste l'atteint : charme, captivité, transformation, vol, perte d'effet (Apsu, Mohini : neg, elle reste à 1), affaiblissement ; Nemesis la bat. */
 const fated=c=>c.id==="ananke"&&!c.neg;
-const noWeak=c=>((c.id==="ecorche"||c.id==="jordan")&&!c.neg)||c.noweak||c.ward||fated(c); /* l'Écorché, Jordan, le Tatoueur, Hel X Baldur */
+const noWeak=c=>((c.id==="ecorche"||c.id==="jordan")&&!c.neg)||c.noweak||c.ward; /* l'Écorché, Jordan, le Tatoueur, Hel X Baldur */
 function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)||baldurSafe(s,c)) return false; c.pow-=n; return true; }
 /* Styx : les cartes Jugement de son côté, dans son lieu, ne peuvent pas être détruites */
 /* Styx : une carte Jugement de son camp détruite ici par un effet ADVERSE revient en main, avec la puissance qu'elle avait.
@@ -255,7 +256,7 @@ const cirqueSafe=(s,li,c)=>shielded(s,li)||sunlit(s)||noWeak(c)||(!c.neg&&(c.id=
 /* Dante : chaque carte détruite dans son lieu, des deux côtés, lui donne +1 */
 function danteHook(li){ for(const side of ["p","e"]) for(const d of S.board[side][li]) if(live(d)&&d.id==="dante"){ d.pow+=1; (d.mods=d.mods||[]).push({v:1,src:"Dante"}); log(`Dante · +1 (${who(side)})`); } }
 /* Médée : sa prochaine carte adverse jouée ici perd 2 (les deux suivantes avec Hécate) */
-function medeeHook(s,li,c){ if(!S.board[s][li].includes(c)||fated(c)) return; const o=opp(s);
+function medeeHook(s,li,c){ if(!S.board[s][li].includes(c)) return; const o=opp(s);
   for(const m of S.board[o][li]) if(live(m)&&m.id==="medee"&&(m.mdHit||0)<(onSide(o,"hecate")?2:1)){
     m.mdHit=(m.mdHit||0)+1; const prev=SRC; SRC={s:o,cost:CARDS.medee.cost};
     const ok=!untargetable(o,s,c)&&weaken(s,li,c,2); SRC=prev;
@@ -296,7 +297,7 @@ function revealFx(s,li,c,opts={}){
     case "nergal_h": { let n=0; for(const side of [s,o]) for(let i=0;i<3;i++) for(const x of S.board[side][i].slice()) if(x!==c&&x.rev&&pw(side,i,x)<=1&&!(side===o&&untargetable(s,o,x))&&destroy(side,i,x)) n++; if(n){ c.pow+=2*n; note=`la peste emporte ${n} carte${n>1?"s":""}, +${2*n}`; snd="destroy"; } break; }
     case "aphrodite_n": { let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)){ const t=mk("refaph"); t.pow=3; t.rev=true; t.fresh=true; S.board[s][i].push(t); n++; } if(n) note=`${n} Reflet${n>1?"s":""} d'Aphrodite (3)`; break; }
     case "sekhmet_n": { let n=0; for(const x of targets.filter(x=>pw(o,li,x)<=2)) if(destroy(o,li,x)) n++; if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
-    case "calypso_n": { const t=strongest(targets.filter(x=>!fated(x)),o,li); if(t&&!shielded(o,li)&&!sunlit(o)){ t.captive=c.uid; note=`${nm(t)} est captive`; snd="lock"; } if(foes.length) buffSelf(foes.length); break; }
+    case "calypso_n": { const t=strongest(targets,o,li); if(t&&!shielded(o,li)&&!sunlit(o)){ t.captive=c.uid; note=`${nm(t)} est captive`; snd="lock"; } if(foes.length) buffSelf(foes.length); break; }
     case "apsu_n": { foes.forEach(x=>x.neg=true); S.disc[s]=2; note=(foes.length?`${foes.length} carte${foes.length>1?"s":""} sans effet, `:"")+"prochaine carte −2"; snd="void"; if(onSide(s,"yarden")) buffSelf(4); break; }
     case "mendiant": { const t=gPick(S.hand[s]); if(t){ discard(s,t); note=`défausse ${nm(t)}`; } break; }
     case "voleuse": { const t=gPick(S.hand[o]); if(t){ discard(o,t); note=`${who(o)} défausse ${nm(t)}`; snd="void"; } break; }
@@ -311,14 +312,14 @@ function revealFx(s,li,c,opts={}){
     case "andraste": if(foes.length) buffSelf(2*foes.length); break;
     case "aphrodite": { const L=S.lastRev&&S.lastRev[s]; if(!L||L===c||!replayable(L)) break; const at=[0,1,2].find(i=>S.board[s][i].includes(L)); if(at==null) break;
       replayFx(s,at,L); note=`rejoue ${nm(L)}`; snd="void"; break; }
-    case "calypso": { const t=strongest(targets.filter(x=>!fated(x)),o,li); if(t&&!shielded(o,li)&&!sunlit(o)){ t.captive=c.uid; note=`${nm(t)} est captive`; snd="lock"; } break; }
+    case "calypso": { const t=strongest(targets,o,li); if(t&&!shielded(o,li)&&!sunlit(o)){ t.captive=c.uid; note=`${nm(t)} est captive`; snd="lock"; } break; }
     case "tefnut": { mates.forEach(x=>x.pow+=1); if(mates.length){ note=`+1 à ${mates.length} carte${mates.length>1?"s":""}`; snd="buff"; } break; }
     case "susanoo": { const t=weakest(mates.filter(x=>!fated(x)),s,li); const spots=[0,1,2].filter(i=>i!==li&&S.locs[i].rev&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)); if(t&&spots.length){ const i=gPick(spots); S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); t.fresh=true; t.pow+=3; (t.mods=t.mods||[]).push({v:3,src:"Susanoo"}); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}, +3`; snd="buff"; } if(onSide(s,"amaterasu")) buffSelf(2); break; }
     case "bourreau": { S.cond=S.cond||{p:[0,0,0],e:[0,0,0]}; if(S.cond[o][li]<4){ S.cond[o][li]++; note="une case adverse est condamnée"; snd="lock"; } break; }
-    case "anubis": { if(total(o,li)>total(s,li)){ const t=strongest(targets,o,li); if(t&&destroy(o,li,t)){ note=`le cœur est trop lourd : détruit ${nm(t)}`; snd="destroy"; } } else buffSelf(4); break; }
+    case "anubis": { if(total(o,li)>total(s,li)){ const t=strongest(targets.filter(x=>!fated(x)),o,li); if(t&&destroy(o,li,t)){ note=`le cœur est trop lourd : détruit ${nm(t)}`; snd="destroy"; } } else buffSelf(4); break; }
     case "balor": { let n=0; for(const t of gShuffle(targets.slice()).slice(0,2)) if(weaken(o,li,t,3)) n++; if(n){ note=`−3 à ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
     case "ulaph": { const list=S.board[s][li].filter(x=>x!==c&&replayable(x)); let n=0; for(const x of list){ if(!S.board[s][li].includes(x)) continue; replayFx(s,li,x); n++; } if(n){ note=`rejoue ${n} carte${n>1?"s":""}`; snd="void"; } break; }
-    case "ulnem": { let n=0; const a=strongest(targets,o,li); if(a&&destroy(o,li,a)) n++; const b=strongest(mates,s,li); if(b&&destroy(s,li,b)) n++; S.board[s][li].filter(x=>x!==c&&x.rev).forEach(x=>x.pow+=2); note=`justice : ${n} carte${n>1?"s":""} détruite${n>1?"s":""}`; snd="destroy"; break; }
+    case "ulnem": { let n=0; const a=strongest(targets.filter(x=>!fated(x)),o,li); if(a&&destroy(o,li,a)) n++; const b=strongest(mates,s,li); if(b&&destroy(s,li,b)) n++; S.board[s][li].filter(x=>x!==c&&x.rev).forEach(x=>x.pow+=2); note=`justice : ${n} carte${n>1?"s":""} détruite${n>1?"s":""}`; snd="destroy"; break; }
     case "coursier": draw(s); note="pioche 1 carte"; break;
     case "felix": S.disc[s]=1; note="prochaine carte −1"; break;
     case "maat": { const t=weakest(mates.filter(x=>!fated(x)),s,li); if(t){ t.pow+=1; (t.mods=t.mods||[]).push({v:1,src:"Mā‘at"}); note=`+1 à ${nm(t)}`; snd="buff"; } break; }
@@ -335,7 +336,7 @@ function revealFx(s,li,c,opts={}){
     case "remi": if(S.destroyed+(S.discarded||0)) buffSelf(2*(S.destroyed+(S.discarded||0))); break;
     case "celeste": if(total(s,li)-cardPow(s,li,c)<=total(o,li)) buffSelf(3); break;
     case "vasseur": c.pay=S.turn+2; note=S.turn+2<=6?`paiera au tour ${S.turn+2}`:"ne sera jamais payé"; break;
-    case "esquille": { const t=weakest(targets,o,li); if(t&&destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } else if(t) note=`${nm(t)} est protégée`; break; }
+    case "esquille": { const t=weakest(targets.filter(x=>!fated(x)),o,li); if(t&&destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } else if(t) note=`${nm(t)} est protégée`; break; }
     case "troll": { const t=weakest(mates,s,li); if(t&&destroy(s,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } break; }
     case "vritra": S.locs[li].locked=true; note="le lieu est verrouillé"; snd="lock"; break;
     case "yarden": if([0,1,2].every(i=>S.board[s][i].length>0)) buffSelf(4); break;
@@ -345,15 +346,16 @@ function revealFx(s,li,c,opts={}){
     case "bia": { const res=(S.bonus[o]||0)>0||((S.unspent&&S.unspent[o])>0&&S.board[o].some(col=>col.some(x=>live(x)&&x.id==="promethee")));
       if(res){ S.bonus[o]=0; if(S.biaBlock) S.biaBlock[o]=true; note="l'adversaire perd son énergie conservée"; snd="debuff"; }
       else { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Bia"}); note=`−1 à ${nm(t)}`; snd="debuff"; } } break; }
-    case "ananke": note="Fatalité : rien ne peut l'atteindre"; snd="legend"; break;
+    case "ananke": /* un Apsu adverse déjà en jeu ici lui retire ses effets dès son arrivée (Jordan : elle reste à 1 quel que soit l'ordre de pose) */
+      if(S.board[o][li].some(x=>live(x)&&charOf(x.id)==="apsu")){ c.neg=true; note="sans effet (Apsu)"; snd="void"; } else { note="Fatalité : ni détruite ni déplacée"; snd="legend"; } break;
     case "nike": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k); break; }
-    case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(6); snd=foes.length?"void":snd; break; }
-    case "lilith": { const t=strongest(targets.filter(x=>!fated(x)&&pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
+    case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(4); snd=foes.length?"void":snd; break; }
+    case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
       if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else if(forest(li)){ S.board[o][li].push(t); } else { S.destroyed++; entomb(o,li,t); if(o==="e") S.killE=(S.killE||0)+1; danteHook(li); note=`${nm(t)} est détruite`; } snd="void"; } break; }
     case "psyche": { const t=weakest(mates,s,li)||c; t.pow+=2; note=`+2 à ${nm(t)}`; snd="buff"; break; }
     case "tlazol": { let n=0; for(const x of mates) if(x.pow<CARDS[x.id].pow){ x.pow=CARDS[x.id].pow; n++; } if(n){ c.pow+=2*n; note=`purifie ${n} carte${n>1?"s":""}, +${2*n}`; snd="buff"; } break; }
     case "eris": { const t=strongest(targets.filter(x=>!fated(x)),o,li); const spots=[0,1,2].filter(i=>i!==li&&S.board[o][i].length<capOf(o,i)); if(t&&spots.length){ const i=gPick(spots); S.board[o][li]=S.board[o][li].filter(x=>x!==t); S.board[o][i].push(t); flonHook(i,t); if(s==="p"&&qLive()) qProg("move2"); note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
-    case "durga": { const t=strongest(targets,o,li); if(t&&pw(o,li,t)>=7){ if(destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } } else buffSelf(3); break; }
+    case "durga": { const t=strongest(targets.filter(x=>!fated(x)),o,li); if(t&&pw(o,li,t)>=7){ if(destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } } else buffSelf(3); break; }
     case "hecate": draw(s); draw(s); note="pioche 2 cartes"; break;
     case "hermes": { /* ta plus forte carte ici part vers un lieu révélé où elle te fait mener (de préférence un lieu que tu ne menais pas) */
       const t=strongest(mates.filter(x=>!fated(x)),s,li); if(!t) break; let best=null;
@@ -389,17 +391,17 @@ function revealFx(s,li,c,opts={}){
         if(r){ note=`ressuscite ${nm(r)}, intouchable`; if(charOf(r.id)==="baldur"){ r.pow+=5; (r.mods=r.mods||[]).push({v:5,src:"Hel X Baldur"}); note+=", +5"; } snd="void"; } } break; }
     case "hel_r": { const ids=S.discardPile[s].slice().sort((a,b)=>CARDS[b].cost-CARDS[a].cost); if(ids.length&&S.board[s][li].length<capOf(s,li)){ const r=resurrect(s,ids[0],li,"discard",{withReveal:true}); if(r){ note=`ressuscite ${nm(r)}`; snd="void"; } } break; }
     case "loviatar": { const id=S.discardPile[s][S.discardPile[s].length-1]; if(id){ const r=resurrect(s,id,li,"discard",{sick:Math.max(0,Math.min(2,6-S.turn))}); if(r){ note=`${nm(r)} revient malade`; snd="void"; } } else buffSelf(3); break; }
-    case "hades": { const ids=S.graveyard[s].slice().sort((a,b)=>CARDS[b].pow-CARDS[a].pow); if(ids.length){ const r=resurrect(s,ids[0],li,"grave"); if(r){ note=`ressuscite ${nm(r)}`; snd="void"; } } else buffSelf(3); break; }
+    case "hades": { const ids=S.graveyard[s].slice().sort((a,b)=>CARDS[b].pow-CARDS[a].pow); if(ids.length){ const r=resurrect(s,ids[0],li,"grave"); if(r){ note=`ressuscite ${nm(r)}`; snd="void"; } } else buffSelf(2); break; }
     case "dionysos": { const lost=[]; for(const side of [s,o]){ draw(side); const t=gPick(S.hand[side]); if(t){ discard(side,t); lost.push(nm(t)); } } note=lost.length?`l'ivresse fait défausser ${lost.join(" et ")}`:"pioche 1"; snd="void"; break; }
-    case "poseidon": { let n=0; for(const t of targets.filter(x=>CARDS[x.id].cost<=3)){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); if(!real(t)) continue; n++;
+    case "poseidon": { let n=0; for(const t of targets.filter(x=>CARDS[x.id].cost<=3&&!fated(x))){ S.board[o][li]=S.board[o][li].filter(x=>x!==t); if(!real(t)) continue; n++;
         if(S.hand[o].length<7) S.hand[o].push(mk(t.id)); else { S.discarded=(S.discarded||0)+1; S.discardPile[o].push(t.id); } }
       if(n){ note=`le reflux emporte ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
-    case "circe": case "ulcirce": { let n=0; if(!shielded(o,li)) for(const t of targets.filter(x=>!fated(x))) if(c.id==="ulcirce"||pw(o,li,t)<=3){ t.orig=t.id; t.id="pourceau"; t.pow=1; t.neg=true; t.mods=[]; n++; }
+    case "circe": case "ulcirce": { let n=0; if(!shielded(o,li)) for(const t of targets) if(c.id==="ulcirce"||pw(o,li,t)<=3){ t.orig=t.id; t.id="pourceau"; t.pow=1; t.neg=true; t.mods=[]; n++; }
       if(n){ note=`${n} Pourceau${n>1?"x":""}`; snd="void"; } break; }
     case "qetesh": { const t=strongest(targets.filter(x=>pw(o,li,x)<=4&&!charmOf(x)),o,li); if(t){ t.charm=s; delete t.charmBy; note=`charme ${nm(t)}`; snd="void"; } break; }
     case "oshun": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[s][i]) if(x!==c&&x.rev){ x.pow+=1; n++; } if(n){ note=`+1 à ${n} carte${n>1?"s":""}`; snd="buff"; } break; }
     case "scathach": { const sp=[0,1,2].filter(i=>i!==li&&!S.locs[i].locked&&S.board[o][i].length<capOf(o,i)); if(sp.length){ const i=gPick(sp); const m=mk("ombre"); m.rev=true; m.fresh=true; m.neg=true; S.board[o][i].push(m); note=`Ombre → ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
-    case "uloshun": { const t=strongest(targets,o,li); if(!t) break; const v=Math.ceil(Math.max(0,pw(o,li,t))/2);
+    case "uloshun": { const t=strongest(targets.filter(x=>!fated(x)),o,li); if(!t) break; const v=Math.ceil(Math.max(0,pw(o,li,t))/2);
       if(destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy";
         let w=null,wi=0; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[s][i]) if(x.rev&&(!w||pw(s,i,x)<pw(s,wi,w))){ w=x; wi=i; }
         if(w&&v){ w.pow+=v; (w.mods=w.mods||[]).push({v,src:"Nyx X Oshun"}); note+=`, +${v} à ${nm(w)}`; } } break; }
@@ -415,7 +417,7 @@ function revealFx(s,li,c,opts={}){
     case "loki": { const lost=[]; for(const side of [s,o]){ const hi=S.hand[side].length?Math.max(...S.hand[side].map(x=>CARDS[x.id].cost)):null; const t=hi==null?null:gPick(S.hand[side].filter(x=>CARDS[x.id].cost===hi)); if(t){ discard(side,t); lost.push(nm(t)); } } if(lost.length){ note=`chacun défausse sa plus chère : ${lost.join(" et ")}`; snd="void"; } break; }
     case "ares": { let n=0; for(const x of targets) if(weaken(o,li,x,1)) n++; if(n){ c.pow+=n; note=`−1 à ${n}, +${n}`; snd="debuff"; } break; }
     case "nergal": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&weaken(o,i,x,1)) n++; if(n){ note=`−1 à ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
-    case "rusalka": { const t=weakest(targets,o,li); if(t&&pw(o,li,t)<=2&&destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } break; }
+    case "rusalka": { const t=weakest(targets.filter(x=>!fated(x)),o,li); if(t&&pw(o,li,t)<=2&&destroy(o,li,t)){ note=`détruit ${nm(t)}`; snd="destroy"; } break; }
     case "mere": { let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)){ const t=mk("cendreux"); t.rev=true; t.fresh=true; S.board[s][i].push(t); n++; } if(n) note=`${n} Cendreux`; break; }
     case "nuee": { const t=strongest(mates,s,li); if(t){ const v=pw(s,li,t); if(v>c.pow){ c.pow=v; note=`reflète ${v}`; snd="buff"; } } break; }
     case "charognard": if(S.destroyed+(S.discarded||0)>0) buffSelf(3); break;
@@ -424,8 +426,8 @@ function revealFx(s,li,c,opts={}){
     case "ulya": { const n=S.hand[s].length; if(n) buffSelf(n); break; }
     case "jordan": { const y=S.deck[s].find(x=>x.id==="yarden"); if(y&&S.hand[s].length<7){ S.deck[s]=S.deck[s].filter(x=>x!==y); S.hand[s].push(y); note="ajoute Yarden Weiss à sa main"; snd="buff"; } break; }
     case "morrigan_h": { draw(s); draw(s); const h2=S.hand[s].slice().sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; if(h2){ discard(s,h2); note=`pioche 2, défausse ${nm(h2)}`; } else note="pioche 2"; break; }
-    case "nyx_h": { let n=0; for(let k=0;k<2;k++){ const t=weakest(S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)),o,li); if(t&&destroy(o,li,t)) n++; else break; } if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
-    case "izzy_h": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6),o,li); if(t){ const v=Math.ceil(Math.max(0,pw(o,li,t))/2); if(destroy(o,li,t)){ c.pow+=v; note=`détruit ${nm(t)}, +${v}`; snd="destroy"; } } break; }
+    case "nyx_h": { let n=0; for(let k=0;k<2;k++){ const t=weakest(S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)&&!fated(x)),o,li); if(t&&destroy(o,li,t)) n++; else break; } if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
+    case "izzy_h": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6&&!fated(x)),o,li); if(t){ const v=Math.ceil(Math.max(0,pw(o,li,t))/2); if(destroy(o,li,t)){ c.pow+=v; note=`détruit ${nm(t)}, +${v}`; snd="destroy"; } } break; }
     case "yarden_d": { let y=null, yl=-1; for(let i=0;i<3;i++){ const f=S.board[s][i].find(x=>x.rev&&x.id==="yarden"); if(f){ y=f; yl=i; break; } } if(y){ const v=Math.max(0,cardPow(s,yl,y)); if(destroy(s,yl,y)){ c.pow+=v; note=`absorbe Yarden Weiss, +${v}`; snd="void"; } } break; }
     case "ulji": { const hd=S.hand[o].slice().sort((a,b)=>CARDS[b.id].pow-CARDS[a.id].pow||CARDS[b.id].cost-CARDS[a.id].cost)[0];
       if(hd){ S.hand[o]=S.hand[o].filter(x=>x!==hd); let dest=S.board[s][li].length<capOf(s,li)?li:null; if(dest==null){ const sp=[0,1,2].filter(i=>S.board[s][i].length<capOf(s,i)); if(sp.length) dest=gPick(sp); }
@@ -447,9 +449,9 @@ function revealFx(s,li,c,opts={}){
       if(pool.length){ const [i,t]=gPick(pool); weaken(o,i,t,3); note=`−3 à ${nm(t)} (${LOCS[S.locs[i].id].name})`; snd="debuff"; } break; }
     case "ixchel": { let best=null; for(let i=0;i<3;i++) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&!shielded(o,i)&&(!best||pw(o,i,x)>pw(o,best[0],best[1]))) best=[i,x];
       if(best){ weaken(o,best[0],best[1],3); note=`−3 à ${nm(best[1])}`; snd="debuff"; } break; }
-    case "inanna": { for(const side of [s,o]) for(const x of S.board[side][li]) if(x.rev){ const base=CARDS[x.id].pow; if(base<x.pow&&(shielded(side,li)||fated(x))) continue; x.pow=base; }
+    case "inanna": { for(const side of [s,o]) for(const x of S.board[side][li]) if(x.rev){ const base=CARDS[x.id].pow; if(base<x.pow&&shielded(side,li)) continue; x.pow=base; }
       note="tout revient à la base"; snd="lock"; break; }
-    case "oya": { const t=strongest(targets.filter(x=>!shielded(o,li)&&!fated(x)),o,li); if(t){ t.pow=1; t.neg=true; t.mods=[{v:1-CARDS[t.id].pow,src:d.name}]; t.reset=true; note=`${nm(t)} devient une carte de puissance 1`; snd="debuff"; } break; }
+    case "oya": { const t=strongest(targets.filter(x=>!shielded(o,li)),o,li); if(t){ t.pow=1; t.neg=true; t.mods=[{v:1-CARDS[t.id].pow,src:d.name}]; t.reset=true; note=`${nm(t)} devient une carte de puissance 1`; snd="debuff"; } break; }
     case "sekhmet": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li].slice()) if(x!==c&&x.rev&&pw(side,li,x)<=2&&!(side===o&&untargetable(s,o,x))){ if(destroy(side,li,x)) n++; }
       if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
   }
@@ -551,6 +553,8 @@ function aiPlan(me="e",tierOv){
       if(nikeWait&&S.turn===5){ let back=0; for(let i=0;i<3;i++) for(const x of S.board[me][i]) if(x.rev&&smallJ(x)&&!shielded(me,i)&&!locIs(i,"sauvabelin")) back++; if(back>=2) adj+=2+1.5*Math.min(4,back); } }
     if(c.id==="ananke"){ /* fin de partie : puissance adverse ici +1 (elle gagne le lieu). Jamais avec une Nemesis adverse ; seulement au tour 6 si possible (un Apsu adverse posé plus tard lui retirerait tout) */
       if(S.board[op][li].some(x=>live(x)&&x.id==="nemesis")) return null;
+      /* 15 octobre : le charme, la captivité et la perte d'effet l'atteignent désormais : jamais là où l'adversaire a déjà une Qetesh, une Calypso ou un Apsu (toutes versions) */
+      if(S.board[op][li].some(x=>x.rev&&(["qetesh","calypso","apsu"].includes(charOf(x.id))||/^ulqetjor/.test(x.id)))) return null;
       pow=op0[li]+opFut[li]+1; if(S.turn<6) adj-=5; }
     if(c.id==="hedone"){ /* 2 charmes (tours 5 et 6) si elle est posée au tour 5 au plus tard ; il faut de la place chez l'adversaire ici et des cartes adverses ailleurs */
       const room=capOf(op,li)-S.board[op][li].length, others=[0,1,2].some(i=>i!==li&&S.board[op][i].some(x=>x.rev));
@@ -585,7 +589,7 @@ function aiPlan(me="e",tierOv){
         const dh=hand.filter(x=>x!==c&&!ctx.plays.some(y=>y.c===x)); pow+=byPow(dp.concat(dh.filter(x=>!CARDS[x.id].token).map(x=>x.id))).slice(0,Math.min(2,room)).reduce((a,v)=>a+v,0); adj-=0.8*dh.length; if(S.turn<6) adj-=3; }
       else if(c.id==="hel_r"&&room&&dp.length) pow+=Math.max(...dp.map(id=>CARDS[id].pow));
       else if(c.id==="loviatar"){ if(!dp.length) pow+=3; else if(room) pow+=Math.max(0,CARDS[dp[dp.length-1]].pow-Math.min(2,6-S.turn)); if(S.turn<5) adj-=2; }   /* malade : −1 par tour restant, donc tard */
-      else if(c.id==="hades"){ if(!gv.length) pow+=3; else if(room) pow+=Math.max(...gv.map(id=>CARDS[id].pow)); }
+      else if(c.id==="hades"){ if(!gv.length) pow+=2; else if(room) pow+=Math.max(...gv.map(id=>CARDS[id].pow)); }
       else if(c.id==="ulhel"&&room&&(dp.length||gv.length)) pow+=Math.max(...byPow(dp.concat(gv))); }
     /* fusions posées trop rarement par rapport à ce qu'elles rapportent (mesure du 14 octobre : 8 à 12 % des decks) */
     if(c.id==="ulhel"&&((S.discardPile[me]||[]).length||(S.graveyard[me]||[]).length)) adj+=6;

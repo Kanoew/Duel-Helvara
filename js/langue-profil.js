@@ -69,6 +69,9 @@ const DROPS=[{id:"oct26",rel:"2026-10-01",soon:"0000",hint:"Lilith, Ereshkigal, 
   {id:"nov15",rel:"2026-11-15",soon:"2026-11-10",hint:"Prométhée garde le feu, Pandore ouvre la boîte, Athéna guide ta main, et Styx veille sur ses filles : Bia, et Nike, la première ultra-légendaire de faction. Mā‘at, Apollon et Vesta lui préparent le chemin. Elle se gagne en jouant 50 parties avec 8 cartes Jugement : le Journal des factions compte déjà."},
   {id:"dec26",rel:"2026-12-01",soon:"2026-11-26",hint:"Odin, Thor, Hel, Baldur, Hadès, Poséidon, Circé, Qetesh, les gens de Lausanne… cinq nouvelles fusions, le Domaine du Créateur."},
   {id:"dec14",rel:"2026-12-14",soon:"2026-12-09",hint:"Zeus lance la foudre, Héphaïstos forge ses armes, Tsukuyomi veille sur les siens… et le Pli de l'Étoile s'ouvre pour Noël."}];
+/* Notes de mise à jour (la plus récente en premier) : affichées une fois à l'accueil (P.maj = id de la dernière lue), revoyables dans les Réglages.
+   Un nouveau joueur ne les voit pas (freshProfile la marque comme lue). Ajouter les textes anglais dans interface-en.js (exact). */
+const MAJ=[{id:"2026-10-15",date:"15 octobre 2026",items:["Apsu : le bonus avec Yarden Weiss passe de +6 à +4 de puissance. Yarden X Apsu passe de 12 à 10 de puissance. Le duo gagnait beaucoup plus souvent que toutes les autres cartes, chez les joueurs comme en simulation."]}];
 const hasReq=(list,r)=>Array.isArray(r)?r.some(x=>list.includes(x)):list.includes(r);
 const ULof=id=>ULS.find(u=>u.id===id);
 /* Journal des factions : les ultra-légendaires de faction se gagnent en jouant.
@@ -162,7 +165,7 @@ const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","
 /* ======= SAUVEGARDE ======= */
 const HIST_MAX=20;
 const SAVE_KEY = "duel-helvara-save-v1", OWNER_KEY = "duel-helvara-save-owner";
-function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}}; }
+function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}, maj:MAJ[0].id}; }
 let migratedNote="";
 const COVERS=["primordial","desir","jugement","helvara"];
 function defDecks(){ return COVERS.map((c,i)=>({name:`Deck ${i+1}`,cover:c,cards:[]})); }
@@ -176,7 +179,7 @@ function cleanDecks(arr,owned,deck){ const d=defDecks();
 function statsSend(mode,res){
   if(!qLive()||!lbDb||!lbDb.stats||!S||!Array.isArray(S.played)||!S.played.length) return;
   const m=mode==="Blitz"?"blitz":mode==="Duel"?"duel":"ia"; const r=res==="win"||res==="lose"||res==="draw"?res:null; if(!r) return;
-  lbDb.stats(m,r,S.played.slice(0,20)).catch(()=>{});
+  lbDb.stats(m,r,S.played.slice(0,20),S.mp?"humain":"ia").catch(()=>{});   /* adversaire : humain (duel en ligne) ou IA (partie classique, Blitz) */
 }
 function pushHist(mode,res,opp,pw,ew,x={}){
   statsSend(mode,res);
@@ -213,7 +216,7 @@ function clean(p){
     daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
     q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,rr:!!p.q.rr,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c,...(typeof x.x==="string"?{x:x.x.slice(0,24)}:{})}))}:null,
     fj:Object.fromEntries(FJ_KEYS.map(k=>[k,Math.min(9999,num(p.fj&&p.fj[k],0))])),
-    pity:Math.min(99,num(p.pity,0)),
+    pity:Math.min(99,num(p.pity,0)), maj:(typeof p.maj==="string"?p.maj.slice(0,20):""),
     ulk:Array.isArray(p.ulk)?p.ulk.filter(id=>ULof(id)&&!ULof(id).quest):ULS.filter(u=>!u.quest&&!u.fac&&u.req.length&&REL(u.id)&&!owned.includes(u.id)&&u.req.every(r=>hasReq(owned,r))).map(u=>u.id),
     wq:(p.wq&&typeof p.wq.wk==="string")?{wk:p.wq.wk.slice(0,10),p:Math.min(WQ.n,num(p.wq.p,0)),c:!!p.wq.c}:null};
   out.deck=[...out.decks[out.di].cards];

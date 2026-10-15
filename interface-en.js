@@ -10,7 +10,8 @@
 
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
-    [/^Fatalité : rien ne peut l'atteindre$/, ()=>"Fate: nothing can affect her"],
+    [/^Fatalité : ni détruite ni déplacée$/, ()=>"Fate: neither destroyed nor moved"],
+    [/^sans effet \(Apsu\)$/, ()=>"no effect (Apsu)"],
     [/^Flèche d'Apollon ajoutée à la main$/, ()=>"Apollo's Arrow added to hand"],
     [/^main pleine : Flèche perdue$/, ()=>"hand full: Arrow lost"],
     [/^Arme d'Héphaïstos forgée dans la main$/, ()=>"Hephaestus's Weapon forged into hand"],
@@ -164,7 +165,8 @@
     "Les lieux d'Helvara":"The locations of Helvara", "Trois lieux par partie, révélés aux tours 1, 2 et 3.":"Three locations per game, revealed on turns 1, 2 and 3.",
     "Touche une carte pour l'agrandir.":"Tap a card to enlarge it.", "Ton deck est plein : retire d'abord une carte.":"Your deck is full: remove a card first.",
     "Ta vitrine":"Your showcase", "Cartes affichées":"Displayed cards", "En faire mon avatar":"Make it my avatar", "Choisir un avatar":"Choose an avatar",
-    "Fusion disponible":"Fusion available", "Ultra-légendaire de faction":"Faction Ultra-Legendary", "Réclamer la carte":"Claim the card", "Ultra-légendaire":"Ultra-legendary",
+    "Fusion disponible":"Fusion available", "Notes de mise à jour":"Patch notes", "Équilibrage":"Balance changes", "Compris":"Got it", "Nouveautés":"What's new", "15 octobre 2026":"October 15, 2026",
+    "Apsu : le bonus avec Yarden Weiss passe de +6 à +4 de puissance. Yarden X Apsu passe de 12 à 10 de puissance. Le duo gagnait beaucoup plus souvent que toutes les autres cartes, chez les joueurs comme en simulation.":"Apsu: the bonus with Yarden Weiss goes from +6 to +4 Power. Yarden X Apsu goes from 12 to 10 Power. The pair was winning far more often than any other card, for players and in simulations.", "Ultra-légendaire de faction":"Faction Ultra-Legendary", "Réclamer la carte":"Claim the card", "Ultra-légendaire":"Ultra-legendary",
     /* boutique */
     "Pack de départ · 12 cartes":"Starter pack · 12 cards", "Tu as déjà toutes les cartes de ces raretés":"You already own every card of these rarities",
     "Collection complète":"Collection complete", "Ouvre d'abord la Première Brûlure":"Open the First Burn first", "Acheter et ouvrir":"Buy and open",

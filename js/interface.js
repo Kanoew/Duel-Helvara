@@ -90,6 +90,7 @@ function sheetHTML(){
     <div class="setrow"><span>Volume des effets</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vs??100}" data-vol="vs" aria-label="Volume des effets"><b data-volv="vs">${P.vs??100}</b></span></div>
     <div class="setrow"><span>Cinématiques</span><button class="toggle" data-act="cine" aria-pressed="${P.cine!==false}">${P.cine!==false?"Activée":"Coupée"}</button></div>
     <div class="setrow"><span>Tutoriel</span><button class="toggle" data-act="tuto">Revoir le tutoriel</button></div>
+    <div class="setrow"><span>Nouveautés</span><button class="toggle" data-act="majshow">Notes de mise à jour</button></div>
     <div class="setacc hint">${accountHTML()}</div>
     ${window.__sandbox?"":`<div class="setrow"><span>Mes données</span><span class="footbtns"><button class="toggle" data-act="gexport">Exporter mes données</button><button class="toggle" data-act="gdelete">Supprimer mon compte</button></span></div>`}
     <div class="setacc hint legal"><a href="${LANG==='en'?'privacy.html':'confidentialite.html'}" target="_blank" rel="noopener">Confidentialité</a> · <a href="${LANG==='en'?'terms.html':'conditions.html'}" target="_blank" rel="noopener">Conditions et mentions légales</a> · <a href="${LANG==='en'?'credits-en.html':'credits.html'}" target="_blank" rel="noopener">Crédits</a></div></section>`;
@@ -197,6 +198,15 @@ function histHTML(){
   </section></div>`;
 }
 function pruneUL(){ let m=""; for(const u of ULS) if(P.deck.includes(u.id)&&!ulOk(u,P.deck)){ P.deck=P.deck.filter(x=>x!==u.id); m=`${CARDS[u.id].name} a quitté le deck : elle exige ${u.n}.`; } return m; }
+/* Notes de mise à jour : une fois par version, à l'accueil (jamais en partie, pendant un paquet ou le tutoriel) ; « Notes de mise à jour » dans les Réglages la rouvre */
+let majOpen=false;
+function majHTML(){
+  const m=MAJ[0]; if(!m||screen==="play"||!P.tuto||(!majOpen&&P.maj===m.id)) return "";
+  return `<div class="veil"><div class="result majpop" role="dialog" aria-label="Notes de mise à jour">
+    <div class="eyebrow"><span>Notes de mise à jour</span> · <span>${m.date}</span></div><h2>Équilibrage</h2>
+    <ul class="majlist">${m.items.map(t=>`<li>${t}</li>`).join("")}</ul>
+    <button class="primary" data-act="majok">Compris</button></div></div>`;
+}
 function ulHTML(){
   if(ulLater||screen==="play") return "";
   const u=ULS.find(u=>REL(u.id)&&!P.owned.includes(u.id)&&ulEarned(u)); if(!u) return "";
@@ -708,7 +718,7 @@ function render(){
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
   /* effet holo du zoom : détaché pendant le redessin puis remis dans le nouveau conteneur ; détruit si le zoom est fermé ou change de carte */
   const holoKeep=zoomHolo&&zoomHolo.id===zoomId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
-  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?ulHTML():"");
+  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
   { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,zoomId); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }
   document.body.classList.toggle("hasdock",screen!=="play");
@@ -922,6 +932,8 @@ document.addEventListener("click", e=>{
     case "dismiss": if(!P.dis.includes(el.dataset.id)) P.dis.push(el.dataset.id); save(); render(); return;
     case "ulclaim": { const id=el.dataset.id; if(ULof(id)&&!P.owned.includes(id)&&ulEarned(ULof(id))){ P.owned.push(id); save(); sfx("legend"); } zoomId=id; render(); return; }
     case "ullater": ulLater=true; render(); return;
+    case "majok": P.maj=MAJ[0].id; majOpen=false; save(); sfx("click"); render(); return;
+    case "majshow": sheet=null; majOpen=true; sfx("click"); render(); return;
     case "tutoplay": tutoStep=-1; sfx("click"); startTutorial(); return;
     case "tutodone": finishTuto(); return;
     case "tuto": sheet=null; sfx("click"); startTutorial(); return;
