@@ -552,8 +552,6 @@ function aiPlan(me="e",tierOv){
       if(nikeWait&&S.turn===5){ let back=0; for(let i=0;i<3;i++) for(const x of S.board[me][i]) if(x.rev&&smallJ(x)&&!shielded(me,i)&&!locIs(i,"sauvabelin")) back++; if(back>=2) adj+=2+1.5*Math.min(4,back); } }
     if(c.id==="ananke"){ /* fin de partie : puissance adverse ici +1 (elle gagne le lieu). Jamais avec une Nemesis adverse ; seulement au tour 6 si possible (un Apsu adverse posé plus tard lui retirerait tout) */
       if(S.board[op][li].some(x=>live(x)&&x.id==="nemesis")) return null;
-      /* 15 octobre : le charme, la captivité et la perte d'effet l'atteignent désormais : jamais là où l'adversaire a déjà une Qetesh, une Calypso ou un Apsu (toutes versions) */
-      if(S.board[op][li].some(x=>x.rev&&(["qetesh","calypso","apsu"].includes(charOf(x.id))||/^ulqetjor/.test(x.id)))) return null;
       pow=op0[li]+opFut[li]+1; if(S.turn<6) adj-=5; }
     if(c.id==="hedone"){ /* 2 charmes (tours 5 et 6) si elle est posée au tour 5 au plus tard ; il faut de la place chez l'adversaire ici et des cartes adverses ailleurs */
       const room=capOf(op,li)-S.board[op][li].length, others=[0,1,2].some(i=>i!==li&&S.board[op][i].some(x=>x.rev));

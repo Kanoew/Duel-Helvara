@@ -321,9 +321,9 @@ async function inPage() {
       T(`Ananké : ${id} adverse posée après elle → elle reste à 1`, a.neg && cardPow("p", 0, a) === 1, `${cardPow("p", 0, a)}, neg ${a.neg}`); }
     fresh(); S.turn = 6; { put("e", 0, id); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); S.final = true; const v = cardPow("p", 0, a); S.final = false;
       T(`Ananké : ${id} déjà posée avant elle → ne l'atteint pas (une Révélation n'agit qu'une fois)`, !a.neg && v === total("e", 0) + 1, `${v}, neg ${a.neg}`); } }
-  /* A4b. IA : jamais en face d'une Qetesh, d'une Calypso ou d'un Apsu adverse (15 octobre) */
-  fresh(); S.turn = 6; S.energy = S.energyE = 6; { put("p", 0, "qetesh"); put("p", 1, "calypso"); const a = card("ananke"); S.hand.e = [a];
-    const plan = aiPlan("e", 5), at = plan.find(x => x.c === a); T("IA : Ananké jamais en face d'une Qetesh ou d'une Calypso adverse", !at || at.li === 2, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+  /* A4b. Une Qetesh ou une Calypso déjà en jeu ne touche pas une Ananké posée après elle (Révélation passée) : l'IA peut la poser en face */
+  fresh(); S.turn = 6; { put("e", 0, "qetesh"); put("e", 0, "calypso"); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
+    T("Ananké posée après une Qetesh et une Calypso adverses : ni charmée ni captive", !a.charm && !a.captive && !a.neg, JSON.stringify({ ch: a.charm, cap: !!a.captive })); }
   /* A5. Deux Ananké face à face : pas de boucle infinie */
   fresh(); S.turn = 6; { const a = put("p", 0, "ananke"), b = put("e", 0, "ananke"); S.final = true; const x = cardPow("p", 0, a), y = cardPow("e", 0, b); T("Deux Ananké face à face : calcul fini", Number.isFinite(x) && Number.isFinite(y), `${x} / ${y}`); S.final = false; }
   /* A6. IA : jamais sur un lieu avec une Nemesis adverse ; au tour 6 sur le lieu où elle perd */
