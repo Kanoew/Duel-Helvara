@@ -28,9 +28,11 @@ const gridArt=fn=>{ ART_MINI=true; try{ return fn(); } finally{ ART_MINI=false; 
 function art(id,light){
   const d=CARDS[id];
   if(ART_MINI&&!d.token&&d.img&&/^images\/[^/]+\.webp/.test(d.img)) return `<div class="art" style="background-image:url('${d.img.replace("images/","images/mini/")}')"></div>`;
-  if(light&&!d.token&&d.img) return `<div class="art" style="background-image:url('images/avatars/${id}.webp?v=7')"></div>`;
+  if(light&&light!=="big"&&!d.token&&d.img) return `<div class="art" style="background-image:url('images/avatars/${id}.webp?v=7')"></div>`;
   if(d.token&&d.img) return `<div class="art" style="background-image:url('${d.img}')"></div>`;
   if(d.token) return `<div class="art token-img" style="background-image:url('images/reflet.webp')${id==="illusion"?";filter:sepia(.7) saturate(2.2) hue-rotate(-12deg)":id==="cendreux"?";filter:grayscale(1) sepia(.5) brightness(.7)":id==="lanterne"?";filter:sepia(1) saturate(4) hue-rotate(-25deg) brightness(.8)":""}"></div>`;
+  /* grand format : la miniature (déjà vue dans la grille) sert de fond le temps que la grande image arrive, au lieu d'une case sombre */
+  if(d.img&&light==="big"&&/^images\/[^/]+\.webp/.test(d.img)) return `<div class="art" style="background-image:url('${d.img}'),url('${d.img.replace("images/","images/mini/")}')"></div>`;
   if(d.img) return `<div class="art" style="background-image:url('${d.img}')"></div>`;
   const mono=d.name.replace(/^(L'|Le |La |Les )/,"").charAt(0);
   return `<div class="art ph" data-mono="${mono}" style="--fc:${FAC[d.fac].c}"></div>`;
@@ -43,7 +45,7 @@ function fullCard(id,extra="",powOv=null){
   /* carte holo en grand : l'image fixe n'a plus les animations d'ultra-légendaire (reflet arc-en-ciel, ambiance, inclinaison) : l'effet holo prend la suite et elles apparaissaient quelques instants avant de disparaître */
   const hp=/\bbig\b/.test(extra)&&d.r==="U"&&!!holoDir(id);
   const fx=!hp&&/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
-  return `<div class="full ${extra}${d.r==="U"&&!hp?" holo":""}${hp?" holopre":""}${rc(d)}${fx}">${art(id)}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
+  return `<div class="full ${extra}${d.r==="U"&&!hp?" holo":""}${hp?" holopre":""}${rc(d)}${fx}">${art(id,/\bbig\b/.test(extra)?"big":undefined)}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${fxH(d.fx)}</div>`:""}</div>
     <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }
