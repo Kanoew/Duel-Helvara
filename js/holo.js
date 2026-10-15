@@ -2,12 +2,12 @@
    Affiché seulement dans le zoom d'une carte et à la révélation d'un paquet, jamais sur le plateau, la main ou les listes.
    Activé par donnée : HOLO = { id de carte : dossier sous images/holo/ }. Une carte sans entrée garde son image fixe.
    Si le module, le manifest ou une image ne charge pas, rien ne change à l'écran (l'image fixe reste). */
-const HOLO = {};
-/* Cartes de test : ouvrir le jeu avec ?holo=test affiche les 4 exemples à la place des 4 ultra-légendaires de faction. */
-const HOLO_TEST = { nike: "exemple-1", ananke: "exemple-3", hedone: "exemple-2", nike_v: "exemple-4" };
+const HOLO = { nike: "nike", ananke: "ananke", hedone: "hedone", nike_v: "nike-saint-valentin" };
+/* Mode test : ouvrir le jeu avec ?holo=test ajoute l'effet de Carla (carte pas encore dans le jeu) sur la carte Yarden Weiss, pour voir son foil électrique. */
+const HOLO_TEST = { yarden: "carla" };
 const HOLO_TESTON = /[?&]holo=test\b/.test(location.search);
 const HOLO_MOD = (document.currentScript && document.currentScript.dataset.mod) || "js/holo-card.js";
-const holoDir = id => (HOLO_TESTON ? HOLO_TEST : HOLO)[id] || null;
+const holoDir = id => (HOLO_TESTON && HOLO_TEST[id]) || HOLO[id] || null;
 let holoModP = null;
 const holoLoad = () => holoModP || (holoModP = import(new URL(HOLO_MOD, document.baseURI).href).catch(e => { holoModP = null; throw e; }));
 /* Monte l'effet dans `slot` (l'image fixe y reste tant que l'effet n'est pas prêt, puis la classe holo-on la cache).
@@ -46,11 +46,11 @@ function holoKill(h) {
 }
 
 /* Mode test (?holo=test) : un petit bouton « Test holo » ouvre un panneau pour voir l'effet sans posséder les cartes
-   (elles ne sont pas encore sorties) : zoom des 4 exemples et faux paquet. Rien n'est acheté ni sauvegardé. */
+   (elles ne sont pas encore sorties) : zoom de chaque carte holo et faux paquet. Rien n'est acheté ni sauvegardé. */
 if (HOLO_TESTON) addEventListener("DOMContentLoaded", () => {
   const box = document.createElement("div"); box.className = "holotest";
   box.innerHTML = '<button type="button" class="ht-toggle">Test holo</button><div class="ht-menu" hidden>' +
-    Object.keys(HOLO_TEST).map(id => '<button type="button" data-z="' + id + '">Zoom : ' + CARDS[id].name + "</button>").join("") +
+    Object.keys(Object.assign({}, HOLO, HOLO_TEST)).map(id => '<button type="button" data-z="' + id + '">Zoom : ' + (HOLO_TEST[id] ? "Carla (sur " + CARDS[id].name + ")" : CARDS[id].name) + "</button>").join("") +
     '<button type="button" data-pack="1">Faux paquet (4 cartes)</button></div>';
   document.body.appendChild(box);
   const menu = box.querySelector(".ht-menu");
@@ -59,6 +59,6 @@ if (HOLO_TESTON) addEventListener("DOMContentLoaded", () => {
     if (b.classList.contains("ht-toggle")) { menu.hidden = !menu.hidden; return; }
     menu.hidden = true;
     if (b.dataset.z) { zoomId = b.dataset.z; render(); }
-    else if (b.dataset.pack) ouvrirTirage({ res: Object.keys(HOLO_TEST).map(id => ({ id, isNew: true, v: 0 })), name: "Test", img: "images/pack.webp", pid: null, price: 0 });
+    else if (b.dataset.pack) ouvrirTirage({ res: Object.keys(HOLO).map(id => ({ id, isNew: true, v: 0 })), name: "Test", img: "images/pack.webp", pid: null, price: 0 });
   });
 });

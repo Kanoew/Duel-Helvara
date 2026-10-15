@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Test de l'effet holo 2.5D (zoom et ouverture de paquet) : node outils/tests-holo.js
-   Utilise les 4 exemples de images/holo/ via ?holo=test. Nécessite Playwright et Chromium (voir CLAUDE.md, « Tests »). */
+   Utilise les vraies cartes holo de images/holo/ ; ?holo=test ajoute Carla sur la carte Yarden Weiss. Nécessite Playwright et Chromium (voir CLAUDE.md, « Tests »). */
 "use strict";
 const { chromium } = require("/opt/node-tools/node_modules/playwright"), http = require("http"), fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, ".."), T = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".webp": "image/webp", ".json": "application/json", ".woff2": "font/woff2", ".png": "image/png", ".mp3": "audio/mpeg" };
@@ -17,7 +17,7 @@ srv.listen(0, async () => {
     if (o.route) await o.route(p);
     await p.goto("http://localhost:" + port + url); await p.waitForTimeout(900); p.ctx = ctx; return p;
   }
-  const zoom = (p, id) => p.evaluate(`P.owned=[...new Set([...P.owned,"nike","ananke","hedone","nike_v","yarden"])];tutoStep=-1;P.tuto=true;screen="deck";zoomId="${id}";render();`);
+  const zoom = (p, id) => p.evaluate(`P.owned=[...new Set([...P.owned,"nike","ananke","hedone","nike_v","yarden","amaterasu"])];tutoStep=-1;P.tuto=true;screen="deck";zoomId="${id}";render();`);
   const n = (p, s) => p.evaluate(s => document.querySelectorAll(s).length, s);
   try {
     /* zoom */
@@ -42,20 +42,26 @@ srv.listen(0, async () => {
     await p.evaluate("document.querySelector('.t-skip').click()"); await p.waitForTimeout(400); check("panneau de test : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
     p = await page("/index.html"); check("production : pas de panneau de test", await n(p, ".holotest") === 0); await p.ctx.close();
     /* carte sans holo et production */
-    p = await page("/index.html?holo=test"); await zoom(p, "yarden"); await p.waitForTimeout(500);
+    p = await page("/index.html?holo=test"); await zoom(p, "amaterasu"); await p.waitForTimeout(500);
     check("carte sans entrée : affichage inchangé", await n(p, "#holoslot") === 0 && await n(p, ".hc-card") === 0); await p.ctx.close();
-    p = await page("/index.html"); const req = []; p.on("request", r => req.push(r.url())); await zoom(p, "nike"); await p.waitForTimeout(500);
-    check("production (sans ?holo=test) : aucune carte n'a d'effet, rien n'est téléchargé", await p.evaluate(() => holoDir("nike")) === null && await n(p, "#holoslot") === 0 && !req.some(u => /holo/.test(u))); await p.ctx.close();
+    p = await page("/index.html"); const req = []; p.on("request", r => req.push(r.url())); await zoom(p, "amaterasu"); await p.waitForTimeout(500);
+    check("production : une carte sans entrée ne télécharge rien de holo", await n(p, "#holoslot") === 0 && !req.some(u => /holo/.test(u))); 
+    await zoom(p, "nike"); await p.waitForTimeout(2200);
+    check("production : Nike (entrée de la table HOLO) affiche l'effet, sans ?holo=test", await n(p, ".hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs);
+    await zoom(p, "yarden"); await p.waitForTimeout(500);
+    check("production : l'effet de Carla n'apparaît qu'en mode test (Yarden reste normale)", await n(p, "#holoslot") === 0); await p.ctx.close();
+    p = await page("/index.html?holo=test"); await zoom(p, "yarden"); await p.waitForTimeout(2200);
+    check("mode test : l'effet de Carla (foil électrique « volt ») s'affiche sans erreur", await n(p, ".hc-card.hc-ready") === 1 && await n(p, ".hc-volt") >= 1 && p.errs.length === 0, p.errs); await p.ctx.close();
     /* chargement lent : l'image fixe garde sa taille pendant que l'effet se charge (elle rétrécissait à côté du conteneur de l'effet) */
-    p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/exemple-1/manifest.json", async r => { await new Promise(k => setTimeout(k, 1500)); r.continue(); }) });
+    p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/nike/manifest.json", async r => { await new Promise(k => setTimeout(k, 1500)); r.continue(); }) });
     await zoom(p, "nike"); await p.waitForTimeout(400);
     const lw = await p.evaluate(() => ({ st: document.querySelector("#holoslot>.full").getBoundingClientRect().width, slot: document.getElementById("holoslot").getBoundingClientRect().width, h: document.getElementById("holoslot").getBoundingClientRect().height }));
     await p.waitForTimeout(2500); const lw2 = await p.evaluate(() => ({ slot: document.getElementById("holoslot").getBoundingClientRect().width, h: document.getElementById("holoslot").getBoundingClientRect().height, on: document.getElementById("holoslot").classList.contains("holo-on") }));
     check("zoom : pendant le chargement l'image fixe garde sa taille, puis l'effet la remplace sans saut", Math.abs(lw.st - lw.slot) < 1 && lw2.on && Math.abs(lw2.h - lw.h) < 8, [lw, lw2]); await p.ctx.close();
     /* repli */
-    p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/exemple-1/manifest.json", r => r.fulfill({ status: 404, body: "" })) }); await zoom(p, "nike"); await p.waitForTimeout(1500);
+    p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/nike/manifest.json", r => r.fulfill({ status: 404, body: "" })) }); await zoom(p, "nike"); await p.waitForTimeout(1500);
     check("manifest introuvable : l'image fixe reste, sans erreur", await n(p, ".hc-card") === 0 && await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display !== "none") && p.errs.length === 0, p.errs); await p.ctx.close();
-    p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/exemple-1/layer2.webp", r => r.fulfill({ status: 404, body: "" })) }); await zoom(p, "nike"); await p.waitForTimeout(1500);
+    p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/nike/layer2.webp", r => r.fulfill({ status: 404, body: "" })) }); await zoom(p, "nike"); await p.waitForTimeout(1500);
     check("image de couche introuvable : repli sur l'image fixe, rien ne reste monté", await n(p, ".hc-card") === 0 && await n(p, ".holohost") === 0 && p.errs.length === 0, p.errs); await p.ctx.close();
     p = await page("/index.html?holo=test", { reduced: true }); await zoom(p, "hedone"); await p.waitForTimeout(1500);
     check("mouvement réduit : l'effet s'affiche (le module coupe lui-même le mouvement)", await n(p, ".hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs); await p.ctx.close();

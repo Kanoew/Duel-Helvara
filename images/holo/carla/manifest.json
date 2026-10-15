@@ -1,0 +1,35 @@
+{
+  "aspect": [
+    1060,
+    1580
+  ],
+  "layers": [
+    {
+      "src": "layer0.webp",
+      "amp": -0.003
+    },
+    {
+      "src": "layer1.webp",
+      "amp": 0.01,
+      "foils": [
+        {
+          "type": "volt",
+          "mask": "foil1-0.webp"
+        }
+      ]
+    },
+    {
+      "src": "layer2.webp",
+      "amp": 0.015
+    }
+  ],
+  "backAfter": 0,
+  "fx": {
+    "back": {
+      "sparks": 14
+    },
+    "front": {
+      "volt": 26
+    }
+  }
+}

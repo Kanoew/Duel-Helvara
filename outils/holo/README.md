@@ -11,8 +11,8 @@ Ce n'est pas de la vraie 3D : pas de WebGL, pas de bibliothèque, pas d'étape d
 | Chemin | Rôle |
 | --- | --- |
 | `src/holo-card.js` | Le module. Un seul fichier, il injecte son propre CSS (classes préfixées `hc-`). |
-| `examples/exemple-1` à `exemple-4` | 4 cartes de test complètes : images de couches, masques de foil, `manifest.json`. |
-| `demo/index.html` | Page de test des 4 exemples. |
+| `examples/` | 5 cartes complètes : `nike`, `ananke`, `hedone`, `carla`, `nike-saint-valentin` (images de couches, masques de foil, `manifest.json`). |
+| `demo/index.html` | Page de test des 5 cartes. |
 | `tools/reference/` | Scripts Python qui ont servi à découper les exemples. Références, pas à exécuter tels quels. |
 | `BRIEF.md` | Le brief de la session Code. |
 
@@ -82,6 +82,7 @@ Le module respecte `prefers-reduced-motion` (pas de mouvement automatique, très
     - `gold` : reflet irisé et traînée lumineuse sur l'or (chaînes, miel, couronne, fissures).
     - `prism` : voile arc-en-ciel doux (ailes, plumes).
     - `shimmer` : reflet léger en superposition claire (écailles).
+    - `volt` : éclairs bleu-blanc qui pulsent (veines électriques). Le masque dessine les éclairs ; l'effet clignote tout seul, sauf si `prefers-reduced-motion`.
   - **`flash`** (sur une couche) : éclair dans les nuages, à utiliser avec `storm`.
 - **`backAfter`** : index de la couche après laquelle s'insère le canvas de particules du fond. Il passe derrière les couches suivantes.
 - **`fx.back` / `fx.front`** : particules derrière ou devant le personnage.
@@ -93,6 +94,7 @@ Le module respecte `prefers-reduced-motion` (pas de mouvement automatique, très
 | `rain` | pluie penchée |
 | `petals` | pétales rouges qui tombent |
 | `hearts` | cœurs roses qui flottent |
+| `volt` | petites étincelles électriques bleues qui montent |
 
 Les nombres sont des quantités à `quality: 'high'`.
 
@@ -117,4 +119,4 @@ Pour mémoire, la méthode utilisée :
 3. Masques de foil calculés à partir des teintes dorées de l'image, limités à chaque couche.
 4. Export en webp (couches à 1060 px de large, masques à 530 px).
 
-Les scripts de `tools/reference/` montrent cette chaîne pour les exemples 2, 3 et 4 (`seg_all.py` produit le détourage, `lib.py` contient les fonctions communes). Ils attendent la structure `cards/cN/src.webp` et ne sont pas prévus pour tourner tels quels.
+Les scripts de `tools/reference/` montrent cette chaîne pour hedone, ananke, nike-saint-valentin et carla (`seg_all.py` produit le détourage (`c5.py` = carla), `lib.py` contient les fonctions communes). Ils attendent la structure `cards/cN/src.webp` et ne sont pas prévus pour tourner tels quels.

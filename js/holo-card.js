@@ -36,6 +36,12 @@ const CSS = `
   background: linear-gradient(110deg, #ff6aa8, #ffd25a, #5affc1, #5ab4ff, #b46aff, #ff6aa8) calc(var(--hc-fx) * 100%) calc(var(--hc-fy) * 100%) / 300% 300%; }
 .hc-shimmer { mix-blend-mode: screen; opacity: calc(var(--hc-foil) * .28);
   background: linear-gradient(110deg, #ff6aa8, #ffd25a, #5affc1, #5ab4ff, #b46aff, #ff6aa8) calc(var(--hc-fx) * 100%) calc(var(--hc-fy) * 100%) / 300% 300%; }
+.hc-volt { mix-blend-mode: screen; opacity: calc(var(--hc-foil) * 1.1);
+  background: linear-gradient(105deg, #4fa8ff, #ffffff 28%, #9a7bff 52%, #5ff0ff 78%, #4fa8ff) calc(var(--hc-fx) * 100%) calc(var(--hc-fy) * 100%) / 260% 260%;
+  animation: hc-volt 3s ease-in-out infinite; }
+@keyframes hc-volt { 0%, 100% { filter: brightness(.7); } 42% { filter: brightness(1.25); } 48% { filter: brightness(.85); } 54% { filter: brightness(1.75); } 62% { filter: brightness(.95); } }
+.hc-still .hc-volt { animation: none; }
+@media (prefers-reduced-motion: reduce) { .hc-volt { animation: none; } }
 .hc-flash { position: absolute; inset: 0; opacity: 0; mix-blend-mode: screen; pointer-events: none;
   background: radial-gradient(ellipse 62% 34% at 62% 13%, rgba(255,246,226,.95), rgba(150,185,255,.28) 55%, transparent 76%); }
 .hc-glare { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
@@ -68,6 +74,7 @@ function sprites() {
   SPR = {
     gold: sprite(64, radial([[0, 'rgba(255,250,235,1)'], [.18, 'rgba(255,222,140,.95)'], [.5, 'rgba(235,170,70,.28)'], [1, 'rgba(235,170,70,0)']])),
     star: sprite(64, radial([[0, 'rgba(255,255,255,1)'], [.14, 'rgba(225,230,255,.95)'], [.42, 'rgba(150,120,255,.3)'], [1, 'rgba(150,120,255,0)']])),
+    volt: sprite(64, radial([[0, 'rgba(255,255,255,1)'], [.16, 'rgba(190,230,255,.95)'], [.45, 'rgba(90,160,255,.32)'], [1, 'rgba(90,160,255,0)']])),
     pinkGlow: sprite(64, radial([[0, 'rgba(255,170,215,.8)'], [.45, 'rgba(255,110,185,.28)'], [1, 'rgba(255,110,185,0)']])),
     petal: sprite(64, (g) => {
       const gr = g.createLinearGradient(8, 20, 56, 44); gr.addColorStop(0, '#d0345a'); gr.addColorStop(.6, '#8c1236'); gr.addColorStop(1, '#5e0c26');
@@ -96,6 +103,7 @@ function buildFx(spec, kind, q) {
   if (spec.rain && q.rain) f.rain = back ? mkDrops(Math.round(spec.rain * q.n), .03, .07, .7, 1.2, .05, .13) : mkDrops(Math.round(spec.rain * q.n), .07, .15, 1.3, 2.1, .1, .26);
   if (spec.sparks) f.sparks = f.sparks.concat(mkSparks(Math.round(spec.sparks * q.n), back ? 4 : 6, back ? 11 : 15, back ? .008 : .015, back ? .03 : .05, S.gold));
   if (spec.stars) f.sparks = f.sparks.concat(mkSparks(Math.round(spec.stars * q.n), back ? 3 : 7, back ? 9 : 14, .002, .008, S.star));
+  if (spec.volt) f.sparks = f.sparks.concat(mkSparks(Math.round(spec.volt * q.n), back ? 3 : 5, back ? 8 : 11, .012, .045, S.volt));
   if (spec.petals && q.motion) f.petals = mkPetals(Math.round(spec.petals * q.n));
   if (spec.hearts) f.hearts = mkHearts(Math.max(1, Math.round(spec.hearts * q.n)));
   return f;
@@ -199,6 +207,7 @@ export class HoloCard {
     });
     cFront.style.zIndex = z++; card.appendChild(cFront);
     const gl = el('div', 'hc-glare'), fr = el('div', 'hc-frame'); gl.style.zIndex = 80; fr.style.zIndex = 90; card.appendChild(gl); card.appendChild(fr);
+    if (this.reduce) card.classList.add('hc-still');
     host.appendChild(card);
     const fx = m.fx || {};
     this.fb = buildFx(fx.back, 'back', this.q); this.ff = buildFx(fx.front, 'front', this.q);
