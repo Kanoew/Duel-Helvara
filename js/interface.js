@@ -43,7 +43,7 @@ const rc=d=>(d.r==="R"||d.r==="E"||d.r==="L")&&!d.token?` r-${d.r}`:"";
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
   /* carte holo en grand : l'image fixe n'a plus les animations d'ultra-légendaire (reflet arc-en-ciel, ambiance, inclinaison) : l'effet holo prend la suite et elles apparaissaient quelques instants avant de disparaître */
-  const hp=/\bbig\b/.test(extra)&&d.r==="U"&&!!holoDir(id);
+  const hp=/\b(big|fanh)\b/.test(extra)&&d.r==="U"&&!!holoDir(id);
   const fx=!hp&&/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
   return `<div class="full ${extra}${d.r==="U"&&!hp?" holo":""}${hp?" holopre":""}${rc(d)}${fx}">${art(id,/\bbig\b/.test(extra)?"big":undefined)}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${fxH(d.fx)}</div>`:""}</div>
@@ -231,7 +231,7 @@ function fanRotate(step){
 }
 function vitrineHTML(){
   const fan=fanIds(), order=fan.length===3?[fan[2],fan[0],fan[1]]:fan, pos=fan.length===3?[-1,0,1]:fan.map((_,i)=>i);
-  return `<section class="vitrinewrap">${seasonDeco("fan")}<div class="fan" aria-label="Vitrine : glisse pour faire tourner les cartes">${order.map((id,k)=>`<button class="fcard" data-act="fantap" data-pos="${pos[k]}" data-id="${id}" aria-label="${pos[k]===0?"Agrandir ":"Mettre en avant "}${CARDS[id].name}">${fullCard(id)}</button>`).join("")}</div>
+  return `<section class="vitrinewrap">${seasonDeco("fan")}<div class="fan" aria-label="Vitrine : glisse pour faire tourner les cartes">${order.map((id,k)=>{ const h=!!holoDir(id)&&CARDS[id].r==="U"; return `<button class="fcard" data-act="fantap" data-pos="${pos[k]}" data-id="${id}" aria-label="${pos[k]===0?"Agrandir ":"Mettre en avant "}${CARDS[id].name}">${fullCard(id,h?"fanh":"")}${h&&pos[k]===0?`<span class="fanholo" data-id="${id}"></span>`:""}</button>`; }).join("")}</div>
     <div class="vfoot"><span class="hint">Glisse pour faire tourner</span><button class="ghost small" data-act="fanpick">Choisir mes cartes</button></div></section>`;
 }
 let vIdx=0;
@@ -715,7 +715,7 @@ function gzHTML(){
     <button class="ghost" data-act="gzclose">Fermer</button></div></div></div>`;
 }
 
-let zoomHolo=null;
+let zoomHolo=null, fanHolo=null;
 function render(){
   const app=document.getElementById("app");
   { const se=season(); if(se) document.documentElement.dataset.season=se; else delete document.documentElement.dataset.season; }
@@ -727,9 +727,14 @@ function render(){
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
   /* effet holo du zoom : détaché pendant le redessin puis remis dans le nouveau conteneur ; détruit si le zoom est fermé ou change de carte */
   const holoKeep=zoomHolo&&zoomHolo.id===zoomId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
+  /* effet holo de la carte du centre de la vitrine (ultra-légendaire de faction) : même principe, gardé tant que la carte reste au centre */
+  const fanKeep=fanHolo&&fanHolo.el?fanHolo.el:null; if(fanKeep) fanKeep.remove();
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
   { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,zoomId); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }
+  { const fs=document.querySelector(".fanholo");
+    if(fs&&fanKeep&&fanHolo.id===fs.dataset.id){ fs.appendChild(fanKeep); fs.classList.add("holo-on"); }
+    else{ holoKill(fanHolo); fanHolo=fs?holoMount(fs,fs.dataset.id,{idle:true}):null; } }
   document.body.classList.toggle("hasdock",screen!=="play");
   document.body.classList.toggle("inplay",screen==="play");
   setTimeout(()=>FX.decorate(app),30);

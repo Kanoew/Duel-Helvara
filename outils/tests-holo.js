@@ -56,6 +56,22 @@ srv.listen(0, async () => {
     check("production : Nike (entrée de la table HOLO) affiche l'effet, sans ?holo=test", await n(p, ".hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs);
     await zoom(p, "source"); await p.waitForTimeout(2200);
     check("production : La Source (Carla, foil électrique « volt ») affiche l'effet sans erreur", await n(p, ".hc-card.hc-ready") === 1 && await n(p, ".hc-volt") >= 1 && p.errs.length === 0, p.errs); await p.ctx.close();
+    /* vitrine de l'accueil (vidéo de Jordan, 15 octobre : l'ancien reflet d'ultra-légendaire y restait) */
+    p = await page("/index.html");
+    await p.evaluate(`P.owned=[...new Set([...P.owned,"nike","yarden","amaterasu"])];P.fan=["nike","yarden","amaterasu"];tutoStep=-1;P.tuto=true;screen="home";render();`);
+    await p.waitForSelector(".fanholo .hc-card.hc-ready", { timeout: 5000 }).catch(() => {});
+    check("vitrine : Nike au centre affiche l'effet holo", await n(p, ".fanholo .hc-card.hc-ready") === 1);
+    check("vitrine : plus l'ancien reflet d'ultra-légendaire sur Nike", await p.evaluate(() => [...document.querySelectorAll('.fcard[data-id="nike"] .full')].every(f => !f.classList.contains("holo") && f.classList.contains("holopre"))));
+    check("vitrine : l'effet laisse passer le doigt (glisser pour tourner)", await p.evaluate(() => getComputedStyle(document.querySelector(".fanholo .hc-card")).pointerEvents === "none"));
+    await p.evaluate("render();render();"); await p.waitForTimeout(200);
+    check("vitrine : des redessins n'empilent pas d'instances", await n(p, ".hc-card") === 1);
+    const fb = await p.locator('.fcard[data-pos="0"]').boundingBox();
+    await p.mouse.move(fb.x + fb.width * .7, fb.y + fb.height / 2); await p.mouse.down(); await p.mouse.move(fb.x - fb.width * .4, fb.y + fb.height / 2, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(700);
+    check("vitrine : glisser fait toujours tourner, Nike passe sur le côté sans effet animé ni ancien reflet", await p.evaluate(() => P.fan[0] !== "nike") && await n(p, ".hc-card") === 0 && await p.evaluate(() => fanHolo === null && !document.querySelector('.fcard[data-id="nike"] .full').classList.contains("holo")));
+    await p.evaluate(`P.fan=["nike","yarden","amaterasu"];render();`); await p.waitForTimeout(1200);
+    await p.evaluate(`screen="deck";render();`); await p.waitForTimeout(200);
+    check("vitrine : l'effet est détruit en quittant l'accueil", await n(p, ".hc-card") === 0 && await p.evaluate(() => fanHolo === null));
+    check("vitrine : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
     /* chargement lent : l'image fixe garde sa taille pendant que l'effet se charge (elle rétrécissait à côté du conteneur de l'effet) */
     p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/nike/manifest.json", async r => { await new Promise(k => setTimeout(k, 1500)); r.continue(); }) });
     await zoom(p, "nike"); await p.waitForTimeout(400);

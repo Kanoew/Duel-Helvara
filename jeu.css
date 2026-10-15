@@ -876,6 +876,10 @@ body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 .holohost .hc-card{transition:none}
 .holoslot:not(.holo-on)>.holohost{position:absolute;left:0;top:0;pointer-events:none}
 /* paquet : l'effet est posé à plat par-dessus la carte retournée, une fois le retournement fini (dans la carte en 3D, des couches disparaissaient par moments sur téléphone) */
+/* vitrine de l'accueil : l'effet est posé par-dessus l'illustration (même image dessous), il bouge seul et laisse passer le doigt (glisser pour tourner) */
+.fan .fanholo{position:absolute;inset:0;display:flex;align-items:center;pointer-events:none;z-index:2}
+.fan .fanholo *{pointer-events:none!important}
+.fan .fanholo .hc-card{touch-action:auto}
 .t-holoover{position:absolute;inset:0;display:flex;align-items:center;pointer-events:none;visibility:hidden}
 .t-holoover.on{visibility:visible}
 .t-holoover .hc-card{touch-action:auto}
