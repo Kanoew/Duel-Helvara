@@ -74,7 +74,7 @@ const ULof=id=>ULS.find(u=>u.id===id);
    Une partie compte pour une faction si le deck joué contient au moins 8 cartes de cette faction (IA classée, Blitz, duel ; jamais le tutoriel).
    Nike de la Saint-Valentin : parties jouées avec Nike (ou sa variante) dans le deck pendant la Saint-Valentin. */
 const FJ_KEYS=["helvara","primordial","desir","jugement","nikev"], FJ_MIN=8;
-const VALENTIN=["02-01","02-20"]; /* fenêtre de la Saint-Valentin pour le journal (à caler sur le futur paquet) */
+const VALENTIN=["02-01","02-28"]; /* fenêtre de la Saint-Valentin pour le journal : tout février (Jordan, 15 octobre) */
 const fjGet=k=>(P.fj&&P.fj[k])|0;
 function fjCount(deck){
   if(!qLive()||!Array.isArray(deck)) return;

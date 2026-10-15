@@ -21,8 +21,11 @@ srv.listen(0, async () => {
   const n = (p, s) => p.evaluate(s => document.querySelectorAll(s).length, s);
   try {
     /* zoom */
-    let p = await page("/index.html?holo=test"); await zoom(p, "nike"); await p.waitForTimeout(2200);
-    check("zoom : l'effet est prêt et l'image fixe est cachée", await n(p, ".hc-card.hc-ready") === 1 && await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display === "none"));
+    let p = await page("/index.html?holo=test"); await zoom(p, "nike");
+    await p.waitForSelector(".hc-card.hc-ready"); const sous = await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display);
+    check("zoom : l'image fixe reste sous l'effet pendant son fondu (pas de creux sombre au premier chargement)", sous !== "none", sous);
+    await p.waitForTimeout(700);
+    check("zoom : l'effet est prêt et l'image fixe est cachée ensuite", await n(p, ".hc-card.hc-ready") === 1 && await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display === "none"));
     await p.evaluate("render();render();"); await p.waitForTimeout(300);
     check("zoom : des redessins n'empilent pas d'instances", await n(p, ".hc-card") === 1);
     const bb = await p.locator(".hc-card").boundingBox();

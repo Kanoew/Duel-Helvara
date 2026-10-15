@@ -22,7 +22,9 @@ function holoMount(slot, id, opts) {
       el = document.createElement("div"); el.className = "holohost"; slot.appendChild(el);
       const card = await mod.HoloCard.load(el, "images/holo/" + dir + "/manifest.json", Object.assign({ radius: 12 }, opts));
       if (h.dead) { card.destroy(); el.remove(); return; }
-      h.card = card; h.el = el; slot.classList.add("holo-on");
+      h.card = card; h.el = el;
+      /* l'image fixe reste sous l'effet pendant son fondu d'apparition (0,25 s) : sinon un creux sombre apparaît au premier chargement */
+      setTimeout(() => { if (!h.dead) slot.classList.add("holo-on"); }, 350);
     } catch (e) { if (el) el.remove(); }
   })();
   return h;
