@@ -23,8 +23,8 @@ function holoMount(slot, id, opts) {
       const card = await mod.HoloCard.load(el, "images/holo/" + dir + "/manifest.json", Object.assign({ radius: 12 }, opts));
       if (h.dead) { card.destroy(); el.remove(); return; }
       h.card = card; h.el = el;
-      /* l'image fixe reste sous l'effet pendant son fondu d'apparition (0,9 s, fondu enchaîné lent) : sinon un creux sombre apparaît au premier chargement */
-      setTimeout(() => { if (!h.dead) slot.classList.add("holo-on"); }, 950);
+      /* même illustration dessous (sans texte) : l'effet prend la place tout de suite, sans fondu (il « montait » et faisait une coupure) */
+      requestAnimationFrame(() => { if (!h.dead) slot.classList.add("holo-on"); });
     } catch (e) { if (el) el.remove(); const f = slot.querySelector(".full.holopre"); if (f) { f.classList.remove("holopre"); f.classList.add("holo"); } }   /* repli : l'image fixe retrouve son reflet d'ultra-légendaire */
   })();
   return h;
@@ -40,6 +40,26 @@ async function holoPoster(id) {
     await Promise.all(imgs.map(im => im.decode()));
     return box;
   } catch (e) { return null; }
+}
+/* Préchargement (appelé à l'affichage de la collection) : module, manifests et images des cartes holo sorties, en tâche de fond,
+   pour que l'effet soit là dès l'ouverture de la carte en grand (sinon il arrivait après l'illustration : « coupure », Jordan 15 octobre). */
+const HOLO_PRE = {};
+function holoPrefetch() {
+  const c = navigator.connection; if (c && (c.saveData || /2g/.test(c.effectiveType || ""))) return;
+  const ids = Object.keys(HOLO).filter(id => !HOLO_PRE[id] && CARDS[id] && (HOLO_TESTON || REL(id))); if (!ids.length) return;
+  ids.forEach(id => HOLO_PRE[id] = []);
+  (window.requestIdleCallback || (f => setTimeout(f, 200)))(() => {
+    holoLoad().catch(() => {});
+    ids.forEach(async id => {
+      try {
+        const dir = holoDir(id), r = await fetch("images/holo/" + dir + "/manifest.json"); if (!r.ok) return;
+        const m = await r.json();
+        m.layers.forEach(L => [L.src].concat((L.foils || []).map(f => f.mask).filter(Boolean)).forEach(src => {
+          const im = new Image(); im.src = "images/holo/" + dir + "/" + src; im.decode().catch(() => {}); HOLO_PRE[id].push(im);
+        }));
+      } catch (e) {}
+    });
+  });
 }
 function holoKill(h) {
   if (!h) return; h.dead = true;

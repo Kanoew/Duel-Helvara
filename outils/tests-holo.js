@@ -23,9 +23,11 @@ srv.listen(0, async () => {
     /* zoom */
     let p = await page("/index.html?holo=test"); await zoom(p, "nike");
     check("zoom : l'image fixe d'une carte holo n'a pas les animations d'ultra-légendaire (elles s'affichaient puis disparaissaient)", await p.evaluate(() => { const f = document.querySelector("#holoslot>.full"); return !!f && !f.classList.contains("holo") && !f.classList.contains("tilt") && !f.classList.contains("amb") && f.classList.contains("holopre"); }));
-    await p.waitForSelector(".hc-card.hc-ready"); const sous = await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display);
-    check("zoom : l'image fixe reste sous l'effet pendant son fondu (pas de creux sombre au premier chargement)", sous !== "none", sous);
-    await p.waitForTimeout(1400);
+    check("zoom : l'image fixe d'une carte holo n'affiche que l'illustration (pas de texte qui disparaît quand l'effet arrive)", await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full>.band")).display === "none"));
+    check("zoom : la miniature sert de fond pendant le chargement de la grande image", await p.evaluate(() => /images\/mini\/nike\.webp/.test(document.querySelector("#holoslot>.full>.art").style.backgroundImage)));
+    await p.waitForSelector(".hc-card.hc-ready"); await p.waitForTimeout(100);
+    check("zoom : l'effet prend la place dès qu'il est prêt, sans fondu", await p.evaluate(() => document.getElementById("holoslot").classList.contains("holo-on") && getComputedStyle(document.querySelector(".hc-card")).transitionDuration === "0s"));
+    check("collection : les cartes holo sorties sont préchargées", await p.evaluate(() => { screen = "deck"; render(); return Object.keys(HOLO_PRE).length > 0; }));
     check("zoom : l'effet est prêt et l'image fixe est cachée ensuite", await n(p, ".hc-card.hc-ready") === 1 && await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display === "none"));
     await p.evaluate("render();render();"); await p.waitForTimeout(300);
     check("zoom : des redessins n'empilent pas d'instances", await n(p, ".hc-card") === 1);
