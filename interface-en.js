@@ -11,7 +11,6 @@
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
     [/^Fatalité : ni détruite ni déplacée$/, ()=>"Fate: neither destroyed nor moved"],
-    [/^sans effet \(Apsu\)$/, ()=>"no effect (Apsu)"],
     [/^Flèche d'Apollon ajoutée à la main$/, ()=>"Apollo's Arrow added to hand"],
     [/^main pleine : Flèche perdue$/, ()=>"hand full: Arrow lost"],
     [/^Arme d'Héphaïstos forgée dans la main$/, ()=>"Hephaestus's Weapon forged into hand"],

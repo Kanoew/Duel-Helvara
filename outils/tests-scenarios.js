@@ -316,11 +316,11 @@ async function inPage() {
   /* A3. Nemesis adverse au même lieu → la règle « le moins de puissance gagne » s'applique, Ananké perd le lieu */
   fresh(); S.turn = 6; { put("e", 0, "nemesis"); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
     T("Ananké : avec une Nemesis adverse au même lieu, elle perd le lieu", leader(0) === "e" && nemInv(0), `${total("p", 0)} contre ${total("e", 0)}`); }
-  /* A4. Apsu adverse posée après elle ou déjà là → Ananké reste à 1 ; Apsu, Veillée des Chaînes pareil */
+  /* A4. Apsu adverse posée après elle → Ananké reste à 1 ; déjà posée avant elle → rien ; Apsu, Veillée des Chaînes pareil */
   for (const id of ["apsu", "apsu_n"]) { fresh(); S.turn = 6; { const a = card("ananke"), ap = card(id); S.hand.p = [a]; S.hand.e = [ap]; await resolveTurn([{ c: a, li: 0 }], [{ c: ap, li: 0 }], false);
       T(`Ananké : ${id} adverse posée après elle → elle reste à 1`, a.neg && cardPow("p", 0, a) === 1, `${cardPow("p", 0, a)}, neg ${a.neg}`); }
     fresh(); S.turn = 6; { put("e", 0, id); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); S.final = true; const v = cardPow("p", 0, a); S.final = false;
-      T(`Ananké : ${id} déjà posée avant elle → elle perd aussi ses effets et reste à 1 (quel que soit l'ordre)`, a.neg && v === 1, `${v}, neg ${a.neg}`); } }
+      T(`Ananké : ${id} déjà posée avant elle → ne l'atteint pas (une Révélation n'agit qu'une fois)`, !a.neg && v === total("e", 0) + 1, `${v}, neg ${a.neg}`); } }
   /* A4b. IA : jamais en face d'une Qetesh, d'une Calypso ou d'un Apsu adverse (15 octobre) */
   fresh(); S.turn = 6; S.energy = S.energyE = 6; { put("p", 0, "qetesh"); put("p", 1, "calypso"); const a = card("ananke"); S.hand.e = [a];
     const plan = aiPlan("e", 5), at = plan.find(x => x.c === a); T("IA : Ananké jamais en face d'une Qetesh ou d'une Calypso adverse", !at || at.li === 2, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
