@@ -864,13 +864,15 @@ body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 @media (prefers-reduced-motion:reduce){ .syncb{transition:none} }
 .synclast{margin-top:4px;opacity:.85}
 /* Effet holo 2.5D (zoom d'une ultra-légendaire de faction, révélation de paquet) : l'image fixe reste tant que l'effet n'est pas prêt */
-.holoslot{width:min(340px,82vw);display:flex;justify-content:center}
+.holoslot{position:relative;width:min(340px,82vw)}
 .holoslot .full.big{width:100%}
 .holoslot.holo-on>.full{display:none}
 .holohost{width:100%}
-.t-bfront.holo-on>.t-full{display:none}
-.t-bfront .holohost{width:100%}
-.t-bfront .hc-card{touch-action:auto}
+.holoslot:not(.holo-on)>.holohost{position:absolute;left:0;top:0;pointer-events:none}
+/* paquet : l'effet est posé à plat par-dessus la carte retournée, une fois le retournement fini (dans la carte en 3D, des couches disparaissaient par moments sur téléphone) */
+.t-holoover{position:absolute;inset:0;display:flex;align-items:center;pointer-events:none;visibility:hidden}
+.t-holoover.on{visibility:visible}
+.t-holoover .hc-card{touch-action:auto}
 .holotest{position:fixed;left:8px;bottom:84px;z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .holotest button{font:600 12px system-ui,sans-serif;padding:7px 10px;border-radius:8px;border:1px solid #f2c6ff;background:rgba(10,14,22,.92);color:#f2c6ff}
 .holotest .ht-menu{display:flex;flex-direction:column;gap:6px}

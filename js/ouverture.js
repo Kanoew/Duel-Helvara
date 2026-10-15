@@ -265,7 +265,8 @@ function ouvrirTirage(op){
     focus.getAnimations().forEach(a => a.cancel());
     Object.assign(focus.style, { left: fx + "px", top: fy + "px", width: W + "px", height: H + "px" });
     focus.innerHTML = `<div class="t-glow" style="--gc:${L.glow}"></div><div class="t-shaker"><div class="t-inner">${backHTML(c.r)}${bigFront(c)}</div></div>`;
-    curHolo = holoMount(focus.querySelector(".t-bfront"), c.id, { idle: true });
+    let holoOver = null;
+    if(holoDir(c.id)){ holoOver = document.createElement("div"); holoOver.className = "t-holoover"; focus.appendChild(holoOver); curHolo = holoMount(holoOver, c.id, { idle: true }); }
     const glow = focus.querySelector(".t-glow"), shaker = focus.querySelector(".t-shaker"), inner = focus.querySelector(".t-inner"), neb = focus.querySelector(".t-neb");
     const sr = root.getBoundingClientRect(), r = slot.getBoundingClientRect();
     const start = `translate(${r.left - sr.left - fx}px,${r.top - sr.top - fy}px) scale(${r.width / W})`;
@@ -359,6 +360,7 @@ function ouvrirTirage(op){
     }
     await flip(T.reveal);
     if(closed || skipped) return;
+    if(holoOver) holoOver.classList.add("on");
 
     /* 4 · Récompense */
     c.open = true;

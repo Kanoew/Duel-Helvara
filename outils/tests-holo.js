@@ -46,6 +46,12 @@ srv.listen(0, async () => {
     check("carte sans entrée : affichage inchangé", await n(p, "#holoslot") === 0 && await n(p, ".hc-card") === 0); await p.ctx.close();
     p = await page("/index.html"); const req = []; p.on("request", r => req.push(r.url())); await zoom(p, "nike"); await p.waitForTimeout(500);
     check("production (sans ?holo=test) : aucune carte n'a d'effet, rien n'est téléchargé", await p.evaluate(() => holoDir("nike")) === null && await n(p, "#holoslot") === 0 && !req.some(u => /holo/.test(u))); await p.ctx.close();
+    /* chargement lent : l'image fixe garde sa taille pendant que l'effet se charge (elle rétrécissait à côté du conteneur de l'effet) */
+    p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/exemple-1/manifest.json", async r => { await new Promise(k => setTimeout(k, 1500)); r.continue(); }) });
+    await zoom(p, "nike"); await p.waitForTimeout(400);
+    const lw = await p.evaluate(() => ({ st: document.querySelector("#holoslot>.full").getBoundingClientRect().width, slot: document.getElementById("holoslot").getBoundingClientRect().width, h: document.getElementById("holoslot").getBoundingClientRect().height }));
+    await p.waitForTimeout(2500); const lw2 = await p.evaluate(() => ({ slot: document.getElementById("holoslot").getBoundingClientRect().width, h: document.getElementById("holoslot").getBoundingClientRect().height, on: document.getElementById("holoslot").classList.contains("holo-on") }));
+    check("zoom : pendant le chargement l'image fixe garde sa taille, puis l'effet la remplace sans saut", Math.abs(lw.st - lw.slot) < 1 && lw2.on && Math.abs(lw2.h - lw.h) < 8, [lw, lw2]); await p.ctx.close();
     /* repli */
     p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/exemple-1/manifest.json", r => r.fulfill({ status: 404, body: "" })) }); await zoom(p, "nike"); await p.waitForTimeout(1500);
     check("manifest introuvable : l'image fixe reste, sans erreur", await n(p, ".hc-card") === 0 && await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display !== "none") && p.errs.length === 0, p.errs); await p.ctx.close();
@@ -57,7 +63,7 @@ srv.listen(0, async () => {
     p = await page("/index.html?holo=test");
     await p.evaluate(`tutoStep=-1;P.tuto=true;screen="shop";render();ouvrirTirage({res:[{id:"nike",isNew:true,v:0},{id:"yarden",isNew:true,v:0},{id:"hedone",isNew:true,v:0}],name:"Test",img:"images/pack.webp",pid:"x",price:100});`);
     await p.waitForTimeout(600); await p.locator(".t-pack").click({ force: true }); await p.waitForTimeout(2500); await p.locator(".t-slot:nth-child(1)").click({ force: true }); await p.waitForTimeout(5200);
-    check("paquet : l'effet tourne sur l'ultra-légendaire révélée", await n(p, ".t-bfront .hc-card.hc-ready") === 1);
+    check("paquet : l'effet tourne à plat, par-dessus la carte révélée (hors de la carte en 3D)", await n(p, ".t-holoover.on .hc-card.hc-ready") === 1 && await n(p, ".t-bfront .hc-card") === 0);
     await p.locator(".t-skip").click({ force: true }).catch(() => {}); await p.waitForTimeout(800);
     check("paquet : « Passer » détruit l'effet", await n(p, ".hc-card") === 0);
     check("paquet : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
