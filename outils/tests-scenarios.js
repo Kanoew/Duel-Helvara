@@ -452,7 +452,7 @@ async function inPage() {
       else T("La Source : autre faction non doublée (aucune carte de test simple, contrôle sauté)", true); }
     /* S5. Données et IA */
     { const u = ULof("source"); T("La Source : ultra-légendaire de faction Helvara 3/2 (8 cartes, 50 parties au journal), sortie le 1er février 2027", u && u.fac === "helvara" && u.min === 8 && u.quest.k === "helvara" && u.quest.n === 50 && !u.req.length && CARDS.source.r === "U" && CARDS.source.cost === 3 && CARDS.source.pow === 2 && CARDS.source.rel === "2027-02-01" && CARDS.source.soon === "2027-01-27"); }
-    T("Dates des ultra-légendaires de faction : Ananké 1er décembre, Hédoné 15 janvier", CARDS.ananke.rel === "2026-12-01" && CARDS.hedone.rel === "2027-01-15" && CARDS.hedone.soon === "2027-01-10");
+    T("Dates des ultra-légendaires de faction : Ananké 1er décembre, Hédoné 15 janvier, Nike Saint-Valentin 15 février", CARDS.ananke.rel === "2026-12-01" && CARDS.hedone.rel === "2027-01-15" && CARDS.hedone.soon === "2027-01-10" && CARDS.nike_v.rel === "2027-02-15" && CARDS.nike_v.soon === "2027-02-10");
     fresh(); S.turn = 3; S.energy = S.energyE = 5; { const src = card("source"), t = card("tatoueur"), v = card("voleuse"); S.hand.e = [src, t, v];
       const plan = aiPlan("e", 5); T("IA : La Source est jouée quand la main compte des cartes Helvara à Révélation", plan.some(x => x.c === src), JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
   }

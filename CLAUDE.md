@@ -296,6 +296,7 @@ Le bouton du bandeau de saison (« Ouvrir le Pli des Citrouilles », de l'Étoil
 | 31 déc. → 18 janv. | Paquet « Pli du Douzième Coup » (annonce le 26 déc.) : Hel Reine du Réveillon, Éos de Nouvel An, Pele du Réveillon, Qetesh du Nouvel An (toutes `ex:"nouvelan"`) + fusions Pele X Jordan du Réveillon (`ulpele_r`) et Qetesh X Jordan du Nouvel An (`ulqetjor_r`, exige `qetesh_r`) |
 
 | **1er févr. 2027** (annonce le 27 janv.) | **La Source** (U de faction Helvara, illustration de Carla) |
+| **15 févr. 2027** (annonce le 10) | **Nike de la Saint-Valentin** (U de faction Jugement, variante de Nike ; **effet à fournir par Jordan** : pour l'instant seulement l'exigence de 8 cartes Jugement, pas d'effet dans le moteur ; la fenêtre `VALENTIN` du journal, 1er → 20 février, est à caler) |
 
 **Règle des dates des ultra-légendaires de faction (Jordan, 15 octobre)** : le **15** du mois s'il n'y a pas d'événement ce mois-là, le **1er** s'il y en a un (annonce 5 jours avant : `soon`).
 
@@ -392,6 +393,7 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
   - **IA** (`place()`) : +1,5 par autre carte Helvara à Révélation en main (4 au plus), petit bonus avant le tour 5. Mesure ciblée (1000 parties, graine 20261012, `--cartes source --date 2027-02-05`) : victoire en deck **49,3 %**, posée dans 65 % des decks, victoire posée 47,1 %, puissance de fin 2,8, survie 96 %, tour de pose 4,4.
   - Tests : 163 scénarios (+10 : doublée, posée juste avant / après, autre lieu, Source adverse, Source annulée, autre faction, données, dates, IA).
 - **Dates** : Ananké 1er décembre 2026 (inchangé), **Hédoné 15 janvier 2027** (annonce le 10 ; avant : 1er janvier provisoire), La Source 1er février 2027. Règle générale : voir « Calendrier du contenu ».
+- **Nike de la Saint-Valentin** : `rel` 2027-02-15, `soon` 2027-02-10 (Jordan, 15 octobre). Holo `nike-saint-valentin` prêt. Pas d'effet dans le moteur (`fx` = l'exigence seulement) : à confirmer avec Jordan.
 - Pas de bannière `DROPS` pour Ananké, Hédoné et La Source (non demandée).
 
 ### Fusions (ultra-légendaires) dans les paquets (12 octobre 2026, décision de Jordan)
