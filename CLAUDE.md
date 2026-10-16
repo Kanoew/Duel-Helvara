@@ -303,7 +303,7 @@ Le bouton du bandeau de saison (« Ouvrir le Pli des Citrouilles », de l'Étoil
 **Règle des dates des ultra-légendaires de faction (Jordan, 15 octobre)** : le **15** du mois s'il n'y a pas d'événement ce mois-là, le **1er** s'il y en a un (annonce 5 jours avant : `soon`).
 
 **Thème de la vague du 15 novembre** :
-- Prométhée garde l'énergie non dépensée (10 maximum).
+- Prométhée garde l'énergie non dépensée, **10 d'énergie au plus au tour suivant** (tour + réserve + Freyr ; 11e série).
 - Pandore la dépense (+1 de puissance par énergie).
 - Bia coupe la réserve adverse.
 - Styx donne +3 à Nike et à Bia ; une carte Jugement de son camp détruite dans son lieu **par un effet adverse** revient dans la main (voir « Décisions d'équilibrage », 2e série).
@@ -450,6 +450,13 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - **Echidna** (`echidna`, toujours cachée, 2099) : Primordial 3/3, reprend l'ancien effet de Cronos : « Révélation : défausse les cartes de coût 1 ou moins de ta main. +2 de puissance pour chacune. » (IA reprise aussi).
 - **Mesures** (graine 20261012). Ciblée `--cartes ananke --date 2027-01-05` (1000 parties, avant → après) : victoire en deck 49,6 → 49,2 %, posée 40 → **62 %**, victoire posée 66,0 → **60,6 %**, puissance de fin 10,1 → 8,2, tour de pose 6,0 → 4,0. Simulation complète au 20 décembre (3000 parties, Cronos désormais en jeu) : **Ananké +14,8** (avant +13,5 : écart dans la marge, elle reste forte en simulation), Cronos −1,5, Nike −0,8, Tsukuyomi −0,9, Yarden X Apsu +15,8, Apsu +11,3, Yarden Weiss +7,4, Hadès +5,8 ; décks dominants : Primordial 55,1 %, Helvara 50,1 %, Désir 49,0 %, Jugement 46,7 %. Ciblée `--cartes cronos,nike,echidna --inclure echidna --date 2027-01-05` : Cronos 49,7 % (posé 19 %, victoire posée 60,1 %), Nike 49,0 %, Echidna 49,1 % ; decks Jugement 49,1 %.
 - Tests : 213 scénarios (+12 : Ananké injouable au tour 6 avec et sans Prométhée, jouable aux tours 4 et 5, charmée par une Qetesh au tour suivant, gagne face à un lieu adverse plein ; Cronos injouable au tour 6, lieux vidés et le sien intact, Ananké et Eir, Styx adverse, Nike après Cronos (14 avec Aphrodite), Echidna, données, IA Cronos (60 sur 60 sur le bon lieu) ; IA Ananké au tour 5).
+
+### 11e série (16 octobre 2026, Prométhée) : même règle, ne pas revenir dessus sans l'accord de Jordan
+
+`BUILD` : `alpha-0.14`.
+- **Prométhée** (pas sorti, 15 novembre) : « l'énergie que tu ne dépenses pas est conservée au tour suivant (10 d'énergie maximum par tour). » Le plafond porte sur **l'énergie totale du tour suivant** (numéro du tour + réserve + Freyr), plus sur la réserve seule : avant, Jordan avait 11 d'énergie au tour 5 et 16 au tour 6 (bac à sable). Réserve gardée = `min(non dépensé, 10 − (tour + 1) − S.bonus)`.
+- Mesure ciblée (`--cartes promethee,pandore --parties 1000 --date 2026-11-20`) : **identique avant et après** (Prométhée 49,6 %, Pandore 49,6 %) : l'IA ne dépasse presque jamais 10 d'énergie, le cas vient surtout d'un joueur qui garde tout exprès.
+- Tests : 217 scénarios (+4 : tour 6 et tour 5 plafonnés à 10, sous le plafond tout est gardé, Freyr compté).
 
 ### Fusions (ultra-légendaires) dans les paquets (12 octobre 2026, décision de Jordan)
 

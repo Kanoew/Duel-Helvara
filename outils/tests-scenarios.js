@@ -88,6 +88,13 @@ async function inPage() {
     T("Prométhée + Pandore : énergie gardée comptée au tour 3 (5)", e3 === 5, e3);
     T("Prométhée + Pandore : +2 par énergie dépensée (2 restantes → 4)", pd.pow === 4, pd.pow);
     T("Prométhée + Pandore : l'énergie dépensée n'est pas gardée une 2e fois", S.energy === 4, S.energy); }
+  /* 6 bis. Prométhée : 10 d'énergie au plus au tour suivant (Jordan, 16 octobre : 11 au tour 5 et 16 au tour 6 avec la réserve seule plafonnée) */
+  { const keep = async (turn, en, bonus) => { fresh(); S.turn = turn - 1; startTurn(); put("p", 1, "promethee"); S.energy = en; S.bonus = { p: 0, e: 0 }; if(bonus) S.bonus.p = bonus; await resolveTurn([], [], false); return S.energy; };
+    const e6 = await keep(5, 11, 0), e5 = await keep(4, 10, 0), e4 = await keep(3, 3, 0), eF = await keep(5, 9, 1);
+    T("Prométhée : au tour 6, 10 d'énergie au plus (11 gardées au tour 5 → 10, plus 16)", e6 === 10, e6);
+    T("Prométhée : au tour 5, 10 au plus (10 gardées au tour 4 → 10, plus 15)", e5 === 10, e5);
+    T("Prométhée : sous le plafond, tout est gardé (3 gardées au tour 3 → 7 au tour 4)", e4 === 7, e4);
+    T("Prométhée : Freyr compte dans le plafond (Freyr +1, 9 restantes → 10 au tour 6)", eF === 10, eF); }
   /* 7. Ouverture de paquet « Le Tirage » : vrai achat, Passer, fermeture, rachat */
   { const tick = ms => new Promise(r => setTimeout(r, ms)), until = async (f, ms = 8000) => { const t0 = Date.now(); while(Date.now() - t0 < ms){ if(f()) return true; await tick(40); } return false; };
     const $ = s => document.querySelector(s);

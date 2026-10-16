@@ -739,9 +739,9 @@ async function resolveTurn(mine, theirs, animate){
   /* La Messagère d'Hécate : à chaque fin de tour, +2 si son camp ne mène pas ici (6 au maximum) */
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="messagere"&&leader(li)!==s){
     const g=Math.min(2,6-(c.msgBonus||0)); if(g>0){ c.msgBonus=(c.msgBonus||0)+g; c.pow+=g; (c.mods=c.mods||[]).push({v:g,src:"La Messagère"}); log(`La Messagère d'Hécate · +${g} (${who(s)})`); sfx("buff"); } }
-  /* Prométhée : l'énergie non dépensée passe au tour suivant (10 maximum) */
+  /* Prométhée : l'énergie non dépensée passe au tour suivant, 10 d'énergie au plus au tour suivant (énergie du tour + réserve + Freyr ; Jordan, 16 octobre : la réserve seule plafonnée à 10 donnait 16 au tour 6) */
   if(S.turn<6) for(const s of ["p","e"]) if(unspent[s]>0&&!S.biaBlock[s]&&S.board[s].some(col=>col.some(c=>live(c)&&c.id==="promethee"))){
-    const k=Math.min(10,unspent[s]); S.bonus[s]+=k; log(`Prométhée garde ${k} énergie en réserve (${who(s)})`); sfx("buff"); if(animate){ const li=S.board[s].findIndex(col=>col.some(c=>live(c)&&c.id==="promethee")); if(li>=0) FX.play("promethee",{li}); } }
+    const k=Math.min(unspent[s],Math.max(0,10-(S.turn+1)-S.bonus[s])); if(k>0){ S.bonus[s]+=k; log(`Prométhée garde ${k} énergie en réserve (${who(s)})`); sfx("buff"); if(animate){ const li=S.board[s].findIndex(col=>col.some(c=>live(c)&&c.id==="promethee")); if(li>=0) FX.play("promethee",{li}); } } }
   if(S.turn>=2&&S.turn<=4) aiOath();
   if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
   if(S.turn>=6) S.final=true;   /* Ananké : la puissance de fin de partie se calcule maintenant, après tout le reste */

@@ -65,7 +65,7 @@ window.HELVARA_EN = {
     charognard:{n:"The M2 Scavenger", fx:"On Reveal: +3 Power if a card was destroyed or discarded during the game."},
     ficelle:{n:"The Devouring Thread", fx:"On Reveal: destroy your other cards here. +3 Power for each."},
     ecorche:{n:"The Silent Flayed One", fx:"Can't be weakened. On Reveal: −2 Power to a random enemy card here."},
-    promethee:{n:"Prometheus", fx:"Ongoing: the energy you don't spend carries over to the next turn (10 max)."},
+    promethee:{n:"Prometheus", fx:"Ongoing: the energy you don't spend carries over to the next turn (10 Energy max per turn)."},
     athena:{n:"Athena", fx:"On Reveal: put the most expensive of the top 3 cards of your deck into your hand."},
     bia:{fx:"On Reveal: your opponent loses their stored energy. If they had none, −1 Power to their strongest card here."},
     pandore:{n:"Pandora", fx:"On Reveal: spend all your remaining energy. +2 Power for each energy spent."},
