@@ -95,6 +95,17 @@ async function inPage() {
     T("Prométhée : au tour 5, 10 au plus (10 gardées au tour 4 → 10, plus 15)", e5 === 10, e5);
     T("Prométhée : sous le plafond, tout est gardé (3 gardées au tour 3 → 7 au tour 4)", e4 === 7, e4);
     T("Prométhée : Freyr compte dans le plafond (Freyr +1, 9 restantes → 10 au tour 6)", eF === 10, eF); }
+  /* 6 ter. Quêtes du jour (Jordan, 17 octobre : « Gagne avec Apsu » 3 jours de suite, la grande quête ne changeait qu'une fois par semaine) */
+  { const keep = P.q, own = P.owned; P.owned = [...new Set([...P.owned, ...Object.keys(CARDS).filter(id => REL(id) && !CARDS[id].token)])];
+    const days = []; for(let i = 0; i < 60; i++){ const d = new Date(2026, 9, 1 + i, 12); P.q = null; ensureQuests(dayKey(d)); days.push(P.q.list.map(q => q.id + (q.x ? ":" + q.x : ""))); }
+    const bigs = days.map(d => d[1]), smalls = days.map(d => d[0]);
+    const kd = x => x.split(":")[0], sameBig = bigs.filter((b, i) => i && kd(b) === kd(bigs[i - 1])).length, sameSmall = smalls.filter((b, i) => i && b === smalls[i - 1]).length;
+    const kinds = new Set(bigs.map(b => b.split(":")[0])).size, chars = new Set(bigs.filter(b => /^charwin/.test(b)).map(b => b.split(":")[1])).size;
+    P.q = null; ensureQuests("2026-10-17"); const a1 = JSON.stringify(P.q.list); P.q = null; ensureQuests("2026-10-17"); const a2 = JSON.stringify(P.q.list);
+    T("Quêtes : jamais la même grande ni la même petite quête deux jours de suite (60 jours)", sameBig === 0 && sameSmall === 0, { sameBig, sameSmall });
+    T("Quêtes : les grandes quêtes varient (au moins 6 sortes sur 60 jours) et le personnage de « Gagne avec… » change", kinds >= 6 && chars >= 2, { kinds, chars });
+    T("Quêtes : même tirage pour un même jour", a1 === a2);
+    P.q = keep; P.owned = own; }
   /* 7. Ouverture de paquet « Le Tirage » : vrai achat, Passer, fermeture, rachat */
   { const tick = ms => new Promise(r => setTimeout(r, ms)), until = async (f, ms = 8000) => { const t0 = Date.now(); while(Date.now() - t0 < ms){ if(f()) return true; await tick(40); } return false; };
     const $ = s => document.querySelector(s);

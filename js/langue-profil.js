@@ -253,11 +253,26 @@ const qOk=id=>!QOK[id]||QOK[id]();
 function mkQuest(id,seed){ const q={id,p:0,c:false};
   if(id==="facwin"){ const f=qFacs(); q.x=f[seed%f.length]; } if(id==="charwin"){ const ch=qChars(); q.x=ch[seed%ch.length]; } return q; }
 const qText=q=>QDEF[q.id].t.replace("{f}",q.x&&FAC[q.x]?FAC[q.x].n:"").replace("{c}",q.x&&CARDS[q.x]?CARDS[q.x].name:"");
-function ensureQuests(){
-  const k=dayKey(); if(P.q&&P.q.day===k&&P.q.list.length===2) return false;
-  let s=0; for(const ch of k) s=(s*31+ch.charCodeAt(0))%100003;
+/* Tirage du jour : même quêtes pour tout le monde un jour donné (selon la collection), mais vraiment mélangées d'un jour à l'autre.
+   L'ancien calcul (s*31 + caractère) n'avançait que de 1 par jour : la grande quête et son personnage restaient les mêmes une semaine
+   (« Gagne avec Apsu » 3 jours de suite, signalé par Jordan le 17 octobre). Une quête d'hier n'est pas reprise le lendemain. */
+const qHash=str=>{ let h=2166136261; for(const ch of str){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } h^=h>>>15; h=Math.imul(h,0x85ebca6b); h^=h>>>13; h=Math.imul(h,0xc2b2ae35); h^=h>>>16; return h>>>0; };
+function qDraw(k){
   const sm=Object.keys(QDEF).filter(id=>QDEF[id].small&&qOk(id)), bg=Object.keys(QDEF).filter(id=>!QDEF[id].small&&qOk(id));
-  P.q={day:k,rr:false,list:[mkQuest(sm[s%sm.length],s),mkQuest(bg[Math.floor(s/7)%bg.length],Math.floor(s/13))]};
+  return {sm, bg, a:qHash(k+"|petite")%sm.length, b:qHash(k+"|grande")%bg.length, x:qHash(k+"|cible")};
+}
+/* Quêtes retenues pour le jour k : le tirage du jour, décalé d'un cran s'il retombe sur celles retenues la veille (calcul limité à 7 jours en arrière) */
+function qPick(k,depth=7){
+  const d=qDraw(k); if(depth<=0) return d;
+  const y=new Date(k+"T12:00:00"); y.setDate(y.getDate()-1); const p=qPick(dayKey(y),depth-1);
+  if(d.sm.length>1&&d.sm[d.a]===p.sm[p.a]) d.a=(d.a+1)%d.sm.length;
+  if(d.bg.length>1&&d.bg[d.b]===p.bg[p.b]) d.b=(d.b+1)%d.bg.length;
+  return d;
+}
+function ensureQuests(k=dayKey()){
+  if(P.q&&P.q.day===k&&P.q.list.length===2) return false;
+  const d=qPick(k);
+  P.q={day:k,rr:false,list:[mkQuest(d.sm[d.a],d.x),mkQuest(d.bg[d.b],d.x)]};
   return true;
 }
 function weekKey(){ const d=new Date(today()+"T12:00:00"); d.setDate(d.getDate()-(d.getDay()+6)%7); return dayKey(d); }
