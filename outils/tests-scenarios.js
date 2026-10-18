@@ -106,6 +106,18 @@ async function inPage() {
     T("Quêtes : les grandes quêtes varient (au moins 6 sortes sur 60 jours) et le personnage de « Gagne avec… » change", kinds >= 6 && chars >= 2, { kinds, chars });
     T("Quêtes : même tirage pour un même jour", a1 === a2);
     P.q = keep; P.owned = own; }
+  /* 6 quinquies. Secondes ultra-légendaires de faction (Jordan, 18 octobre) : même compteur, 150 parties au total, une seule par faction */
+  { const sec = ["marduk", "ymir", "nammu"], facs = sec.map(id => ULof(id).fac), keepFj = P.fj, keepOwned = P.owned, keepSoon = sec.map(id => CARDS[id].soon), keepRel = sec.map(id => CARDS[id].rel);
+    T("Secondes UL de faction : Marduk Jugement, Ymir Primordial, Nammu Helvara, seuil 150, ultra-légendaires cachées", sec.every((id, i) => ULof(id).quest.n === 150 && ULof(id).fac === CARDS[id].fac && CARDS[id].r === "U" && !REL(id)) && facs.join() === "jugement,primordial,helvara", facs);
+    T("Secondes UL de faction : au plus une seconde par faction, une seule première par faction", new Set(facs).size === 3 && ["jugement", "primordial", "desir", "helvara"].every(f => ULS.filter(u => u.quest && u.quest.k === f && u.quest.n === 50).length === 1));
+    P.owned = []; P.fj = Object.assign({}, P.fj, { primordial: 100 });
+    T("Secondes UL de faction : à 100 parties, Ananké est gagnée et pas Ymir", ulEarned(ULof("ananke")) && !ulEarned(ULof("ymir")));
+    P.fj.primordial = 150; T("Secondes UL de faction : à 150 parties au total, Ymir est gagnée", ulEarned(ULof("ymir")));
+    P.fj.primordial = 100; sec.forEach(id => { CARDS[id].rel = "2000-01-01"; CARDS[id].soon = "2000-01-01"; });
+    const j = journalHTML(); T("Journal des factions : une ligne de plus par seconde UL annoncée (Primordial 100/150), rien avant son annonce", (j.match(/class="fjrow"/g) || []).length === 7 && /100\/150/.test(j) && /seconde ultra-légendaire/.test(j), (j.match(/class="fjrow"/g) || []).length);
+    sec.forEach((id, i) => { CARDS[id].rel = keepRel[i]; CARDS[id].soon = keepSoon[i]; }); const j2 = journalHTML();
+    T("Journal des factions : secondes UL cachées, le Journal garde ses 4 lignes", (j2.match(/class="fjrow"/g) || []).length === 4 && !/150/.test(j2), (j2.match(/class="fjrow"/g) || []).length);
+    P.fj = keepFj; P.owned = keepOwned; }
   /* 7. Ouverture de paquet « Le Tirage » : vrai achat, Passer, fermeture, rachat */
   { const tick = ms => new Promise(r => setTimeout(r, ms)), until = async (f, ms = 8000) => { const t0 = Date.now(); while(Date.now() - t0 < ms){ if(f()) return true; await tick(40); } return false; };
     const $ = s => document.querySelector(s);

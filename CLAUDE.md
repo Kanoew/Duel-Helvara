@@ -458,6 +458,13 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - Mesure ciblée (`--cartes promethee,pandore --parties 1000 --date 2026-11-20`) : **identique avant et après** (Prométhée 49,6 %, Pandore 49,6 %) : l'IA ne dépasse presque jamais 10 d'énergie, le cas vient surtout d'un joueur qui garde tout exprès.
 - Tests : 217 scénarios (+4 : tour 6 et tour 5 plafonnés à 10, sous le plafond tout est gardé, Freyr compté).
 
+### Secondes ultra-légendaires de faction (18 octobre 2026, décision de Jordan)
+
+- **Règle** : une faction peut avoir une **seconde** ultra-légendaire de faction, gagnée à **150 parties au total** (même compteur `P.fj` que la première, qui reste à 50 ; donc 100 parties de plus), « pour fidéliser les joueurs dans le temps ». Jamais deux secondes dans la même faction (Jordan : « c'est chaud niveau conditions »). Une seule ultra-légendaire par deck, comme avant.
+- **Cartes** (`ULS` : `{id,req:[],fac,min:8,quest:{k:"<faction>",n:150}}`, `r:"U"`) : **Marduk** (Jugement), **Ymir** (Primordial), **Nammu** (Helvara). Désir n'a pas de seconde pour l'instant. **Dates : aucune** (`rel`/`soon` à 2099, cachées) : Jordan les repousse « plus tard, pour que les gens profitent des UL actuelles et des UL hors faction ». 3/3 provisoires, **sans effet**, sans `vfx`, sans holo.
+- **Journal des factions** (`journalHTML`) : une ligne par ultra-légendaire de faction dans l'ordre des seuils ; la ligne « <Faction> · seconde ultra-légendaire » n'apparaît qu'à la date d'annonce (`SHOWN`) de la carte (avant : le Journal garde ses 4 lignes). Traductions anglaises ajoutées (`interface-en.js`).
+- Tests : 226 scénarios (+6 : données, une seconde au plus par faction, 100 parties = Ananké mais pas Ymir, 150 = Ymir, Journal avec et sans annonce).
+
 ### Fusions (ultra-légendaires) dans les paquets (12 octobre 2026, décision de Jordan)
 
 On **oublie la fusion par collection** : une fusion ne se gagne plus en réunissant ses deux cartes, elle **sort des paquets**. La **règle de deck ne change pas** : une fusion exige toujours ses deux personnages dans le deck (`ulOk`). Les ultra-légendaires **de faction** (Nike, Ananké, Nike Saint-Valentin) restent à gagner par quête (Journal des factions), hors paquets.

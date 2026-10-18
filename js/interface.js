@@ -255,9 +255,14 @@ function homeHTML(){
 
 /* --- profil --- */
 function journalHTML(){
-  const rows=Object.entries(FAC).map(([k,F])=>{ const u=ULS.find(x=>x.quest&&x.quest.k===k), n=u?u.quest.n:50, v=Math.min(fjGet(k),n);
-    const goal=u&&SHOWN(u.id)?(P.owned.includes(u.id)?`${CARDS[u.id].name} · obtenue`:`Récompense : ${CARDS[u.id].name}`):"Récompense : une ultra-légendaire, bientôt";
-    return `<div class="fjrow"><div class="fjtop"><b style="color:${F.c}">${F.n}</b><span>${u&&SHOWN(u.id)?`${v}/${n}`:`${fjGet(k)} partie${fjGet(k)>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${Math.round(v/n*100)}%;background:${F.c}"></i></div><small>${goal}</small></div>`; });
+  /* une ligne par ultra-légendaire de faction, dans l'ordre des seuils (50, puis 150) ; la seconde n'apparaît qu'à sa date d'annonce */
+  const rows=Object.entries(FAC).flatMap(([k,F])=>{ const us=ULS.filter(x=>x.quest&&x.quest.k===k).sort((a,b)=>a.quest.n-b.quest.n), out=[];
+    const first=us[0], rowOf=(u,label)=>{ const n=u?u.quest.n:50, v=Math.min(fjGet(k),n), known=!!u&&SHOWN(u.id);
+      const goal=known?(P.owned.includes(u.id)?`${CARDS[u.id].name} · obtenue`:`Récompense : ${CARDS[u.id].name}`):"Récompense : une ultra-légendaire, bientôt";
+      return `<div class="fjrow"><div class="fjtop"><b style="color:${F.c}">${label}</b><span>${known?`${v}/${n}`:`${fjGet(k)} partie${fjGet(k)>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${Math.round(v/n*100)}%;background:${F.c}"></i></div><small>${goal}</small></div>`; };
+    out.push(rowOf(first,F.n));
+    for(const u of us.slice(1)) if(SHOWN(u.id)) out.push(rowOf(u,`${F.n} · seconde ultra-légendaire`));
+    return out; });
   const nv=ULof("nike_v");
   if(nv&&SHOWN(nv.id)){ const v=Math.min(fjGet("nikev"),nv.quest.n);
     rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:#f2a7c8">Saint-Valentin · avec Nike</b><span>${v}/${nv.quest.n}</span></div><div class="fjbar"><i style="width:${Math.round(v/nv.quest.n*100)}%;background:#f2a7c8"></i></div><small>${P.owned.includes(nv.id)?`${CARDS[nv.id].name} · obtenue`:`Récompense : ${CARDS[nv.id].name}`}</small></div>`); }
