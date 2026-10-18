@@ -128,6 +128,7 @@ window.HELVARA_EN = {
     medee_h:{n:"Medea, Spectral Bride", fx:"On Reveal: poison the strongest enemy card here: it loses 1 Power at the end of each turn, down to 0. If Hecate is on your side, also poison the second strongest."},
     eros:{n:"Eros"}, cronos:{n:"Cronus", fx:"Can't be played on turn 6. On Reveal: devours the other two locations: all cards there are destroyed, on both sides."}, echidna:{fx:"On Reveal: discard the cards that cost 1 or less from your hand. +2 Power for each."}, herakles:{n:"Heracles"}, anahita:{n:"Anahita"},
     izanami:{fx:"On Reveal: discard the weakest card in your hand. Ongoing: your resurrected cards have +2 Power."}, loki:{fx:"On Reveal: each player discards the most expensive card in their hand."},
+    nageuse_lac:{n:"The Lake Swimmer"}, athlete_stade:{n:"The Stadium Runner"}, joueuse_palud:{n:"The Player of La Palud"}, voix_flon:{n:"The Voice of the Flon"}, ecoliere_dorigny:{n:"The Schoolgirl of Dorigny"}, tatoueuse_flon:{n:"The Tattoo Artist of the Flon"},
     effigie:{n:"The Effigy"}, reflet_noir:{n:"The Black Reflection"}, enfant:{n:"The Child Without School"},
     ananke:{n:"Ananke", fx:"Can't be played on turn 6. Fate: can be neither destroyed nor moved. End of game: her Power becomes the opponent's total Power here, +1 Power. Requires 8 Primordial cards in the deck, Ananke included."},
     source:{n:"The Source", fx:"Ongoing: the Reveals of your other Helvara cards played here trigger twice. Requires 8 Helvara cards in the deck, The Source included."},
