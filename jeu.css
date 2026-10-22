@@ -875,6 +875,7 @@ body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 .holotile *{pointer-events:none!important}
 .holotile .hc-card{touch-action:auto}
 .holof{border-color:rgba(232,184,90,.55)}
+.fan .fcard .holotile{display:flex;align-items:center;z-index:2}
 .holoslot{position:relative;width:min(340px,82vw)}
 .holoslot .full.big{width:100%}
 .holoslot.holo-on>.full{display:none}

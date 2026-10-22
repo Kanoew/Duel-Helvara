@@ -43,7 +43,7 @@ const rc=d=>(d.r==="R"||d.r==="E"||d.r==="L")&&!d.token?` r-${d.r}`:"";
 /* Effet holo 2.5D sur les petites cartes (main, plateau, grille de la Collection) : une ultra-légendaire de faction garde son effet partout où on la voit.
    tileHolo() pose un emplacement (une clé par carte affichée) ; render() y monte l'effet et le garde d'un redessin à l'autre (au plus quelques instances : une seule ultra-légendaire par deck). */
 const hasHoloTile=id=>CARDS[id].r==="U"&&!!holoDir(id);
-const tileHolo=(id,key)=>hasHoloTile(id)?`<i class="holotile" data-hid="${id}" data-hk="${key}" aria-hidden="true"></i>`:"";
+const tileHolo=(id,key,r)=>hasHoloTile(id)?`<i class="holotile" data-hid="${id}" data-hk="${key}"${r?` data-r="${r}"`:""} aria-hidden="true"></i>`:"";
 const HOLO_TILES=new Map();
 function holoTilesDetach(){ for(const v of HOLO_TILES.values()) if(v.h&&v.h.el) v.h.el.remove(); }
 function holoTilesAttach(root){
@@ -51,7 +51,7 @@ function holoTilesAttach(root){
   root.querySelectorAll(".holotile").forEach(t=>{
     const k=t.dataset.hk, id=t.dataset.hid, v=HOLO_TILES.get(k); live.add(k);
     if(v&&v.id===id&&v.h) holoMove(v.h,t);
-    else{ if(v) holoKill(v.h); HOLO_TILES.set(k,{id,h:holoMount(t,id,{idle:true,quality:"low",radius:6,maxFps:30})}); }
+    else{ if(v) holoKill(v.h); HOLO_TILES.set(k,{id,h:holoMount(t,id,{idle:true,quality:"low",radius:+t.dataset.r||6,maxFps:30})}); }
   });
   for(const [k,v] of HOLO_TILES) if(!live.has(k)){ holoKill(v.h); HOLO_TILES.delete(k); }
 }
@@ -247,7 +247,7 @@ function fanRotate(step){
 }
 function vitrineHTML(){
   const fan=fanIds(), order=fan.length===3?[fan[2],fan[0],fan[1]]:fan, pos=fan.length===3?[-1,0,1]:fan.map((_,i)=>i);
-  return `<section class="vitrinewrap">${seasonDeco("fan")}<div class="fan" aria-label="Vitrine : glisse pour faire tourner les cartes">${order.map((id,k)=>{ const h=!!holoDir(id)&&CARDS[id].r==="U"; return `<button class="fcard" data-act="fantap" data-pos="${pos[k]}" data-id="${id}" aria-label="${pos[k]===0?"Agrandir ":"Mettre en avant "}${CARDS[id].name}">${fullCard(id,h?"fanh":"")}${h&&pos[k]===0?`<span class="fanholo" data-id="${id}"></span>`:""}</button>`; }).join("")}</div>
+  return `<section class="vitrinewrap">${seasonDeco("fan")}<div class="fan" aria-label="Vitrine : glisse pour faire tourner les cartes">${order.map((id,k)=>{ const h=!!holoDir(id)&&CARDS[id].r==="U"; return `<button class="fcard" data-act="fantap" data-pos="${pos[k]}" data-id="${id}" aria-label="${pos[k]===0?"Agrandir ":"Mettre en avant "}${CARDS[id].name}">${fullCard(id,h?"fanh":"")}${h&&pos[k]===0?`<span class="fanholo" data-id="${id}"></span>`:""}${h&&pos[k]!==0?tileHolo(id,"f"+id,12):""}</button>`; }).join("")}</div>
     <div class="vfoot"><span class="hint">Glisse pour faire tourner</span><button class="ghost small" data-act="fanpick">Choisir mes cartes</button></div></section>`;
 }
 let vIdx=0;
@@ -757,6 +757,7 @@ function render(){
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
   holoTilesAttach(app);
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
+  else if(screen==="home") holoPrefetch(fanIds()); /* accueil : les cartes holo de la vitrine (celle du centre et celles qui viennent de tourner) */
   else if(screen==="play") holoPrefetch(P.deck); /* en partie : seulement la carte holo de ton deck (le reste se charge à la demande) */
   { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,bigId); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }
   { const fs=document.querySelector(".fanholo");

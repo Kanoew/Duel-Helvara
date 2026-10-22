@@ -67,7 +67,7 @@ srv.listen(0, async () => {
     check("vitrine : des redessins n'empilent pas d'instances", await n(p, ".hc-card") === 1);
     const fb = await p.locator('.fcard[data-pos="0"]').boundingBox();
     await p.mouse.move(fb.x + fb.width * .7, fb.y + fb.height / 2); await p.mouse.down(); await p.mouse.move(fb.x - fb.width * .4, fb.y + fb.height / 2, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(700);
-    check("vitrine : glisser fait toujours tourner, Nike passe sur le côté sans effet animé ni ancien reflet", await p.evaluate(() => P.fan[0] !== "nike") && await n(p, ".hc-card") === 0 && await p.evaluate(() => fanHolo === null && !document.querySelector('.fcard[data-id="nike"] .full').classList.contains("holo")));
+    check("vitrine : glisser fait toujours tourner, Nike passe sur le côté et y garde son effet (sans l'ancien reflet)", await p.evaluate(() => P.fan[0] !== "nike") && await p.evaluate(() => fanHolo === null && !document.querySelector('.fcard[data-id="nike"] .full').classList.contains("holo")) && await p.waitForFunction(() => document.querySelectorAll('.fcard[data-id="nike"] .holotile .hc-ready').length === 1, null, { timeout: 8000 }).then(() => true, () => false));
     await p.evaluate(`P.fan=["nike","yarden","amaterasu"];render();`); await p.waitForTimeout(1200);
     await p.evaluate(`screen="deck";render();`); await p.waitForTimeout(200);
     check("vitrine : l'effet est détruit en quittant l'accueil", await n(p, ".hc-card") === 0 && await p.evaluate(() => fanHolo === null));
@@ -135,6 +135,20 @@ srv.listen(0, async () => {
     await p.evaluate("screen=\"home\";render();"); await p.waitForTimeout(300);
     check("partie : quitter l'écran détruit tous les effets des petites cartes", await n(p, ".hc-card") <= 1 && await p.evaluate(() => HOLO_TILES.size === 0));
     check("petites cartes : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
+
+    /* vitrine de l'accueil : les cartes holo sur les côtés gardent leur effet (vidéo de Jordan, 22 octobre : il disparaissait quand la carte n'était plus au centre) */
+    p = await page("/index.html?date=2027-04-11");
+    await p.evaluate(`tutoStep=-1;P.tuto=true;P.fan=["nike_v","cronos","ananke"];screen="home";render();`);
+    await p.waitForFunction(() => document.querySelectorAll(".fanholo .hc-ready").length + document.querySelectorAll(".fcard .holotile .hc-ready").length === 2, null, { timeout: 8000 }).catch(() => {});
+    check("vitrine : Nike V au centre a l'effet, Ananké sur le côté aussi", await n(p, ".fanholo .hc-ready") === 1 && await n(p, ".fcard .holotile .hc-ready") === 1, [await n(p, ".fanholo .hc-ready"), await n(p, ".fcard .holotile .hc-ready")]);
+    await p.evaluate("fanRotate(1);"); await p.waitForFunction(() => document.querySelectorAll(".fcard .holotile .hc-ready").length === 2, null, { timeout: 8000 }).catch(() => {});
+    check("vitrine : Cronos au centre (pas de holo), les deux cartes holo des côtés ont l'effet", await n(p, ".fanholo") === 0 && await n(p, ".fcard .holotile .hc-ready") === 2, [await n(p, ".fanholo"), await n(p, ".fcard .holotile .hc-ready")]);
+    await p.evaluate("for(let i=0;i<6;i++)render();"); await p.waitForTimeout(500);
+    check("vitrine : des redessins n'empilent pas d'instances", await n(p, ".hc-card") === 2);
+    check("vitrine : la vitrine laisse passer le doigt (appui sur une carte de côté = la mettre en avant)", await p.evaluate(() => getComputedStyle(document.querySelector(".fcard .holotile")).pointerEvents === "none"));
+    await p.evaluate(`screen="deck";render();`); await p.waitForTimeout(300);
+    check("vitrine : quitter l'accueil détruit les effets de la vitrine", await n(p, ".fcard") === 0 && await p.evaluate(() => ![...HOLO_TILES.keys()].some(k => k[0] === "f")));
+    check("vitrine : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
   } catch (e) { ko++; console.log("ÉCHEC   exception : " + e.message); }
   await b.close(); srv.close(); console.log(`\n${ok} sur ${ok + ko} vérifications valides.`); process.exit(ko ? 1 : 0);
 });
