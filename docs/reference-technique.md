@@ -126,7 +126,7 @@ Brillance (classes `r-R`, `r-E`, `r-L` ajoutées par `rc()` sur `fullCard`, la m
 
 ## Collection et construction de deck (13 octobre 2026, d'après les retours de joueurs)
 
-Écran Collection = constructeur de deck (`deckHTML`). Retours de Jojo et Victor (nouveaux joueurs) : toucher une carte du deck la **retirait** sans la montrer ; le deck sortait de l'écran quand on faisait défiler ; pas de recherche.
+Écran Collection = constructeur de deck (`deckHTML`). Retours de nouveaux joueurs : toucher une carte du deck la **retirait** sans la montrer ; le deck sortait de l'écran quand on faisait défiler ; pas de recherche.
 - **Toucher = lire** : toucher une carte de la collection, de la rangée du deck ou du mini-deck ouvre la carte en grand (`zoomHTML`) avec l'état (« Dans ton deck · N/12 ») et un bouton **Ajouter au deck / Retirer du deck** (action `toggle`, les messages d'erreur du deck s'y affichent). Le petit bouton **« + Deck » / « ✓ Deck »** sur chaque carte (`.qadd`) ajoute ou retire d'un geste. L'ancienne action `deckout` est supprimée. Une carte de la grille est un `div.pick` (bouton de lecture `.pickmain` + `.qadd`), pas un bouton imbriqué.
 - **Barre collée en haut** (`.collbar2`, `position:sticky`) pendant qu'on fait défiler : mini-deck de 12 cases (`deckMiniHTML`, toucher = lire) + compteur, champ de **recherche par mot-clé** et bouton **Filtrer**.
 - **Recherche** (`searchOK`, `normQ`) : tous les mots doivent se trouver dans le nom, l'effet, la faction, la rareté, le coût ou la puissance, sans accents ni majuscules. Seule la grille est redessinée à la frappe (`#collgrid`, `#collinfo`, anti-rebond 140 ms) pour garder le clavier.
