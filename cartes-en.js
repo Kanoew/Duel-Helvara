@@ -142,7 +142,7 @@ window.HELVARA_EN = {
     ularchiviste:{n:"The Archivist X The Proprietress", fx:"Requires The Archivist of the Sous-Gare and The Proprietress of Ouchy in the deck."},
     qetesh_v:{n:"Qetesh of Valentine's Day"}, circe_v:{n:"Circe of Valentine's Day"}, aphrodite_r:{n:"Aphrodite of New Year"},
     ereshkigal_n:{n:"Ereshkigal of Christmas"}, ereshkigal_v:{n:"Ereshkigal of Valentine's Day"}, demeter:{n:"Demeter"}, meduse:{n:"Medusa"},
-    nike_v:{n:"Nike of Valentine's Day", fx:"Requires 8 Judgement cards in the deck, Nike of Valentine's Day included."},
+    nike_v:{n:"Nike of Valentine's Day", fx:"On Reveal: +2 Power for each other card you played before her this turn. Requires 8 Judgement cards in the deck, Nike of Valentine's Day included."},
     ulqetjor_v:{n:"Qetesh X Jordan of Valentine's Day", fx:"Requires Qetesh of Valentine's Day and Jordan in the deck."},
     ulprombia:{n:"Prometheus X Bia", fx:"Requires Prometheus and Bia in the deck."},
     ulheradio:{n:"Hera X Dionysus", fx:"Requires Hera and Dionysus in the deck."},

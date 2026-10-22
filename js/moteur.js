@@ -31,10 +31,10 @@ function aiDeck(t,full,noUL){   /* noUL : le Blitz n'a aucune ultra-légendaire,
   /* palier 4 et plus : une ultra-légendaire si le deck remplit ses conditions */
   if(t>=4&&!noUL){ for(const u of shuffle(ULS.filter(u=>REL(u.id)))){ if(!ulOk(u,deck)) continue; const need=new Set(u.req.flat()); let k=-1; deck.forEach((x,i)=>{ if(!need.has(x)&&!paired(x)&&CARDS[x].fac!==u.fac&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k<0) deck.forEach((x,i)=>{ if(!need.has(x)&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k>=0){ const was=deck[k]; deck[k]=u.id; if(ulOk(u,deck)) break; deck[k]=was; } } }
   /* Nike : le deck emporte jusqu'à 3 petites cartes Jugement (coût 0 ou 1) à jouer avant elle, à la place de ses cartes les plus faibles */
-  if(deck.includes("nike")){ const sj=id=>CARDS[id].fac==="jugement"&&CARDS[id].cost<=1&&id!=="nike", u=ULof("nike");
+  if(deck.some(isNike)){ const sj=id=>CARDS[id].fac==="jugement"&&CARDS[id].cost<=1&&!isNike(id), u=ULof(deck.find(isNike));
     let have=deck.filter(sj).length;
     for(const id of pool.filter(x=>sj(x)&&!deck.some(y=>charOf(y)===charOf(x))).sort((a,b)=>sc[b]-sc[a])){ if(have>=3) break;
-      let k=-1; deck.forEach((x,i)=>{ if(x!=="nike"&&!sj(x)&&!paired(x)&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k<0) break;
+      let k=-1; deck.forEach((x,i)=>{ if(!isNike(x)&&!sj(x)&&!paired(x)&&(k<0||sc[x]<sc[deck[k]])) k=i; }); if(k<0) break;
       const was=deck[k]; deck[k]=id; if(u&&!ulOk(u,deck)){ deck[k]=was; break; } have++; } }
   return {deck:deck.slice(0,ECO.deckSize),fac};
 }
@@ -158,7 +158,7 @@ function cardPow(s,li,c){
     if(c.id==="freya" && hasHere(s,li,"freyr")) p+=4;
     if(c.id==="selene" && S.turn>=5) p+=3;
     if(c.id==="nergal" && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="ereshkigal"))) p+=3; /* continu */
-    if((c.id==="nike"||c.id==="bia") && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="styx"))) p+=3; /* Styx veille sur ses filles */
+    if((isNike(c.id)||c.id==="bia") && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="styx"))) p+=3; /* Styx veille sur ses filles */
     if(c.id==="fange") p+=S.discarded||0;
     if(c.id==="ulqetyar") for(let i=0;i<3;i++){ const f=S.board[s][i].filter(o=>o.rev).map(o=>CARDS[o.id].fac); if(f.includes("desir")&&f.includes("primordial")) p+=3; }
     if(c.id==="yarden_d") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&o.rev&&CARDS[o.id].fac==="primordial"&&!CARDS[o.id].token) p+=2;
@@ -348,7 +348,7 @@ function revealFx(s,li,c,opts={}){
       if(res){ S.bonus[o]=0; if(S.biaBlock) S.biaBlock[o]=true; note="l'adversaire perd son énergie conservée"; snd="debuff"; }
       else { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Bia"}); note=`−1 à ${nm(t)}`; snd="debuff"; } } break; }
     case "ananke": note="Fatalité : ni détruite ni déplacée"; snd="legend"; break;   /* Apsu ne l'atteint que par sa propre Révélation, s'il est posé après elle (Jordan : « Révélation c'est Révélation ») */
-    case "nike": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k); break; }
+    case "nike": case "nike_v": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k); break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(4); snd=foes.length?"void":snd; break; }
     case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
       if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else if(forest(li)){ S.board[o][li].push(t); } else { S.destroyed++; entomb(o,li,t); if(o==="e") S.killE=(S.killE||0)+1; danteHook(li); note=`${nm(t)} est détruite`; } snd="void"; } break; }
@@ -475,7 +475,7 @@ const DESTROYERS=new Set(["anat","anubis","boucher","durga","ereshkigal","esquil
 const NEEDS_MATES=["susanoo","ulaph","oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
 /* Synergies connues de l'IA : [carte qui prépare, cartes qui en profitent, 1 si elles doivent partager le lieu] */
 const AI_PAIRS=[["yarden",["apsu","apsu_n","yarden_d"]],["freyr",["freya"],1],["freya",["freyr"],1],["ereshkigal",["nergal"]],["amaterasu",["susanoo"]],["izzy",["artemis"]],
-  ["thot",["costumes"]],["persephone",["eos","eos_r"]],["hecate",["medee","medee_h"]],["styx",["nike","bia"]],["promethee",["pandore"]]];
+  ["thot",["costumes"]],["persephone",["eos","eos_r"]],["hecate",["medee","medee_h"]],["styx",["nike","nike_v","bia"]],["promethee",["pandore"]]];
 const AI_PREP={}, AI_PAY={};
 for(const [a,bs,loc] of AI_PAIRS){ (AI_PREP[a]=AI_PREP[a]||[]).push(...bs); for(const x of bs) (AI_PAY[x]=AI_PAY[x]||[]).push({a,loc:!!loc}); }
 /* Cartes adverses qui visent la plus forte : l'IA évite alors de tout miser sur une seule grosse carte */
@@ -491,8 +491,8 @@ function aiPlan(me="e",tierOv){
   const en0=me==="e"?S.energyE:S.energy, hand=S.hand[me].slice(0,7);
   /* Nike : les petites cartes Jugement (coût 0 ou 1, jetons Flèche et Arme compris) sont gardées pour le tour de Nike et jouées avant elle.
      Nike attend (en main, ou encore dans le deck) ; Zeus en main avant le tour 5 : pas besoin de garder, la foudre les ramènera en main. */
-  const smallJ=c=>CARDS[c.id].fac==="jugement"&&CARDS[c.id].cost<=1&&c.id!=="nike";
-  const nikeHand=hand.some(x=>x.id==="nike"), nikeWait=!S.board[me].some(col=>col.some(x=>x.id==="nike"))&&(nikeHand||(S.deck[me]||[]).some(x=>x.id==="nike"));
+  const smallJ=c=>CARDS[c.id].fac==="jugement"&&CARDS[c.id].cost<=1&&!isNike(c.id);
+  const nikeHand=hand.some(x=>isNike(x.id)), nikeWait=!S.board[me].some(col=>col.some(x=>isNike(x.id)))&&(nikeHand||(S.deck[me]||[]).some(x=>isNike(x.id)));
   const zeusPlan=hand.some(x=>x.id==="zeus")&&S.turn<5;
   if(!hand.length) return [];
   const me0=[0,1,2].map(li=>total(me,li)), op0=[0,1,2].map(li=>total(op,li)), diffs=[0,1,2].map(li=>op0[li]-me0[li]);
@@ -521,7 +521,7 @@ function aiPlan(me="e",tierOv){
     if(NEEDS_MATES.includes(c.id)) pow+=mates?2:-1;
     if(c.id==="aphrodite"){ /* elle rejoue la dernière Révélation du tour : ici, la dernière carte posée avant elle */
       const prev=ctx.plays.filter(x=>!isAph(x.c)); const L=prev[prev.length-1];
-      if(!L) adj-=3; else if(L.c.id==="nike") pow+=2*prev.length-2; else if(L.c.id==="pandore") adj-=1;
+      if(!L) adj-=3; else if(isNike(L.c.id)) pow+=2*prev.length-2; else if(L.c.id==="pandore") adj-=1;
       else if(HITS.includes(L.c.id)){ if(foesN[L.li]) hit+=2.5; else adj-=1; } else pow+=1.5; }
     if(c.id==="messagere"&&diff>0) pow+=3;
     if(locIs(li,"cirque")&&S.turn<4) pow+=d.pow<=2?2:-2;
@@ -538,7 +538,7 @@ function aiPlan(me="e",tierOv){
     if(locIs(li,"faille")&&S.turn<=4&&d.pow<=2) pow-=d.pow;
     if(c.id==="nemesis") adj+=(diff>0&&diff<12)?5:-6;
     if(c.id==="mouche") pow-=mates;
-    if(c.id==="nike"){ pow+=ctx.plays.length*2;
+    if(isNike(c.id)){ pow+=ctx.plays.length*2;
       /* au tour 6 de préférence ; plus tôt seulement avec au moins 3 cartes jouées avant elle (Vesta, Prométhée) */
       if(S.turn<6&&ctx.plays.length<3) adj-=20; }
     if(nikeWait&&!ctx.nike&&smallJ(c)&&S.turn<6&&!zeusPlan&&hand.length<7) adj-=nikeHand?8:4;
@@ -610,7 +610,7 @@ function aiPlan(me="e",tierOv){
     return {cost,pow,hit,adj};
   };
   /* ordre de pose : les préparatrices d'abord, Pandore et Nike en dernier, puis les plus chères */
-  const late=c=>c.id==="pandore"?3:c.id==="aphrodite"?2:c.id==="nike"?1:0, prepFor=(c,cs)=>(AI_PAY[c.id]||[]).some(p=>cs.some(x=>x.id===p.a))?1:0;
+  const late=c=>c.id==="pandore"?3:c.id==="aphrodite"?2:isNike(c.id)?1:0, prepFor=(c,cs)=>(AI_PAY[c.id]||[]).some(p=>cs.some(x=>x.id===p.a))?1:0;
   const order=cs=>cs.slice().sort((a,b)=>late(a)-late(b)||prepFor(a,cs)-prepFor(b,cs)||CARDS[b.id].cost-CARDS[a.id].cost);
   const winP=(add,hit)=>{ const p=[0,1,2].map(li=>{ let m=me0[li]+add[li]+meFut[li]-(op0[li]-hit[li]+opFut[li]); if(nemInv(li)) m=-m; return 1/(1+Math.exp(-1.6*m/sd)); });
     return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
@@ -631,7 +631,7 @@ function aiPlan(me="e",tierOv){
     return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
   const cands=[];
   for(let mask=0;mask<(1<<hand.length);mask++){
-    const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,jf:true,plays:[],pend:[0,0,0],nike:cs.some(x=>x.id==="nike")}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
+    const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,jf:true,plays:[],pend:[0,0,0],nike:cs.some(x=>isNike(x.id))}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
     for(const c of cs){ let bp=null;
       /* chaque carte va là où elle fait le plus monter la probabilité de victoire */
       for(let li=0;li<3;li++){ const r=place(c,li,ctx); if(!r) continue; add[li]+=r.pow; hit[li]+=r.hit; const v=winP(add,hit)*100+r.adj; add[li]-=r.pow; hit[li]-=r.hit; if(!bp||v>bp.v) bp={...r,li,v}; }
@@ -671,7 +671,7 @@ async function resolveTurn(mine, theirs, animate){
   /* Prométhée : énergie non dépensée ; Nike : ordre dans lequel chaque joueur a posé ses cartes (l'IA garde Nike pour la fin) */
   const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0,jugFirst(list,i))),0);
   const unspent=S.unspent={p:Math.max(0,S.energy-spent("p",mine)),e:Math.max(0,S.energyE-spent("e",theirs))}; S.biaBlock={p:false,e:false};
-  S.turnPlays={p:mine.map(x=>x.c),e:(S.mp?theirs:[...theirs.filter(x=>x.c.id!=="nike"),...theirs.filter(x=>x.c.id==="nike")]).map(x=>x.c)};
+  S.turnPlays={p:mine.map(x=>x.c),e:(S.mp?theirs:[...theirs.filter(x=>!isNike(x.c.id)),...theirs.filter(x=>isNike(x.c.id))]).map(x=>x.c)};
   S.hand.p=S.hand.p.filter(c=>!mine.some(x=>x.c===c));
   for(const x of theirs) S.hand.e=S.hand.e.filter(c=>c!==x.c);
   if(mine.length){ S.disc.p=0; if(!(S.mp&&S.mp.replaying)&&!S.tut){ ensureQuests(); qProg("cards12",mine.length);

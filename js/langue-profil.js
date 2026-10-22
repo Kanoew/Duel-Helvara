@@ -94,6 +94,7 @@ const ulEarned=u=>u.quest?fjGet(u.quest.k)>=u.quest.n:((P.ulk||[]).includes(u.id
 /* Une ultra-légendaire de fusion exige ses cartes ; une ultra-légendaire de faction exige assez de cartes de sa faction (elle comprise). */
 const ulOk=(u,list)=>u.fac?list.filter(x=>x!==u.id&&CARDS[x]&&CARDS[x].fac===u.fac).length>=u.min-1:u.req.every(r=>hasReq(list,r));
 const charOf=id=>CARDS[id].base||id;
+const isNike=id=>!!CARDS[id]&&charOf(id)==="nike"; /* Nike et sa variante de la Saint-Valentin (même carte, autre illustration) */
 const OCT_REL="2026-10-01";
 const ECO = {win:50, draw:20, loss:10, deckSize:12, tuto:100, dup:{D:10,C:10,R:20,E:40,L:80,U:150}};
 /* Chance (en % par paquet) qu'un paquet d'édition contienne une fusion ultra-légendaire : un peu plus que le paquet à 300 CHF (pas de garantie, édition courte). */

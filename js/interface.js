@@ -279,9 +279,10 @@ function journalHTML(){
     out.push(rowOf(first,F.n));
     for(const u of us.slice(1)) if(SHOWN(u.id)) out.push(rowOf(u,`${F.n} · seconde ultra-légendaire`));
     return out; });
-  const nv=ULof("nike_v");
-  if(nv&&SHOWN(nv.id)){ const v=Math.min(fjGet("nikev"),nv.quest.n);
-    rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:#f2a7c8">Saint-Valentin · avec Nike</b><span>${v}/${nv.quest.n}</span></div><div class="fjbar"><i style="width:${Math.round(v/nv.quest.n*100)}%;background:#f2a7c8"></i></div><small>${P.owned.includes(nv.id)?`${CARDS[nv.id].name} · obtenue`:`Récompense : ${CARDS[nv.id].name}`}</small></div>`); }
+  /* Nike de la Saint-Valentin : la quête est visible et compte dès le 1er février (Jordan, 22 octobre), la carte n'est nommée qu'à son annonce (le 9) et sort le 14 */
+  const nv=ULof("nike_v"), nvKnown=!!nv&&SHOWN(nv.id);
+  if(nv&&(nvKnown||inWin(VALENTIN))){ const v=Math.min(fjGet("nikev"),nv.quest.n), g=fjGet("nikev");
+    rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:#f2a7c8">Saint-Valentin · avec Nike</b><span>${nvKnown?`${v}/${nv.quest.n}`:`${g} partie${g>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${nvKnown?Math.round(v/nv.quest.n*100):0}%;background:#f2a7c8"></i></div><small>${nvKnown?(P.owned.includes(nv.id)?`${CARDS[nv.id].name} · obtenue`:`Récompense : ${CARDS[nv.id].name}`):"Récompense : une ultra-légendaire, bientôt"}</small></div>`); }
   return `<section class="sec journal"><h2>Journal des factions</h2><p class="hint">Une partie compte quand ton deck contient au moins 8 cartes d'une faction (IA, Blitz et duels).</p>${rows.join("")}</section>`;
 }
 function profileHTML(){

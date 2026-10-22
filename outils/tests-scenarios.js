@@ -498,7 +498,7 @@ async function inPage() {
       else T("La Source : autre faction non doublée (aucune carte de test simple, contrôle sauté)", true); }
     /* S5. Données et IA */
     { const u = ULof("source"); T("La Source : ultra-légendaire de faction Helvara 3/2 (8 cartes, 50 parties au journal), sortie le 1er février 2027", u && u.fac === "helvara" && u.min === 8 && u.quest.k === "helvara" && u.quest.n === 50 && !u.req.length && CARDS.source.r === "U" && CARDS.source.cost === 3 && CARDS.source.pow === 2 && CARDS.source.rel === "2027-02-01" && CARDS.source.soon === "2027-01-27"); }
-    T("Dates des ultra-légendaires de faction : Ananké 1er décembre, Hédoné 15 janvier, Nike Saint-Valentin 15 février", CARDS.ananke.rel === "2026-12-01" && CARDS.hedone.rel === "2027-01-15" && CARDS.hedone.soon === "2027-01-10" && CARDS.nike_v.rel === "2027-02-15" && CARDS.nike_v.soon === "2027-02-10");
+    T("Dates des ultra-légendaires de faction : Ananké 1er décembre, Hédoné 15 janvier, Nike Saint-Valentin 14 février", CARDS.ananke.rel === "2026-12-01" && CARDS.hedone.rel === "2027-01-15" && CARDS.hedone.soon === "2027-01-10" && CARDS.nike_v.rel === "2027-02-14" && CARDS.nike_v.soon === "2027-02-09");
     fresh(); S.turn = 3; S.energy = S.energyE = 5; { const src = card("source"), t = card("tatoueur"), v = card("voleuse"); S.hand.e = [src, t, v];
       const plan = aiPlan("e", 5); T("IA : La Source est jouée quand la main compte des cartes Helvara à Révélation", plan.some(x => x.c === src), JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
   }
@@ -620,6 +620,26 @@ async function inPage() {
       const plan = aiPlan("e", 5), at = plan.find(x => x.c === cr); T("IA : Cronos joué au tour 5 sur le lieu qu'elle mène, quand elle perd les deux autres", !!at && at.li === 0, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("e", 0, plain[0], 6); put("e", 1, plain[1], 6); put("p", 2, plain[2], 6); const cr = card("cronos"); S.hand.e = [cr];
       const plan = aiPlan("e", 5); T("IA : jamais Cronos quand elle mène déjà deux lieux", !plan.some(x => x.c === cr), JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+
+    /* Nike de la Saint-Valentin (22 octobre) : même carte que Nike, autre illustration ; quête dès le 1er février, sortie le 14 */
+    T("Nike V : 3/2 comme Nike, même personnage, effet identique, holo et effet visuel de Nike", CARDS.nike_v.cost === CARDS.nike.cost && CARDS.nike_v.pow === CARDS.nike.pow && charOf("nike_v") === "nike" && isNike("nike_v") && isNike("nike") && !isNike("styx") && /\+2 de puissance pour chaque autre carte que tu as jouée avant elle/.test(CARDS.nike_v.fx) && CARDS.nike_v.vfx === "nike" && !!holoDir("nike_v"));
+    fresh(); S.turn = 6; { const a = card(plain[0], 1), b = card(plain[1], 1), n = card("nike_v"), ap = card("aphrodite"); S.hand.p = [a, b, n, ap];
+      await resolveTurn([a, b, n, ap].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike_v"); T("Nike V + Aphrodite : finit à 10 comme Nike", nk && nk.pow === 10, nk && nk.pow); }
+    fresh(); S.turn = 5; { const a = card(plain[0], 1), n = card("nike_v"); S.hand.p = [a, n]; await resolveTurn([a, n].map(c => ({ c, li: 0 })), [], false);
+      const nk = find("p", "nike_v"); T("Nike V : +2 par carte jouée avant elle (une carte : 4)", nk && nk.pow === 4, nk && nk.pow); }
+    fresh(); S.turn = 4; { put("p", 0, "styx"); const nk = put("p", 0, "nike_v"); T("Styx : Nike V reçoit aussi +3 (2 + 3)", cardPow("p", 0, nk) === 5, cardPow("p", 0, nk));
+      SRC = { s: "e", cost: 3 }; const ok = destroy("p", 0, nk); SRC = null; T("Styx : Nike V détruite par l'adversaire revient en main", ok && S.hand.p.includes(nk) && !S.graveyard.p.includes("nike_v"), ok); }
+    fresh(); S.turn = 5; S.energy = S.energyE = 5; { const m = card("maat"), a = card("apollon"), n = card("nike_v"); S.hand.e = [n, m, a];
+      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike V posée après Mā'at et Apollon, comme Nike", ids.indexOf("nike_v") === ids.length - 1 && ids.length === 3, ids.join()); }
+    fresh(); S.turn = 3; S.energy = S.energyE = 5; { const n = card("nike_v"), m = card("maat"), a = card("apollon"); S.hand.e = [n, m, a];
+      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike V en main au tour 3 → les petites cartes sont gardées pour son tour", !ids.includes("maat") && !ids.includes("apollon") && !ids.includes("nike_v"), ids.join() || "rien"); }
+    { const keep = window.__today, jr = () => { P.owned = P.owned.filter(x => x !== "nike_v"); return journalHTML(); };
+      window.__today = "2027-01-31"; P.fj = { nikev: 7 }; T("Journal : pas de ligne Saint-Valentin avant le 1er février", !jr().includes("Saint-Valentin"));
+      window.__today = "2027-02-03"; { const h = jr(); T("Journal : la quête est visible dès le 1er février, la carte et le seuil ne sont pas encore révélés", h.includes("Saint-Valentin · avec Nike") && h.includes("7 parties") && h.includes("bientôt") && !h.includes("/25") && !h.includes("Récompense : Nike de la Saint-Valentin")); }
+      window.__today = "2027-02-09"; P.fj = { nikev: 7 }; { const h = jr(); T("Journal : le 9 février la carte est annoncée (7/25)", h.includes("7/25") && h.includes("Récompense : Nike de la Saint-Valentin")); }
+      P.fj = { nikev: 25 }; window.__today = "2027-02-12"; screen = "home"; ulLater = false; P.tuto = true; tutoStep = -1; T("Quête finie le 12 février : la fenêtre de réclamation attend la sortie de la carte (le 14)", !ulHTML().includes("Nike de la Saint-Valentin"));
+      window.__today = "2027-02-14"; T("Le 14 février : Nike de la Saint-Valentin est réclamable", ulHTML().includes("Nike de la Saint-Valentin"));
+      window.__today = keep; P.fj = {}; }
   }
 
   return res;

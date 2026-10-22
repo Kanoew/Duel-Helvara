@@ -148,7 +148,7 @@ Le bouton du bandeau de saison (« Ouvrir le Pli des Citrouilles », de l'Étoil
 
 - Les ultra-légendaires de faction se **gagnent en jouant**, pas en collectionnant : entrée `ULS` avec `quest:{k,n}` (`nike` : `jugement`, 50 ; `nike_v` : `nikev`, 25). `ulEarned(u)` décide du déblocage (fenêtre `ulHTML`, bouton `ulclaim`) ; `ulOk(u,deck)` reste la règle de deck (8 cartes de la faction).
 - Compteurs `P.fj` (`helvara`, `primordial`, `desir`, `jugement`, `nikev`), incrémentés par `fjCount(deck)` au début de `pushHist` (fin de partie IA, Blitz ou duel, jamais tutoriel, simulation ni reprise : `qLive()`). Une partie compte pour une faction si le deck a au moins `FJ_MIN` = 8 cartes de cette faction. Une partie de 12 cartes ne peut compter que pour une faction.
-- `nikev` : parties avec Nike (ou sa variante, `charOf`) dans le deck pendant `VALENTIN` = **1er → 28 février** (Jordan, 15 octobre).
+- `nikev` : parties avec Nike (ou sa variante, `charOf`) dans le deck pendant `VALENTIN` = **1er → 28 février** (Jordan, 15 octobre). La ligne du Journal est visible dès le 1er février, la carte (même effet que Nike, sortie le 14) est nommée à son annonce du 9 (22 octobre : voir la 12e série).
 - Écran : section « Journal des factions » du profil (`journalHTML`) ; la récompense n'est nommée qu'à partir de sa date d'annonce (`SHOWN`). Futures ultra-légendaires de faction : ajouter `quest:{k:"<faction>",n:50}` à leur entrée `ULS`.
 
 ## Effet holo 2.5D (15 octobre 2026, module préparé par Jordan dans une autre session)

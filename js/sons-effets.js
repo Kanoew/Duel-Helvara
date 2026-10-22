@@ -389,7 +389,7 @@ function fusionCine(id,s){
   });
 }
 /* Ultra-légendaires de faction : pas de fusion, mais un effet de pose propre à chacune (Nike d'abord ; Helvara, Désir et Primordial viendront) */
-const FACTION_CINE={nike:nikeCine};
+const FACTION_CINE={nike:nikeCine,nike_v:nikeCine};
 function factionCine(id,s,li){ const f=FACTION_CINE[id]; return f?f(id,s,li):Promise.resolve(); }
 /* Nike, « Les plumes de la Victoire » : chaque carte posée avant elle ce tour lâche une plume qui vole vers elle, le compteur monte de 2,
    puis deux ailes s'ouvrent et un laurier se forme. Jouée en premier : ailes à moitié ouvertes, plus pâles, sans compteur.

@@ -8,7 +8,6 @@ Extrait de l'ancien `CLAUDE.md` (22 octobre 2026), **texte inchangé**, sauf la 
 - La Source : 50 parties avec 8 cartes Helvara, « à confirmer par Jordan ».
 - Vesta : la réduction va à la première carte Jugement de coût imprimé 1 ou plus (nuance « à faire confirmer par Jordan »).
 - Cartes holo : elles n'affichent ni coût, ni puissance, ni nom (illustration pleine) : « décision de Jordan à prendre ». Jordan a testé sur son Android (ROG Phone 8 Pro) le 22 octobre : aucun problème, et il juge l'effet « parfait » ; un ami doit encore tester sur un autre téléphone.
-- Nike de la Saint-Valentin : aucun effet dans le moteur ; Jordan hésite entre l'effet de Nike et un autre.
 - Noms : « L'Enfant sans École » (Jordan avait écrit « sans éco »), et `reflet_noir` (Jordan veut changer le nom).
 - À surveiller : combo Lip Dentelle → Hel (fin octobre), rangs et Mohini (fin octobre), deck Jugement « énergie » (mi-novembre ; leviers : Styx à +2, réserve de Prométhée à 6).
 - À faire vérifier en jouant (session du 8 octobre) : jonction de boucle des musiques, fondu vers la tension au tour 5, jingles de fin, curseurs de volume sur téléphone, ressenti de l'IA aux hauts rangs.
@@ -29,7 +28,7 @@ Extrait de l'ancien `CLAUDE.md` (22 octobre 2026), **texte inchangé**, sauf la 
 | 31 déc. → 18 janv. | Paquet « Pli du Douzième Coup » (annonce le 26 déc.) : Hel Reine du Réveillon, Éos de Nouvel An, Pele du Réveillon, Qetesh du Nouvel An (toutes `ex:"nouvelan"`) + fusions Pele X Jordan du Réveillon (`ulpele_r`) et Qetesh X Jordan du Nouvel An (`ulqetjor_r`, exige `qetesh_r`) |
 
 | **1er févr. 2027** (annonce le 27 janv.) | **La Source** (U de faction Helvara, illustration de Carla) |
-| **15 févr. 2027** (annonce le 10) | **Nike de la Saint-Valentin** (U de faction Jugement, variante de Nike ; **effet à fournir par Jordan** : pour l'instant seulement l'exigence de 8 cartes Jugement, pas d'effet dans le moteur ; fenêtre `VALENTIN` du journal : **tout février, 1er → 28**, décision de Jordan du 15 octobre) |
+| **14 févr. 2027** (annonce le 9) | **Nike de la Saint-Valentin** (U de faction Jugement, **même effet que Nike : une nouvelle illustration** ; décision de Jordan du 22 octobre, voir la 12e série). **La quête commence le 1er février** (fenêtre `VALENTIN` du journal : tout février, 1er → 28, pour laisser aux joueurs le temps de la faire) alors que la carte sort le 14. Exception à la règle « le 15 / le 1er » : la sortie tombe le jour de la Saint-Valentin |
 
 **Règle des dates des ultra-légendaires de faction (Jordan, 15 octobre)** : le **15** du mois s'il n'y a pas d'événement ce mois-là, le **1er** s'il y en a un (annonce 5 jours avant : `soon`).
 

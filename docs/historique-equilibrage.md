@@ -88,7 +88,7 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
   - **IA** (`place()`) : +1,5 par autre carte Helvara à Révélation en main (4 au plus), petit bonus avant le tour 5. Mesure ciblée (1000 parties, graine 20261012, `--cartes source --date 2027-02-05`) : victoire en deck **49,3 %**, posée dans 65 % des decks, victoire posée 47,1 %, puissance de fin 2,8, survie 96 %, tour de pose 4,4.
   - Tests : 163 scénarios (+10 : doublée, posée juste avant / après, autre lieu, Source adverse, Source annulée, autre faction, données, dates, IA).
 - **Dates** : Ananké 1er décembre 2026 (inchangé), **Hédoné 15 janvier 2027** (annonce le 10 ; avant : 1er janvier provisoire), La Source 1er février 2027. Règle générale : voir « Calendrier du contenu ».
-- **Nike de la Saint-Valentin** : `rel` 2027-02-15, `soon` 2027-02-10 (Jordan, 15 octobre). Holo `nike-saint-valentin` prêt. Pas d'effet dans le moteur (`fx` = l'exigence seulement) : Jordan hésite entre le même effet que Nike et un autre, à décider plus tard.
+- **Nike de la Saint-Valentin** : `rel` 2027-02-15, `soon` 2027-02-10 (Jordan, 15 octobre) **→ 14 février / 9 février et même effet que Nike : voir la 12e série (22 octobre)**. Holo `nike-saint-valentin` prêt.
 - Pas de bannière `DROPS` pour Ananké, Hédoné et La Source (non demandée).
 
 ### 7e série (15 octobre 2026, renfort Jugement autour de Nike) : même règle, ne pas revenir dessus sans l'accord de Jordan
@@ -148,6 +148,14 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - **Prométhée** (pas sorti, 15 novembre) : « l'énergie que tu ne dépenses pas est conservée au tour suivant (10 d'énergie maximum par tour). » Le plafond porte sur **l'énergie totale du tour suivant** (numéro du tour + réserve + Freyr), plus sur la réserve seule : avant, Jordan avait 11 d'énergie au tour 5 et 16 au tour 6 (bac à sable). Réserve gardée = `min(non dépensé, 10 − (tour + 1) − S.bonus)`.
 - Mesure ciblée (`--cartes promethee,pandore --parties 1000 --date 2026-11-20`) : **identique avant et après** (Prométhée 49,6 %, Pandore 49,6 %) : l'IA ne dépasse presque jamais 10 d'énergie, le cas vient surtout d'un joueur qui garde tout exprès.
 - Tests : 217 scénarios (+4 : tour 6 et tour 5 plafonnés à 10, sous le plafond tout est gardé, Freyr compté).
+
+### 12e série (22 octobre 2026, Nike de la Saint-Valentin) : même règle, ne pas revenir dessus sans l'accord de Jordan
+
+`BUILD` : `alpha-0.15`.
+- **Nike de la Saint-Valentin** (`nike_v`) est une **nouvelle illustration** de Nike (décision de Jordan) : **3/2, même effet** (« +2 de puissance pour chaque autre carte que tu as jouée avant elle ce tour », Aphrodite ne compte pas), même exigence (8 cartes Jugement, elle comprise), même `vfx:"nike"`, même cinématique (`FACTION_CINE`). Avant : 3/1 sans effet.
+- **Même personnage partout** : `isNike(id)` (`charOf(id)==="nike"`, dans `js/langue-profil.js`) remplace les tests `id==="nike"` du moteur : effet (`case "nike": case "nike_v":`), bonus de Styx (+3), IA (petites cartes gardées, jouée en dernier, simulation, ordre de pose adverse), construction du deck de l'IA. Une seule version de Nike par deck (règle `base` inchangée). **`outils/equilibrage.js` ne compte pas encore Nike V** dans son bloc « Nike et les petites cartes » (il teste `"nike"` en dur).
+- **Dates** : `rel` 2027-02-14, `soon` 2027-02-09 (la Saint-Valentin elle-même ; exception à la règle « le 15 / le 1er »). **La quête commence le 1er février** (`VALENTIN` = 1er → 28 février) : la ligne « Saint-Valentin · avec Nike » du Journal est visible et compte dès le 1er (sans nom de carte ni seuil : « Récompense : une ultra-légendaire, bientôt »), la carte est nommée avec son seuil (25 parties) à l'annonce du 9, et elle est réclamable à sa sortie (`ulHTML` attend `REL`), même si la quête est finie avant.
+- Tests : 238 scénarios (+12 : données, finit à 10 avec Aphrodite, +2 par carte, Styx +3 et retour en main, IA, Journal aux 31 janvier, 3, 9 février, réclamation les 12 et 14 février).
 
 ### Secondes ultra-légendaires de faction (18 octobre 2026, décision de Jordan)
 
