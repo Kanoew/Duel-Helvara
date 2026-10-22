@@ -38,11 +38,13 @@ function aiDeck(t,full,noUL){   /* noUL : le Blitz n'a aucune ultra-légendaire,
       const was=deck[k]; deck[k]=id; if(u&&!ulOk(u,deck)){ deck[k]=was; break; } have++; } }
   return {deck:deck.slice(0,ECO.deckSize),fac};
 }
+/* Trois lieux au hasard ; le week-end, le lieu à l'honneur du jour en fait toujours partie (à une place tirée au hasard) */
+function pickLocs(){ const f=featureLoc(); let ids=shuffle(locPool()).slice(0,3); if(f&&!ids.includes(f)) ids=shuffle([f,...ids.slice(0,2)]); return ids; }
 function newGame(){
   RNG=Math.random;
   if(!deckReady()){ screen="deck"; render(); return; }
   if(S&&S.blitz&&!S.over) bzEndRun();
-  const locIds = games===0 && P.w+P.l+P.d===0 ? ["ruelle","ouchy","sousgare"] : shuffle(locPool()).slice(0,3);
+  const firstEver = games===0 && P.w+P.l+P.d===0, locIds = firstEver ? ["ruelle","ouchy","sousgare"] : pickLocs();
   games++;
   S={turn:0, energy:0, energyE:0, bonus:{p:0,e:0}, destroyed:0,
     locs:locIds.map(id=>({id,rev:false,stopped:false,locked:false})),
@@ -50,6 +52,7 @@ function newGame(){
     deck:{p:shuffle(P.deck.map(mk)), e:[]}, aiTier:tierOf(P.lv), aiFac:null,
     staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
     log:[], sel:null, info:null, busy:false, over:null};
+  S.feat=!firstEver&&locIds.includes(featureLoc())?featureLoc():null; /* lieu à l'honneur présent dans cette partie */
   const ai=aiDeck(S.aiTier); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac;
   for(let i=0;i<3;i++){draw("p");draw("e");}
   log(`Adversaire : deck ${FAC[ai.fac].n} · niveau ${TIERS[S.aiTier]}`);
@@ -822,8 +825,10 @@ function finish(){
   if(res==="win") P.sw++; else if(res==="lose") P.sl++; else P.sd++;
   const oath=S.oath!=null?(leader(S.oath)==="p"?"kept":"broken"):null;
   const rk=applyRank(res,oath,S.oath!=null&&S.oath===S.aiOath);
-  P.chf+=gain; pushHist("IA",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew,{gain,lv:P.lv}); save(); lbPublish();
-  S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,rk,qDone};
+  /* lieu à l'honneur : +25 CHF à la fin de la première partie du jour contre l'IA (victoire ou non) */
+  let feat=0; if(S.feat&&qLive()&&P.ld!==today()){ P.ld=today(); feat=FEATURE_CHF; }
+  P.chf+=gain+feat; pushHist("IA",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew,{gain,lv:P.lv}); save(); lbPublish();
+  S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,rk,qDone,feat};
   if(rk.up) setTimeout(()=>sfx("legend"),900);
   endCine(S.over); endMusic(res); setTimeout(()=>sfx("coin"),700);
   render();

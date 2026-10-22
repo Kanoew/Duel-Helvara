@@ -695,6 +695,37 @@ async function inPage() {
       T("IA : Arès Duelliste est posé là où la carte adverse la plus forte est plus faible que lui (2 contre 4)", !!at && at.li === 0, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
     fresh(); S.turn = 4; S.energy = S.energyE = 5; { const er = card("ereshkigal_n"); S.hand.e = [er]; put("p", 1, plain[0], 7); const plan = aiPlan("e", 5), at = plan.find(x => x.c === er);
       T("IA : Ereshkigal Longue Nuit est posée face à une carte adverse (lieu 1)", !!at && at.li === 1, JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
+
+    /* Lieu à l'honneur (22 octobre) : samedi et dimanche, un lieu du jour dans toutes les parties, +25 CHF à la première partie du jour contre l'IA */
+    { const keep = window.__today, sat = "2026-12-05", sun = "2026-12-06", wk = ["2026-12-07", "2026-12-08", "2026-12-09", "2026-12-10", "2026-12-11"];
+      const at = d => { window.__today = d; };
+      at(sat); const on1 = featureOn(); at(sun); const on2 = featureOn(); const off = wk.every(d => (at(d), !featureOn() && featureLoc() === null));
+      T("Lieu à l'honneur : actif le samedi et le dimanche, jamais du lundi au vendredi", on1 && on2 && off, `${on1} ${on2} ${off}`);
+      at(sat); const f1 = featureLoc(), f2 = featureLoc(); const days = ["2026-12-05", "2026-12-06", "2026-12-12", "2026-12-13", "2026-12-19", "2026-12-20", "2027-01-02", "2027-01-03"].map(d => (at(d), featureLoc()));
+      T("Lieu à l'honneur : le même lieu à chaque appel un jour donné (tirage par le jour), un lieu sorti, et il change d'un jour à l'autre", f1 === f2 && locPool().includes(f1) && days.every(x => locPool().includes(x)) && new Set(days).size >= 3, days.join());
+      at(sat); const picks = [...Array(300)].map(() => pickLocs());
+      T("Lieu à l'honneur : sur 300 tirages le samedi, 3 lieux distincts et le lieu à l'honneur toujours présent", picks.every(a => a.length === 3 && new Set(a).size === 3 && a.includes(f1)), JSON.stringify(picks.find(a => !(a.length === 3 && new Set(a).size === 3 && a.includes(f1)))));
+      T("Lieu à l'honneur : sa place est tirée au hasard (les trois places sont occupées au moins une fois)", [0, 1, 2].every(i => picks.some(a => a[i] === f1)));
+      at(wk[0]); const wkPicks = [...Array(300)].map(() => pickLocs()); T("Lieu à l'honneur : en semaine, tirage normal (3 lieux distincts)", wkPicks.every(a => a.length === 3 && new Set(a).size === 3));
+      /* dans une vraie partie */
+      at(sat); fresh(); const g0 = games; newGame(); T("Lieu à l'honneur : une partie contre l'IA le samedi contient le lieu du jour (S.feat)", S.feat === f1 && S.locs.some(L => L.id === f1), `${S.feat} / ${S.locs.map(L => L.id)}`);
+      at(wk[0]); newGame(); T("Lieu à l'honneur : en semaine, aucune partie ne le marque (S.feat vide)", S.feat === null);
+      at(sat); { const g = games, w = P.w, l = P.l, d = P.d; games = 0; P.w = P.l = P.d = 0; newGame(); T("Lieu à l'honneur : la toute première partie d'un joueur garde ses trois lieux d'initiation", S.locs.map(L => L.id).join() === "ruelle,ouchy,sousgare" && S.feat === null, S.locs.map(L => L.id)); games = g; P.w = w; P.l = l; P.d = d; }
+      /* récompense */
+      const playOut = async () => { newGame(); quiet = false; S.turn = 6; S.energy = 6; S.hand.p = []; S.hand.e = []; const before = P.chf; await resolveTurn([], [], false); quiet = true; return { o: S.over, gained: P.chf - before }; };
+      at(sat); P.ld = ""; const a = await playOut();
+      T("Lieu à l'honneur : première partie du samedi contre l'IA = le gain normal + 25 CHF, une fois", !!a.o && a.o.feat === 25 && P.ld === sat && a.gained === a.o.gain + 25, `${a.o && a.o.feat} / ${P.ld} / ${a.gained} (gain ${a.o && a.o.gain})`);
+      const b = await playOut(); T("Lieu à l'honneur : la deuxième partie du même jour ne donne plus rien en plus", !!b.o && b.o.feat === 0 && b.gained === b.o.gain, `${b.o && b.o.feat} / ${b.gained}`);
+      at(sun); const c = await playOut(); T("Lieu à l'honneur : le lendemain (dimanche), 25 CHF de nouveau", !!c.o && c.o.feat === 25 && P.ld === sun, `${c.o && c.o.feat}`);
+      at(wk[0]); P.ld = ""; const e = await playOut(); T("Lieu à l'honneur : en semaine, pas de bonus", !!e.o && e.o.feat === 0 && P.ld === "", `${e.o && e.o.feat}`);
+      at(sat); P.ld = ""; newGame(); quiet = true; S.turn = 6; S.energy = 6; { const before = P.chf; await resolveTurn([], [], false); T("Lieu à l'honneur : pas de bonus dans une simulation (hors partie réelle)", P.ld === "" && S.over && !S.over.feat, `${P.ld}`); }
+      /* accueil, profil, anglais */
+      at(sat); P.tuto = true; P.ld = ""; T("Lieu à l'honneur : l'accueil du samedi montre le lieu, l'effet et les 25 CHF", /Lieu à l'honneur/.test(homeHTML()) && homeHTML().includes(LOCS[f1].name) && homeHTML().includes("+25 CHF pour ta première partie contre l'IA"));
+      P.ld = sat; T("Lieu à l'honneur : une fois reçu, l'accueil le dit", homeHTML().includes("+25 CHF reçus aujourd'hui"));
+      at(wk[0]); T("Lieu à l'honneur : pas de bandeau en semaine", !/Lieu à l'honneur/.test(homeHTML()));
+      T("Lieu à l'honneur : P.ld survit au nettoyage du profil, une valeur absurde est ignorée", clean({ ld: "2026-12-05" }).ld === "2026-12-05" && clean({ ld: 42 }).ld === "" && clean({}).ld === "");
+      T("Lieu à l'honneur : textes anglais (bandeau et résultat)", HELVARA_UI_EN.exact["Lieu à l'honneur · aujourd'hui"] === "Featured place · today" && HELVARA_UI_EN.rules.some(([re]) => re.test("Lieu à l'honneur : +25 CHF pour ta première partie du jour.")));
+      window.__today = keep; P.ld = ""; games = g0; }
   }
 
   return res;

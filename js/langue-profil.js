@@ -168,7 +168,7 @@ const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","
 /* ======= SAUVEGARDE ======= */
 const HIST_MAX=20;
 const SAVE_KEY = "duel-helvara-save-v1", OWNER_KEY = "duel-helvara-save-owner";
-function freshProfile(){ return {name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}, maj:MAJ[0].id}; }
+function freshProfile(){ return {ld:"", name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}, maj:MAJ[0].id}; }
 let migratedNote="";
 const COVERS=["primordial","desir","jugement","helvara"];
 function defDecks(){ return COVERS.map((c,i)=>({name:`Deck ${i+1}`,cover:c,cards:[]})); }
@@ -215,7 +215,7 @@ function clean(p){
     lv:Math.min(MAXLV,p.rv===2?num(p.lv,0):migrateLv(num(p.lv,0))), st:num(p.st,0), streak:num(p.streak,0), best:Math.min(MAXLV,p.rv===2?num(p.best,0):migrateLv(num(p.best,0))), rv:2,
     season:(typeof p.season==="string"&&/^\d{4}-\d{2}$/.test(p.season))?p.season:seasonKey(), sw:num(p.sw,0), sl:num(p.sl,0), sd:num(p.sd,0),
     tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, vm:Math.min(100,num(p.vm,35)), vs:Math.min(100,num(p.vs,100)), cine:p.cine!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
-    bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,HIST_MAX).map(cleanHist):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
+    ld:(typeof p.ld==="string"?p.ld.slice(0,10):""), bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,HIST_MAX).map(cleanHist):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
     daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
     q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,rr:!!p.q.rr,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c,...(typeof x.x==="string"?{x:x.x.slice(0,24)}:{})}))}:null,
     fj:Object.fromEntries(FJ_KEYS.map(k=>[k,Math.min(9999,num(p.fj&&p.fj[k],0))])),
@@ -259,6 +259,11 @@ const qText=q=>QDEF[q.id].t.replace("{f}",q.x&&FAC[q.x]?FAC[q.x].n:"").replace("
 /* Tirage du jour : même quêtes pour tout le monde un jour donné (selon la collection), mais vraiment mélangées d'un jour à l'autre.
    L'ancien calcul (s*31 + caractère) n'avançait que de 1 par jour : la grande quête et son personnage restaient les mêmes une semaine
    (« Gagne avec Apsu » 3 jours de suite, signalé par Jordan le 17 octobre). Une quête d'hier n'est pas reprise le lendemain. */
+/* Lieu à l'honneur (22 octobre 2026, Jordan) : le samedi et le dimanche, un même lieu, tiré par le jour (donc le même pour tout le monde), est présent dans toutes les parties :
+   contre l'IA, Blitz et duels (l'hôte du duel choisit les lieux, l'invité les reçoit). +25 CHF à la fin de la première partie du jour contre l'IA (victoire ou non), une fois par jour (P.ld). */
+const FEATURE_CHF=25;
+const featureOn=()=>{ const d=new Date(today()+"T12:00:00").getDay(); return d===0||d===6; };
+const featureLoc=()=>{ if(!featureOn()) return null; const pool=locPool(); return pool.length?pool[qHash(today()+"|lieu")%pool.length]:null; };
 const qHash=str=>{ let h=2166136261; for(const ch of str){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } h^=h>>>15; h=Math.imul(h,0x85ebca6b); h^=h>>>13; h=Math.imul(h,0xc2b2ae35); h^=h>>>16; return h>>>0; };
 function qDraw(k){
   const sm=Object.keys(QDEF).filter(id=>QDEF[id].small&&qOk(id)), bg=Object.keys(QDEF).filter(id=>!QDEF[id].small&&qOk(id));

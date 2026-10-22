@@ -355,6 +355,11 @@ pre{background:var(--deep);border:1px solid var(--line);border-radius:10px;paddi
 .spider i{position:absolute;left:50%;top:0;width:1px;height:62px;background:linear-gradient(rgba(225,220,240,0),rgba(225,220,240,.7))}
 .spider svg{display:block;width:100%;margin-top:60px}
 @keyframes spider{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(16px) rotate(4deg)}}
+.featbar{display:flex;border-radius:14px;overflow:hidden;margin-bottom:12px;border:1px solid rgba(232,184,90,.55);background:linear-gradient(135deg,rgba(232,184,90,.16),rgba(10,18,32,.85) 65%)}
+.featimg{flex:0 0 34%;min-height:110px;background-size:cover;background-position:center}
+.featbody{padding:12px 14px;display:grid;gap:3px;align-content:center}
+.featbody b{font-family:var(--display);font-size:17px}
+.featrw{font-size:12.5px;color:var(--warm);margin-top:2px}.featrw.got{color:var(--mist)}
 .seasonbar{position:relative}
 .seasonbar>div:not(.sdeco),.seasonbar>button{position:relative;z-index:1}
 .sdeco.bar{overflow:visible}

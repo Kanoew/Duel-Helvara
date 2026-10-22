@@ -131,6 +131,12 @@ function questsHTML(){
       <div class="qfoot"><span class="hint">${P.wq.p} / ${WQ.n}</span>${P.wq.c?`<span class="hint">Récompense récupérée</span>`:P.wq.p>=WQ.n?`<button class="primary small" data-act="wclaim">Récupérer</button>`:""}</div>
     </div></section>`;
 }
+/* Lieu à l'honneur du week-end : image, effet et récompense du jour */
+function featureHTML(){
+  const f=featureLoc(); if(!f||!P.tuto) return "";
+  const l=LOCS[f], got=P.ld===today();
+  return `<section class="featbar" aria-label="Lieu à l'honneur"><div class="featimg" style="background-image:linear-gradient(90deg,rgba(8,12,20,0),rgba(8,12,20,.8)),url('${l.img}')"></div><div class="featbody"><div class="eyebrow">Lieu à l'honneur · aujourd'hui</div><b>${l.name}</b><div class="hint">${l.fx}</div><div class="hint">Présent dans toutes les parties du jour.</div><div class="featrw${got?" got":""}">${got?"+25 CHF reçus aujourd'hui":"+25 CHF pour ta première partie contre l'IA"}</div></div></section>`;
+}
 function bannerHTML(){
   const dr=DROPS.filter(x=>today()>=x.soon).pop(); if(!dr) return "";
   const live=today()>=dr.rel, id=dr.id+(live?"-live":"-soon"); if(P.dis.includes(id)) return "";
@@ -265,6 +271,7 @@ function homeHTML(){
     <button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Duel entre amis</span><span class="m">${S&&S.mp&&!S.over?`En cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon"}${P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:""}</span></button>
   </div>
   ${seasonBarHTML()}
+  ${featureHTML()}
   ${bannerHTML()}
 `;
 }
@@ -683,6 +690,7 @@ function resultHTML(){
   return `<div class="veil"><div class="result" role="dialog" aria-label="${t}">
     <h2>${t}</h2>
     ${o.blitz?`<div class="rankline"><b>Blitz · ${o.wins} victoire${o.wins>1?"s":""} sur 3</b><br><span>${o.ended?(o.gain?`Blitz terminé : +${o.gain} CHF`:"Blitz terminé, sans récompense"):o.res==="draw"?"Égalité : le match est à rejouer":`Prochain match contre une IA ${TIERS[BZ.tiers[o.wins]]}`}</span></div>`:`<div class="reward">+${o.gain} CHF</div>`}
+    ${o.feat?`<div class="qdone">Lieu à l'honneur : +${o.feat} CHF pour ta première partie du jour.</div>`:""}
     ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
     ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>

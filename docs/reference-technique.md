@@ -164,6 +164,10 @@ Effet réservé aux **ultra-légendaires de faction** (4 au plus d'ici février)
 - **À savoir** : la carte holo n'affiche **ni coût, ni puissance, ni nom** (c'est une illustration pleine) : dans le zoom ils sont dans l'encadré d'info, dans le paquet seule la bannière « Ultra-légendaire » reste. Décision de Jordan à prendre.
 - Tests : `node outils/tests-holo.js` (34 vérifications : zoom, vitrine, redessins sans doublon, glissement qui ne ferme pas, `destroy()`, carte sans entrée, production, manifest ou image manquants, mouvement réduit, paquet, « Passer »). Le test du doigt sur Android (fluidité, défilement hors de la carte) reste à faire par Jordan.
 
+## Lieu à l'honneur du week-end (22 octobre 2026, demande de Jordan)
+
+Voir la 14e série de `docs/historique-equilibrage.md` pour la règle. Repères : `featureLoc()` (jour → lieu, `qHash`), `pickLocs()` (`js/moteur.js`), `S.feat`, `P.ld`, `featureHTML()` (accueil, classe `.featbar`). **Pour tester un week-end** : bac à sable `?date=2026-12-05` (samedi) ou `window.__today`. Pour exclure un lieu du tirage : filtrer `locPool()` dans `featureLoc()`.
+
 ## Bac à sable `?date=AAAA-MM-JJ` (15 octobre 2026, demande de Jordan)
 
 Ouvrir `https://kanoew.github.io/Duel-Helvara/?date=2027-02-05` simule cette date (de 2026-10-01 à 2030-12-31 ; autre valeur ignorée) pour **voir et jouer les cartes pas encore sorties, avec leurs effets et leur holo**, sur téléphone, sans rien casser.

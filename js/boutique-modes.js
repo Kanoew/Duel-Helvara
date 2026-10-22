@@ -103,7 +103,7 @@ function bzStart(){ if(P.bz.run&&!P.bz.run.over) return;
 function bzPick(id){ const r=P.bz.run; if(!r||r.over||!r.opts.includes(id)||r.deck.length>=12) return; r.deck.push(id); r.opts=r.deck.length<12?bzRoll(r.deck):[]; save(); sfx("select"); render(); }
 function bzEndRun(){ const r=P.bz.run; if(!r||r.over) return; r.over=true; r.gain=BZ.gain[r.wins]; P.chf+=r.gain; save(); if(r.gain) setTimeout(()=>sfx("coin"),500); }
 function bzGame(){ const r=P.bz.run; if(!r||r.over||r.deck.length<12) return;
-  RNG=Math.random; const locIds=shuffle(locPool()).slice(0,3); games++;
+  RNG=Math.random; const locIds=pickLocs(); games++;
   const t=BZ.tiers[r.wins];
   S={turn:0, energy:0, energyE:0, bonus:{p:0,e:0}, destroyed:0,
     locs:locIds.map(id=>({id,rev:false,stopped:false,locked:false})),
@@ -143,7 +143,7 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.16", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.17", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Jetons et codes de salon : crypto.getRandomValues (pas Math.random). Code = LIEU- + 6 caractères sans I, L, O ni 0/1 (31 symboles, tirage sans biais). */
@@ -249,7 +249,7 @@ const validDeck=d=>Array.isArray(d)&&d.length===12&&new Set(d).size===12&&d.ever
 const safeNick=n=>(typeof n==="string"&&n.trim()?n.trim().slice(0,24):"Adversaire");
 function mpNewMatch(om){
   const g=(myMp.g||0)+1, seed=Math.floor(Math.random()*2147483647);
-  const locs=shuffle(locPool()).slice(0,3);
+  const locs=pickLocs();
   mpPush({g,seed,locs,oppTok:om.tok,hist:{},t:0,again:0});
   mpStart(om,false);
 }
