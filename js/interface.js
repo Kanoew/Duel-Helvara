@@ -40,12 +40,28 @@ function art(id,light){
 /* Brillance par rareté : r-R liseré fixe, r-E reflet violet qui balaie, r-L reflet doré et souffle dans l'illustration */
 const rarN=id=>{ const u=ULof(id); return u&&u.fac?"Ultra-légendaire de faction":RAR[CARDS[id].r].n; };
 const rc=d=>(d.r==="R"||d.r==="E"||d.r==="L")&&!d.token?` r-${d.r}`:"";
+/* Effet holo 2.5D sur les petites cartes (main, plateau, grille de la Collection) : une ultra-légendaire de faction garde son effet partout où on la voit.
+   tileHolo() pose un emplacement (une clé par carte affichée) ; render() y monte l'effet et le garde d'un redessin à l'autre (au plus quelques instances : une seule ultra-légendaire par deck). */
+const hasHoloTile=id=>CARDS[id].r==="U"&&!!holoDir(id);
+const tileHolo=(id,key)=>hasHoloTile(id)?`<i class="holotile" data-hid="${id}" data-hk="${key}" aria-hidden="true"></i>`:"";
+const HOLO_TILES=new Map();
+function holoTilesDetach(){ for(const v of HOLO_TILES.values()) if(v.h&&v.h.el) v.h.el.remove(); }
+function holoTilesAttach(root){
+  const live=new Set();
+  root.querySelectorAll(".holotile").forEach(t=>{
+    const k=t.dataset.hk, id=t.dataset.hid, v=HOLO_TILES.get(k); live.add(k);
+    if(v&&v.id===id&&v.h) holoMove(v.h,t);
+    else{ if(v) holoKill(v.h); HOLO_TILES.set(k,{id,h:holoMount(t,id,{idle:true,quality:"low",radius:6,maxFps:30})}); }
+  });
+  for(const [k,v] of HOLO_TILES) if(!live.has(k)){ holoKill(v.h); HOLO_TILES.delete(k); }
+}
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
   /* carte holo en grand : l'image fixe n'a plus les animations d'ultra-légendaire (reflet arc-en-ciel, ambiance, inclinaison) : l'effet holo prend la suite et elles apparaissaient quelques instants avant de disparaître */
   const hp=/\b(big|fanh)\b/.test(extra)&&d.r==="U"&&!!holoDir(id);
   const fx=!hp&&/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
-  return `<div class="full ${extra}${d.r==="U"&&!hp?" holo":""}${hp?" holopre":""}${rc(d)}${fx}">${art(id,/\bbig\b/.test(extra)?"big":undefined)}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
+  const tl=/\btileh\b/.test(extra)&&hasHoloTile(id);
+  return `<div class="full ${extra}${d.r==="U"&&!hp&&!tl?" holo":""}${hp?" holopre":""}${tl?" holof":""}${rc(d)}${fx}">${art(id,/\bbig\b/.test(extra)?"big":undefined)}${tl?tileHolo(id,"g"+id):""}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${fxH(d.fx)}</div>`:""}</div>
     <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }
@@ -337,7 +353,7 @@ function filtHTML(){
 function collCard(id,full){
   if(!P.owned.includes(id)) return lockedCard(id);
   const inn=P.deck.includes(id), off=!inn&&full, nm=CARDS[id].name;
-  return `<div class="pick ${inn?"in":""} ${off?"off":""}" data-lp="z${id}"><button class="pickmain" data-act="zoom" data-id="${id}" aria-label="Voir ${esc(nm)}">${fullCard(id)}</button>
+  return `<div class="pick ${inn?"in":""} ${off?"off":""}" data-lp="z${id}"><button class="pickmain" data-act="zoom" data-id="${id}" aria-label="Voir ${esc(nm)}">${fullCard(id,"tileh")}</button>
     <button class="qadd ${inn?"on":""}" data-act="toggle" data-id="${id}" aria-pressed="${inn}" aria-label="${inn?"Retirer du deck":"Ajouter au deck"} : ${esc(nm)}">${inn?"✓ Deck":"+ Deck"}</button></div>`;
 }
 function collSort(){ return POOL.filter(id=>SHOWN(id)&&collMatch(id)).sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].cost-CARDS[b].cost||CARDS[a].name.localeCompare(CARDS[b].name)); }
@@ -587,7 +603,7 @@ function mini(s,li,c,staged){
   const fat=!staged&&!S.final&&c.id==="ananke"&&c.rev&&fated(c)?`<span class="fatb" title="Fatalité : puissance en fin de partie">✠ ${ankEnd(s,li,c)}</span>`:"";
   const sick=!staged&&c.sick>0?`<span class="sickb" title="Malade : −1 au début de chacun des tours suivants">🤒 ${c.sick}</span>`:"";
   const hed=!staged&&c.id==="hedone"&&c.rev?`<span class="hedb" title="Charmes">${c.hed||0}/2</span>`:"";
-  return `<button class="mini${CARDS[c.id].r==="U"?" holo":""}${chm}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}${fat}${hed}${sick}<span class="pw ${cls}">${p}</span></button>`;
+  return `<button class="mini${CARDS[c.id].r==="U"?hasHoloTile(c.id)?" holof":" holo":""}${chm}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${tileHolo(c.id,"m"+c.uid)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}${fat}${hed}${sick}<span class="pw ${cls}">${p}</span></button>`;
 }
 function sideHTML(s,li){
   const items=S.board[s][li].map(c=>mini(s,li,c,s==="p"&&!c.rev));
@@ -633,8 +649,8 @@ function handHTML(){
   return S.hand.p.map(c=>{
     const d=CARDS[c.id], any=[0,1,2].some(li=>canStage(c,li));
     const cheapest=Math.min(...[0,1,2].map(li=>costOf("p",c,li,S.staged.length===0,jugFirst(S.staged,S.staged.length))));
-    return `<button class="hc${d.r==="U"?" holo":""}${rc(d)}${S.sel===c.uid?" sel":""}${any||S.busy?"":" no"}${S.tut&&tutReq().some(([id])=>id===c.id)&&!S.staged.some(x=>x.c.id===c.id)?" tutreq":""}" data-act="hand" data-uid="${c.uid}" data-lp="c${c.uid}" aria-label="${d.name}, coût ${d.cost}, puissance ${c.pow}">
-      ${art(c.id)}<span class="cost${cheapest<d.cost?" cut":""}">${cheapest}</span><span class="nm">${d.name}</span><span class="pw ${c.pow>d.pow?"up":c.pow<d.pow?"down":""}">${c.pow}</span></button>`;
+    return `<button class="hc${d.r==="U"?hasHoloTile(c.id)?" holof":" holo":""}${rc(d)}${S.sel===c.uid?" sel":""}${any||S.busy?"":" no"}${S.tut&&tutReq().some(([id])=>id===c.id)&&!S.staged.some(x=>x.c.id===c.id)?" tutreq":""}" data-act="hand" data-uid="${c.uid}" data-lp="c${c.uid}" aria-label="${d.name}, coût ${d.cost}, puissance ${c.pow}">
+      ${art(c.id)}${tileHolo(c.id,"h"+c.uid)}<span class="cost${cheapest<d.cost?" cut":""}">${cheapest}</span><span class="nm">${d.name}</span><span class="pw ${c.pow>d.pow?"up":c.pow<d.pow?"down":""}">${c.pow}</span></button>`;
   }).join("")||`<div class="m" style="color:var(--mist);padding:20px 4px">Main vide.</div>`;
 }
 /* Retour facultatif et discret en fin de partie : 👍 / 👎 / « Une carte m'a paru injuste » (puis on choisit la carte). */
@@ -736,7 +752,9 @@ function render(){
   const bigId=bigCardId(), holoKeep=zoomHolo&&zoomHolo.id===bigId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
   /* effet holo de la carte du centre de la vitrine (ultra-légendaire de faction) : même principe, gardé tant que la carte reste au centre */
   const fanKeep=fanHolo&&fanHolo.el?fanHolo.el:null; if(fanKeep) fanKeep.remove();
+  holoTilesDetach();
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
+  holoTilesAttach(app);
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
   else if(screen==="play") holoPrefetch(P.deck); /* en partie : seulement la carte holo de ton deck (le reste se charge à la demande) */
   { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,bigId); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }

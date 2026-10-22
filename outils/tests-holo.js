@@ -102,15 +102,39 @@ srv.listen(0, async () => {
     const uid = await p.evaluate(() => { const h = S.hand.p, d = S.deck.p, k = d.find(x => x.id === "ananke"); if (k) { d.splice(d.indexOf(k), 1); h.push(k); } const c = h.find(x => x.id === "ananke"); if (!c) return "absente"; gz = "c" + c.uid; render(); return c.id; });
     check("partie : Ananké est bien dans la main pour le test", uid === "ananke", uid);
     await p.waitForSelector(".hc-card.hc-ready", { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(150);
-    check("partie : une carte holo en grand reçoit l'effet (" + uid + ")", await n(p, ".hc-card.hc-ready") === 1);
+    check("partie : une carte holo en grand reçoit l'effet (" + uid + ")", await n(p, "#holoslot .hc-card.hc-ready") === 1);
     check("partie : l'effet est mis dans le conteneur holo, l'image fixe est cachée", await p.evaluate(() => document.getElementById("holoslot").classList.contains("holo-on")));
     await p.evaluate("render();render();"); await p.waitForTimeout(300);
-    check("partie : des redessins n'empilent pas d'instances", await n(p, ".hc-card") <= 1);
+    check("partie : des redessins n'empilent pas d'instances", await n(p, "#holoslot .hc-card") <= 1);
     await p.evaluate("gz=null;render();"); await p.waitForTimeout(300);
-    check("partie : fermer le grand format détruit l'effet", await n(p, ".hc-card") === 0 && await p.evaluate(() => zoomHolo === null));
+    check("partie : fermer le grand format détruit l'effet", await n(p, "#holoslot .hc-card") === 0 && await p.evaluate(() => zoomHolo === null));
     await p.evaluate(`(()=>{const h=S.hand.p,c=h.find(x=>x.id!=="ananke");gz="c"+c.uid;render();})()`); await p.waitForTimeout(300);
-    check("partie : une carte sans holo garde son image fixe (aucun effet monté)", await n(p, ".hc-card") === 0 && await n(p, "#holoslot") === 0);
+    check("partie : une carte sans holo garde son image fixe (aucun effet monté)", await n(p, "#holoslot .hc-card") === 0 && await n(p, "#holoslot") === 0);
     check("partie : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
+
+    /* petites cartes : main, plateau et grille de la Collection (idée de Jordan, 22 octobre : l'effet partout où la carte apparaît) */
+    p = await page("/index.html?date=2027-02-05");
+    await p.evaluate(`tutoStep=-1;P.tuto=true;screen="deck";render();`); await p.waitForFunction(() => document.querySelectorAll(".holotile .hc-ready").length === 4, null, { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(100);
+    check("collection : les 4 ultra-légendaires de faction sorties ont l'effet dans la grille", await n(p, ".holotile") === 4 && await n(p, ".holotile .hc-ready") === 4, [await n(p, ".holotile"), await n(p, ".holotile .hc-ready")]);
+    check("collection : le nom, le coût et la puissance restent visibles sur la carte holo de la grille", await p.evaluate(() => { const f = document.querySelector(".holotile").closest(".full"); return getComputedStyle(f.querySelector(".band")).display !== "none" && getComputedStyle(f.querySelector(".cost")).display !== "none"; }));
+    check("collection : l'ancien reflet violet n'est plus posé sur une carte holo", await p.evaluate(() => !document.querySelector(".holotile").closest(".full").classList.contains("holo")));
+    await p.evaluate(`P.deck=["ananke",...P.deck.filter(x=>x!=="ananke")].slice(0,12);newGame();screen="play";
+      const h=S.hand.p,d=S.deck.p,k=d.find(x=>x.id==="ananke");if(k){d.splice(d.indexOf(k),1);h.push(k)}
+      const m=mk("hedone");m.rev=true;S.board.p[0].push(m);const e=mk("nike");e.rev=true;S.board.e[1].push(e);
+      const f=mk("yarden");f.rev=true;S.board.p[1].push(f);render();`);
+    await p.waitForSelector(".hand .holotile .hc-ready", { timeout: 5000 }).catch(() => {}); await p.waitForTimeout(400);
+    check("partie : la carte holo de la main a l'effet", await n(p, ".hand .hc .holotile .hc-ready") === 1);
+    check("partie : les cartes holo du plateau (les tiennes et celles de l'adversaire) ont l'effet", await n(p, ".side .mini .holotile .hc-ready") === 2);
+    check("partie : une carte sans holo n'a aucun emplacement d'effet", await p.evaluate(() => [...document.querySelectorAll(".mini,.hc")].filter(x => !/Ananké|Hédoné|Nike/.test(x.getAttribute("aria-label"))).every(x => !x.querySelector(".holotile"))));
+    check("partie : l'effet laisse passer le doigt (appui sur la carte = ouvrir, défilement de la main)", await p.evaluate(() => { const t = document.querySelector(".hand .holotile"); return getComputedStyle(t).pointerEvents === "none" && getComputedStyle(t.querySelector(".hc-card")).touchAction === "auto"; }));
+    check("partie : une carte holo garde un cadre doré, la fusion garde son reflet violet", await p.evaluate(() => document.querySelector(".hc.holof") !== null && !document.querySelector(".hc.holof").classList.contains("holo")));
+    await p.evaluate("for(let i=0;i<10;i++)render();"); await p.waitForTimeout(500);
+    check("partie : 10 redessins n'empilent pas d'instances (3 au total)", await n(p, ".hc-card") === 3 && await p.evaluate(() => HOLO_TILES.size === 3), [await n(p, ".hc-card")]);
+    await p.evaluate("S.board.e[1].length=0;render();"); await p.waitForTimeout(300);
+    check("partie : une carte qui quitte le plateau détruit son effet", await n(p, ".hc-card") === 2 && await p.evaluate(() => HOLO_TILES.size === 2));
+    await p.evaluate("screen=\"home\";render();"); await p.waitForTimeout(300);
+    check("partie : quitter l'écran détruit tous les effets des petites cartes", await n(p, ".hc-card") <= 1 && await p.evaluate(() => HOLO_TILES.size === 0));
+    check("petites cartes : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
   } catch (e) { ko++; console.log("ÉCHEC   exception : " + e.message); }
   await b.close(); srv.close(); console.log(`\n${ok} sur ${ok + ko} vérifications valides.`); process.exit(ko ? 1 : 0);
 });

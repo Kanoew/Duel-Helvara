@@ -1,5 +1,5 @@
 /* Effet holo 2.5D des Ultra-légendaires de faction (module js/holo-card.js, chargé à la demande).
-   Affiché seulement dans le grand format d'une carte (Collection ou partie) et à la révélation d'un paquet, jamais sur le plateau, la main ou les listes.
+   Affiché partout où la carte apparaît : grand format (Collection, partie), révélation d'un paquet, vitrine de l'accueil, et petites cartes (main, plateau, grille de la Collection).
    Activé par donnée : HOLO = { id de carte : dossier sous images/holo/ }. Une carte sans entrée garde son image fixe.
    Si le module, le manifest ou une image ne charge pas, rien ne change à l'écran (l'image fixe reste). */
 const HOLO = { nike: "nike", ananke: "ananke", hedone: "hedone", nike_v: "nike-saint-valentin", source: "carla" };
@@ -14,20 +14,25 @@ const holoLoad = () => holoModP || (holoModP = import(new URL(HOLO_MOD, document
    Renvoie un jeton à passer à holoKill(), ou null si la carte n'a pas de holo. */
 function holoMount(slot, id, opts) {
   const dir = holoDir(id); if (!dir || !slot) return null;
-  const h = { id, dead: false, card: null, el: null };
+  const h = { id, dead: false, card: null, el: null, slot };
   (async () => {
     let el = null;
     try {
       const mod = await holoLoad(); if (h.dead) return;
-      el = document.createElement("div"); el.className = "holohost"; slot.appendChild(el);
+      el = document.createElement("div"); el.className = "holohost"; h.slot.appendChild(el);
       const card = await mod.HoloCard.load(el, "images/holo/" + dir + "/manifest.json", Object.assign({ radius: 12 }, opts));
       if (h.dead) { card.destroy(); el.remove(); return; }
       h.card = card; h.el = el;
       /* même illustration dessous (sans texte) : l'effet prend la place tout de suite, sans fondu (il « montait » et faisait une coupure) */
-      requestAnimationFrame(() => { if (!h.dead) slot.classList.add("holo-on"); });
-    } catch (e) { if (el) el.remove(); const f = slot.querySelector(".full.holopre"); if (f) { f.classList.remove("holopre"); f.classList.add("holo"); } }   /* repli : l'image fixe retrouve son reflet d'ultra-légendaire */
+      requestAnimationFrame(() => { if (!h.dead) h.slot.classList.add("holo-on"); });
+    } catch (e) { if (el) el.remove(); const f = h.slot.querySelector(".full.holopre"); if (f) { f.classList.remove("holopre"); f.classList.add("holo"); } }   /* repli : l'image fixe retrouve son reflet d'ultra-légendaire */
   })();
   return h;
+}
+/* Change l'emplacement d'un effet (le jeu réécrit l'écran à chaque action : l'effet suit son nouveau conteneur, même pendant son chargement). */
+function holoMove(h, slot) {
+  if (!h || h.dead) return; h.slot = slot;
+  if (h.el) { slot.appendChild(h.el); slot.classList.add("holo-on"); }
 }
 /* Image à plat de la carte holo (les couches empilées, sans mouvement) : sert de face à la carte qui se retourne dans l'ouverture de paquet,
    pour que l'effet, posé ensuite par-dessus, prenne la suite sans changement d'image (l'image fixe du jeu a le nom, le coût et le texte). Renvoie null si indisponible. */

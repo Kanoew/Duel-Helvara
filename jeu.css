@@ -869,6 +869,11 @@ body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 @media (prefers-reduced-motion:reduce){ .syncb{transition:none} }
 .synclast{margin-top:4px;opacity:.85}
 /* Effet holo 2.5D (zoom d'une ultra-légendaire de faction, révélation de paquet) : l'image fixe reste tant que l'effet n'est pas prêt */
+/* petites cartes (main, plateau, grille de la Collection) : l'effet est posé sur l'illustration, sous le coût, le nom et la puissance, et laisse passer le doigt */
+.holotile{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;display:block}
+.holotile *{pointer-events:none!important}
+.holotile .hc-card{touch-action:auto}
+.holof{border-color:rgba(232,184,90,.55)}
 .holoslot{position:relative;width:min(340px,82vw)}
 .holoslot .full.big{width:100%}
 .holoslot.holo-on>.full{display:none}

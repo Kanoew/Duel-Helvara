@@ -266,6 +266,9 @@ export class HoloCard {
 
   _frame = (now) => {
     if (!this.running) return;
+    /* option maxFps (ajout Duel d'Helvara, petites cartes) : saute les images en trop pour ménager le téléphone */
+    if (this.o.maxFps && now - (this._drawn || 0) < 1000 / this.o.maxFps - 3) { requestAnimationFrame(this._frame); return; }
+    this._drawn = now;
     const dt = Math.min(.05, (now - this.last) / 1000); this.last = now; const t = (now - this.t0) / 1000;
     const idle = this.o.idle !== false && !this.reduce;
     if (!this.active) { this.target.x = idle ? Math.sin(t * .55) * .75 : 0; this.target.y = idle ? Math.cos(t * .4) * .5 : 0; }
