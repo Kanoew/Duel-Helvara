@@ -125,7 +125,7 @@ const vestaOn=s=>!!(S.vesta&&S.vesta[s]);
 const vestaT=id=>CARDS[id].fac==="jugement"&&CARDS[id].cost>=1;
 const jugFirst=(list,i)=>!list.slice(0,i).some(x=>vestaT((x.c||x).id));
 function costOf(s,c,li,isFirst,jf){ return c.free?0:costFor(s,c.id,li,isFirst,jf); }
-function costFor(s,id,li,isFirst,jf){ let c=CARDS[id].cost; if(id==="ulya") c-=S.hand[s].filter(x=>x.id!=="ulya").length; if(isFirst) c-=S.disc[s]; if(jf&&vestaT(id)&&vestaOn(s)) c-=1; if(locIs(li,"sousgare")) c-=1; if(locIs(li,"encheres")) c+=1; return Math.max(0,c); }
+function costFor(s,id,li,isFirst,jf){ let c=CARDS[id].cost; if(id==="ulya") c-=S.hand[s].filter(x=>x.id!=="ulya").length; if(id==="ereshkigal_n"&&S.hand[s].some(x=>charOf(x.id)==="nergal")) c-=2; if(isFirst) c-=S.disc[s]; if(jf&&vestaT(id)&&vestaOn(s)) c-=1; if(locIs(li,"sousgare")) c-=1; if(locIs(li,"encheres")) c+=1; return Math.max(0,c); }
 function used(){ return S.staged.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf("p",x.c,x.li,i===0,jugFirst(S.staged,i))),0); }
 /* Nemesis ne peut pas être jouée au tour 6, même avec de l'énergie en réserve (Prométhée) */
 /* Règle de design : les cartes qui verrouillent un lieu (Nemesis, Cronos, Ananké) ne peuvent pas être jouées au tour 6, même avec de l'énergie gardée (Prométhée) */
@@ -296,6 +296,17 @@ function revealFx(s,li,c,opts={}){
     case "joanna": { let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&S.board[s][i].some(x=>x.rev)&&S.board[s][i].length<capOf(s,i)){ const t=mk("lanterne"); t.rev=true; t.fresh=true; S.board[s][i].push(t); n++; } if(n) note=`${n} Lanterne${n>1?"s":""}`; break; }
     case "ares_h": { let n=0; for(const x of targets) if(weaken(o,li,x,2)) n++; if(n){ c.pow+=n; note=`−2 à ${n}, +${n}`; snd="debuff"; } break; }
     case "nergal_h": { let n=0; for(const side of [s,o]) for(let i=0;i<3;i++) for(const x of S.board[side][i].slice()) if(x!==c&&x.rev&&pw(side,i,x)<=1&&!(side===o&&untargetable(s,o,x))&&destroy(side,i,x)) n++; if(n){ c.pow+=2*n; note=`la peste emporte ${n} carte${n>1?"s":""}, +${2*n}`; snd="destroy"; } break; }
+    case "aphrodite_r": { /* Coupe de Minuit : +2 d'énergie au tour suivant (10 au plus ce tour-là, comme Prométhée), chaque joueur pioche 1 carte ; rien au tour 6 */
+      if(S.turn>=6) break;
+      const k=Math.min(2,Math.max(0,10-(S.turn+1)-S.bonus[s])); if(k>0) S.bonus[s]+=k;
+      draw(s); draw(o); note=(k>0?`+${k} énergie au prochain tour, `:"")+"chacun pioche 1 carte"; snd="buff"; break; }
+    case "ares_n": { /* Duelliste du Dernier Soir : défie la carte adverse la plus forte ici, la moins puissante des deux est détruite (égalité : aucune) */
+      const t=strongest(targets,o,li); if(!t) break;
+      const a=pw(s,li,c), b=pw(o,li,t);
+      if(a>b){ if(destroy(o,li,t)){ note=`défie ${nm(t)} : ${nm(t)} tombe`; snd="destroy"; } }
+      else if(b>a){ if(destroy(s,li,c)){ note=`défie ${nm(t)} : ${nm(c)} tombe`; snd="destroy"; } }
+      else note=`défie ${nm(t)} : égalité`;
+      break; }
     case "aphrodite_n": { let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)){ const t=mk("refaph"); t.pow=3; t.rev=true; t.fresh=true; S.board[s][i].push(t); n++; } if(n) note=`${n} Reflet${n>1?"s":""} d'Aphrodite (3)`; break; }
     case "sekhmet_n": { let n=0; for(const x of targets.filter(x=>pw(o,li,x)<=2)) if(destroy(o,li,x)) n++; if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
     case "calypso_n": { const t=strongest(targets,o,li); if(t&&!shielded(o,li)&&!sunlit(o)){ t.captive=c.uid; note=`${nm(t)} est captive`; snd="lock"; } if(foes.length) buffSelf(foes.length); break; }
@@ -470,7 +481,7 @@ function revealFx(s,li,c,opts={}){
 
 /* ======= IA ======= */
 const RES=new Set(["hel","hel_r","ulhel","hades","loviatar"]);
-const HITS=["bia","circe","qetesh","qetesh_r","pele_r","ulqetjor_r","poseidon","uloshun","tyr","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
+const HITS=["ereshkigal_n","bia","circe","qetesh","qetesh_r","pele_r","ulqetjor_r","poseidon","uloshun","tyr","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
 const DESTROYERS=new Set(["anat","anubis","boucher","durga","ereshkigal","esquille","ficelle","izzy_h","lilith","maree","nergal_h","nyx","nyx_h","rusalka","sekhmet","sekhmet_n","troll","ulnem","uloshun","yarden_d"]);
 const NEEDS_MATES=["susanoo","ulaph","oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
 /* Synergies connues de l'IA : [carte qui prépare, cartes qui en profitent, 1 si elles doivent partager le lieu] */
@@ -480,7 +491,7 @@ const AI_PREP={}, AI_PAY={};
 for(const [a,bs,loc] of AI_PAIRS){ (AI_PREP[a]=AI_PREP[a]||[]).push(...bs); for(const x of bs) (AI_PAY[x]=AI_PAY[x]||[]).push({a,loc:!!loc}); }
 /* Cartes adverses qui visent la plus forte : l'IA évite alors de tout miser sur une seule grosse carte */
 /* Cartes adverses qui affaiblissent (−N de puissance) : Amaterasu les neutralise */
-const AI_WEAK=new Set(["thot","artemis","tyr","hathor","ishtar","skadi","ixchel","balor","pele","pele_r","ulpele_r","nergal","araignee","ares","ares_h","mouche","medee","medee_h","set","bia","scathach","ecorche","andraste"]);
+const AI_WEAK=new Set(["ereshkigal_n","ares_n","thot","artemis","tyr","hathor","ishtar","skadi","ixchel","balor","pele","pele_r","ulpele_r","nergal","araignee","ares","ares_h","mouche","medee","medee_h","set","bia","scathach","ecorche","andraste"]);
 const AI_WARY=new Set(["nyx","nyx_h","durga","oya","ixchel","lilith","anubis","izzy_h","uloshun","ulnem","qetesh","qetesh_r","mohini","thot","medee_h"]);
 /* L'IA compare toutes les combinaisons de sa main qui tiennent dans son énergie (128 au plus). Pour chacune, elle estime
    la puissance ajoutée dans chaque lieu, puis sa probabilité de gagner 2 lieux sur 3 face à ce que l'adversaire peut encore poser.
@@ -574,6 +585,10 @@ function aiPlan(me="e",tierOv){
       if(foes){ hit+=fs-2.5; pow-=ms; pow+=2*Math.max(0,own.length-(own.length?1:0)+(ctx.pend[li]?ctx.pend[li]*.7:0)); adj+=1.5; } }
     /* Nyx X Circé : toutes les cartes adverses ici deviennent des Pourceaux (puissance 1) : on retire leur puissance moins 1 chacune */
     if(c.id==="ulcirce"){ const fo=S.board[op][li].filter(x=>x.rev&&!fated(x)&&!x.neg); if(fo.length&&!shielded(op,li)) hit+=fo.reduce((a,x)=>a+Math.max(0,cardPow(op,li,x)-1),0)+.5; else adj-=2; }
+    /* Arès, Duelliste du Dernier Soir : si la carte adverse la plus forte ici est plus faible, elle tombe (on gagne sa puissance) ; si elle est plus forte, c'est lui qui tombe */
+    if(c.id==="ares_n"){ const fp=S.board[op][li].filter(x=>x.rev&&!untargetable(me,op,x)).map(x=>cardPow(op,li,x)); if(fp.length){ const f=Math.max(...fp); if(f<pow) hit+=f; else if(f>pow){ adj-=pow; pow=0; } } }
+    /* Aphrodite, Coupe de Minuit : +2 d'énergie au tour suivant, sans effet au tour 6 : à jouer au plus tard au tour 5 */
+    if(c.id==="aphrodite_r"){ if(S.turn>=6) adj-=6; else adj+=S.turn<=3?6:4; }
     /* Médée, Mariée Spectrale : le poison retire 1 par fin de tour (7 − tour fins de tour restantes) à la carte adverse la plus forte ici, aux deux plus fortes avec Hécate */
     if(c.id==="medee_h"){ const fp=S.board[op][li].filter(x=>x.rev&&!fated(x)).map(x=>cardPow(op,li,x)).sort((a,b)=>b-a), k=Math.max(0,7-S.turn);
       if(fp.length){ hit+=Math.min(Math.max(0,fp[0]),k)+((onBoard("hecate")||ctx.plays.some(x=>x.c.id==="hecate"))&&fp[1]>0?Math.min(fp[1],k):0); if(S.turn<=4) adj+=1; } else adj-=1.5; }
@@ -705,6 +720,11 @@ async function resolveTurn(mine, theirs, animate){
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(c.poison&&c.rev&&cardPow(s,li,c)>0&&(SRC={s:opp(s),cost:CARDS.medee_h.cost},weaken(s,li,c,1))&&!(SRC=null)){
     (c.mods=c.mods||[]).push({v:-1,src:"Poison de Médée"}); log(`Poison de Médée · −1 à ${nm(c)} (${who(s)})`); sfx("debuff"); }
   SRC=null;
+  /* Ereshkigal, Dame de la Longue Nuit : à la fin de chaque tour (le 6 compris), la carte adverse la plus forte ici perd 1 de puissance, définitivement */
+  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="ereshkigal_n"){
+    const o=opp(s); const t=S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];
+    SRC={s,cost:CARDS.ereshkigal_n.cost}; const ok=t&&weaken(o,li,t,1); SRC=null;
+    if(ok){ (t.mods=t.mods||[]).push({v:-1,src:"Ereshkigal"}); log(`Ereshkigal · −1 à ${nm(t)} (${who(o)})`); sfx("debuff"); } }
   /* Ishtar : fin de tour (pas après le tour 6) */
   if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="ishtar"){
     const o=opp(s); const t=S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];

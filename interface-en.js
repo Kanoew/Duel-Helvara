@@ -23,7 +23,10 @@
     [/^l'adversaire perd son énergie conservée$/, ()=>"the opponent loses their stored energy"],
     [/^\+1 à (.+), encre indélébile$/, (m,a)=>`+1 to ${a}, permanent ink`],
     [/^défausse (.+), pioche 2$/, (m,a)=>`discards ${a}, draws 2`],
-    [/^\+1 énergie au prochain tour$/, ()=>"+1 energy next turn"],
+    [/^\+(\d+) énergie au prochain tour$/, (m,n)=>`+${n} energy next turn`],
+    [/^chacun pioche 1 carte$/, ()=>"each player draws 1 card"],
+    [/^défie (.+) : égalité$/, (m,a)=>`challenges ${a}: a tie`],
+    [/^défie (.+) : (.+) tombe$/, (m,a,b)=>`challenges ${a}: ${b} falls`],
     [/^ajoute (.+) à sa main$/, (m,a)=>`adds ${a} to hand`],
     [/^l'effet du lieu s'arrête$/, ()=>"the location's effect stops"],
     [/^la forge s'allume$/, ()=>"the forge lights up"],
@@ -464,8 +467,8 @@
       },
       SEASON:{
         halloween:{sub:"Pumpkin Night",who:"Player of Helvara · Halloween night",eyebrow:"Pumpkin Night · until November 2",title:"The veil is thin in Helvara",hint:"Pumpkins burn along the quays. The Pumpkin Fold hides Lady Joanna, and Morrigan, Nyx, Izzy, Yarden, Ares, Nergal and Medea in their Halloween versions.",btn:"Open the Pumpkin Fold",win:"Victory under the russet moon",lose:"The dead won tonight"},
-        noel:{sub:"Star Vigil",who:"Player of Helvara · Christmas Eve",eyebrow:"Star Vigil · until January 2",title:"Snow falls on Helvara",hint:"The vineyards are white and the lake holds its breath. The Star Fold hides Aphrodite, Sekhmet, Calypso and Apsu in their Christmas versions.",btn:"Open the Star Fold",win:"Victory under the Star",lose:"The winter night prevails"},
-        nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel, Eos, Pele and Qetesh in their New Year's Eve versions.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
+        noel:{sub:"Star Vigil",who:"Player of Helvara · Christmas Eve",eyebrow:"Star Vigil · until January 2",title:"Snow falls on Helvara",hint:"The vineyards are white and the lake holds its breath. The Star Fold hides Aphrodite, Sekhmet, Calypso, Apsu and Ereshkigal in their Christmas versions.",btn:"Open the Star Fold",win:"Victory under the Star",lose:"The winter night prevails"},
+        nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel, Eos, Pele, Qetesh, Aphrodite and Ares in their New Year's Eve versions.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
       },
       DROPS:{
         nov15:"Prometheus keeps the fire, Pandora opens the box, Athena guides your hand, and Styx watches over her daughters: Bia, and Nike, the first faction ultra-legendary. Ma'at, Apollo and Vesta prepare her way. She is earned by playing 50 games with 8 Judgement cards: the Faction journal is already counting.",
@@ -474,7 +477,7 @@
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."
       },
-      ULS:{nike:"8 Judgement cards, Nike included",ananke:"8 Primordial cards, Ananke included",hedone:"8 Desire cards, Hedone included",source:"8 Helvara cards, The Source included",ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur",ulpele_r:"Pele and Jordan",ulqetjor_r:"Qetesh of the New Year and Jordan",ulsomnambule:"The Sleepwalker and The Queen",ularchiviste:"The Archivist and The Proprietress",nike_v:"8 Judgement cards, Nike of Valentine's Day included",ulqetjor_v:"Qetesh of Valentine's Day and Jordan",ulprombia:"Prometheus and Bia",ulheradio:"Hera and Dionysus",ulposathe:"Poseidon and Athena",ulnikebia:"Nike and Bia",ulmaatset:"Ma'at and Set",ulprompan:"Prometheus and Pandora",ulinaere:"Inanna and Ereshkigal",ulnikejor_v:"Nike of Valentine's Day and Jordan",ulaphares:"Aphrodite and Ares",ultyphgaia:"Typhon and Gaia",ularesathe:"Ares and Athena",ulbaldere:"Baldur and Ereshkigal",ulbaldfrigg:"Baldur and Frigg",ulsusama:"Susanoo and Amaterasu",ulcircal:"Circe and Calypso",uloshoya:"Oshun and Oya",ulhadper:"Hades and Persephone"}
+      ULS:{nike:"8 Judgement cards, Nike included",ananke:"8 Primordial cards, Ananke included",hedone:"8 Desire cards, Hedone included",source:"8 Helvara cards, The Source included",ulya:"Yarden Weiss and Apsu",ulji:"Jordan and Izzy",ulaph:"Aphrodite and Yarden Weiss",ulcal:"Calypso and Jordan",ulnem:"Nemesis and Jordan",ulcirce:"Nyx and Circe",uloshun:"Nyx and Oshun",ulqetjor:"Qetesh and Jordan",ulqetyar:"Qetesh and Yarden Weiss",ulhel:"Hel and Baldur",ulpele_r:"Pele and Jordan",ulqetjor_r:"Qetesh, Vow of the First Day and Jordan",ulsomnambule:"The Sleepwalker and The Queen",ularchiviste:"The Archivist and The Proprietress",nike_v:"8 Judgement cards, Nike of Valentine's Day included",ulqetjor_v:"Qetesh of Valentine's Day and Jordan",ulprombia:"Prometheus and Bia",ulheradio:"Hera and Dionysus",ulposathe:"Poseidon and Athena",ulnikebia:"Nike and Bia",ulmaatset:"Ma'at and Set",ulprompan:"Prometheus and Pandora",ulinaere:"Inanna and Ereshkigal",ulnikejor_v:"Nike of Valentine's Day and Jordan",ulaphares:"Aphrodite and Ares",ultyphgaia:"Typhon and Gaia",ularesathe:"Ares and Athena",ulbaldere:"Baldur and Ereshkigal",ulbaldfrigg:"Baldur and Frigg",ulsusama:"Susanoo and Amaterasu",ulcircal:"Circe and Calypso",uloshoya:"Oshun and Oya",ulhadper:"Hades and Persephone"}
     }
   };
 })();

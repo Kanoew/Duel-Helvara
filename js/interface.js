@@ -873,7 +873,7 @@ document.addEventListener("pointercancel", e=>fanRelease(e,true));
 /* Pose la carte sélectionnée (S.sel) sur un lieu : même règle pour le toucher et pour le glisser-déposer */
 function stageSel(li){
   const c=S.sel&&findHand(S.sel);
-  if(c&&canStage(c,li)){ const fx=c.id==="ulya"?costFor("p",c.id,li,S.staged.length===0):null; S.hand.p=S.hand.p.filter(x=>x!==c); S.staged.push(fx!=null?{c,li,fixed:fx}:{c,li}); S.sel=null; S.info=null; sfx("place"); return true; }
+  if(c&&canStage(c,li)){ const fx=(c.id==="ulya"||c.id==="ereshkigal_n")?costFor("p",c.id,li,S.staged.length===0):null; S.hand.p=S.hand.p.filter(x=>x!==c); S.staged.push(fx!=null?{c,li,fixed:fx}:{c,li}); S.sel=null; S.info=null; sfx("place"); return true; }
   return false;
 }
 /* Glisser-déposer : on soulève une carte de la main VERS LE HAUT (un glissement de côté fait défiler la main, un toucher
