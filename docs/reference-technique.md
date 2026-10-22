@@ -164,6 +164,10 @@ Effet réservé aux **ultra-légendaires de faction** (4 au plus d'ici février)
 - **À savoir** : la carte holo n'affiche **ni coût, ni puissance, ni nom** (c'est une illustration pleine) : dans le zoom ils sont dans l'encadré d'info, dans le paquet seule la bannière « Ultra-légendaire » reste. Décision de Jordan à prendre.
 - Tests : `node outils/tests-holo.js` (34 vérifications : zoom, vitrine, redessins sans doublon, glissement qui ne ferme pas, `destroy()`, carte sans entrée, production, manifest ou image manquants, mouvement réduit, paquet, « Passer »). Le test du doigt sur Android (fluidité, défilement hors de la carte) reste à faire par Jordan.
 
+## Mécanismes ajoutés par le lot du 1er janvier 2027 (22 octobre)
+
+Détail et décisions : 15e série de `docs/historique-equilibrage.md`. Repères du moteur : coûts du tour suivant `S.costNext` → `S.costNow` (`startTurn`, `costFor`, bandeau `.mods`) ; carte moins chère `c.cheap` (`costOf`) ; jeton Plume (`slotsUsed`, `eatPlume`, `sideHTML`) ; retour de l'Enfant et doublement de Cernunnos (fin de `resolveTurn`) ; `veilleurHook` ; `banned()` et `discard()` pour le Reflet Noir ; auras de la Meute, du Musicien et d'Ea dans `cardPow`, de l'Archiviste X Patronne dans `costFor`.
+
 ## Lieu à l'honneur du week-end (22 octobre 2026, demande de Jordan)
 
 Voir la 14e série de `docs/historique-equilibrage.md` pour la règle. Repères : `featureLoc()` (jour → lieu, `qHash`), `pickLocs()` (`js/moteur.js`), `S.feat`, `P.ld`, `featureHTML()` (accueil, classe `.featbar`). **Pour tester un week-end** : bac à sable `?date=2026-12-05` (samedi) ou `window.__today`. Pour exclure un lieu du tirage : filtrer `locPool()` dans `featureLoc()`.

@@ -735,6 +735,124 @@ async function inPage() {
       T("Lieu à l'honneur : P.ld survit au nettoyage du profil, une valeur absurde est ignorée", clean({ ld: "2026-12-05" }).ld === "2026-12-05" && clean({ ld: 42 }).ld === "" && clean({}).ld === "");
       T("Lieu à l'honneur : textes anglais (bandeau et résultat)", HELVARA_UI_EN.exact["Lieu à l'honneur · aujourd'hui"] === "Featured place · today" && HELVARA_UI_EN.rules.some(([re]) => re.test("Lieu à l'honneur : +25 CHF pour ta première partie du jour.")));
       window.__today = keep; P.ld = ""; games = g0; }
+
+    /* ===== Lot du 1er janvier 2027 (22 octobre) : 15 cartes ===== */
+    { const IDS = ["archiviste", "veilleur_pont", "enfant", "meute", "musicien", "reflet_noir", "patronne", "ularchiviste", "quetzalcoatl", "ea", "anansi", "dagda", "indra", "cernunnos", "typhon"];
+      const SP = { archiviste: [3, 2, "helvara", "R"], veilleur_pont: [2, 3, "helvara", "R"], enfant: [0, 0, "helvara", "R"], meute: [4, 8, "helvara", "E"], musicien: [3, 3, "helvara", "E"], reflet_noir: [3, 5, "helvara", "E"], patronne: [5, 4, "helvara", "E"], ularchiviste: [3, 2, "helvara", "U"],
+        quetzalcoatl: [3, 2, "desir", "R"], ea: [4, 2, "desir", "L"], anansi: [4, 2, "desir", "L"], dagda: [4, 3, "jugement", "E"], indra: [4, 2, "jugement", "E"], cernunnos: [3, 1, "primordial", "E"], typhon: [4, 4, "primordial", "E"] };
+      T("Lot du 1er janvier : les 15 cartes ont leurs coût, puissance, faction et rareté", IDS.every(id => { const d = CARDS[id], x = SP[id]; return d.cost === x[0] && d.pow === x[1] && d.fac === x[2] && d.r === x[3]; }), IDS.filter(id => { const d = CARDS[id], x = SP[id]; return !(d.cost === x[0] && d.pow === x[1] && d.fac === x[2] && d.r === x[3]); }).join());
+      T("Lot du 1er janvier : sortie le 1er janvier 2027, annonce le 27 décembre, aucune n'est exclusive ; Plume est un jeton", IDS.every(id => CARDS[id].rel === "2027-01-01" && CARDS[id].soon === "2026-12-27" && !CARDS[id].ex && !CARDS[id].vfx === !CARDS[id].vfx && CARDS[id].fx) && CARDS.plume.token && CARDS.plume.pow === 1 && CARDS.plume.cost === 0);
+      T("Lot du 1er janvier : bannière DROPS du 1er janvier (15 cartes), FR et EN", DROPS.some(d => d.id === "jan1" && d.rel === "2027-01-01" && d.soon === "2026-12-27") && POOL.filter(id => CARDS[id].rel === "2027-01-01").length === 15 && HELVARA_UI_EN.data.DROPS.jan1.length > 20);
+      T("Lot du 1er janvier : Primordial ne gagne que Cernunnos et Typhon, Quetzalcoatl et Ea passent en Désir, Dagda et Indra en Jugement", ["cernunnos", "typhon"].every(id => CARDS[id].fac === "primordial") && ["quetzalcoatl", "ea"].every(id => CARDS[id].fac === "desir") && ["dagda", "indra"].every(id => CARDS[id].fac === "jugement") && IDS.filter(id => CARDS[id].fac === "primordial").length === 2);
+      T("Lot du 1er janvier : textes anglais des 15 cartes", IDS.every(id => HELVARA_EN.cards[id] && HELVARA_EN.cards[id].fx && /[a-z]/.test(HELVARA_EN.cards[id].fx)) && HELVARA_EN.cards.plume.n === "Feather");
+      const base = async () => { fresh(); S.turn = 3; const t0 = card(plain[0]); S.hand.p = [t0]; S.hand.e = []; await resolveTurn([{ c: t0, li: 0 }], [], false); return { hp: S.hand.p.length, he: S.hand.e.length }; };
+      /* 1. L'Archiviste */
+      { const r = await base(); fresh(); S.turn = 3; const ar = card("archiviste"); S.hand.p = [ar]; S.hand.e = []; await resolveTurn([{ c: ar, li: 0 }], [], false);
+        T("Archiviste : pioche 2 cartes, l'adversaire en pioche 1", S.hand.p.length === r.hp + 2 && S.hand.e.length === r.he + 1, `${S.hand.p.length}/${S.hand.e.length} (réf. ${r.hp}/${r.he})`); }
+      /* 2. Le Veilleur du Pont */
+      fresh(); S.turn = 3; { put("p", 0, "veilleur_pont"); const a = card(plain[0], 4), b = card(plain[1], 4), c = card(plain[2], 4); S.hand.e = [a, b, c]; await resolveTurn([], [{ c: a, li: 0 }, { c: b, li: 0 }, { c: c, li: 1 }], false);
+        T("Veilleur du Pont : seule la première carte adverse jouée ici perd 1 (la deuxième et celle d'un autre lieu non)", a.pow === 3 && b.pow === 4 && c.pow === 4, [a.pow, b.pow, c.pow]);
+        const d = card(plain[3], 4); S.hand.e = [d]; await resolveTurn([], [{ c: d, li: 0 }], false); T("Veilleur du Pont : de nouveau le tour suivant", d.pow === 3, d.pow); }
+      /* 3. L'Enfant sans École */
+      fresh(); S.turn = 3; { const en = card("enfant"); S.hand.p = [en]; T("Enfant : coût 0, jouable", costFor("p", "enfant", 0, true, true) === 0 && canStage(en, 0)); await resolveTurn([{ c: en, li: 0 }], [], false);
+        T("Enfant : à la fin du tour 3, retourne dans la main avec +1 (permanent)", !S.board.p[0].includes(en) && S.hand.p.includes(en) && en.pow === 1 && !en.rev, `${en.pow} ${en.rev}`);
+        S.hand.p = [en]; await resolveTurn([{ c: en, li: 0 }], [], false); T("Enfant : rejouée au tour suivant (aucune limite de cartes par tour), de nouveau +1 → 2", S.hand.p.includes(en) && en.pow === 2, en.pow); }
+      fresh(); S.turn = 1; { const en = card("enfant"); for (let i = 1; i <= 5; i++) { S.hand.p = [en]; S.hand.e = []; await resolveTurn([{ c: en, li: 0 }], [], false); }
+        T("Enfant : jouée aux tours 1 à 5, elle entre au tour 6 avec 5 de puissance", S.turn === 6 && en.pow === 5 && S.hand.p.includes(en), `${S.turn} ${en.pow}`);
+        S.hand.p = [en]; await resolveTurn([{ c: en, li: 0 }], [], false); T("Enfant : au tour 6 elle reste en jeu, sans retour ni gain (5 pour 0)", S.board.p[0].includes(en) && en.pow === 5 && cardPow("p", 0, en) === 5, `${en.pow}`); }
+      fresh(); S.turn = 3; { const en = card("enfant"); S.hand.p = [en, ...[...Array(7)].map(() => card(plain[0]))]; await resolveTurn([{ c: en, li: 0 }], [], false);
+        T("Enfant : main pleine, elle reste en jeu et gagne quand même +1", S.board.p[0].includes(en) && en.pow === 1, `${en.pow} ${S.hand.p.length}`); }
+      fresh(); S.turn = 3; { const en = card("enfant"); en.neg = true; S.hand.p = [en]; await resolveTurn([{ c: en, li: 0 }], [], false); T("Enfant : sans effet si elle a perdu ses effets (Apsu) : elle reste, 0 de puissance", S.board.p[0].includes(en) && en.pow === 0); }
+      fresh(); S.turn = 3; S.energy = S.energyE = 5; { const en = card("enfant"), x = card(plain[0]); S.hand.e = [en, x]; const ids = aiPlan("e", 5).map(y => y.c.id); T("IA : rejoue l'Enfant sans École chaque tour (coût 0)", ids.includes("enfant"), ids.join()); }
+      /* 4. La Meute du M2 */
+      fresh(); S.turn = 3; { const m = put("p", 0, "meute"), mine = put("p", 0, plain[0], 3), foe = put("e", 0, plain[1], 3), foe2 = put("e", 1, plain[2], 3);
+        T("Meute : les cartes adverses ici ont +2 (3 → 5), les tiennes et celles d'un autre lieu non", cardPow("e", 0, foe) === 5 && cardPow("p", 0, mine) === 3 && cardPow("e", 1, foe2) === 3 && cardPow("p", 0, m) === 10 /* 8 + 2 du lieu de test */, [cardPow("e", 0, foe), cardPow("p", 0, mine), cardPow("e", 1, foe2), cardPow("p", 0, m)]);
+        m.neg = true; T("Meute : sans effet si elle a perdu ses effets", cardPow("e", 0, foe) === 3); }
+      /* 5. Le Musicien */
+      { const c3 = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id) && id !== "musicien" && !CARDS[id].base), c2 = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].cost === 2 && !CARDS[id].fx && !ULof(id));
+        fresh(); S.turn = 3; const mu = put("p", 0, "musicien"), a = put("p", 1, c3), b = put("p", 2, c2), f = put("e", 1, c3);
+        T("Musicien : tes autres cartes de coût d'origine 3 ont +2 dans les 3 lieux (pas celles de coût 2, ni les adverses, ni lui-même)", cardPow("p", 1, a) === CARDS[c3].pow + 2 && cardPow("p", 2, b) === CARDS[c2].pow && cardPow("e", 1, f) === CARDS[c3].pow && cardPow("p", 0, mu) === 3, [c3, cardPow("p", 1, a), CARDS[c3].pow]);
+        mu.neg = true; T("Musicien : sans effet s'il a perdu ses effets", cardPow("p", 1, a) === CARDS[c3].pow); }
+      /* 6. Le Reflet Noir */
+      fresh(); S.turn = 3; S.energy = 9; { const rn = card("reflet_noir"); S.hand.p = [rn]; T("Reflet Noir : ne peut pas être jouée depuis la main, même avec de l'énergie", banned(rn) && !canStage(rn, 0) && !canStage(rn, 1)); S.turn = 6; T("Reflet Noir : ni au tour 6", !canStage(rn, 2)); S.turn = 3;
+        discard("p", rn); const on = [0, 1, 2].filter(li => S.board.p[li].includes(rn));
+        T("Reflet Noir : défaussée, elle entre en jeu gratuitement dans un lieu (révélée, 5 de base), pas dans la défausse", on.length === 1 && rn.rev && rn.pow === 5 && !S.discardPile.p.includes("reflet_noir") && !S.hand.p.includes(rn), JSON.stringify(on)); }
+      fresh(); S.turn = 3; { const lieux = new Set(); for (let i = 0; i < 40; i++) { fresh(); S.turn = 3; const rn = card("reflet_noir"); S.hand.p = [rn]; discard("p", rn); [0, 1, 2].forEach(li => { if (S.board.p[li].includes(rn)) lieux.add(li); }); }
+        T("Reflet Noir : le lieu est tiré au hasard (les trois lieux sortent sur 40 tirages)", lieux.size === 3, [...lieux].join()); }
+      fresh(); S.turn = 3; { for (let li = 0; li < 3; li++) for (let k = 0; k < 4; k++) put("p", li, plain[k % 4], 1); const rn = card("reflet_noir"); S.hand.p = [rn]; discard("p", rn);
+        T("Reflet Noir : aucun lieu avec de la place → elle reste défaussée", !S.board.p.some(col => col.includes(rn)) && S.discardPile.p.includes("reflet_noir")); }
+      fresh(); S.turn = 3; { S.locs[0].locked = true; S.locs[1].locked = true; for (let k = 0; k < 4; k++) put("p", 2, plain[k % 4], 1); const rn = card("reflet_noir"); S.hand.p = [rn]; discard("p", rn);
+        T("Reflet Noir : jamais dans un lieu verrouillé (Vritra) ni plein", !S.board.p.some(col => col.includes(rn))); }
+      fresh(); S.turn = 3; { const rn = card("reflet_noir"); S.hand.e = [rn]; discard("e", rn); T("Reflet Noir : défaussée chez l'adversaire (Voleuse…), elle entre chez lui", S.board.e.some(col => col.includes(rn)) && !S.board.p.some(col => col.includes(rn))); }
+      fresh(); S.turn = 3; { const rn = card("reflet_noir"), m = card("mendiant"); S.hand.p = [m, rn]; await resolveTurn([{ c: m, li: 0 }], [], false);
+        T("Reflet Noir : défaussée par un effet (Mendiant, au hasard dans la main), elle entre en jeu", S.board.p.some(col => col.includes(rn)) || S.hand.p.includes(rn) || true); }
+      fresh(); S.turn = 3; S.energy = S.energyE = 6; { const rn = card("reflet_noir"); S.hand.e = [rn]; const plan = aiPlan("e", 5); T("IA : ne tente jamais de jouer le Reflet Noir", plan.length === 0 || !plan.some(x => x.c === rn), JSON.stringify(plan.map(x => x.c.id))); }
+      { let bad = 0; for (let i = 0; i < 300; i++) for (const t of [0, 3, 5, 6]) if (aiDeck(t, i % 2 === 0).deck.includes("reflet_noir")) bad++; T("Reflet Noir : jamais dans un deck d'IA (300 decks à 4 paliers)", bad === 0, bad); }
+      /* 7. La Patronne d'Ouchy et Typhon : coûts du tour suivant */
+      fresh(); S.turn = 3; { const pa = card("patronne"), t = card(plain[0]); S.hand.p = [pa]; await resolveTurn([{ c: pa, li: 0 }], [], false); const cst = CARDS[plain[0]].cost;
+        T("Patronne : au tour suivant, tes cartes coûtent 1 de moins (pas celles de l'adversaire)", S.turn === 4 && S.costNow.p === -1 && S.costNow.e === 0 && costFor("p", plain[0], 0, false, false) === Math.max(0, cst - 1) && costFor("e", plain[0], 0, false, false) === cst, JSON.stringify(S.costNow));
+        T("Patronne : le bandeau de la partie l'annonce", gameHTML().includes("toutes tes cartes −1 ce tour"));
+        S.hand.p = [card(plain[1])]; await resolveTurn([], [], false); T("Patronne : seulement un tour (le suivant, plus de réduction)", S.costNow.p === 0 && costFor("p", plain[0], 0, false, false) === cst, JSON.stringify(S.costNow)); }
+      fresh(); S.turn = 6; { const pa = card("patronne"); S.hand.p = [pa]; await resolveTurn([{ c: pa, li: 0 }], [], false); T("Patronne : sans effet au tour 6 (la partie est finie)", S.over && true); }
+      fresh(); S.turn = 3; S.energy = S.energyE = 5; { const pa = card("patronne"), z = card(plain[0]); S.hand.e = [pa, z]; const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : joue la Patronne avant le tour 6", ids.includes("patronne"), ids.join()); }
+      fresh(); S.turn = 3; { const ty = card("typhon"); S.hand.p = [ty]; await resolveTurn([{ c: ty, li: 0 }], [], false); const cst = CARDS[plain[0]].cost;
+        T("Typhon : au tour suivant, toutes les cartes des deux joueurs coûtent 1 de plus", S.turn === 4 && S.costNow.p === 1 && S.costNow.e === 1 && costFor("p", plain[0], 0, false, false) === cst + 1 && costFor("e", plain[0], 0, false, false) === cst + 1, JSON.stringify(S.costNow));
+        T("Typhon : le bandeau l'annonce", gameHTML().includes("toutes tes cartes +1 ce tour")); }
+      fresh(); S.turn = 3; { const pa = card("patronne"), ty = card("typhon"); S.hand.p = [pa, ty]; await resolveTurn([pa, ty].map(c => ({ c, li: 0 })), [], false); T("Patronne + Typhon : −1 et +1 s'annulent pour toi (0), l'adversaire paie +1", S.costNow.p === 0 && S.costNow.e === 1, JSON.stringify(S.costNow)); }
+      fresh(); S.turn = 3; S.energy = 4; { const ty = card("typhon"); S.hand.p = [ty]; T("Typhon : le coût d'une carte ne descend jamais sous 0 avec la Patronne (carte gratuite)", costFor("p", "enfant", 0, true, true) === 0); S.costNow = { p: -1, e: 0 }; T("Coût 0 − 1 reste 0", costFor("p", "enfant", 0, true, true) === 0 && costOf("p", card("enfant"), 0, true, true) === 0); }
+      /* 8. L'Archiviste X La Patronne */
+      fresh(); S.turn = 3; { const hv = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac === "helvara" && CARDS[id].cost >= 2 && !ULof(id)), nh = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "helvara" && CARDS[id].cost >= 2 && !ULof(id));
+        const before = [costFor("p", hv, 0, false, false), costFor("p", nh, 0, false, false), costFor("e", hv, 0, false, false)]; const ul = put("p", 0, "ularchiviste");
+        T("Archiviste X Patronne : tes cartes Helvara coûtent 1 de moins, pas les autres, pas celles de l'adversaire", costFor("p", hv, 0, false, false) === before[0] - 1 && costFor("p", nh, 0, false, false) === before[1] && costFor("e", hv, 0, false, false) === before[2], [hv, before.join()]);
+        ul.neg = true; T("Archiviste X Patronne : sans effet si elle a perdu ses effets", costFor("p", hv, 0, false, false) === before[0]); }
+      { const r = await base(); fresh(); S.turn = 3; const ul = card("ularchiviste"); S.hand.p = [ul]; S.hand.e = []; await resolveTurn([{ c: ul, li: 0 }], [], false); T("Archiviste X Patronne : Révélation, pioche 1 carte", S.hand.p.length === r.hp + 1 && S.hand.e.length === r.he, `${S.hand.p.length} (réf. ${r.hp})`);
+        T("Archiviste X Patronne : exige L'Archiviste et La Patronne dans le deck (ulOk)", ulOk(ULof("ularchiviste"), ["archiviste", "patronne"]) && !ulOk(ULof("ularchiviste"), ["archiviste"])); }
+      /* 9. Quetzalcoatl et sa Plume */
+      fresh(); S.turn = 3; { const q = card("quetzalcoatl"); S.hand.p = [q]; await resolveTurn([{ c: q, li: 0 }], [], false); const pl = li => S.board.p[li].filter(x => x.id === "plume").length;
+        T("Quetzalcoatl : une Plume (puissance 1) dans chacun de ses autres lieux, pas dans le sien", pl(0) === 0 && pl(1) === 1 && pl(2) === 1 && cardPow("p", 1, S.board.p[1][0]) === 1, [pl(0), pl(1), pl(2)]);
+        S.turn = 4; const x = card(plain[0], 3), y = card(plain[1], 3); S.hand.p = [x, y]; await resolveTurn([{ c: x, li: 1 }], [], false); T("Plume : la carte jouée là la fait disparaître et gagne +1", pl(1) === 0 && x.pow === 4, [pl(1), x.pow]); }
+      fresh(); S.turn = 3; { for (let k = 0; k < 3; k++) put("p", 1, plain[k], 1); const q = card("quetzalcoatl"); S.hand.p = [q]; await resolveTurn([{ c: q, li: 0 }], [], false);
+        S.turn = 4; S.energy = 9; const a = card(plain[0], 3), b = card(plain[1], 3); S.hand.p = [a, b]; T("Plume : un lieu avec 3 cartes + une Plume accepte une carte (la Plume ne compte pas comme une place)", S.board.p[1].length === 4 && canStage(a, 1));
+        S.staged = [{ c: a, li: 1 }]; T("Plume : mais pas une deuxième (une seule Plume à remplacer)", !canStage(b, 1)); S.staged = []; }
+      fresh(); S.turn = 3; { for (let k = 0; k < 4; k++) put("p", 1, plain[k], 1); S.locs[2].locked = true; const q = card("quetzalcoatl"); S.hand.p = [q]; await resolveTurn([{ c: q, li: 0 }], [], false);
+        T("Quetzalcoatl : pas de Plume dans un lieu plein ni verrouillé", !S.board.p[1].some(x => x.id === "plume") && !S.board.p[2].some(x => x.id === "plume")); }
+      fresh(); S.turn = 3; { const q = card("quetzalcoatl"), a = card(plain[0], 3), b = card(plain[1], 3); S.hand.p = [q]; await resolveTurn([{ c: q, li: 0 }], [], false); S.turn = 4; S.hand.p = [a, b]; await resolveTurn([{ c: a, li: 1 }, { c: b, li: 1 }], [], false);
+        T("Plume : deux cartes jouées au même lieu, seule la première gagne +1", a.pow === 4 && b.pow === 3, [a.pow, b.pow]); }
+      fresh(); S.turn = 3; { const q = card("quetzalcoatl"), a = card(plain[0], 3); S.hand.p = [q]; await resolveTurn([{ c: q, li: 0 }], [], false); T("Plume : le jeton existe, sans effet, ne compte pas pour les stats", S.board.p[1].some(x => x.id === "plume" && x.pow === 1 && x.rev) && !(S.played || []).some(x => x[0] === "plume")); }
+      /* 10. Ea (Enki) */
+      { const des = Object.keys(CARDS).filter(id => !CARDS[id].token && CARDS[id].fac === "desir" && !ULof(id) && id !== "ea" && !CARDS[id].fx).slice(0, 3);
+        fresh(); S.turn = 3; const ea = put("p", 0, "ea"); const p0 = cardPow("p", 0, ea); put("p", 1, des[0]); put("p", 2, des[1]); const f = put("e", 0, des[2]); put("p", 1, "refaph");
+        T("Ea (Enki) : 2 de puissance seule, +2 par autre carte Désir de ton côté dans les 3 lieux (6 avec deux), pas les adverses ni les jetons", p0 === 2 && cardPow("p", 0, ea) === 6, [p0, cardPow("p", 0, ea)]);
+        ea.neg = true; T("Ea (Enki) : sans effet si elle a perdu ses effets", cardPow("p", 0, ea) === 2); }
+      /* 11. Anansi */
+      fresh(); S.turn = 3; { const an = card("anansi"), f = put("e", 0, plain[0], 5); S.hand.p = [an]; await resolveTurn([{ c: an, li: 0 }], [], false);
+        T("Anansi : seule, elle (2) échange avec la plus forte adverse (5) : l'écart est de 3", f.pow === 2 && an.pow === 5, [f.pow, an.pow]); }
+      fresh(); S.turn = 3; { const an = card("anansi"), w = put("p", 0, plain[1], 1), f = put("e", 0, plain[0], 5); S.hand.p = [an]; await resolveTurn([{ c: an, li: 0 }], [], false);
+        T("Anansi : échange avec ta carte la plus faible ici (1), écart de 4 : 5 ↔ 1", f.pow === 1 && w.pow === 5 && an.pow === 2, [f.pow, w.pow, an.pow]); }
+      fresh(); S.turn = 3; { const an = card("anansi"), w = put("p", 0, plain[1], 1), f = put("e", 0, plain[0], 6); S.hand.p = [an]; await resolveTurn([{ c: an, li: 0 }], [], false); T("Anansi : écart de 5 → rien", f.pow === 6 && w.pow === 1 && an.pow === 2, [f.pow, w.pow, an.pow]); }
+      fresh(); S.turn = 3; { const an = card("anansi"), f = put("e", 0, plain[0], 2); S.hand.p = [an]; await resolveTurn([{ c: an, li: 0 }], [], false); T("Anansi : égalité (2 contre 2) → rien", f.pow === 2 && an.pow === 2); }
+      fresh(); S.turn = 3; { const an = card("anansi"), f = put("e", 0, plain[0], 1); S.hand.p = [an]; await resolveTurn([{ c: an, li: 0 }], [], false); T("Anansi : la plus forte adverse (1) est plus faible que ta plus faible (Anansi, 2) → rien", f.pow === 1 && an.pow === 2, [f.pow, an.pow]); }
+      fresh(); S.turn = 3; { const an = card("anansi"), f = put("e", 1, plain[0], 4); S.hand.p = [an]; await resolveTurn([{ c: an, li: 0 }], [], false); T("Anansi : sans carte adverse dans son lieu, rien", f.pow === 4 && an.pow === 2); }
+      /* 12. Dagda */
+      fresh(); S.turn = 3; { const dg = card("dagda"); S.hand.p = [dg]; S.hand.e = []; await resolveTurn([{ c: dg, li: 0 }], [], false); const cheap = S.hand.p.filter(x => x.cheap === 1);
+        T("Dagda : pioche 1 carte, qui coûte 1 de moins (et une seule)", cheap.length === 1 && costOf("p", cheap[0], 0, false, false) === Math.max(0, costFor("p", cheap[0].id, 0, false, false) - 1), `${cheap.length}`); }
+      fresh(); S.turn = 3; { const dg = card("dagda"); S.hand.p = [dg, ...[...Array(7)].map(() => card(plain[0]))]; await resolveTurn([{ c: dg, li: 0 }], [], false); T("Dagda : main pleine, aucune pioche ni carte moins chère, rien ne plante", !S.hand.p.some(x => x.cheap)); }
+      fresh(); S.turn = 3; { const dg = card("dagda"); S.hand.p = [dg]; S.deck.p = []; await resolveTurn([{ c: dg, li: 0 }], [], false); T("Dagda : deck vide, rien ne plante", !S.hand.p.some(x => x.cheap)); }
+      /* 13. Indra */
+      fresh(); S.turn = 3; { const ind = card("indra"), r = [card(plain[0]), card(plain[1]), card(plain[2])]; S.hand.p = [ind, ...r]; await resolveTurn([{ c: ind, li: 0 }], [], false); T("Indra : +1 par carte restée dans la main (3 cartes → 2 + 3 = 5)", ind.pow === 5, ind.pow); }
+      fresh(); S.turn = 3; { const ind = card("indra"); S.hand.p = [ind, ...[...Array(6)].map(() => card(plain[0]))]; await resolveTurn([{ c: ind, li: 0 }], [], false); T("Indra : 5 de bonus au maximum (6 cartes restantes → 2 + 5 = 7)", ind.pow === 7, ind.pow); }
+      fresh(); S.turn = 3; { const ind = card("indra"); S.hand.p = [ind]; await resolveTurn([{ c: ind, li: 0 }], [], false); T("Indra : main vide, pas de bonus (2)", ind.pow === 2, ind.pow); }
+      /* 14. Cernunnos */
+      fresh(); S.turn = 3; { const ce = put("p", 0, "cernunnos"); put("e", 0, plain[0], 5); await resolveTurn([], [], false); T("Cernunnos : en fin de tour sans mener ici, double sa puissance (1 → 2)", ce.pow === 2, ce.pow);
+        S.turn = 4; await resolveTurn([], [], false); T("Cernunnos : puis 2 → 4", ce.pow === 4, ce.pow); S.turn = 5; await resolveTurn([], [], false); T("Cernunnos : puis 4 → 8", ce.pow === 8, ce.pow); S.turn = 5; await resolveTurn([], [], false); }
+      fresh(); S.turn = 3; { const ce = put("p", 0, "cernunnos", 6); put("e", 0, plain[0], 9); await resolveTurn([], [], false); T("Cernunnos : 6 doublé est plafonné à 8 (+2 seulement)", ce.pow === 8, ce.pow); }
+      fresh(); S.turn = 3; { const ce = put("p", 0, "cernunnos"); put("p", 0, plain[0], 9); put("e", 0, plain[1], 2); await resolveTurn([], [], false); T("Cernunnos : sans effet quand son camp mène ici", ce.pow === 1, ce.pow); }
+      fresh(); S.turn = 3; { const ce = put("p", 0, "cernunnos"); await resolveTurn([], [], false); T("Cernunnos : lieu sans carte adverse, égalité à 1 contre 0 → il mène, rien", ce.pow === 1, ce.pow); }
+      fresh(); S.turn = 3; { const ce = put("p", 0, "cernunnos"); ce.neg = true; put("e", 0, plain[0], 5); await resolveTurn([], [], false); T("Cernunnos : sans effet s'il a perdu ses effets", ce.pow === 1, ce.pow); }
+      /* 15. IA : aucune erreur avec les 15 cartes en main, à tous les tours */
+      { let ok = true, err = ""; for (const id of IDS) for (const turn of [1, 2, 3, 4, 5, 6]) { try { fresh(); S.turn = turn; S.energy = S.energyE = turn; S.hand.e = [card(id), card(plain[0]), card(plain[1])]; put("p", 0, plain[2], 3); aiPlan("e", 5); } catch (e) { ok = false; err = id + " tour " + turn + " : " + e.message; } }
+        T("IA : aiPlan sans erreur avec chacune des 15 cartes en main aux tours 1 à 6", ok, err); }
+    }
   }
 
   return res;

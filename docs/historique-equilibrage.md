@@ -181,6 +181,43 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - **Accueil** : `featureHTML()` (image du lieu, effet, récompense, « reçus aujourd'hui »), entre la saison et la bannière des nouvelles cartes ; textes anglais dans `interface-en.js`.
 - Tests : 286 scénarios (+18 : jours, tirage commun, 300 tirages, place au hasard, partie, première partie, récompense unique par jour, simulation, accueil, profil, anglais).
 
+### 15e série (22 octobre 2026, lot du 1er janvier 2027 : 15 cartes) : même règle, ne pas revenir dessus sans l'accord de Jordan
+
+`BUILD` : `alpha-0.19`. Bloc de Jordan (« CHANTIER ÉQUILIBRAGE · Batch du 1er janvier 2027 »). Toutes : `rel` 2027-01-01, `soon` 2026-12-27, noms inchangés, bannière `DROPS` `jan1` (FR et EN). Aucune n'est exclusive à un paquet. **Changements de faction depuis Primordial** : Quetzalcoatl et Ea → Désir ; Dagda et Indra → Jugement ; Primordial ne gagne que Cernunnos et Typhon.
+
+| Carte | Faction, rareté | Coût / puiss. | Effet |
+|---|---|---|---|
+| L'Archiviste du Sous-Gare | Helvara, R | 3/2 | Révélation : pioche 2 cartes. L'adversaire pioche 1 carte. |
+| Le Veilleur du Pont Bessières | Helvara, R | 2/3 | Continu : la première carte que l'adversaire joue ici à chaque tour perd 1. |
+| L'Enfant sans École | Helvara, R | 0/0 | Continu : à la fin de chaque tour sauf le sixième, retourne dans ta main et gagne +1 définitivement. |
+| La Meute du M2 | Helvara, E | 4/8 | Continu : les cartes adverses ici ont +2. |
+| Le Musicien | Helvara, E | 3/3 | Continu : tes autres cartes de coût d'origine 3 ont +2, dans les 3 lieux. |
+| Le Reflet Noir | Helvara, E | 3/5 | Ne peut pas être jouée depuis la main. Défaussée, elle entre en jeu gratuitement dans un lieu au hasard où il reste de la place. |
+| La Patronne d'Ouchy | Helvara, E | 5/4 | Révélation : au tour suivant, tes cartes coûtent 1 de moins. |
+| L'Archiviste X La Patronne | Helvara, U (fusion) | 3/2 (avant 6/4) | Continu : tes cartes Helvara coûtent 1 de moins. Révélation : pioche 1 carte. Exige les deux dans le deck. |
+| Quetzalcoatl | **Désir**, R | 3/2 | Révélation : une Plume (1, sans effet) dans chacun de tes autres lieux ; la carte que tu y joues la remplace et gagne +1. |
+| Ea (Enki) | **Désir**, L | 4/2 | Continu : +2 pour chaque autre carte Désir de ton côté. |
+| Anansi | Désir, L | 4/2 | Révélation : échange la puissance de la plus forte adverse ici et de ta plus faible ici (Anansi compris) si l'écart est de 4 ou moins. |
+| Dagda | **Jugement**, E | 4/3 | Révélation : pioche 1 carte. Elle coûte 1 de moins. |
+| Indra | **Jugement**, E | 4/2 | Révélation : +1 par carte restée dans ta main (5 au maximum). |
+| Cernunnos | Primordial, E | 3/1 | Continu : à la fin de chaque tour où tu ne mènes pas ici, double sa puissance (8 au maximum). |
+| Typhon | Primordial, E | 4/4 | Révélation : au tour suivant, toutes les cartes des deux joueurs coûtent 1 de plus. |
+
+**Interprétations et mécanismes (à connaître avant de toucher)**
+- **Ea (Enki) : « de ton côté » (les 3 lieux) gardé** (Jordan avait retiré le « ici », en laissant le choix). Mesure `--cartes ea --parties 3000` (6000 decks chacun) : « de ton côté » **49,5 %** en deck, posée 33 %, victoire posée 48,7 %, puissance de fin 5,8 ; « ici » **49,5 %**, posée 16 %, victoire posée 42,5 %, puissance de fin 3,8. Même victoire en deck (la carte est dans les deux decks : miroir), mais « ici » est deux fois moins jouée et perd plus quand elle l'est.
+- **Coûts du tour suivant** (Patronne, Typhon) : `S.costNext` (par camp) devient `S.costNow` à `startTurn()` ; `costFor` ajoute `S.costNow[s]` ; minimum 0. Bandeau `.mods` « toutes tes cartes −1 ce tour » / « au prochain tour : tes cartes +1 ». Sans effet au tour 6 (pas de tour suivant). IA : Patronne au plus tard au tour 5 (malus au 6).
+- **Archiviste X Patronne** : aura de coût dans `costFor` (cartes Helvara, tant qu'elle est en jeu et non neutralisée). Pas de `vfx` (pas fourni).
+- **Dagda** : la carte piochée porte `c.cheap = 1` (`costOf` : −1, jamais sous 0), le reste du temps qu'elle est en main ; main pleine ou deck vide : rien. La note du journal ne nomme pas la carte (elle est visible de l'adversaire).
+- **Indra** : la main est lue à la Révélation, cartes posées ce tour déjà retirées.
+- **L'Enfant** : `resolveTurn()` (fin de tour, avant le calcul final) : si elle est active (`live`, pas captive), `c.pow += 1` puis retour dans la main (`rev=false`) ; **main pleine (7) : elle reste en jeu et gagne quand même +1** (choix de l'implémentation, à confirmer). Aucune limite de cartes par tour n'existe dans le moteur : rien ne la bloque. Jouée aux tours 1 à 5, elle entre au tour 6 avec **5 de puissance pour 0**. L'IA la rejoue chaque tour (`adj +5` avant le tour 6). Elle compte pour Nike à chaque pose (+2).
+- **Le Reflet Noir** : `banned()` toujours (grisée en main, jamais jouée par l'IA, jamais dans un deck d'IA) ; `discard()` la fait entrer **en jeu** (`gPick` parmi les lieux non verrouillés où il reste de la place ; une Plume compte comme libre) pour le camp de la main défaussée (Mendiant, Voleuse, Hel, Loki…) ; sans place elle reste dans la défausse.
+- **Quetzalcoatl et la Plume** : jeton `plume` (Désir, 1/0, `token`) **sans illustration** (case de remplacement : il faut une image `images/plume.webp`, avatar et miniature). `slotsUsed()` ignore la Plume pour la place (`canStage`, IA) ; `eatPlume()` dans `resolveTurn()` la retire quand une carte jouée entre dans le lieu (+1, journal « Plume ») ; une seule Plume par lieu ; l'interface la cache pendant qu'une carte est posée (`sideHTML`). Pas de Plume dans un lieu plein ou verrouillé.
+- **Anansi** : l'échange n'a lieu que si la plus forte adverse est **plus forte** que ta plus faible (écart de 1 à 4) ; si l'adversaire est plus faible ou à égalité, rien ; une carte protégée d'un affaiblissement n'est pas échangée.
+- **Le Veilleur** : `veilleurHook()` (une fois par tour, marqueur `vgT`) ; la carte concernée perd 1 par `weaken` (protections respectées).
+- **Cernunnos** : double `c.pow` (base et gains, hors auras), plafonné à 8 ; **égalité = il ne mène pas** donc il double. **Meute** et **Musicien** : auras dans `cardPow` (Musicien : coût imprimé 3, jetons exclus, lui-même exclu).
+- **Mesure** (`--cartes` les 15, `--parties 3000`, `--date 2027-01-05`, graine 20261012, ~1100 decks par carte, marge d'erreur d'environ ±3 points, moyenne des 15 : 48,5 %) : victoire en deck / posée / posée dans N % : Archiviste 45,3 / 43,7 / 50 ; Veilleur 51,2 / 52,3 / 75 ; **Enfant 54,1 / 57,0 / 78 (+5,6)** ; Meute 45,9 / 42,7 / 63 (puissance de fin 8,0) ; Musicien 50,4 / 52,1 / 68 ; Reflet Noir 47,8 / jamais posée ; Patronne 47,6 / 47,2 / 17 ; **Archiviste X Patronne 43,6 / 41,9 / 58 (−4,9)** ; Quetzalcoatl 49,9 / 49,3 / 65 ; Ea 48,2 / 49,5 / 36 ; **Anansi 53,3 / 51,5 / 48 (+4,8)** ; Dagda 45,1 / 44,2 / 27 ; Indra 49,1 / 47,5 / 68 ; Cernunnos 49,7 / 45,1 / 25 ; Typhon 46,3 / 38,3 / 27. **Aucune carte au-delà de ±6** (zone « surveiller » : ±6 à ±8). À surveiller dans les statistiques réelles : **Enfant** (l'IA la pose en moyenne au tour 2,7 ; un joueur qui la joue dès le tour 1 chaque tour l'a à 5 au tour 6, et chaque pose compte pour Nike), **Anansi**, et la fusion **Archiviste X Patronne** (3/2, ses effets de coût sont mal exploités par l'IA). Les mesures « une seule carte » (`--cartes enfant` etc.) tombent à ~49,5 % par symétrie (la carte est dans les deux decks) : seules la victoire posée et la puissance de fin y sont lisibles (Enfant 51,2 % posée, 3,7 de fin ; Meute 46,1 %, 8,4 ; Anansi 50,1 %).
+- Tests : 369 scénarios (+73 : données et fusion, textes anglais, chaque carte dans ses cas limites, IA sans erreur avec les 15 cartes à tous les tours).
+
 ### Secondes ultra-légendaires de faction (18 octobre 2026, décision de Jordan)
 
 - **Règle** : une faction peut avoir une **seconde** ultra-légendaire de faction, gagnée à **150 parties au total** (même compteur `P.fj` que la première, qui reste à 50 ; donc 100 parties de plus), « pour fidéliser les joueurs dans le temps ». Jamais deux secondes dans la même faction (Jordan : « c'est chaud niveau conditions »). Une seule ultra-légendaire par deck, comme avant.

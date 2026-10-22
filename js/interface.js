@@ -614,7 +614,8 @@ function mini(s,li,c,staged){
   return `<button class="mini${CARDS[c.id].r==="U"?hasHoloTile(c.id)?" holof":" holo":""}${chm}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${tileHolo(c.id,"m"+c.uid)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}${fat}${hed}${sick}<span class="pw ${cls}">${p}</span></button>`;
 }
 function sideHTML(s,li){
-  const items=S.board[s][li].map(c=>mini(s,li,c,s==="p"&&!c.rev));
+  let bd=S.board[s][li]; if(s==="p"&&S.staged.some(x=>x.li===li)){ const pl=bd.find(x=>x.id==="plume"); if(pl) bd=bd.filter(x=>x!==pl); }   /* la Plume cède sa case à la carte posée */
+  const items=bd.map(c=>mini(s,li,c,s==="p"&&!c.rev));
   if(s==="p") for(const x of S.staged.filter(x=>x.li===li)) items.push(mini("p",li,x.c,true));
   const cp=capOf(s,li), slots=[];
   for(let i=0;i<4;i++) slots.push(items[i]||`<div class="slot${i>=cp?" x":""}"></div>`);
@@ -711,7 +712,7 @@ function gameHTML(){
     ${oathOK()&&S.oath==null&&!S.busy?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
     ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
   </div>
-  ${S.disc.p||S.bonus.p||vestaOn("p")?`<div class="mods">${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
+  ${S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
   <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${pilesHTML()}</div>
   ${aiOathBar()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}

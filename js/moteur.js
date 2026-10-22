@@ -16,7 +16,7 @@ const deckReady=()=>P.deck.length===ECO.deckSize;
 function aiDeck(t,full,noUL){   /* noUL : le Blitz n'a aucune ultra-légendaire, ni pour le joueur ni pour l'IA */
   const own=full?4:Math.max(2,...P.owned.map(id=>RVAL[CARDS[id].r]));
   const cap=Math.min([1,2,3,3,4,4,4][t],own);
-  const pool=PACK().filter(id=>RVAL[CARDS[id].r]<=cap);
+  const pool=PACK().filter(id=>RVAL[CARDS[id].r]<=cap&&id!=="reflet_noir");   /* injouable depuis la main : jamais dans le deck de l'IA */
   const facs=Object.keys(FAC).filter(f=>pool.filter(id=>CARDS[id].fac===f).length>=3);
   const fac=pickRand(facs.length?facs:Object.keys(FAC));
   const sc={}; pool.forEach(id=>sc[id]=(CARDS[id].fac===fac?5:0)+RVAL[CARDS[id].r]*t*0.35+Math.random()*2.5);
@@ -91,7 +91,7 @@ function aiOathBar(){
   return `<div class="oathbar sworn" style="color:var(--mist)">⚖ L'adversaire a juré sur <b>${n}</b>.</div>`;
 }
 function startTurn(){
-  S.turn++;
+  S.turn++; S.costNow=S.costNext||{p:0,e:0}; S.costNext={p:0,e:0};   /* Patronne, Typhon : coûts de ce tour */
   S.energy=S.turn+S.bonus.p; S.energyE=S.turn+S.bonus.e; S.bonus={p:0,e:0};
   if(S.turn<=3){ const L=S.locs[S.turn-1], li=S.turn-1; L.rev=true; log(`Tour ${S.turn} · lieu révélé : ${LOCS[L.id].name}`); sfx("loc"); if(screen==="play") setTimeout(()=>FX.play("l_"+L.id,{li}),60); }
   else log(`Tour ${S.turn}`);
@@ -127,17 +127,19 @@ const untargetable=(by,s,c)=>by!==s && c.id==="uzume" && !c.neg; /* Uzume : aucu
 const vestaOn=s=>!!(S.vesta&&S.vesta[s]);
 const vestaT=id=>CARDS[id].fac==="jugement"&&CARDS[id].cost>=1;
 const jugFirst=(list,i)=>!list.slice(0,i).some(x=>vestaT((x.c||x).id));
-function costOf(s,c,li,isFirst,jf){ return c.free?0:costFor(s,c.id,li,isFirst,jf); }
-function costFor(s,id,li,isFirst,jf){ let c=CARDS[id].cost; if(id==="ulya") c-=S.hand[s].filter(x=>x.id!=="ulya").length; if(id==="ereshkigal_n"&&S.hand[s].some(x=>charOf(x.id)==="nergal")) c-=2; if(isFirst) c-=S.disc[s]; if(jf&&vestaT(id)&&vestaOn(s)) c-=1; if(locIs(li,"sousgare")) c-=1; if(locIs(li,"encheres")) c+=1; return Math.max(0,c); }
+function costOf(s,c,li,isFirst,jf){ return c.free?0:Math.max(0,costFor(s,c.id,li,isFirst,jf)-(c.cheap||0)); }
+function costFor(s,id,li,isFirst,jf){ let c=CARDS[id].cost; if(id==="ulya") c-=S.hand[s].filter(x=>x.id!=="ulya").length; if(id==="ereshkigal_n"&&S.hand[s].some(x=>charOf(x.id)==="nergal")) c-=2; if(S.costNow) c+=S.costNow[s]||0; if(CARDS[id].fac==="helvara"&&S.board[s].some(col=>col.some(o=>live(o)&&o.id==="ularchiviste"))) c-=1; if(isFirst) c-=S.disc[s]; if(jf&&vestaT(id)&&vestaOn(s)) c-=1; if(locIs(li,"sousgare")) c-=1; if(locIs(li,"encheres")) c+=1; return Math.max(0,c); }
 function used(){ return S.staged.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf("p",x.c,x.li,i===0,jugFirst(S.staged,i))),0); }
 /* Nemesis ne peut pas être jouée au tour 6, même avec de l'énergie en réserve (Prométhée) */
 /* Règle de design : les cartes qui verrouillent un lieu (Nemesis, Cronos, Ananké) ne peuvent pas être jouées au tour 6, même avec de l'énergie gardée (Prométhée) */
-const banned=c=>(c.id==="nemesis"||c.id==="cronos"||c.id==="ananke")&&S.turn>=6;
+const banned=c=>c.id==="reflet_noir"||((c.id==="nemesis"||c.id==="cronos"||c.id==="ananke")&&S.turn>=6);
+/* Plume de Quetzalcoatl : elle occupe une case mais ne compte pas comme une place : la carte suivante la remplace */
+const slotsUsed=(s,li)=>S.board[s][li].filter(x=>x.id!=="plume").length;
 function canStage(c,li){
   if(S&&S.tut){ if(!tutReq().some(([id,l])=>id===c.id&&l===li&&!S.staged.some(x=>x.c.id===id))) return false; }
   if(!c||S.locs[li].locked||muted("p",li)) return false;
   if(banned(c)) return false;
-  if(S.board.p[li].length+stagedAt(li)>=capOf("p",li)) return false;
+  if(slotsUsed("p",li)+stagedAt(li)>=capOf("p",li)) return false;
   return used()+costOf("p",c,li,S.staged.length===0,jugFirst(S.staged,S.staged.length))<=S.energy;
 }
 /* Ananké, Fatalité : en fin de partie (S.final, après toutes les révélations et fins de tour du tour 6), sa puissance devient la puissance totale adverse ici +1.
@@ -154,6 +156,8 @@ function cardPow(s,li,c){
   for(const o of S.board[s][li]) if(o!==c && live(o) && o.id==="ulcal") p+=2;
   for(const o of S.board[s][li]) if(o!==c && live(o) && o.id==="ishara") p+=1;
   if(d.fac==="helvara") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c && live(o) && o.id==="doyenne") p+=1;
+  for(const o of S.board[opp(s)][li]) if(live(o) && o.id==="meute") p+=2;   /* La Meute du M2 : les cartes adverses ici ont +2 */
+  if(d.cost===3&&!d.token&&c.id!=="musicien") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c && live(o) && o.id==="musicien") p+=2;   /* Le Musicien : tes autres cartes de coût d'origine 3 */
   if(!c.neg){
     if(c.id==="costumes" && inPlay("thot")) p+=4;
     if(c.id==="freyr" && hasHere(s,li,"freya")) p+=2;
@@ -163,6 +167,7 @@ function cardPow(s,li,c){
     if(c.id==="nergal" && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="ereshkigal"))) p+=3; /* continu */
     if((isNike(c.id)||c.id==="bia") && S.board[s].some(col=>col.some(o=>live(o)&&o.id==="styx"))) p+=3; /* Styx veille sur ses filles */
     if(c.id==="fange") p+=S.discarded||0;
+    if(c.id==="ea") for(const col of S.board[s]) for(const o of col) if(o!==c&&o.rev&&CARDS[o.id].fac==="desir"&&!CARDS[o.id].token) p+=2;   /* Ea (Enki) : +2 par autre carte Désir de ton côté */
     if(c.id==="ulqetyar") for(let i=0;i<3;i++){ const f=S.board[s][i].filter(o=>o.rev).map(o=>CARDS[o.id].fac); if(f.includes("desir")&&f.includes("primordial")) p+=3; }
     if(c.id==="yarden_d") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c&&o.rev&&CARDS[o.id].fac==="primordial"&&!CARDS[o.id].token) p+=2;
   }
@@ -197,7 +202,12 @@ const sunlit=s=>S.board[s].some(col=>col.some(x=>live(x)&&x.id==="amaterasu"));
 /* Défausse et cimetière : on garde les cartes (Hel, Hadès, Loviatar, le Tombeau). Les jetons et les Échos disparaissent. */
 const piles=()=>{ S.discardPile=S.discardPile||{p:[],e:[]}; S.graveyard=S.graveyard||{p:[],e:[]}; };
 const real=c=>!CARDS[c.id].token&&!c.echo;
-function discard(s,c){ if(s==="p"&&qLive()) qProg("disc3"); S.hand[s]=S.hand[s].filter(x=>x!==c); S.discarded=(S.discarded||0)+1; piles(); if(real(c)) S.discardPile[s].push(c.id); }
+function discard(s,c){ if(s==="p"&&qLive()) qProg("disc3"); S.hand[s]=S.hand[s].filter(x=>x!==c); S.discarded=(S.discarded||0)+1; piles();
+  /* Le Reflet Noir : défaussée, elle entre en jeu gratuitement dans un lieu au hasard où il reste de la place (sinon elle reste défaussée) */
+  if(c.id==="reflet_noir"){ const ok=[0,1,2].filter(li=>!S.locs[li].locked&&slotsUsed(s,li)<capOf(s,li));
+    if(ok.length){ const li=gPick(ok); const pl=S.board[s][li].find(x=>x.id==="plume"); if(pl&&S.board[s][li].length>=capOf(s,li)) S.board[s][li]=S.board[s][li].filter(x=>x!==pl);
+      c.rev=true; c.fresh=true; S.board[s][li].push(c); log(`Le Reflet Noir entre en jeu : ${LOCS[S.locs[li].id].name} (${who(s)})`); sfx("void"); return; } }
+  if(real(c)) S.discardPile[s].push(c.id); }
 function bury(s,c){ piles(); if(real(c)) S.graveyard[s].push(c.id);
   if(c.id==="mjolnir"&&c.thor){ for(const col of S.board[s]) for(const t of col) if(t.uid===c.thor&&live(t)){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Mjölnir"}); log(`Thor récupère Mjölnir : +2 (${who(s)})`); } } }
 /* Qetesh du Nouvel An, minuit : la carte adverse la plus forte ici de puissance 5 ou moins (lue maintenant) est charmée (renvoie la cible ou null) */
@@ -266,6 +276,13 @@ function medeeHook(s,li,c){ if(!S.board[s][li].includes(c)) return; const o=opp(
     const ok=!untargetable(o,s,c)&&weaken(s,li,c,2); SRC=prev;
     if(ok){ (c.mods=c.mods||[]).push({v:-2,src:"Médée"}); log(`Médée · −2 à ${nm(c)} (${who(s)})`); sfx("debuff"); }
     break; } }
+/* Le Veilleur du Pont Bessières : la première carte adverse jouée ici à chaque tour perd 1 */
+function veilleurHook(s,li,c){ if(!S.board[s][li].includes(c)) return; const o=opp(s);
+  for(const m of S.board[o][li]) if(live(m)&&m.id==="veilleur_pont"&&m.vgT!==S.turn){
+    m.vgT=S.turn; const prev=SRC; SRC={s:o,cost:CARDS.veilleur_pont.cost};
+    const ok=!untargetable(o,s,c)&&weaken(s,li,c,1); SRC=prev;
+    if(ok){ (c.mods=c.mods||[]).push({v:-1,src:"Le Veilleur"}); log(`Le Veilleur du Pont · −1 à ${nm(c)} (${who(s)})`); sfx("debuff"); }
+    break; } }
 /* Cartes qui forment une Fusion avec Jordan (Domaine du Créateur) */
 const JPARTNERS=new Set((()=>{ const out=[]; for(const u of ULS) if(u.req.some(r=>[].concat(r).some(x=>charOf(x)==="jordan"))) for(const r of u.req) for(const x of [].concat(r)) if(charOf(x)!=="jordan") out.push(x); return out; })());
 
@@ -300,6 +317,17 @@ function revealFx(s,li,c,opts={}){
     case "joanna": { let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&S.board[s][i].some(x=>x.rev)&&S.board[s][i].length<capOf(s,i)){ const t=mk("lanterne"); t.rev=true; t.fresh=true; S.board[s][i].push(t); n++; } if(n) note=`${n} Lanterne${n>1?"s":""}`; break; }
     case "ares_h": { let n=0; for(const x of targets) if(weaken(o,li,x,2)) n++; if(n){ c.pow+=n; note=`−2 à ${n}, +${n}`; snd="debuff"; } break; }
     case "nergal_h": { let n=0; for(const side of [s,o]) for(let i=0;i<3;i++) for(const x of S.board[side][i].slice()) if(x!==c&&x.rev&&pw(side,i,x)<=1&&!(side===o&&untargetable(s,o,x))&&destroy(side,i,x)) n++; if(n){ c.pow+=2*n; note=`la peste emporte ${n} carte${n>1?"s":""}, +${2*n}`; snd="destroy"; } break; }
+    case "archiviste": { draw(s); draw(s); draw(o); note="pioche 2 cartes, l'adversaire en pioche 1"; snd="buff"; break; }
+    case "ularchiviste": { draw(s); note="pioche 1 carte"; snd="buff"; break; }
+    case "indra": { const n=Math.min(5,S.hand[s].length); if(n) buffSelf(n); break; }
+    case "dagda": { const n=S.hand[s].length; draw(s); if(S.hand[s].length>n){ const t=S.hand[s][S.hand[s].length-1]; t.cheap=(t.cheap||0)+1; note="pioche 1 carte, elle coûte 1 de moins"; snd="buff"; } break; }
+    case "patronne": { S.costNext=S.costNext||{p:0,e:0}; S.costNext[s]-=1; note="au tour suivant, tes cartes coûtent 1 de moins"; snd="buff"; break; }
+    case "typhon": { S.costNext=S.costNext||{p:0,e:0}; S.costNext.p+=1; S.costNext.e+=1; note="au tour suivant, toutes les cartes coûtent 1 de plus"; snd="debuff"; break; }
+    case "quetzalcoatl": { let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&!S.board[s][i].some(x=>x.id==="plume")&&S.board[s][i].length<capOf(s,i)){ const t=mk("plume"); t.rev=true; t.fresh=true; S.board[s][i].push(t); n++; } if(n) note=`${n} Plume${n>1?"s":""}`; break; }
+    case "anansi": { /* échange la puissance de la plus forte adverse ici et de ta plus faible ici (Anansi compris) si l'écart est de 4 ou moins */
+      const F=strongest(targets,o,li), W=weakest([c,...mates],s,li); if(!F||!W) break;
+      const pf=pw(o,li,F), pk=pw(s,li,W), gap=pf-pk;
+      if(gap>0&&gap<=4&&weaken(o,li,F,gap)){ W.pow+=gap; (F.mods=F.mods||[]).push({v:-gap,src:"Anansi"}); (W.mods=W.mods||[]).push({v:gap,src:"Anansi"}); note=`échange ${nm(F)} et ${nm(W)} (${pf} ↔ ${pk})`; snd="void"; } break; }
     case "ereshkigal_n": { /* Dame de la Longue Nuit : la carte adverse la plus forte ici perd la moitié de sa puissance (arrondie au-dessus) */
       const t=strongest(targets,o,li); if(!t) break;
       const n=Math.ceil(Math.max(0,pw(o,li,t))/2); if(n>0&&weaken(o,li,t,n)){ (t.mods=t.mods||[]).push({v:-n,src:"Ereshkigal"}); note=`−${n} à ${nm(t)}`; snd="debuff"; } break; }
@@ -527,7 +555,7 @@ function aiPlan(me="e",tierOv){
   /* une carte posée dans un lieu : coût, puissance estimée, puissance retirée à l'adversaire, petits ajustements */
   const place=(c,li,ctx)=>{
     const d=CARDS[c.id];
-    if(S.locs[li].locked||muted(me,li)||banned(c)||S.board[me][li].length+ctx.pend[li]>=capOf(me,li)) return null;
+    if(S.locs[li].locked||muted(me,li)||banned(c)||slotsUsed(me,li)+ctx.pend[li]>=capOf(me,li)) return null;
     const cost=costOf(me,c,li,ctx.first,ctx.jf); if(cost>ctx.en) return null;
     const diff=diffs[li], foes=foesN[li], mates=matesN[li]+ctx.pend[li];
     let pow=c.pow+NZ.get(c)[li], hit=0, adj=0;
@@ -596,6 +624,23 @@ function aiPlan(me="e",tierOv){
     if(c.id==="ereshkigal_n"){ const fp=S.board[op][li].filter(x=>x.rev&&!untargetable(me,op,x)).map(x=>cardPow(op,li,x)); if(fp.length&&!shielded(op,li)) hit+=Math.ceil(Math.max(0,...fp)/2); }
     /* Arès, Duelliste du Dernier Soir : si la carte adverse la plus forte ici est plus faible, elle tombe (on gagne sa puissance) ; si elle est plus forte, c'est lui qui tombe */
     if(c.id==="ares_n"){ const fp=S.board[op][li].filter(x=>x.rev&&!untargetable(me,op,x)).map(x=>cardPow(op,li,x)); if(fp.length){ const f=Math.max(...fp); if(f<pow) hit+=f; else if(f>pow){ adj-=pow; pow=0; } } }
+    /* Lot du 1er janvier 2027 (22 octobre) */
+    { const rest=hand.filter(x=>x!==c&&!ctx.plays.some(y=>y.c===x)), onB=f=>{ let n=0; for(const col of S.board[me]) for(const x of col) if(x.rev&&f(x)) n++; return n+ctx.plays.filter(y=>y.c!==c&&f(y.c)).length+.4*rest.filter(f).length; };
+      if(c.id==="enfant"&&S.turn<6) adj+=5;                                   /* revient en main avec +1 à chaque tour : à rejouer chaque tour */
+      if(c.id==="archiviste") adj+=1.5;
+      if(c.id==="ularchiviste") adj+=2+Math.min(3,.5*rest.filter(x=>CARDS[x.id].fac==="helvara").length);
+      if(c.id==="dagda") adj+=1.5;
+      if(c.id==="indra") pow+=Math.min(5,rest.length);
+      if(c.id==="patronne"){ if(S.turn>=6) adj-=6; else adj+=1+.5*Math.min(3,rest.length); }       /* sans effet au tour 6 : au plus tard au tour 5 */
+      if(c.id==="typhon"){ if(S.turn>=6) adj-=4; else adj+=S.hand[op].length>hand.length?1.5:-1; }
+      if(c.id==="meute"){ hit-=2*foes; adj-=1; }
+      if(c.id==="musicien") pow+=1.6*onB(x=>CARDS[x.id].cost===3&&x.id!=="musicien");
+      if(c.id==="ea") pow+=2*onB(x=>CARDS[x.id].fac==="desir"&&!CARDS[x.id].token&&x.id!=="ea");
+      if(c.id==="cernunnos") adj+=diff>0?2:-1;
+      if(c.id==="veilleur_pont"&&foes) adj+=1;
+      if(c.id==="quetzalcoatl"){ let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&slotsUsed(me,i)+ctx.pend[i]<capOf(me,i)&&!S.board[me][i].some(x=>x.id==="plume")) n++; adj+=1.2*n; }
+      if(c.id==="anansi"){ const fp=S.board[op][li].filter(x=>x.rev&&!untargetable(me,op,x)).map(x=>cardPow(op,li,x)), mp=[pow,...S.board[me][li].filter(x=>x.rev).map(x=>cardPow(me,li,x))];
+        if(fp.length){ const gap=Math.max(...fp)-Math.min(...mp); if(gap>0&&gap<=4){ hit+=gap; pow+=gap; } } } }
     /* Aphrodite, Coupe de Minuit : +2 d'énergie au tour suivant, sans effet au tour 6 : à jouer au plus tard au tour 5 */
     if(c.id==="aphrodite_r"){ if(S.turn>=6) adj-=6; else adj+=S.turn<=3?6:4; }
     /* Médée, Mariée Spectrale : le poison retire 1 par fin de tour (7 − tour fins de tour restantes) à la carte adverse la plus forte ici, aux deux plus fortes avec Hécate */
@@ -704,8 +749,9 @@ async function resolveTurn(mine, theirs, animate){
   if(theirs.length) S.disc.e=0;
   /* Vesta : la réduction est prise par la première carte Jugement de coût 1 ou plus jouée (avant les Révélations : une Vesta jouée ce tour vaut pour la suite) */
   S.vesta=S.vesta||{p:0,e:0}; for(const [k,l] of [["p",mine],["e",theirs]]) if(l.some(x=>vestaT(x.c.id))) S.vesta[k]=0;
-  for(const x of mine){ S.board.p[x.li].push(x.c); if(!CARDS[x.c.id].token) (S.played=S.played||[]).push([x.c.id,S.locs[x.li].id]); }
-  for(const x of theirs) S.board.e[x.li].push(x.c);
+  const eatPlume=(s,li,c)=>{ const pl=S.board[s][li].find(x=>x.id==="plume"); if(pl){ S.board[s][li]=S.board[s][li].filter(x=>x!==pl); c.pow+=1; (c.mods=c.mods||[]).push({v:1,src:"Plume"}); } };
+  for(const x of mine){ eatPlume("p",x.li,x.c); S.board.p[x.li].push(x.c); if(!CARDS[x.c.id].token) (S.played=S.played||[]).push([x.c.id,S.locs[x.li].id]); }
+  for(const x of theirs){ eatPlume("e",x.li,x.c); S.board.e[x.li].push(x.c); }
   render();
   const dflt=(!S.mp||S.mp.meHost)?"p":"e", queue=[];
   for(let li=0;li<3;li++){ const f=leader(li)||dflt, g=opp(f);
@@ -715,7 +761,7 @@ async function resolveTurn(mine, theirs, animate){
     if(!S.board[s][x.li].includes(x.c)) continue;
     if(animate&&CARDS[x.c.id].r==="U"&&!S.tut&&!(S.mp&&S.mp.replaying)){ const u=ULof(x.c.id);
       if(u&&u.fac) await factionCine(x.c.id,s,x.li); else if(u&&u.req.length&&P.cine!==false) await fusionCine(x.c.id,s); }
-    { const m=snapPow(); reveal(s,x.li,x.c); medeeHook(s,x.li,x.c); diffPow(m,CARDS[x.c.id].name); } render();
+    { const m=snapPow(); reveal(s,x.li,x.c); medeeHook(s,x.li,x.c); veilleurHook(s,x.li,x.c); diffPow(m,CARDS[x.c.id].name); } render();
     if(animate) cardVfx(x.c.id,x.li);
   }
   /* Idunn : fin de tour (pas après le tour 6) */
@@ -766,8 +812,16 @@ async function resolveTurn(mine, theirs, animate){
   /* Prométhée : l'énergie non dépensée passe au tour suivant, 10 d'énergie au plus au tour suivant (énergie du tour + réserve + Freyr ; Jordan, 16 octobre : la réserve seule plafonnée à 10 donnait 16 au tour 6) */
   if(S.turn<6) for(const s of ["p","e"]) if(unspent[s]>0&&!S.biaBlock[s]&&S.board[s].some(col=>col.some(c=>live(c)&&c.id==="promethee"))){
     const k=Math.min(unspent[s],Math.max(0,10-(S.turn+1)-S.bonus[s])); if(k>0){ S.bonus[s]+=k; log(`Prométhée garde ${k} énergie en réserve (${who(s)})`); sfx("buff"); if(animate){ const li=S.board[s].findIndex(col=>col.some(c=>live(c)&&c.id==="promethee")); if(li>=0) FX.play("promethee",{li}); } } }
+  /* Cernunnos : à la fin de chaque tour où son camp ne mène pas ici, sa puissance double (8 au maximum) */
+  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="cernunnos"&&leader(li)!==s&&c.pow>0&&c.pow<8){
+    const g=Math.min(8,c.pow*2)-c.pow; c.pow+=g; (c.mods=c.mods||[]).push({v:g,src:"Cernunnos"}); log(`Cernunnos double sa puissance : +${g} (${who(s)})`); sfx("buff"); }
   if(S.turn>=2&&S.turn<=4) aiOath();
   if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
+  /* L'Enfant sans École : à la fin de chaque tour sauf le sixième, elle gagne +1 définitivement et retourne dans ta main (main pleine : elle reste en jeu, +1 quand même) */
+  if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li].slice()) if(live(c)&&c.id==="enfant"&&!(c.captive&&captorLive(c.captive))){
+    c.pow+=1; (c.mods=c.mods||[]).push({v:1,src:"L'Enfant"});
+    if(S.hand[s].length<7){ S.board[s][li]=S.board[s][li].filter(x=>x!==c); c.rev=false; c.fresh=false; S.hand[s].push(c); log(`L'Enfant sans École retourne dans la main, +1 (${who(s)})`); }
+    else log(`L'Enfant sans École : main pleine, elle reste en jeu, +1 (${who(s)})`); sfx("buff"); }
   if(S.turn>=6) S.final=true;   /* Ananké : la puissance de fin de partie se calcule maintenant, après tout le reste */
   render(); await wait(300);
   for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) c.fresh=false;
