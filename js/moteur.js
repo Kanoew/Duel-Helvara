@@ -277,7 +277,8 @@ function reveal(s,li,c){
   if(CARDS[c.id].fac==="helvara"&&c.id!=="source"&&replayable(c)&&S.board[s][li].some(x=>x!==c&&x.id==="source"&&live(x))){
     log(`La Source · Révélation de ${nm(c)} rejouée (${who(s)})`); replayFx(s,li,c); }
 }
-const isAph=c=>charOf(c.id)==="aphrodite"||c.id==="ulaph";
+/* Aphrodite (de base) et Aphrodite X Yarden rejouent des Révélations et ne comptent pas pour Nike ; les variantes (Étoile de Noël, Coupe de Minuit) sont des cartes comme les autres pour Nike (22 octobre, Jordan) */
+const isAph=c=>c.id==="aphrodite"||c.id==="ulaph";
 /* Rejouer la Révélation d'une carte déjà posée (Aphrodite) : ni Brigid, ni effets de lieu à la pose */
 const replayable=x=>x.rev&&!x.neg&&!CARDS[x.id].token&&charOf(x.id)!=="aphrodite"&&x.id!=="ulaph";
 function replayFx(s,li,x){ const prev=SRC; SRC={s,cost:CARDS[x.id].cost}; try{ revealFx(s,li,x,{replay:true}); } finally { SRC=prev; } }
@@ -299,6 +300,9 @@ function revealFx(s,li,c,opts={}){
     case "joanna": { let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&S.board[s][i].some(x=>x.rev)&&S.board[s][i].length<capOf(s,i)){ const t=mk("lanterne"); t.rev=true; t.fresh=true; S.board[s][i].push(t); n++; } if(n) note=`${n} Lanterne${n>1?"s":""}`; break; }
     case "ares_h": { let n=0; for(const x of targets) if(weaken(o,li,x,2)) n++; if(n){ c.pow+=n; note=`−2 à ${n}, +${n}`; snd="debuff"; } break; }
     case "nergal_h": { let n=0; for(const side of [s,o]) for(let i=0;i<3;i++) for(const x of S.board[side][i].slice()) if(x!==c&&x.rev&&pw(side,i,x)<=1&&!(side===o&&untargetable(s,o,x))&&destroy(side,i,x)) n++; if(n){ c.pow+=2*n; note=`la peste emporte ${n} carte${n>1?"s":""}, +${2*n}`; snd="destroy"; } break; }
+    case "ereshkigal_n": { /* Dame de la Longue Nuit : la carte adverse la plus forte ici perd la moitié de sa puissance (arrondie au-dessus) */
+      const t=strongest(targets,o,li); if(!t) break;
+      const n=Math.ceil(Math.max(0,pw(o,li,t))/2); if(n>0&&weaken(o,li,t,n)){ (t.mods=t.mods||[]).push({v:-n,src:"Ereshkigal"}); note=`−${n} à ${nm(t)}`; snd="debuff"; } break; }
     case "aphrodite_r": { /* Coupe de Minuit : +2 d'énergie au tour suivant (10 au plus ce tour-là, comme Prométhée), chaque joueur pioche 1 carte ; rien au tour 6 */
       if(S.turn>=6) break;
       const k=Math.min(2,Math.max(0,10-(S.turn+1)-S.bonus[s])); if(k>0) S.bonus[s]+=k;
@@ -588,6 +592,8 @@ function aiPlan(me="e",tierOv){
       if(foes){ hit+=fs-2.5; pow-=ms; pow+=2*Math.max(0,own.length-(own.length?1:0)+(ctx.pend[li]?ctx.pend[li]*.7:0)); adj+=1.5; } }
     /* Nyx X Circé : toutes les cartes adverses ici deviennent des Pourceaux (puissance 1) : on retire leur puissance moins 1 chacune */
     if(c.id==="ulcirce"){ const fo=S.board[op][li].filter(x=>x.rev&&!fated(x)&&!x.neg); if(fo.length&&!shielded(op,li)) hit+=fo.reduce((a,x)=>a+Math.max(0,cardPow(op,li,x)-1),0)+.5; else adj-=2; }
+    /* Ereshkigal, Dame de la Longue Nuit : la moitié (arrondie au-dessus) de la puissance de la carte adverse la plus forte ici */
+    if(c.id==="ereshkigal_n"){ const fp=S.board[op][li].filter(x=>x.rev&&!untargetable(me,op,x)).map(x=>cardPow(op,li,x)); if(fp.length&&!shielded(op,li)) hit+=Math.ceil(Math.max(0,...fp)/2); }
     /* Arès, Duelliste du Dernier Soir : si la carte adverse la plus forte ici est plus faible, elle tombe (on gagne sa puissance) ; si elle est plus forte, c'est lui qui tombe */
     if(c.id==="ares_n"){ const fp=S.board[op][li].filter(x=>x.rev&&!untargetable(me,op,x)).map(x=>cardPow(op,li,x)); if(fp.length){ const f=Math.max(...fp); if(f<pow) hit+=f; else if(f>pow){ adj-=pow; pow=0; } } }
     /* Aphrodite, Coupe de Minuit : +2 d'énergie au tour suivant, sans effet au tour 6 : à jouer au plus tard au tour 5 */
@@ -723,11 +729,6 @@ async function resolveTurn(mine, theirs, animate){
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(c.poison&&c.rev&&cardPow(s,li,c)>0&&(SRC={s:opp(s),cost:CARDS.medee_h.cost},weaken(s,li,c,1))&&!(SRC=null)){
     (c.mods=c.mods||[]).push({v:-1,src:"Poison de Médée"}); log(`Poison de Médée · −1 à ${nm(c)} (${who(s)})`); sfx("debuff"); }
   SRC=null;
-  /* Ereshkigal, Dame de la Longue Nuit : à la fin de chaque tour (le 6 compris), la carte adverse la plus forte ici perd 1 de puissance, définitivement */
-  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="ereshkigal_n"){
-    const o=opp(s); const t=S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];
-    SRC={s,cost:CARDS.ereshkigal_n.cost}; const ok=t&&weaken(o,li,t,1); SRC=null;
-    if(ok){ (t.mods=t.mods||[]).push({v:-1,src:"Ereshkigal"}); log(`Ereshkigal · −1 à ${nm(t)} (${who(o)})`); sfx("debuff"); } }
   /* Ishtar : fin de tour (pas après le tour 6) */
   if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&c.id==="ishtar"){
     const o=opp(s); const t=S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];

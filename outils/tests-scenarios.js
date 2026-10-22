@@ -654,13 +654,17 @@ async function inPage() {
       S.hand.p = [er, ng]; S.energy = 3; S.sel = er.uid; const ok = stageSel(0);
       T("Ereshkigal Longue Nuit : posée à 3 avec Nergal, le coût reste fixé à 3 une fois Nergal posé ensuite", ok && S.staged[0].fixed === 3 && used() === 3, `${ok} ${S.staged[0] && S.staged[0].fixed}`);
       S.staged = []; S.hand.p = [er]; S.energy = 3; T("Ereshkigal Longue Nuit : sans Nergal, 3 d'énergie ne suffisent pas", !canStage(er, 0)); }
-    /* Ereshkigal : Continu */
-    fresh(); S.turn = 3; { put("p", 0, "ereshkigal_n"); const a = put("e", 0, plain[0], 5), b = put("e", 0, plain[1], 3), own = put("p", 0, plain[2], 6);
-      await resolveTurn([], [], false); T("Ereshkigal Longue Nuit : fin de tour, la carte adverse la plus forte ici perd 1 (5 → 4), les autres et les tiennes non", a.pow === 4 && b.pow === 3 && own.pow === 6, [a.pow, b.pow, own.pow]);
-      S.turn = 4; await resolveTurn([], [], false); T("Ereshkigal Longue Nuit : le tour suivant, encore −1 (cumulatif, définitif)", a.pow === 3 && b.pow === 3 || (a.pow === 3 && b.pow === 3), [a.pow, b.pow]); }
-    fresh(); S.turn = 6; { put("p", 0, "ereshkigal_n"); const a = put("e", 0, plain[0], 5); await resolveTurn([], [], false); T("Ereshkigal Longue Nuit : agit aussi à la fin du tour 6", a.pow === 4, a.pow); }
-    fresh(); S.turn = 3; { const er = put("p", 0, "ereshkigal_n"); er.neg = true; const a = put("e", 0, plain[0], 5); await resolveTurn([], [], false); T("Ereshkigal Longue Nuit : sans effet si elle a perdu ses effets", a.pow === 5, a.pow); }
-    fresh(); S.turn = 3; { put("p", 0, "ereshkigal_n"); const a = put("e", 1, plain[0], 5); await resolveTurn([], [], false); T("Ereshkigal Longue Nuit : ne touche que le lieu où elle est", a.pow === 5, a.pow); }
+    /* Ereshkigal : Révélation (la moitié de la puissance de la plus forte adverse ici, arrondie au-dessus) ; plus de Continu */
+    T("Ereshkigal Longue Nuit : texte (coût réduit avec Nergal, Révélation moitié arrondie au-dessus, plus de Continu)", /^Coûte 2 de moins si Nergal est dans ta main\. Révélation : la carte adverse la plus forte ici perd la moitié de sa puissance \(arrondie au-dessus\)\.$/.test(CARDS.ereshkigal_n.fx) && !/Continu/.test(CARDS.ereshkigal_n.fx) && /loses half its Power \(rounded up\)/.test(HELVARA_EN.cards.ereshkigal_n.fx));
+    for (const [pw0, exp] of [[6, 3], [5, 2], [1, 0], [8, 4], [3, 1]]) {
+      fresh(); S.turn = 3; { const er = card("ereshkigal_n"), f = put("e", 0, plain[0], pw0), g = put("e", 0, plain[1], 1); S.hand.p = [er]; await resolveTurn([{ c: er, li: 0 }], [], false);
+        T(`Ereshkigal Longue Nuit : la plus forte adverse (${pw0}) perd la moitié arrondie au-dessus → ${exp}, la plus faible (1) ${pw0 === 1 ? "est une égalité de plus faible" : "ne bouge pas"}`, f.pow === exp && (pw0 === 1 || g.pow === 1), [f.pow, g.pow]); } }
+    fresh(); S.turn = 3; { const er = card("ereshkigal_n"), f = put("e", 0, plain[0], 6), own = put("p", 0, plain[1], 6); S.hand.p = [er]; await resolveTurn([{ c: er, li: 0 }], [], false);
+      T("Ereshkigal Longue Nuit : ne touche pas tes propres cartes ni les autres lieux", own.pow === 6 && f.pow === 3); }
+    fresh(); S.turn = 3; { const er = card("ereshkigal_n"), f = put("e", 1, plain[0], 6); S.hand.p = [er]; await resolveTurn([{ c: er, li: 0 }], [], false); T("Ereshkigal Longue Nuit : sans carte adverse dans son lieu, rien ne se passe", f.pow === 6); }
+    fresh(); S.turn = 3; { const er = card("ereshkigal_n"), f = put("e", 0, plain[0], 6); S.hand.p = [er]; await resolveTurn([{ c: er, li: 0 }], [], false); S.turn = 4; await resolveTurn([], [], false);
+      T("Ereshkigal Longue Nuit : l'effet est ponctuel, la perte ne se répète pas aux fins de tour suivantes", f.pow === 3, f.pow); }
+    fresh(); S.turn = 3; { const er = card("ereshkigal_n"), f = put("e", 0, "ananke", 6); f.pow = 6; S.hand.p = [er]; await resolveTurn([{ c: er, li: 0 }], [], false); T("Ereshkigal Longue Nuit : la Fatalité d'Ananké (ni détruite ni déplacée) ne protège pas d'un affaiblissement : 6 → 3", f.pow === 3, f.pow); }
     /* Aphrodite, Coupe de Minuit */
     /* resolveTurn enchaîne sur le tour suivant : le bonus est alors déjà dans l'énergie, et chaque camp a pioché sa carte de début de tour */
     fresh(); S.turn = 3; { const t0 = card(plain[0]); S.hand.p = [t0]; S.hand.e = []; await resolveTurn([{ c: t0, li: 0 }], [], false); var ref = { en: S.energy, hp: S.hand.p.length, he: S.hand.e.length, turn: S.turn }; }
@@ -670,7 +674,12 @@ async function inPage() {
     fresh(); S.turn = 4; { const ap = card("aphrodite_r"); S.hand.p = [ap]; S.bonus.p = 4; await resolveTurn([{ c: ap, li: 0 }], [], false); T("Coupe de Minuit : plafond de 10 d'énergie au tour suivant (5 + 4 déjà gardés : +1 seulement)", S.turn === 5 && S.energy === 10, S.energy); }
     fresh(); S.turn = 4; { const ap = card("aphrodite_r"); S.hand.p = [ap]; S.bonus.p = 5; S.hand.e = []; await resolveTurn([{ c: ap, li: 0 }], [], false); T("Coupe de Minuit : déjà au plafond (10), pas d'énergie en plus mais la pioche a lieu", S.energy === 10 && S.hand.e.length === 2, `énergie ${S.energy}, main adverse ${S.hand.e.length}`); }
     fresh(); S.turn = 3; { const ap = card("aphrodite_r"); S.hand.p = [ap]; S.hand.e = [...Array(7)].map(() => card(plain[0])); await resolveTurn([{ c: ap, li: 0 }], [], false); T("Coupe de Minuit : main adverse pleine (7) : pas de carte en plus, rien ne plante, l'énergie est bien donnée", S.hand.e.length === 7 && S.energy === 6, `${S.hand.e.length} / ${S.energy}`); }
-    fresh(); S.turn = 3; { const ap = card("aphrodite_r"), a = card("aphrodite"); const r = [[ap, a]]; S.hand.p = [ap]; T("Coupe de Minuit : une Aphrodite de base ne la rejoue pas (variantes non rejouables)", !replayable(ap) && isAph(ap)); }
+    fresh(); S.turn = 3; { const ap = card("aphrodite_r"), a = card("aphrodite"); const r = [[ap, a]]; S.hand.p = [ap]; T("Coupe de Minuit : une Aphrodite ne la rejoue pas (les variantes ne sont pas rejouables) mais elle compte pour Nike", !replayable(ap) && !isAph(ap) && isAph(a) && isAph(card("ulaph"))); }
+    /* Nike et les variantes d'Aphrodite (22 octobre, Jordan) : seules Aphrodite et Aphrodite X Yarden ne comptent pas */
+    for (const [id, cnt, nom] of [["aphrodite_r", 4, "Coupe de Minuit"], ["aphrodite_n", 4, "Étoile de Noël"], ["aphrodite", 2, "de base"], ["ulaph", 2, "X Yarden"]]) {
+      fresh(); S.turn = 5; { const a = card(id), n = card("nike"); S.hand.p = [a, n]; await resolveTurn([a, n].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike");
+        T(`Nike après Aphrodite ${nom} : ${cnt === 4 ? "elle compte (+2 : Nike à 4)" : "elle ne compte pas (Nike reste à 2)"}`, nk && nk.pow === cnt, nk && nk.pow); } }
+    T("Aphrodite et Aphrodite X Yarden : le texte dit qu'elles ne comptent pas pour Nike (FR et EN)", /Ne compte pas pour Nike\./.test(CARDS.aphrodite.fx) && /Ne compte pas pour Nike\./.test(CARDS.ulaph.fx) && /Does not count for Nike\./.test(HELVARA_EN.cards.aphrodite.fx) && /Does not count for Nike\./.test(HELVARA_EN.cards.ulaph.fx) && !/Nike/.test(CARDS.aphrodite_r.fx));
     /* Arès, Duelliste du Dernier Soir */
     fresh(); S.turn = 3; { const ar = card("ares_n"), f = put("e", 0, plain[0], 3); S.hand.p = [ar]; await resolveTurn([{ c: ar, li: 0 }], [], false);
       T("Arès Duelliste : la carte adverse la plus forte (3) est plus faible que lui (4) → elle est détruite, il reste", !S.board.e[0].includes(f) && S.board.p[0].includes(ar) && S.graveyard.e.includes(plain[0]), `${S.board.e[0].length} / ${S.board.p[0].length}`); }
