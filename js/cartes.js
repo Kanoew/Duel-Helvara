@@ -167,7 +167,7 @@ const CARDS = {
   patronne:      {name:"La Patronne d'Ouchy", cost:5, pow:4, fac:"helvara", r:"E", rel:"2027-01-01", soon:"2026-12-27", fx:"Révélation : au tour suivant, tes cartes coûtent 1 de moins.", img:"images/patronne.webp"},
   meute:         {name:"La Meute du M2", cost:4, pow:10, fac:"helvara", r:"E", rel:"2027-01-01", soon:"2026-12-27", fx:"Continu : les cartes adverses ici ont +2 de puissance.", img:"images/meute.webp"},
   ulsomnambule:{name:"La Somnambule X La Reine", cost:6, pow:4, fac:"helvara", r:"U", rel:"2099-01-01", soon:"2099-01-01", fx:"Exige La Somnambule du Flon et La Reine de Sévelin dans le deck.", img:"images/ulsomnambule.webp"},
-  ularchiviste:  {name:"L'Archiviste X La Patronne", cost:3, pow:2, fac:"helvara", r:"U", rel:"2027-01-01", soon:"2026-12-27", fx:"Continu : tes cartes Helvara coûtent 1 de moins. Révélation : pioche 1 carte. Exige L'Archiviste du Sous-Gare et La Patronne d'Ouchy dans le deck.", img:"images/ularchiviste.webp"},
+  ularchiviste:  {name:"L'Archiviste X La Patronne", vfx:"ularchiviste", cost:3, pow:2, fac:"helvara", r:"U", rel:"2027-01-01", soon:"2026-12-27", fx:"Continu : tes cartes Helvara coûtent 1 de moins. Révélation : pioche 1 carte. Exige L'Archiviste du Sous-Gare et La Patronne d'Ouchy dans le deck.", img:"images/ularchiviste.webp"},
   /* 13 cartes sans faction, coût ni effet : factions, coûts, puissances et raretés provisoires, cachées (rel/soon lointains) */
   daji:       {name:"Daji", cost:3, pow:3, fac:"desir", r:"E", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/daji.webp"},
   aine:       {name:"Áine", cost:3, pow:3, fac:"desir", r:"E", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/aine.webp"},
@@ -271,7 +271,7 @@ const CARDS = {
   refaph:  {name:"Reflet d'Aphrodite", cost:0, pow:2, fac:"desir", r:"T", fx:"Jeton laissé par Aphrodite.", img:"images/refaph.webp?v=6", token:true},
   mjolnir: {name:"Mjölnir", cost:0, pow:2, fac:"primordial", r:"T", fx:"Jeton lancé par Thor. S'il est détruit, Thor gagne +2 de puissance.", img:"images/mjolnir.webp", token:true},
   ombre:   {name:"Ombre de Scáthach", cost:0, pow:-3, fac:"jugement", r:"T", fx:"Jeton laissé par Scáthach chez l'adversaire.", img:"images/ombre.webp", token:true},
-  plume:   {name:"Plume", cost:0, pow:1, fac:"desir", r:"T", fx:"Jeton laissé par Quetzalcoatl.", img:"", token:true},
+  plume:   {name:"Plume", cost:0, pow:1, fac:"desir", r:"T", fx:"Jeton laissé par Quetzalcoatl.", img:"images/plume.webp", token:true},
   fleche:  {name:"Flèche d'Apollon", cost:0, pow:1, fac:"jugement", r:"T", fx:"Jeton ajouté à ta main par Apollon.", img:"images/fleche.webp", token:true},
   arme:    {name:"Arme d'Héphaïstos", cost:1, pow:2, fac:"jugement", r:"T", fx:"Jeton forgé dans ta main par Héphaïstos.", img:"images/arme.webp", token:true},
   pourceau:{name:"Pourceau", cost:0, pow:1, fac:"desir", r:"T", fx:"Une carte changée en Pourceau par Circé.", img:"images/pourceau.webp", token:true}

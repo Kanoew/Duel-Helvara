@@ -746,6 +746,10 @@ async function inPage() {
       T("Lot du 1er janvier : Primordial ne gagne que Cernunnos et Typhon, Quetzalcoatl et Ea passent en Désir, Dagda et Indra en Jugement", ["cernunnos", "typhon"].every(id => CARDS[id].fac === "primordial") && ["quetzalcoatl", "ea"].every(id => CARDS[id].fac === "desir") && ["dagda", "indra"].every(id => CARDS[id].fac === "jugement") && IDS.filter(id => CARDS[id].fac === "primordial").length === 2);
       T("Lot du 1er janvier : textes anglais des 15 cartes", IDS.every(id => HELVARA_EN.cards[id] && HELVARA_EN.cards[id].fx && /[a-z]/.test(HELVARA_EN.cards[id].fx)) && HELVARA_EN.cards.plume.n === "Feather");
       const base = async () => { fresh(); S.turn = 3; const t0 = card(plain[0]); S.hand.p = [t0]; S.hand.e = []; await resolveTurn([{ c: t0, li: 0 }], [], false); return { hp: S.hand.p.length, he: S.hand.e.length }; };
+      /* L'Archiviste X La Patronne : eau et champagne (Jordan, 22 octobre) et jeton Plume illustré */
+      { window.__fxErr = []; FX.play("ularchiviste", { li: 0, ultra: true }); await wait(60); const okPlume = (await fetch("images/plume.webp")).ok && (await fetch("images/avatars/plume.webp")).ok;
+        T("Archiviste X Patronne : effet visuel propre (vfx), lueur de cinématique bleue et dorée, aucune erreur de dessin", CARDS.ularchiviste.vfx === "ularchiviste" && typeof FUSION_FLASH === "object" && !!FUSION_FLASH.ularchiviste && (window.__fxErr || []).length === 0, JSON.stringify(window.__fxErr));
+        T("Plume : illustration fournie (carte et avatar) et branchée sur le jeton", okPlume && CARDS.plume.img === "images/plume.webp" && art("plume").includes("images/plume.webp")); }
       /* 1. L'Archiviste */
       { const r = await base(); fresh(); S.turn = 3; const ar = card("archiviste"); S.hand.p = [ar]; S.hand.e = []; await resolveTurn([{ c: ar, li: 0 }], [], false);
         T("Archiviste : pioche 2 cartes, l'adversaire en pioche 1", S.hand.p.length === r.hp + 2 && S.hand.e.length === r.he + 1, `${S.hand.p.length}/${S.hand.e.length} (réf. ${r.hp}/${r.he})`); }

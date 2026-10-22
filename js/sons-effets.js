@@ -276,8 +276,11 @@ const FX=(()=>{
       return (c,p,f)=>{ c.fillStyle=rgba(o.col||"235,242,255",.85*f); for(const d of ds){ const y=d.y+p*H*1.2*d.v, x=d.x+Math.sin(p*4+d.ph)*20; c.beginPath(); c.arc(x,y,d.s,0,7); c.fill(); } }; },
     dust:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, ds=Array.from({length:Math.min(90,Math.round(W*H/4000))},()=>({x:rnd()*W,y:rnd()*H,s:1+rnd()*2,ph:rnd()*6,vx:(rnd()-.5)*40,vy:-10-rnd()*30}));
       return (c,p,f)=>{ c.globalCompositeOperation="lighter"; for(const d of ds){ const a=Math.max(0,Math.sin(p*8+d.ph))*f; c.fillStyle=rgba(o.col||"255,215,120",a); c.beginPath(); c.arc(d.x+d.vx*p,d.y+d.vy*p,d.s,0,7); c.fill(); } c.globalCompositeOperation="source-over"; }; },
-    bubbles:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, ds=Array.from({length:Math.min(60,Math.round(W*H/6000))},()=>({x:rnd()*W,y:H+rnd()*H*.4,s:3+rnd()*8,v:.5+rnd()*.7,ph:rnd()*6}));
-      return (c,p,f)=>{ c.strokeStyle=rgba(o.col||"190,240,255",.7*f); c.lineWidth=1.2; for(const d of ds){ const y=d.y-p*H*1.3*d.v, x=d.x+Math.sin(p*6+d.ph)*10; c.beginPath(); c.arc(x,y,d.s,0,7); c.stroke(); } }; },
+    /* bulles : en contour, d'une couleur ; avec o.gold, une bulle sur deux devient une petite bulle pleine, dorée, plus rapide et plus droite (le champagne, à côté de l'eau) */
+    bubbles:o=>{ const W=o.W||innerWidth,H=o.H||innerHeight, n=Math.min(60,Math.round(W*H/6000)),
+        ds=Array.from({length:n},(_,i)=>o.gold&&i%2?{g:1,x:rnd()*W,y:H+rnd()*H*.4,s:1.4+rnd()*2.4,v:1.1+rnd()*.9,ph:rnd()*6}:{x:rnd()*W,y:H+rnd()*H*.4,s:3+rnd()*8,v:.5+rnd()*.7,ph:rnd()*6});
+      return (c,p,f)=>{ c.lineWidth=1.2; for(const d of ds){ const y=d.y-p*H*1.3*d.v, x=d.x+Math.sin(p*(d.g?15:6)+d.ph)*(d.g?3:10); c.beginPath(); c.arc(x,y,d.s,0,7);
+        if(d.g){ c.fillStyle=rgba(o.gold,.85*f); c.fill(); } else { c.strokeStyle=rgba(o.col||"190,240,255",.7*f); c.stroke(); } } }; },
   };
   /* --- mélanges : un par carte ou par lieu. loc = briques sur le lieu ; screen et tint = ultra-légendaires seulement --- */
   const W_="170,215,255", GOLD="255,205,110";
@@ -308,6 +311,8 @@ const FX=(()=>{
     uloshun:  {loc:[["rise",{c1:"240,200,90",c2:"120,80,10",rings:5,c3:"255,240,200"}]], screen:[["dust",{col:GOLD}],["rain",{col:"255,215,130"}]], tint:"50,35,0"},
     ulqetjor: {loc:[["rays",{col:"255,170,200"}]], screen:[["petals",{col:["255,180,200","255,220,230"]}]], tint:"50,10,30"},
     ulpele_r: {loc:[["rise",{c1:"230,70,15",c2:"90,5,0",h:.5,c3:"255,190,100"}],["burst",{col:["255,90,30","255,190,80","255,240,200"],up:true,n:40}],["flicker",{col:"255,140,40",y:.7}]], screen:[["embers",{col:["255,210,100","255,80,20"]}]], tint:"50,10,0"},
+    /* L'Archiviste X La Patronne : l'eau bleue des souterrains du Sous-Gare et le champagne doré du bar d'Ouchy (Jordan, 22 octobre) */
+    ularchiviste:{loc:[["rise",{c1:"90,170,255",c2:"10,40,90",h:.4,c3:"255,215,140"}],["burst",{col:["255,205,110","255,225,150","130,195,255"],up:true,n:30}],["rings",{col:"255,215,140",n:3}]], screen:[["bubbles",{col:"130,195,255",gold:"255,208,120"}]], tint:"8,26,56"},
     ulqetjor_r:{loc:[["rays",{col:"255,215,140"}],["sparkle",{col:"255,230,170"}]], screen:[["bubbles",{}]], tint:"45,30,5"},
     ulqetyar: {loc:[["rise",{c1:"255,120,30",c2:"120,10,0",h:.5,c3:"255,200,120"}],["burst",{col:["255,120,40","255,200,90"],up:true}]], screen:[["embers",{col:["255,200,90","255,80,20"]}]], tint:"50,10,0"},
     ulhel:    {loc:[["rays",{col:"255,240,200"}],["smoke",{col:"150,190,230"}]], screen:[["snow",{}]], tint:"20,30,50"},
@@ -367,6 +372,8 @@ const FX=(()=>{
 function cardVfx(id,li){ const d=CARDS[id]; if(!d) return; if(d.vfx&&(d.r==="L"||d.r==="U")) FX.play(d.vfx,{li,ultra:d.r==="U"}); else if(d.r==="E"&&!d.token) FX.play("epic_"+d.fac,{li,epic:true}); }
 /* Cinématique de fusion : les deux cartes sources se percutent et la fusion apparaît (1,5 s au plus, un toucher la saute).
    Réservée aux vraies fusions (entrée ULS avec des req). Locale : elle ne touche ni l'état de la partie ni la synchro en ligne. */
+/* lueur de la cinématique de fusion propre à une fusion (par défaut : blanche) ; la carte de gauche est la première source, celle de droite la seconde */
+const FUSION_FLASH={ularchiviste:{flash:"radial-gradient(circle at 36% 50%,rgba(110,185,255,1),rgba(110,185,255,0) 62%),radial-gradient(circle at 64% 50%,rgba(255,205,110,1),rgba(255,205,110,0) 62%),rgba(255,244,222,.55)",glow:"0 0 44px rgba(110,185,255,.55),0 0 70px rgba(255,205,110,.4)",line:"#ffd98a"}};
 function fusionCine(id,s){
   return new Promise(done=>{
     if(typeof Element.prototype.animate!=="function"||matchMedia("(prefers-reduced-motion: reduce)").matches){ done(); return; }
@@ -377,6 +384,7 @@ function fusionCine(id,s){
     ov.innerHTML=srcs.map((x,i)=>`<div class="cc ${i?"r":"l"}" style="left:50%;top:50%">${art(x)}<span>${nm(x)}</span></div>`).join("")
       +`<div class="res" style="left:50%;top:50%">${art(id)}<span>${nm(id)}</span></div><div class="flash"></div><div class="skip">${trUI("Touche pour passer")}</div>`;
     document.body.appendChild(ov);
+    { const ff=FUSION_FLASH[id]; if(ff){ ov.querySelector(".flash").style.background=ff.flash; const rs=ov.querySelector(".res"); rs.style.boxShadow=ff.glow; rs.style.outlineColor=ff.line; } }
     const anims=[], A=(el,kf,o)=>{ if(el) anims.push(el.animate(kf,{fill:"both",...o})); };
     const T="translate(-50%,-50%)", q=sel=>ov.querySelector(sel), resAt=600;
     A(q(".cc.l"),[{transform:`${T} translateX(-72vw) rotate(-9deg)`,opacity:1},{transform:`${T} translateX(-9vw) rotate(0)`,opacity:1,offset:.8},{transform:`${T} translateX(-3vw) scale(1.12)`,opacity:0}],{duration:700,easing:"cubic-bezier(.5,0,.9,.6)"});

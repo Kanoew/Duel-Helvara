@@ -166,6 +166,8 @@ Effet réservé aux **ultra-légendaires de faction** (4 au plus d'ici février)
 
 ## Mécanismes ajoutés par le lot du 1er janvier 2027 (22 octobre)
 
+Effets visuels : brique `bubbles` à deux couleurs (`gold`), mélange `MIX.ularchiviste`, `FUSION_FLASH` (lueur et halo propres à une fusion dans `fusionCine`).
+
 Détail et décisions : 15e série de `docs/historique-equilibrage.md`. Repères du moteur : coûts du tour suivant `S.costNext` → `S.costNow` (`startTurn`, `costFor`, bandeau `.mods`) ; carte moins chère `c.cheap` (`costOf`) ; jeton Plume (`slotsUsed`, `eatPlume`, `sideHTML`) ; retour de l'Enfant et doublement de Cernunnos (fin de `resolveTurn`) ; `veilleurHook` ; `banned()` et `discard()` pour le Reflet Noir ; auras de la Meute, du Musicien et d'Ea dans `cardPow`, de l'Archiviste X Patronne dans `costFor`.
 
 ## Lieu à l'honneur du week-end (22 octobre 2026, demande de Jordan)
