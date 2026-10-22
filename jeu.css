@@ -230,6 +230,10 @@ pre{background:var(--deep);border:1px solid var(--line);border-radius:10px;paddi
 .fan .fcard:nth-child(1){transform:rotate(-12deg) translateX(-38%);z-index:1}
 .fan .fcard:nth-child(2){z-index:3;top:0;cursor:zoom-in}
 .fan .fcard:nth-child(3){transform:rotate(12deg) translateX(38%);z-index:2}
+/* trois cartes : la place suit data-pos (et non l'ordre dans la page), pour que la fin d'un glissement n'oblige pas à tout redessiner */
+.fan[data-n="3"] .fcard[data-pos="-1"]{transform:rotate(-12deg) translateX(-38%);z-index:1;top:6%;cursor:pointer}
+.fan[data-n="3"] .fcard[data-pos="0"]{transform:none;z-index:3;top:0;cursor:zoom-in}
+.fan[data-n="3"] .fcard[data-pos="1"]{transform:rotate(12deg) translateX(38%);z-index:2;top:6%;cursor:pointer}
 .pick,.thumb{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 .vfoot{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .vdots{display:flex;gap:7px}.vdots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .2s}.vdots i.on{background:var(--frost)}
@@ -884,9 +888,6 @@ body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 .holoslot:not(.holo-on)>.holohost{position:absolute;left:0;top:0;pointer-events:none}
 /* paquet : l'effet est posé à plat par-dessus la carte retournée, une fois le retournement fini (dans la carte en 3D, des couches disparaissaient par moments sur téléphone) */
 /* vitrine de l'accueil : l'effet est posé par-dessus l'illustration (même image dessous), il bouge seul et laisse passer le doigt (glisser pour tourner) */
-.fan .fanholo{position:absolute;inset:0;display:flex;align-items:center;pointer-events:none;z-index:2}
-.fan .fanholo *{pointer-events:none!important}
-.fan .fanholo .hc-card{touch-action:auto}
 .t-holoover{position:absolute;inset:0;display:flex;align-items:center;pointer-events:none;visibility:hidden}
 .t-holoover.on{visibility:visible}
 .t-holoover .hc-card{touch-action:auto}

@@ -59,18 +59,18 @@ srv.listen(0, async () => {
     /* vitrine de l'accueil (vidéo de Jordan, 15 octobre : l'ancien reflet d'ultra-légendaire y restait) */
     p = await page("/index.html");
     await p.evaluate(`P.owned=[...new Set([...P.owned,"nike","yarden","amaterasu"])];P.fan=["nike","yarden","amaterasu"];tutoStep=-1;P.tuto=true;screen="home";render();`);
-    await p.waitForSelector(".fanholo .hc-card.hc-ready", { timeout: 5000 }).catch(() => {});
-    check("vitrine : Nike au centre affiche l'effet holo", await n(p, ".fanholo .hc-card.hc-ready") === 1);
+    await p.waitForSelector('.fcard[data-pos="0"] .holotile .hc-card.hc-ready', { timeout: 5000 }).catch(() => {});
+    check("vitrine : Nike au centre affiche l'effet holo", await n(p, '.fcard[data-pos="0"] .holotile .hc-card.hc-ready') === 1);
     check("vitrine : plus l'ancien reflet d'ultra-légendaire sur Nike", await p.evaluate(() => [...document.querySelectorAll('.fcard[data-id="nike"] .full')].every(f => !f.classList.contains("holo") && f.classList.contains("holopre"))));
-    check("vitrine : l'effet laisse passer le doigt (glisser pour tourner)", await p.evaluate(() => getComputedStyle(document.querySelector(".fanholo .hc-card")).pointerEvents === "none"));
+    check("vitrine : l'effet laisse passer le doigt (glisser pour tourner)", await p.evaluate(() => getComputedStyle(document.querySelector(".fcard .holotile .hc-card")).pointerEvents === "none"));
     await p.evaluate("render();render();"); await p.waitForTimeout(200);
     check("vitrine : des redessins n'empilent pas d'instances", await n(p, ".hc-card") === 1);
     const fb = await p.locator('.fcard[data-pos="0"]').boundingBox();
     await p.mouse.move(fb.x + fb.width * .7, fb.y + fb.height / 2); await p.mouse.down(); await p.mouse.move(fb.x - fb.width * .4, fb.y + fb.height / 2, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(700);
-    check("vitrine : glisser fait toujours tourner, Nike passe sur le côté et y garde son effet (sans l'ancien reflet)", await p.evaluate(() => P.fan[0] !== "nike") && await p.evaluate(() => fanHolo === null && !document.querySelector('.fcard[data-id="nike"] .full').classList.contains("holo")) && await p.waitForFunction(() => document.querySelectorAll('.fcard[data-id="nike"] .holotile .hc-ready').length === 1, null, { timeout: 8000 }).then(() => true, () => false));
+    check("vitrine : glisser fait toujours tourner, Nike passe sur le côté et y garde son effet (sans l'ancien reflet)", await p.evaluate(() => P.fan[0] !== "nike") && await p.evaluate(() => !document.querySelector('.fcard[data-id="nike"] .full').classList.contains("holo")) && await p.waitForFunction(() => document.querySelectorAll('.fcard[data-id="nike"] .holotile .hc-ready').length === 1, null, { timeout: 8000 }).then(() => true, () => false));
     await p.evaluate(`P.fan=["nike","yarden","amaterasu"];render();`); await p.waitForTimeout(1200);
     await p.evaluate(`screen="deck";render();`); await p.waitForTimeout(200);
-    check("vitrine : l'effet est détruit en quittant l'accueil", await n(p, ".hc-card") === 0 && await p.evaluate(() => fanHolo === null));
+    check("vitrine : l'effet est détruit en quittant l'accueil", await n(p, ".hc-card") === 0 && await p.evaluate(() => ![...HOLO_TILES.keys()].some(k => k[0] === "f")));
     check("vitrine : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
     /* chargement lent : l'image fixe garde sa taille pendant que l'effet se charge (elle rétrécissait à côté du conteneur de l'effet) */
     p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/nike/manifest.json", async r => { await new Promise(k => setTimeout(k, 1500)); r.continue(); }) });
@@ -139,16 +139,32 @@ srv.listen(0, async () => {
     /* vitrine de l'accueil : les cartes holo sur les côtés gardent leur effet (vidéo de Jordan, 22 octobre : il disparaissait quand la carte n'était plus au centre) */
     p = await page("/index.html?date=2027-04-11");
     await p.evaluate(`tutoStep=-1;P.tuto=true;P.fan=["nike_v","cronos","ananke"];screen="home";render();`);
-    await p.waitForFunction(() => document.querySelectorAll(".fanholo .hc-ready").length + document.querySelectorAll(".fcard .holotile .hc-ready").length === 2, null, { timeout: 8000 }).catch(() => {});
-    check("vitrine : Nike V au centre a l'effet, Ananké sur le côté aussi", await n(p, ".fanholo .hc-ready") === 1 && await n(p, ".fcard .holotile .hc-ready") === 1, [await n(p, ".fanholo .hc-ready"), await n(p, ".fcard .holotile .hc-ready")]);
+    await p.waitForFunction(() => document.querySelectorAll(".fcard .holotile .hc-ready").length === 2, null, { timeout: 8000 }).catch(() => {});
+    check("vitrine : Nike V au centre a l'effet, Ananké sur le côté aussi", await n(p, '.fcard[data-pos="0"] .holotile .hc-ready') === 1 && await n(p, ".fcard .holotile .hc-ready") === 2, [await n(p, '.fcard[data-pos="0"] .holotile .hc-ready'), await n(p, ".fcard .holotile .hc-ready")]);
     await p.evaluate("fanRotate(1);"); await p.waitForFunction(() => document.querySelectorAll(".fcard .holotile .hc-ready").length === 2, null, { timeout: 8000 }).catch(() => {});
-    check("vitrine : Cronos au centre (pas de holo), les deux cartes holo des côtés ont l'effet", await n(p, ".fanholo") === 0 && await n(p, ".fcard .holotile .hc-ready") === 2, [await n(p, ".fanholo"), await n(p, ".fcard .holotile .hc-ready")]);
+    check("vitrine : Cronos au centre (pas de holo), les deux cartes holo des côtés ont l'effet", await n(p, '.fcard[data-pos="0"] .holotile') === 0 && await n(p, ".fcard .holotile .hc-ready") === 2, [await n(p, '.fcard[data-pos="0"] .holotile'), await n(p, ".fcard .holotile .hc-ready")]);
     await p.evaluate("for(let i=0;i<6;i++)render();"); await p.waitForTimeout(500);
     check("vitrine : des redessins n'empilent pas d'instances", await n(p, ".hc-card") === 2);
     check("vitrine : la vitrine laisse passer le doigt (appui sur une carte de côté = la mettre en avant)", await p.evaluate(() => getComputedStyle(document.querySelector(".fcard .holotile")).pointerEvents === "none"));
     await p.evaluate(`screen="deck";render();`); await p.waitForTimeout(300);
     check("vitrine : quitter l'accueil détruit les effets de la vitrine", await n(p, ".fcard") === 0 && await p.evaluate(() => ![...HOLO_TILES.keys()].some(k => k[0] === "f")));
     check("vitrine : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
+
+    /* fin du glissement sans redessin (vidéos de Jordan, 22 octobre : l'effet « arrivait en sautant » parce que tout était recréé) */
+    p = await page("/index.html?date=2027-04-11");
+    await p.evaluate(`tutoStep=-1;P.tuto=true;P.fan=["nike_v","ereshkigal_n","ananke"];screen="home";render();`);
+    await p.waitForFunction(() => document.querySelectorAll(".fcard .holotile .hc-ready").length === 2, null, { timeout: 8000 }).catch(() => {});
+    await p.evaluate(`window.__nodes=[...document.querySelectorAll(".fcard")];window.__hosts=[...document.querySelectorAll(".fcard .holohost")];window.__rn=0;const r0=render;render=function(){window.__rn++;return r0.apply(this,arguments)};fanSlide(1);`);
+    await p.waitForTimeout(900);
+    check("vitrine : à la fin du glissement, aucun redessin de l'écran", await p.evaluate(() => window.__rn === 0), await p.evaluate(() => window.__rn));
+    check("vitrine : les cartes sont les mêmes éléments de la page après le glissement", await p.evaluate(() => [...document.querySelectorAll(".fcard")].every((c, i) => c === window.__nodes[i])));
+    check("vitrine : l'effet holo continue sans repartir de zéro (mêmes instances)", await p.evaluate(() => { const h = [...document.querySelectorAll(".fcard .holohost")]; return h.length === 2 && h.every(x => window.__hosts.includes(x)); }));
+    check("vitrine : l'ordre est enregistré comme avant (la carte de droite passe au centre)", await p.evaluate(() => P.fan.join() === "ereshkigal_n,ananke,nike_v" && document.querySelector('.fcard[data-pos="0"]').dataset.id === "ereshkigal_n"));
+    const geo = () => p.evaluate(() => Object.fromEntries([...document.querySelectorAll(".fcard")].map(c => { const r = c.getBoundingClientRect(); return [c.dataset.id, [r.left, r.top, r.width, r.height].map(v => Math.round(v * 10) / 10).join()]; })));
+    const g1 = await geo(); await p.evaluate("render();"); await p.waitForTimeout(300); const g2 = await geo();
+    check("vitrine : un redessin complet donne exactement les mêmes positions (pas de saut)", JSON.stringify(Object.entries(g1).sort()) === JSON.stringify(Object.entries(g2).sort()), [g1, g2]);
+    check("vitrine : la carte au centre s'agrandit, les autres se mettent en avant (étiquettes)", await p.evaluate(() => document.querySelector('.fcard[data-pos="0"]').getAttribute("aria-label").startsWith("Agrandir") && document.querySelector('.fcard[data-pos="1"]').getAttribute("aria-label").startsWith("Mettre en avant")));
+    check("vitrine : (glissement) aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
   } catch (e) { ko++; console.log("ÉCHEC   exception : " + e.message); }
   await b.close(); srv.close(); console.log(`\n${ok} sur ${ok + ko} vérifications valides.`); process.exit(ko ? 1 : 0);
 });

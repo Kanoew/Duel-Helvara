@@ -43,7 +43,7 @@ const rc=d=>(d.r==="R"||d.r==="E"||d.r==="L")&&!d.token?` r-${d.r}`:"";
 /* Effet holo 2.5D sur les petites cartes (main, plateau, grille de la Collection) : une ultra-légendaire de faction garde son effet partout où on la voit.
    tileHolo() pose un emplacement (une clé par carte affichée) ; render() y monte l'effet et le garde d'un redessin à l'autre (au plus quelques instances : une seule ultra-légendaire par deck). */
 const hasHoloTile=id=>CARDS[id].r==="U"&&!!holoDir(id);
-const tileHolo=(id,key,r)=>hasHoloTile(id)?`<i class="holotile" data-hid="${id}" data-hk="${key}"${r?` data-r="${r}"`:""} aria-hidden="true"></i>`:"";
+const tileHolo=(id,key,r,hi)=>hasHoloTile(id)?`<i class="holotile" data-hid="${id}" data-hk="${key}"${r?` data-r="${r}"`:""}${hi?' data-q="hi"':""} aria-hidden="true"></i>`:"";
 const HOLO_TILES=new Map();
 function holoTilesDetach(){ for(const v of HOLO_TILES.values()) if(v.h&&v.h.el) v.h.el.remove(); }
 function holoTilesAttach(root){
@@ -51,7 +51,7 @@ function holoTilesAttach(root){
   root.querySelectorAll(".holotile").forEach(t=>{
     const k=t.dataset.hk, id=t.dataset.hid, v=HOLO_TILES.get(k); live.add(k);
     if(v&&v.id===id&&v.h) holoMove(v.h,t);
-    else{ if(v) holoKill(v.h); HOLO_TILES.set(k,{id,h:holoMount(t,id,{idle:true,quality:"low",radius:+t.dataset.r||6,maxFps:30})}); }
+    else{ if(v) holoKill(v.h); HOLO_TILES.set(k,{id,h:holoMount(t,id,Object.assign({idle:true,radius:+t.dataset.r||6},t.dataset.q==="hi"?{}:{quality:"low",maxFps:30}))}); }
   });
   for(const [k,v] of HOLO_TILES) if(!live.has(k)){ holoKill(v.h); HOLO_TILES.delete(k); }
 }
@@ -247,7 +247,7 @@ function fanRotate(step){
 }
 function vitrineHTML(){
   const fan=fanIds(), order=fan.length===3?[fan[2],fan[0],fan[1]]:fan, pos=fan.length===3?[-1,0,1]:fan.map((_,i)=>i);
-  return `<section class="vitrinewrap">${seasonDeco("fan")}<div class="fan" aria-label="Vitrine : glisse pour faire tourner les cartes">${order.map((id,k)=>{ const h=!!holoDir(id)&&CARDS[id].r==="U"; return `<button class="fcard" data-act="fantap" data-pos="${pos[k]}" data-id="${id}" aria-label="${pos[k]===0?"Agrandir ":"Mettre en avant "}${CARDS[id].name}">${fullCard(id,h?"fanh":"")}${h&&pos[k]===0?`<span class="fanholo" data-id="${id}"></span>`:""}${h&&pos[k]!==0?tileHolo(id,"f"+id,12):""}</button>`; }).join("")}</div>
+  return `<section class="vitrinewrap">${seasonDeco("fan")}<div class="fan"${fan.length===3?' data-n="3"':""} aria-label="Vitrine : glisse pour faire tourner les cartes">${order.map((id,k)=>{ const h=!!holoDir(id)&&CARDS[id].r==="U"; return `<button class="fcard" data-act="fantap" data-pos="${pos[k]}" data-id="${id}" aria-label="${pos[k]===0?"Agrandir ":"Mettre en avant "}${CARDS[id].name}">${fullCard(id,h?"fanh":"")}${h?tileHolo(id,"f"+id,12,true):""}</button>`; }).join("")}</div>
     <div class="vfoot"><span class="hint">Glisse pour faire tourner</span><button class="ghost small" data-act="fanpick">Choisir mes cartes</button></div></section>`;
 }
 let vIdx=0;
@@ -737,7 +737,7 @@ function gzHTML(){
     <button class="ghost" data-act="gzclose">Fermer</button></div></div></div>`;
 }
 
-let zoomHolo=null, fanHolo=null;
+let zoomHolo=null;
 /* carte agrandie en ce moment (Collection, ou grand format d'une carte en partie) : c'est elle qui reçoit l'effet holo */
 function bigCardId(){ if(zoomId) return zoomId; if(gz&&gz[0]==="c"&&S){ const f=findAny(+gz.slice(1)); return f?f.c.id:null; } return null; }
 function render(){
@@ -751,8 +751,6 @@ function render(){
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
   /* effet holo du zoom : détaché pendant le redessin puis remis dans le nouveau conteneur ; détruit si le zoom est fermé ou change de carte */
   const bigId=bigCardId(), holoKeep=zoomHolo&&zoomHolo.id===bigId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
-  /* effet holo de la carte du centre de la vitrine (ultra-légendaire de faction) : même principe, gardé tant que la carte reste au centre */
-  const fanKeep=fanHolo&&fanHolo.el?fanHolo.el:null; if(fanKeep) fanKeep.remove();
   holoTilesDetach();
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
   holoTilesAttach(app);
@@ -760,9 +758,6 @@ function render(){
   else if(screen==="home") holoPrefetch(fanIds()); /* accueil : les cartes holo de la vitrine (celle du centre et celles qui viennent de tourner) */
   else if(screen==="play") holoPrefetch(P.deck); /* en partie : seulement la carte holo de ton deck (le reste se charge à la demande) */
   { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,bigId); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }
-  { const fs=document.querySelector(".fanholo");
-    if(fs&&fanKeep&&fanHolo.id===fs.dataset.id){ fs.appendChild(fanKeep); fs.classList.add("holo-on"); }
-    else{ holoKill(fanHolo); fanHolo=fs?holoMount(fs,fs.dataset.id,{idle:true}):null; } }
   document.body.classList.toggle("hasdock",screen!=="play");
   document.body.classList.toggle("inplay",screen==="play");
   setTimeout(()=>FX.decorate(app),30);
@@ -833,8 +828,26 @@ function fanFinish(d,commit){
     c.anim=c.el.animate(fr,{duration:dur,easing:"cubic-bezier(.22,.8,.3,1)",fill:"forwards"});
   }
   setTimeout(()=>{ fanBusy=false;
-    if(commit) fanRotate(d.step);
+    if(commit) fanCommit(d);
     else for(const c of d.cards){ if(c.anim) c.anim.cancel(); c.el.style.cssText=""; } },dur+20);
+}
+/* Fin du glissement : l'état change comme avec fanRotate (ordre gardé, vIdx), mais les cartes RESTENT dans la page : elles reprennent leur place par data-pos
+   au lieu d'un redessin complet. Un redessin recréait chaque carte : l'effet holo repartait de zéro (il « arrivait en sautant », vidéos de Jordan du 22 octobre)
+   et les reflets des légendaires redémarraient. */
+function fanCommit(d){
+  const f=document.querySelector(".fan[data-n=\"3\"]");
+  if(!f||d.cards.length!==3||!d.cards.every(c=>c.el.isConnected)){ fanRotate(d.step); return; }
+  const own=P.fan.filter(id=>P.owned.includes(id));
+  if(own.length===3){ P.fan=d.step>0?[own[1],own[2],own[0]]:[own[2],own[0],own[1]]; save(); }
+  else vIdx=(vIdx+(d.step>0?1:2))%3;
+  sfx("select");
+  for(const c of d.cards){
+    let np=c.pos-d.step; if(np<-1) np+=3; if(np>1) np-=3;
+    if(c.anim) c.anim.cancel(); c.el.style.cssText="transition:none"; /* sans transition : la carte est déjà à sa place */
+    c.el.dataset.pos=String(np); c.pos=np;
+    c.el.setAttribute("aria-label",(np===0?"Agrandir ":"Mettre en avant ")+CARDS[c.el.dataset.id].name);
+  }
+  void f.offsetWidth; requestAnimationFrame(()=>d.cards.forEach(c=>{ c.el.style.transition=""; }));
 }
 function fanSlide(step){ /* toucher une carte de côté : même glissement, sans geste */
   const f=document.querySelector(".fan"), d=f&&!fanBusy&&!matchMedia("(prefers-reduced-motion: reduce)").matches?fanGrab(f,0,0):null;
