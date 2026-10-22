@@ -738,7 +738,7 @@ async function inPage() {
 
     /* ===== Lot du 1er janvier 2027 (22 octobre) : 15 cartes ===== */
     { const IDS = ["archiviste", "veilleur_pont", "enfant", "meute", "musicien", "reflet_noir", "patronne", "ularchiviste", "quetzalcoatl", "ea", "anansi", "dagda", "indra", "cernunnos", "typhon"];
-      const SP = { archiviste: [3, 2, "helvara", "R"], veilleur_pont: [2, 3, "helvara", "R"], enfant: [0, 0, "helvara", "R"], meute: [4, 8, "helvara", "E"], musicien: [3, 3, "helvara", "E"], reflet_noir: [3, 5, "helvara", "E"], patronne: [5, 4, "helvara", "E"], ularchiviste: [3, 2, "helvara", "U"],
+      const SP = { archiviste: [3, 2, "helvara", "R"], veilleur_pont: [2, 3, "helvara", "R"], enfant: [0, 0, "helvara", "R"], meute: [4, 10, "helvara", "E"], musicien: [3, 3, "helvara", "E"], reflet_noir: [3, 5, "helvara", "E"], patronne: [5, 4, "helvara", "E"], ularchiviste: [3, 2, "helvara", "U"],
         quetzalcoatl: [3, 2, "desir", "R"], ea: [4, 2, "desir", "L"], anansi: [4, 2, "desir", "L"], dagda: [4, 3, "jugement", "E"], indra: [4, 2, "jugement", "E"], cernunnos: [3, 1, "primordial", "E"], typhon: [4, 4, "primordial", "E"] };
       T("Lot du 1er janvier : les 15 cartes ont leurs coût, puissance, faction et rareté", IDS.every(id => { const d = CARDS[id], x = SP[id]; return d.cost === x[0] && d.pow === x[1] && d.fac === x[2] && d.r === x[3]; }), IDS.filter(id => { const d = CARDS[id], x = SP[id]; return !(d.cost === x[0] && d.pow === x[1] && d.fac === x[2] && d.r === x[3]); }).join());
       T("Lot du 1er janvier : sortie le 1er janvier 2027, annonce le 27 décembre, aucune n'est exclusive ; Plume est un jeton", IDS.every(id => CARDS[id].rel === "2027-01-01" && CARDS[id].soon === "2026-12-27" && !CARDS[id].ex && !CARDS[id].vfx === !CARDS[id].vfx && CARDS[id].fx) && CARDS.plume.token && CARDS.plume.pow === 1 && CARDS.plume.cost === 0);
@@ -761,12 +761,12 @@ async function inPage() {
         T("Enfant : jouée aux tours 1 à 5, elle entre au tour 6 avec 5 de puissance", S.turn === 6 && en.pow === 5 && S.hand.p.includes(en), `${S.turn} ${en.pow}`);
         S.hand.p = [en]; await resolveTurn([{ c: en, li: 0 }], [], false); T("Enfant : au tour 6 elle reste en jeu, sans retour ni gain (5 pour 0)", S.board.p[0].includes(en) && en.pow === 5 && cardPow("p", 0, en) === 5, `${en.pow}`); }
       fresh(); S.turn = 3; { const en = card("enfant"); S.hand.p = [en, ...[...Array(7)].map(() => card(plain[0]))]; await resolveTurn([{ c: en, li: 0 }], [], false);
-        T("Enfant : main pleine, elle reste en jeu et gagne quand même +1", S.board.p[0].includes(en) && en.pow === 1, `${en.pow} ${S.hand.p.length}`); }
+        T("Enfant : main pleine, pas de retour en main donc pas de gain : elle reste en jeu à 0 (Jordan, 22 octobre)", S.board.p[0].includes(en) && en.pow === 0 && !S.hand.p.includes(en), `${en.pow} ${S.hand.p.length}`); }
       fresh(); S.turn = 3; { const en = card("enfant"); en.neg = true; S.hand.p = [en]; await resolveTurn([{ c: en, li: 0 }], [], false); T("Enfant : sans effet si elle a perdu ses effets (Apsu) : elle reste, 0 de puissance", S.board.p[0].includes(en) && en.pow === 0); }
       fresh(); S.turn = 3; S.energy = S.energyE = 5; { const en = card("enfant"), x = card(plain[0]); S.hand.e = [en, x]; const ids = aiPlan("e", 5).map(y => y.c.id); T("IA : rejoue l'Enfant sans École chaque tour (coût 0)", ids.includes("enfant"), ids.join()); }
       /* 4. La Meute du M2 */
       fresh(); S.turn = 3; { const m = put("p", 0, "meute"), mine = put("p", 0, plain[0], 3), foe = put("e", 0, plain[1], 3), foe2 = put("e", 1, plain[2], 3);
-        T("Meute : les cartes adverses ici ont +2 (3 → 5), les tiennes et celles d'un autre lieu non", cardPow("e", 0, foe) === 5 && cardPow("p", 0, mine) === 3 && cardPow("e", 1, foe2) === 3 && cardPow("p", 0, m) === 10 /* 8 + 2 du lieu de test */, [cardPow("e", 0, foe), cardPow("p", 0, mine), cardPow("e", 1, foe2), cardPow("p", 0, m)]);
+        T("Meute : les cartes adverses ici ont +2 (3 → 5), les tiennes et celles d'un autre lieu non", cardPow("e", 0, foe) === 5 && cardPow("p", 0, mine) === 3 && cardPow("e", 1, foe2) === 3 && cardPow("p", 0, m) === 12 /* 10 + 2 du lieu de test */, [cardPow("e", 0, foe), cardPow("p", 0, mine), cardPow("e", 1, foe2), cardPow("p", 0, m)]);
         m.neg = true; T("Meute : sans effet si elle a perdu ses effets", cardPow("e", 0, foe) === 3); }
       /* 5. Le Musicien */
       { const c3 = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id) && id !== "musicien" && !CARDS[id].base), c2 = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].cost === 2 && !CARDS[id].fx && !ULof(id));

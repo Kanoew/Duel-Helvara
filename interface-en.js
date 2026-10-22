@@ -449,7 +449,7 @@
     [/^Le Veilleur du Pont · −1 à (.+) \((.+)\)$/, (m,a,w)=>`The Bridge Watcher · −1 to ${a} (${who(w)})`],
     [/^Cernunnos double sa puissance : \+(\d+) \((.+)\)$/, (m,v,w)=>`Cernunnos doubles its Power: +${v} (${who(w)})`],
     [/^L'Enfant sans École retourne dans la main, \+1 \((.+)\)$/, (m,w)=>`The Child Without School returns to hand, +1 (${who(w)})`],
-    [/^L'Enfant sans École : main pleine, elle reste en jeu, \+1 \((.+)\)$/, (m,w)=>`The Child Without School: hand full, stays in play, +1 (${who(w)})`],
+    [/^L'Enfant sans École : main pleine, elle reste en jeu \((.+)\)$/, (m,w)=>`The Child Without School: hand full, stays in play (${who(w)})`],
     [/^Le Reflet Noir entre en jeu : (.+) \((.+)\)$/, (m,a,w)=>`The Black Reflection enters play: ${exact[a]||a} (${who(w)})`],
     [/^(.+) · (Le Veilleur|Plume|L'Enfant)$/, (m,a,b)=>`${a} · ${({"Le Veilleur":"The Watcher","Plume":"Feather","L'Enfant":"The Child"})[b]}`],
     [/^toutes tes cartes ([−+])(\d+) ce tour$/, (m,g,n)=>`all your cards ${g}${n} this turn`],

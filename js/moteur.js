@@ -817,11 +817,10 @@ async function resolveTurn(mine, theirs, animate){
     const g=Math.min(8,c.pow*2)-c.pow; c.pow+=g; (c.mods=c.mods||[]).push({v:g,src:"Cernunnos"}); log(`Cernunnos double sa puissance : +${g} (${who(s)})`); sfx("buff"); }
   if(S.turn>=2&&S.turn<=4) aiOath();
   if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
-  /* L'Enfant sans École : à la fin de chaque tour sauf le sixième, elle gagne +1 définitivement et retourne dans ta main (main pleine : elle reste en jeu, +1 quand même) */
+  /* L'Enfant sans École : à la fin de chaque tour sauf le sixième, elle retourne dans ta main et gagne +1 définitivement (main pleine : pas de retour, donc pas de gain : Jordan, 22 octobre) */
   if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li].slice()) if(live(c)&&c.id==="enfant"&&!(c.captive&&captorLive(c.captive))){
-    c.pow+=1; (c.mods=c.mods||[]).push({v:1,src:"L'Enfant"});
-    if(S.hand[s].length<7){ S.board[s][li]=S.board[s][li].filter(x=>x!==c); c.rev=false; c.fresh=false; S.hand[s].push(c); log(`L'Enfant sans École retourne dans la main, +1 (${who(s)})`); }
-    else log(`L'Enfant sans École : main pleine, elle reste en jeu, +1 (${who(s)})`); sfx("buff"); }
+    if(S.hand[s].length<7){ c.pow+=1; (c.mods=c.mods||[]).push({v:1,src:"L'Enfant"}); S.board[s][li]=S.board[s][li].filter(x=>x!==c); c.rev=false; c.fresh=false; S.hand[s].push(c); log(`L'Enfant sans École retourne dans la main, +1 (${who(s)})`); sfx("buff"); }
+    else log(`L'Enfant sans École : main pleine, elle reste en jeu (${who(s)})`); }
   if(S.turn>=6) S.final=true;   /* Ananké : la puissance de fin de partie se calcule maintenant, après tout le reste */
   render(); await wait(300);
   for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) c.fresh=false;

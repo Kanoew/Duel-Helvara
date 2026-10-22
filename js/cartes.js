@@ -165,7 +165,7 @@ const CARDS = {
   couturiere:{name:"La Couturière de la Cité", cost:3, pow:3, fac:"helvara", r:"R", rel:"2099-01-01", soon:"2099-01-01", fx:"", img:"images/couturiere.webp"},
   archiviste:    {name:"L'Archiviste du Sous-Gare", cost:3, pow:2, fac:"helvara", r:"R", rel:"2027-01-01", soon:"2026-12-27", fx:"Révélation : pioche 2 cartes. L'adversaire pioche 1 carte.", img:"images/archiviste.webp"},
   patronne:      {name:"La Patronne d'Ouchy", cost:5, pow:4, fac:"helvara", r:"E", rel:"2027-01-01", soon:"2026-12-27", fx:"Révélation : au tour suivant, tes cartes coûtent 1 de moins.", img:"images/patronne.webp"},
-  meute:         {name:"La Meute du M2", cost:4, pow:8, fac:"helvara", r:"E", rel:"2027-01-01", soon:"2026-12-27", fx:"Continu : les cartes adverses ici ont +2 de puissance.", img:"images/meute.webp"},
+  meute:         {name:"La Meute du M2", cost:4, pow:10, fac:"helvara", r:"E", rel:"2027-01-01", soon:"2026-12-27", fx:"Continu : les cartes adverses ici ont +2 de puissance.", img:"images/meute.webp"},
   ulsomnambule:{name:"La Somnambule X La Reine", cost:6, pow:4, fac:"helvara", r:"U", rel:"2099-01-01", soon:"2099-01-01", fx:"Exige La Somnambule du Flon et La Reine de Sévelin dans le deck.", img:"images/ulsomnambule.webp"},
   ularchiviste:  {name:"L'Archiviste X La Patronne", cost:3, pow:2, fac:"helvara", r:"U", rel:"2027-01-01", soon:"2026-12-27", fx:"Continu : tes cartes Helvara coûtent 1 de moins. Révélation : pioche 1 carte. Exige L'Archiviste du Sous-Gare et La Patronne d'Ouchy dans le deck.", img:"images/ularchiviste.webp"},
   /* 13 cartes sans faction, coût ni effet : factions, coûts, puissances et raretés provisoires, cachées (rel/soon lointains) */
