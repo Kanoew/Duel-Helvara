@@ -1,5 +1,5 @@
 /* Effet holo 2.5D des Ultra-légendaires de faction (module js/holo-card.js, chargé à la demande).
-   Affiché seulement dans le zoom d'une carte et à la révélation d'un paquet, jamais sur le plateau, la main ou les listes.
+   Affiché seulement dans le grand format d'une carte (Collection ou partie) et à la révélation d'un paquet, jamais sur le plateau, la main ou les listes.
    Activé par donnée : HOLO = { id de carte : dossier sous images/holo/ }. Une carte sans entrée garde son image fixe.
    Si le module, le manifest ou une image ne charge pas, rien ne change à l'écran (l'image fixe reste). */
 const HOLO = { nike: "nike", ananke: "ananke", hedone: "hedone", nike_v: "nike-saint-valentin", source: "carla" };
@@ -44,9 +44,9 @@ async function holoPoster(id) {
 /* Préchargement (appelé à l'affichage de la collection) : module, manifests et images des cartes holo sorties, en tâche de fond,
    pour que l'effet soit là dès l'ouverture de la carte en grand (sinon il arrivait après l'illustration : « coupure », Jordan 15 octobre). */
 const HOLO_PRE = {};
-function holoPrefetch() {
+function holoPrefetch(only) {
   const c = navigator.connection; if (c && (c.saveData || /2g/.test(c.effectiveType || ""))) return;
-  const ids = Object.keys(HOLO).filter(id => !HOLO_PRE[id] && CARDS[id] && (HOLO_TESTON || REL(id))); if (!ids.length) return;
+  const ids = Object.keys(HOLO).filter(id => !HOLO_PRE[id] && CARDS[id] && (HOLO_TESTON || REL(id)) && (!only || only.includes(id))); if (!ids.length) return;
   ids.forEach(id => HOLO_PRE[id] = []);
   (window.requestIdleCallback || (f => setTimeout(f, 200)))(() => {
     holoLoad().catch(() => {});

@@ -713,7 +713,7 @@ function gzHTML(){
   const uid=+gz.slice(1), f=findAny(uid); if(!f){ return ""; } const c=f.c, d=CARDS[c.id];
   const onBoard=f.li!=null&&c.rev, cur=onBoard?cardPow(f.s,f.li,c):c.pow, cont=onBoard?cur-c.pow:0;
   const mods=(c.mods||[]);
-  return `<div class="veil" data-act="gzclose"><div class="zoomwrap">${fullCard(c.id,"big",cur)}
+  return `<div class="veil" data-act="gzclose"><div class="zoomwrap">${holoDir(c.id)?`<div class="holoslot" id="holoslot" data-act="holoin">${fullCard(c.id,"big",cur)}</div>`:fullCard(c.id,"big",cur)}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m">Coût ${d.cost} · puissance de base ${d.pow}${onBoard?` · actuelle <b>${cur}</b>`:""}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
     ${c.neg?`<p style="color:var(--ko)">Cette carte a perdu ses effets.</p><p class="hint" style="margin-top:-4px">Ses effets Continu et de fin de tour ne s'appliquent plus. Ses bonus déjà gagnés restent.</p>`:""}
     ${onBoard&&(mods.length||cont)?`<div class="modlist">${mods.map(m=>`<div class="${m.v>0?"up":"down"}">${m.v>0?"+":"−"}${Math.abs(m.v)} · ${esc(m.src)}${c.neg&&m.src===d.name?` <span>(acquis)</span>`:""}</div>`).join("")}${cont?`<div class="${cont>0?"up":"down"}">${cont>0?"+":"−"}${Math.abs(cont)} · effets continus et lieu</div>`:""}</div>`:""}
@@ -721,6 +721,8 @@ function gzHTML(){
 }
 
 let zoomHolo=null, fanHolo=null;
+/* carte agrandie en ce moment (Collection, ou grand format d'une carte en partie) : c'est elle qui reçoit l'effet holo */
+function bigCardId(){ if(zoomId) return zoomId; if(gz&&gz[0]==="c"&&S){ const f=findAny(+gz.slice(1)); return f?f.c.id:null; } return null; }
 function render(){
   const app=document.getElementById("app");
   { const se=season(); if(se) document.documentElement.dataset.season=se; else delete document.documentElement.dataset.season; }
@@ -731,12 +733,13 @@ function render(){
   /* le code de salon en cours de saisie survit aux redessins (le salon commun en provoque à chaque arrivée ou départ) */
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
   /* effet holo du zoom : détaché pendant le redessin puis remis dans le nouveau conteneur ; détruit si le zoom est fermé ou change de carte */
-  const holoKeep=zoomHolo&&zoomHolo.id===zoomId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
+  const bigId=bigCardId(), holoKeep=zoomHolo&&zoomHolo.id===bigId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
   /* effet holo de la carte du centre de la vitrine (ultra-légendaire de faction) : même principe, gardé tant que la carte reste au centre */
   const fanKeep=fanHolo&&fanHolo.el?fanHolo.el:null; if(fanKeep) fanKeep.remove();
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
-  { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,zoomId); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }
+  else if(screen==="play") holoPrefetch(P.deck); /* en partie : seulement la carte holo de ton deck (le reste se charge à la demande) */
+  { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,bigId); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }
   { const fs=document.querySelector(".fanholo");
     if(fs&&fanKeep&&fanHolo.id===fs.dataset.id){ fs.appendChild(fanKeep); fs.classList.add("holo-on"); }
     else{ holoKill(fanHolo); fanHolo=fs?holoMount(fs,fs.dataset.id,{idle:true}):null; } }

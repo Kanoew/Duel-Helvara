@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Test de l'effet holo 2.5D (zoom et ouverture de paquet) : node outils/tests-holo.js
+/* Test de l'effet holo 2.5D (zoom, partie et ouverture de paquet) : node outils/tests-holo.js
    Utilise les vraies cartes holo de images/holo/ ; ?holo=test ajoute le bouton « Test holo ». Nécessite Playwright et Chromium (voir CLAUDE.md, « Tests »). */
 "use strict";
 const { chromium } = require("/opt/node-tools/node_modules/playwright"), http = require("http"), fs = require("fs"), path = require("path");
@@ -94,6 +94,23 @@ srv.listen(0, async () => {
     await p.locator(".t-skip").click({ force: true }).catch(() => {}); await p.waitForTimeout(800);
     check("paquet : « Passer » détruit l'effet", await n(p, ".hc-card") === 0);
     check("paquet : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
+
+    /* grand format en partie (appui long sur une carte de la main ou du plateau) : même effet que la Collection */
+    p = await page("/index.html?date=2027-02-05"); /* bac à sable : toutes les cartes, profil jetable */
+    await p.evaluate(`tutoStep=-1;P.tuto=true;P.deck=["ananke",...P.deck.filter(x=>x!=="ananke")].slice(0,12);newGame(P.deck);screen="play";render();`);
+    await p.waitForTimeout(400);
+    const uid = await p.evaluate(() => { const h = S.hand.p, d = S.deck.p, k = d.find(x => x.id === "ananke"); if (k) { d.splice(d.indexOf(k), 1); h.push(k); } const c = h.find(x => x.id === "ananke"); if (!c) return "absente"; gz = "c" + c.uid; render(); return c.id; });
+    check("partie : Ananké est bien dans la main pour le test", uid === "ananke", uid);
+    await p.waitForSelector(".hc-card.hc-ready", { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(150);
+    check("partie : une carte holo en grand reçoit l'effet (" + uid + ")", await n(p, ".hc-card.hc-ready") === 1);
+    check("partie : l'effet est mis dans le conteneur holo, l'image fixe est cachée", await p.evaluate(() => document.getElementById("holoslot").classList.contains("holo-on")));
+    await p.evaluate("render();render();"); await p.waitForTimeout(300);
+    check("partie : des redessins n'empilent pas d'instances", await n(p, ".hc-card") <= 1);
+    await p.evaluate("gz=null;render();"); await p.waitForTimeout(300);
+    check("partie : fermer le grand format détruit l'effet", await n(p, ".hc-card") === 0 && await p.evaluate(() => zoomHolo === null));
+    await p.evaluate(`(()=>{const h=S.hand.p,c=h.find(x=>x.id!=="ananke");gz="c"+c.uid;render();})()`); await p.waitForTimeout(300);
+    check("partie : une carte sans holo garde son image fixe (aucun effet monté)", await n(p, ".hc-card") === 0 && await n(p, "#holoslot") === 0);
+    check("partie : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
   } catch (e) { ko++; console.log("ÉCHEC   exception : " + e.message); }
   await b.close(); srv.close(); console.log(`\n${ok} sur ${ok + ko} vérifications valides.`); process.exit(ko ? 1 : 0);
 });
