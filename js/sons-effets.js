@@ -51,7 +51,7 @@ function sfx(n){ if(!quiet && P.sfx && SFX[n]) try{ SFX[n](); }catch(e){} }
    et la lecture ne passe plus par un élément <audio> (source de saccades sur Android). Trois morceaux décodés au plus en mémoire.
    Fondus par GainNode (sur iPhone, audio.volume est ignoré). Sans Web Audio, repli sur un élément <audio>.
    Le choix du morceau de partie utilise Math.random, jamais le tirage partagé des duels en ligne. */
-const MUSIC={home:"audio/accueil.mp3",play:"audio/partie.mp3",play2:"audio/partie_2.mp3",tension:"audio/partie_tension.mp3",home_halloween:"audio/accueil_halloween.mp3",home_noel:"audio/accueil_noel.mp3",home_nouvelan:"audio/accueil_noel.mp3",
+const MUSIC={home:"audio/accueil.mp3",play:"audio/partie.mp3",play2:"audio/partie_2.mp3",tension:"audio/partie_tension.mp3",home_halloween:"audio/accueil_halloween.mp3",home_noel:"audio/accueil_noel.mp3",home_nouvelan:"audio/accueil_nouvelan.mp3",
   win:"audio/victoire.mp3",lose:"audio/defaite.mp3"};
 /* bgm : morceau en cours ; bgmFade : celui qui s'éteint ; bgmHold : morceau de partie mis en pause pendant le jingle de fin */
 let bgm=null, bgmFade=null, bgmHold=null, bgmArmed=false, jingle=null, playFor=null, playPick="play", nextPlay=null, endKey=null;

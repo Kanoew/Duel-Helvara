@@ -562,7 +562,7 @@ async function inPage() {
     T("Nike : 3/2", CARDS.nike.cost === 3 && CARDS.nike.pow === 2);
     /* J11. Données, dates et jetons */
     T("Renfort Jugement : coûts, puissances, raretés et dates", CARDS.maat.cost === 0 && CARDS.maat.pow === 1 && CARDS.maat.r === "C" && CARDS.apollon.cost === 1 && CARDS.apollon.r === "R" && CARDS.vesta.pow === 2 && CARDS.hephaistos.cost === 2 && CARDS.tsukuyomi.r === "C" && CARDS.zeus.cost === 5 && CARDS.zeus.pow === 4 && CARDS.zeus.r === "L"
-      && ["maat", "apollon", "vesta"].every(id => CARDS[id].rel === "2026-11-15" && CARDS[id].soon === "2026-11-10") && ["hephaistos", "tsukuyomi", "zeus"].every(id => CARDS[id].rel === "2026-12-14" && CARDS[id].soon === "2026-12-09") && ["maat", "apollon", "vesta", "hephaistos", "tsukuyomi", "zeus"].every(id => CARDS[id].fac === "jugement"));
+      && ["maat", "apollon", "vesta"].every(id => CARDS[id].rel === "2026-11-15" && CARDS[id].soon === "2026-11-10") && ["hephaistos", "tsukuyomi", "zeus", "cronos"].every(id => CARDS[id].rel === "2026-12-01" && CARDS[id].soon === "2026-11-26") && ["maat", "apollon", "vesta", "hephaistos", "tsukuyomi", "zeus"].every(id => CARDS[id].fac === "jugement"));
     T("Jetons Flèche et Arme : Jugement, hors collection et paquets", CARDS.fleche.token && CARDS.arme.token && !POOL.includes("fleche") && !POOL.includes("arme") && CARDS.fleche.fac === "jugement");
     /* J12. IA : Nike après les cartes à 0 et 1 ; Zeus joué quand l'adversaire a plusieurs cartes bon marché */
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { const m = card("maat"), a = card("apollon"), n = card("nike"); S.hand.e = [n, m, a];
@@ -589,7 +589,7 @@ async function inPage() {
   { const stage = (id, turn, en) => { fresh(); S.turn = turn; S.energy = en; const c = card(id); S.hand.p = [c]; S.staged = []; return canStage(c, 0); };
     T("Ananké : injouable au tour 6 (6 et 10 d'énergie, Prométhée), jouable aux tours 4 et 5", !stage("ananke", 6, 6) && !stage("ananke", 6, 10) && stage("ananke", 4, 4) && stage("ananke", 5, 5));
     T("Cronos : injouable au tour 6 (même avec 10 d'énergie), jouable au tour 5", !stage("cronos", 6, 6) && !stage("cronos", 6, 10) && stage("cronos", 5, 5));
-    T("Données : Ananké 4/1 ; Cronos Jugement légendaire 5/3 (14 décembre) ; Echidna Primordial 3/3, effet de défausse", CARDS.ananke.cost === 4 && CARDS.ananke.pow === 1 && CARDS.cronos.fac === "jugement" && CARDS.cronos.r === "L" && CARDS.cronos.cost === 5 && CARDS.cronos.pow === 3 && CARDS.cronos.rel === "2026-12-14" && CARDS.echidna.fac === "primordial" && /défausse les cartes de coût 1/.test(CARDS.echidna.fx));
+    T("Données : Ananké 4/1 ; Cronos Jugement légendaire 5/3 (1er décembre) ; Echidna Primordial 3/3, effet de défausse", CARDS.ananke.cost === 4 && CARDS.ananke.pow === 1 && CARDS.cronos.fac === "jugement" && CARDS.cronos.r === "L" && CARDS.cronos.cost === 5 && CARDS.cronos.pow === 3 && CARDS.cronos.rel === "2026-12-01" && CARDS.echidna.fac === "primordial" && /défausse les cartes de coût 1/.test(CARDS.echidna.fx));
     /* Ananké posée au tour 4, Qetesh adverse au tour 5 → charmée */
     fresh(); S.turn = 4; { const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); S.turn = 5; const q = card("qetesh"); S.hand.e = [q]; await resolveTurn([], [{ c: q, li: 0 }], false);
       T("Ananké posée au tour 4, Qetesh adverse au tour 5 : charmée", a.charm === "e", a.charm); }
