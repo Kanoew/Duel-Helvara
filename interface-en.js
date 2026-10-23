@@ -10,6 +10,11 @@
 
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
+    [/^attire (.+)$/, (m,a)=>`draws ${a} here`],
+    [/^Pêche d'immortalité ajoutée à la main$/, ()=>"Peach of Immortality added to hand"],
+    [/^main pleine : Pêche perdue$/, ()=>"hand full: Peach lost"],
+    [/^reprend (.+) en main, 2 de moins$/, (m,a)=>`takes ${a} back into hand, 2 less`],
+    [/^copie (.+)$/, (m,a)=>`copies ${a}`],
     [/^mélange la Lance de Lugh dans ton deck$/, ()=>"shuffles Lugh's Spear into your deck"],
     [/^flèche d'or : \+2 à (.+) ; flèche de plomb : −2 à (.+)$/, (m,a,b)=>`golden arrow: +2 to ${a}; lead arrow: −2 to ${b}`],
     [/^flèche d'or : \+2 à (.+)$/, (m,a)=>`golden arrow: +2 to ${a}`],
@@ -435,6 +440,8 @@
     [/^Adversaire : deck (.+) · niveau (.+)$/, (m,f,t)=>`Opponent: ${f} deck · level ${t}`],
     [/^Blitz · match (\d)\/3 · adversaire (.+), niveau (.+)$/, (m,n,f,t)=>`Blitz · match ${n}/3 · ${f} opponent, level ${t}`],
     [/^(Idunn|Ishtar) · ([+−]\d+) à (.+) \((.+)\)$/, (m,c,v,a,w)=>`${c} · ${v} to ${a} (${who(w)})`],
+    [/^Pakhet détruit (.+) \((.+)\)$/, (m,a,w)=>`Pakhet destroys ${a} (${who(w)})`],
+    [/^Bari Gongju · (.+) compte aussi comme défaussée \((.+)\)$/, (m,a,w)=>`Bari Gongju · ${a} also counts as discarded (${who(w)})`],
     [/^Kama · \+2 \((.+)\)$/, (m,w)=>`Kama · +2 (${who(w)})`],
     [/^Kama est détruit et revient dans la main \((.+)\)$/, (m,w)=>`Kama is destroyed and returns to hand (${who(w)})`],
     [/^Tezcatlipoca absorbe (.+) : \+(-?\d+) \((.+)\)$/, (m,a,n,w)=>`Tezcatlipoca absorbs ${a}: +${n} (${who(w)})`],
@@ -446,6 +453,7 @@
     [/^Héraklès passe chez l'adversaire : (.+) \((.+)\)$/, (m,l,w)=>`Heracles crosses over to the opponent: ${l} (${who(w)})`],
     [/^Héraklès n'a plus de place chez l'adversaire : il retourne dans la main \((.+)\)$/, (m,w)=>`Heracles has no room left on the opponent's side: he returns to hand (${who(w)})`],
     [/^Plus de place : (.+) est perdue \((.+)\)$/, (m,a,w)=>`No room left: ${a} is lost (${who(w)})`],
+    [/^Copie l'effet de (.+)\.$/, (m,a)=>`Copies the effect of ${a}.`],
     [/^Absorbées : (.+)$/, (m,a)=>`Absorbed: ${a}`],
     [/^Dante · \+1 \((.+)\)$/, (m,w)=>`Dante · +1 (${who(w)})`],
     [/^La Messagère d'Hécate · \+(\d+) \((.+)\)$/, (m,v,w)=>`Hecate's Messenger · +${v} (${who(w)})`],
@@ -506,6 +514,7 @@
       DROPS:{
         nov15:"Prometheus keeps the fire, Pandora opens the box, Athena guides your hand, and Styx watches over her daughters: Bia, and Nike, the first faction ultra-legendary. Ma'at, Apollo and Vesta prepare her way. She is earned by playing 50 games with 8 Judgement cards: the Faction journal is already counting.",
         dec14:"The Star Fold opens for Christmas.",
+        feb1:"Nephtys sacrifices her neighbour, Pakhet hunts the small cards, Hera grows jealous, Frigg draws to herself, Xi Wangmu offers the Peach of Immortality, Bari Gongju opens the way of the discarded, Isis and Rati call back the fallen, Loki makes them discard and Anahita copies… and The Source, the new Helvara ultra-legendary.",
         jan15:"Kama always comes back, Tezcatlipoca absorbs everything played at his feet, Eros aims true, Horus keeps watch, Heracles switches sides, Lugh hurls his spear and Marduk is never really discarded… and Hedone draws in the opponent's cards.",
         jan1:"The Archivist and the Proprietress meet at the Sous-Gare, Ea and Anansi play the game of tricks, the Child Without School comes back every turn, Typhon makes cards cost dearly… and a new fusion, The Archivist X The Proprietress.",
         dec26:"Odin, Thor, Hel, Baldur, Hades, Poseidon, Circe, Qetesh, the people of Lausanne… five new fusions and the Creator's Domain. And among the Judgement: Zeus hurls his lightning, Hephaestus forges his weapons, Tsukuyomi watches over his own, Cronus devours.",

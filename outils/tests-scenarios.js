@@ -931,6 +931,69 @@ async function inPage() {
     T("Bannière : la vague « jan15 » existe", DROPS.some(d => d.id === "jan15" && d.rel === "2027-01-15"), "");
   }
 
+  /* ===== Lot du 1er février 2027 : Nephtys, Pakhet, Héra, Frigg, Xi Wangmu, Bari Gongju, Isis, Rati, Loki, Anahita ===== */
+  { const small = Object.keys(CARDS).filter(id => !CARDS[id].token && !/Continu/.test(CARDS[id].fx || "") && !ULof(id) && CARDS[id].cost <= 1 && !CARDS[id].base && !["pakhet"].includes(id)), big = plain[0];
+    T("Lot du 1er février : 10 cartes datées du 1er février (annonce le 27 janvier), Isis passe en Désir (légendaire), Anahita 3/0, Héra 4/6", ["nephtys", "pakhet", "hera", "frigg", "xiwangmu", "bari_gongju", "isis", "rati", "loki", "anahita"].every(id => CARDS[id].rel === "2027-02-01" && CARDS[id].soon === "2027-01-27") && CARDS.isis.fac === "desir" && CARDS.isis.r === "L" && CARDS.anahita.pow === 0 && CARDS.hera.cost === 4 && CARDS.hera.pow === 6 && CARDS.source.rel === "2027-02-01", "");
+    T("Bannière : la vague « feb1 » existe", DROPS.some(d => d.id === "feb1" && d.rel === "2027-02-01"), "");
+    /* Nephtys */
+    fresh(); S.turn = 3; S.energy = 6; { const a = put("p", 0, plain[0], 5), b = put("p", 0, plain[1], 2), n = card("nephtys"); S.hand.p = [n]; await resolveTurn([{ c: n, li: 0 }], [], false);
+      const nn = find("p", "nephtys"); T("Nephtys : détruit ton autre carte la plus forte ici, +4 (2 → 6)", nn && nn.pow === 6 && !S.board.p[0].includes(a) && S.board.p[0].includes(b) && S.graveyard.p.includes(plain[0]), nn && nn.pow); }
+    fresh(); S.turn = 3; S.energy = 6; { const n = card("nephtys"); S.hand.p = [n]; put("p", 1, plain[0], 5); await resolveTurn([{ c: n, li: 0 }], [], false); T("Nephtys : aucune autre carte à toi ici, aucun effet", find("p", "nephtys").pow === 2 && S.board.p[1].length === 1, ""); }
+    /* Pakhet */
+    fresh(); S.turn = 3; { put("p", 0, "pakhet"); const a = put("e", 0, small[0], 2), b = put("e", 0, small[1], 4), g = put("e", 0, plain.find(id => CARDS[id].cost >= 2), 5); await resolveTurn([], [], false);
+      T("Pakhet : fin de tour, détruit UNE carte adverse de coût 1 ou moins ici (la plus forte), pas les autres", !S.board.e[0].includes(b) && S.board.e[0].includes(a) && S.board.e[0].includes(g), S.board.e[0].length);
+      S.turn = 4; await resolveTurn([], [], false); T("Pakhet : puis la suivante au tour d'après", !S.board.e[0].includes(a) && S.board.e[0].includes(g), S.board.e[0].length); }
+    fresh(); S.turn = 3; { put("p", 0, "pakhet"); put("p", 1, small[0], 2); const a = put("e", 1, small[1], 2); await resolveTurn([], [], false); T("Pakhet : seulement dans son lieu", S.board.e[1].includes(a), ""); }
+    /* Héra */
+    fresh(); S.locs.forEach(L => L.id = "ruelle"); { const h = put("p", 0, "hera"), e = put("e", 0, plain[0], 8); T("Héra : la carte adverse la plus forte (8) est au moins aussi forte : elle perd la moitié (4), Héra garde 6", cardPow("e", 0, e) === 4 && cardPow("p", 0, h) === 6, `${cardPow("e", 0, e)}/${cardPow("p", 0, h)}`); }
+    fresh(); S.locs.forEach(L => L.id = "ruelle"); { const h = put("p", 0, "hera"), e = put("e", 0, plain[0], 3); T("Héra : la carte adverse (3) est plus faible : Héra perd la moitié (3), l'autre garde 3", cardPow("p", 0, h) === 3 && cardPow("e", 0, e) === 3, `${cardPow("p", 0, h)}/${cardPow("e", 0, e)}`); }
+    fresh(); S.locs.forEach(L => L.id = "ruelle"); { const h = put("p", 0, "hera"), e = put("e", 0, plain[0], 6); T("Héra : égalité (6 contre 6) : la carte adverse perd la moitié (3)", cardPow("e", 0, e) === 3 && cardPow("p", 0, h) === 6, ""); }
+    fresh(); S.locs.forEach(L => L.id = "ruelle"); { const h = put("p", 0, "hera"), e = put("e", 0, plain[0], 5); T("Héra : arrondi au-dessus (5 → perd 3, reste 2 ; Héra 6 > 5 : c'est Héra qui perd 3)", cardPow("p", 0, h) === 3 && cardPow("e", 0, e) === 5, `${cardPow("p", 0, h)}`); }
+    fresh(); S.locs.forEach(L => L.id = "ruelle"); { const h = put("p", 0, "hera"); T("Héra : sans carte adverse ici, aucun effet", cardPow("p", 0, h) === 6, ""); }
+    fresh(); S.locs.forEach(L => L.id = "ruelle"); { const a = put("p", 0, "hera"), b = put("e", 0, "hera"); T("Héra contre Héra : pas de boucle (comparaison avant l'effet) : chacune perd 3", cardPow("p", 0, a) === 3 && cardPow("e", 0, b) === 3, `${cardPow("p", 0, a)}/${cardPow("e", 0, b)}`); }
+    fresh(); S.locs.forEach(L => L.id = "ruelle"); { const h = put("p", 0, "hera"), e = put("e", 0, plain[0], 8); h.neg = true; T("Héra : sans effet si elle a perdu ses effets", cardPow("e", 0, e) === 8, ""); }
+    /* Frigg */
+    fresh(); S.turn = 3; S.energy = 6; { const f = card("frigg"), x = put("e", 1, plain[0], 7), y = put("e", 2, plain[1], 4); S.hand.p = [f]; await resolveTurn([{ c: f, li: 0 }], [], false);
+      T("Frigg : attire ici (côté adverse) la carte adverse la plus forte d'un autre lieu", S.board.e[0].includes(x) && !S.board.e[1].includes(x) && S.board.e[2].includes(y), ""); }
+    fresh(); S.turn = 3; S.energy = 6; { const f = card("frigg"), x = put("e", 1, plain[0], 7); S.hand.p = [f]; for (let i = 1; i <= 4; i++) put("e", 0, plain[i], 1); await resolveTurn([{ c: f, li: 0 }], [], false);
+      T("Frigg : lieu adverse plein, rien", S.board.e[1].includes(x), ""); }
+    /* Xi Wangmu et la Pêche */
+    fresh(); S.turn = 3; S.energy = 6; { const x = card("xiwangmu"); S.hand.p = [x]; await resolveTurn([{ c: x, li: 0 }], [], false); T("Xi Wangmu : ajoute une Pêche d'immortalité à ta main", S.hand.p.some(c => c.id === "peche_immortalite"), ""); }
+    fresh(); S.turn = 3; S.energy = 6; { const x = card("xiwangmu"); S.hand.p = [x, ...Array.from({ length: 7 }, () => card(plain[0]))]; await resolveTurn([{ c: x, li: 0 }], [], false); T("Xi Wangmu : main pleine, pas de Pêche", !S.hand.p.some(c => c.id === "peche_immortalite"), ""); }
+    fresh(); { const p = put("p", 0, "peche_immortalite"); T("Pêche d'immortalité : 0/2, jeton caché, ne peut pas être détruite", CARDS.peche_immortalite.token && CARDS.peche_immortalite.cost === 0 && CARDS.peche_immortalite.pow === 2 && destroy("p", 0, p) === false && S.board.p[0].includes(p), ""); }
+    /* Bari Gongju */
+    fresh(); { put("p", 0, "bari_gongju"); const a = put("p", 0, plain[0], 2); const d0 = S.discarded; destroy("p", 0, a);
+      T("Bari Gongju : ta carte détruite ici compte aussi comme défaussée (cimetière, défausse, compteur)", S.graveyard.p.includes(plain[0]) && S.discardPile.p.includes(plain[0]) && S.discarded === d0 + 1, ""); }
+    fresh(); { put("p", 0, "bari_gongju"); const a = put("p", 1, plain[0], 2); destroy("p", 1, a); T("Bari Gongju : seulement ici", S.graveyard.p.includes(plain[0]) && !S.discardPile.p.includes(plain[0]), ""); }
+    fresh(); { put("p", 0, "bari_gongju"); const m = put("p", 0, "marduk"); destroy("p", 0, m); T("Bari Gongju + Marduk : détruit ici, il compte comme défaussé : retour en main à 8", S.hand.p.includes(m) && m.pow === 8 && !S.graveyard.p.includes("marduk") && !S.discardPile.p.includes("marduk"), `${m.pow}`); }
+    fresh(); { const b = put("p", 0, "bari_gongju"), a = put("e", 0, plain[0], 2); destroy("e", 0, a); T("Bari Gongju : ne concerne pas les cartes adverses", !S.discardPile.e.includes(plain[0]), ""); }
+    /* Isis */
+    fresh(); S.turn = 3; S.energy = 6; { const i = card("isis"); S.hand.p = [i]; S.graveyard.p = [plain[0], plain[1]]; await resolveTurn([{ c: i, li: 0 }], [], false); const t = S.hand.p.find(c => c.id === plain[1]);
+      T("Isis : reprend en main ta dernière carte détruite, qui coûte 2 de moins", t && costOf("p", t, 0, false, false) === Math.max(0, costFor("p", t.id, 0, false, false) - 2) && S.graveyard.p.join() === plain[0], ""); }
+    fresh(); S.turn = 3; S.energy = 6; { const i = card("isis"); S.hand.p = [i, ...Array.from({ length: 7 }, () => card(plain[2]))]; S.graveyard.p = [plain[0]]; await resolveTurn([{ c: i, li: 0 }], [], false); T("Isis : main pleine ou cimetière vide, rien", S.graveyard.p.length === 1, ""); }
+    /* Rati */
+    fresh(); S.turn = 3; S.energy = 6; { const r = card("rati"); S.hand.p = [r]; S.graveyard.p = [plain[0], plain[1]]; await resolveTurn([{ c: r, li: 0 }], [], false);
+      T("Rati : ressuscite ici ta dernière carte détruite, sans bonus", find("p", plain[1]) && S.graveyard.p.join() === plain[0] && find("p", "rati").pow === 2, ""); }
+    fresh(); S.turn = 3; S.energy = 6; { const r = card("rati"); S.hand.p = [r]; S.graveyard.p = ["kama"]; await resolveTurn([{ c: r, li: 0 }], [], false); T("Rati : si c'est Kama, +2 de puissance (2 → 4)", find("p", "kama") && find("p", "rati").pow === 4, ""); }
+    fresh(); S.turn = 3; S.energy = 6; { const r = card("rati"); S.hand.p = [r]; await resolveTurn([{ c: r, li: 0 }], [], false); T("Rati : cimetière vide, rien", find("p", "rati").pow === 2, ""); }
+    /* Loki */
+    T("Loki : effet inchangé, date du 1er février", CARDS.loki.fx === "Révélation : chaque joueur défausse la carte la plus chère de sa main." && CARDS.loki.rel === "2027-02-01", "");
+    /* Anahita */
+    fresh(); S.turn = 3; S.energy = 8; { const an = card("andraste"), ah = card("anahita"); S.hand.p = [an, ah]; put("e", 0, plain[0], 1); put("e", 0, plain[1], 1); await resolveTurn([{ c: an, li: 0 }, { c: ah, li: 0 }], [], false);
+      const a2 = find("p", "anahita"); T("Anahita : copie la Révélation de la dernière carte révélée avant elle (Andraste : +2 par carte adverse ici = +4)", a2 && a2.pow === 4 && a2.cp === "andraste", a2 && a2.pow); }
+    fresh(); S.turn = 3; S.energy = 8; { const ah = card("anahita"); S.hand.p = [ah]; put("e", 0, plain[0], 1); await resolveTurn([{ c: ah, li: 0 }], [], false); T("Anahita : première carte révélée du tour, aucun effet", find("p", "anahita").pow === 0, ""); }
+    fresh(); S.turn = 3; S.energy = 8; { const ah = card("anahita"); S.hand.p = [ah]; S.board.e[0].push(Object.assign(mk("andraste"), { rev: true })); put("e", 0, plain[0], 1); put("e", 0, plain[1], 1); S.lastAny = "andraste"; reveal("p", 0, (S.board.p[0].push(ah), ah));
+      T("Anahita : copie aussi la carte adverse (lue du point de vue d'Anahita : +2 par carte adverse)", ah.pow === 2 * 3, ah.pow); }
+    fresh(); S.turn = 3; S.energy = 8; { const ah = card("anahita"); S.hand.p = [ah]; S.lastAny = "ananke"; S.board.p[0].push(ah); reveal("p", 0, ah); T("Anahita : sans effet sur une ultra-légendaire", ah.pow === 0 && !ah.cp, ""); }
+    fresh(); { const ah = put("p", 0, "anahita"); ah.cp = "meute"; const e = put("e", 0, plain[0], 1); T("Anahita : copie un effet Continu (La Meute : les cartes adverses ici ont +2)", cardPow("e", 0, e) === 3, `${cardPow("e", 0, e)}`); }
+    /* IA */
+    fresh(); S.turn = 3; S.energy = S.energyE = 5; { const ah = card("anahita"), x = card(plain[0]); S.hand.e = [ah, x]; let first = 0, alone = 0; for (let i = 0; i < 10; i++) { const pl = aiPlan("e", 5); const ia = pl.findIndex(q => q.c === ah); if (ia === 0) first++; }
+      S.hand.e = [ah]; for (let i = 0; i < 10; i++) if (aiPlan("e", 5).some(q => q.c === ah)) alone++;
+      T("IA : ne joue jamais Anahita en premier, ni seule", first === 0 && alone === 0, `${first}/${alone}`); }
+    { let ok = true, err = ""; for (const id of ["nephtys", "pakhet", "hera", "frigg", "xiwangmu", "bari_gongju", "isis", "rati", "loki", "anahita"]) for (const turn of [1, 2, 3, 4, 5, 6]) { try { fresh(); S.turn = turn; S.energy = S.energyE = turn; S.hand.e = [card(id), card(plain[0]), card(plain[1])]; put("p", 0, plain[2], 3); S.graveyard.e = [plain[3]]; aiPlan("e", 5); } catch (e) { ok = false; err = id + " tour " + turn + " " + e.message; } }
+      T("IA : aiPlan sans erreur avec chacune des 10 cartes en main aux tours 1 à 6", ok, err); }
+  }
+
   return res;
 }
 

@@ -172,6 +172,8 @@ Détail et décisions : 15e série de `docs/historique-equilibrage.md`. Repères
 
 Lot du 15 janvier 2027 (16e série de `docs/historique-equilibrage.md`) : mécanismes nouveaux dans `moteur.js` : `afterPlay()` (Tezcatlipoca absorbe, Horus), `destroyedHook()`/`kamaBack()`/`entomb()` (Kama, Belobog, pertes des cartes absorbées), `crossed` dans `resolveTurn()` (Héraklès passe chez l'adversaire), `draw()` (Lance de Lugh), `discard()` (Marduk), `trimOverflow()`.
 
+Lot du 1er février 2027 (17e série) : **les effets du moteur lisent `eid(c)` (= `c.cp||c.id`), pas `c.id`** (Anahita copie l'effet d'une autre carte) ; garde `HERA` dans `cardPow()` (Héra) ; `deathless()` (Pêche d'immortalité) ; `S.lastAny` (dernière carte révélée) ; Bari Gongju dans `entomb()` ; Pakhet dans `resolveTurn()` (fin de tour).
+
 ## Lieu à l'honneur du week-end (22 octobre 2026, demande de Jordan)
 
 Voir la 14e série de `docs/historique-equilibrage.md` pour la règle. Repères : `featureLoc()` (jour → lieu, `qHash`), `pickLocs()` (`js/moteur.js`), `S.feat`, `P.ld`, `featureHTML()` (accueil, classe `.featbar`). **Pour tester un week-end** : bac à sable `?date=2026-12-05` (samedi) ou `window.__today`. Pour exclure un lieu du tirage : filtrer `locPool()` dans `featureLoc()`.

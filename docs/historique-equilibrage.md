@@ -246,6 +246,36 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - **Mesure** (`--cartes` les 8, `--parties 1000`, `--date 2027-01-20`, graine 20261012, ~600 decks par carte, marge d'erreur ±4 points ; deux passages) : victoire en deck : Kama 49,7 / 48,0 ; Tezcatlipoca 47,5 / 47,5 ; Éros 52,9 / 55,0 ; Belobog 52,6 / 46,4 ; Horus 48,3 / 48,6 ; Héraklès 51,2 / 47,4 ; Lugh 47,2 / 48,4 ; Marduk 49,2 / 50,2 (avec Odin et Lip Dentelle, 1 300 decks : Marduk 49,7, Odin 47,7, Lip Dentelle 51,9). Aucune carte au-delà de ±6 : **rien à corriger**, Éros à surveiller avec les statistiques réelles. Horus n'est posé que dans 15 à 18 % des decks où il est présent (4 de coût pour 2 de puissance) ; Marduk dans 24 à 31 % (coût 6). Aucune erreur moteur ni de console.
 - Tests : 400 scénarios (+31 : chaque carte et ses cas limites, textes anglais, IA).
 
+### 17e série (23 octobre 2026, lot du 1er février 2027 : 10 cartes) : même règle, ne pas revenir dessus sans l'accord de Jordan
+
+`BUILD` : `alpha-0.22`. Bloc de Jordan (« CHANTIER ÉQUILIBRAGE · Batch du 1er février 2027 »). Toutes : `rel` 2027-02-01, `soon` 2027-01-27, noms inchangés, bannière `DROPS` `feb1` (FR et EN). **Le 1er février compte 11 cartes avec La Source** (ultra-légendaire de faction Helvara, déjà datée). Isis passe de Jugement à **Désir** (le bloc la classe en Désir).
+
+| Carte | Faction, rareté | Coût / puiss. | Effet |
+|---|---|---|---|
+| Nephtys | Jugement, E | 3/2 | Révélation : détruis ton autre carte la plus forte ici. +4 de puissance. |
+| Pakhet | Jugement, E | 3/3 | Continu : à la fin de chaque tour, détruit une carte adverse de coût 1 ou moins ici (une seule par tour). |
+| Héra | Jugement, E | 4/6 | Continu : la jalousie (comparaison de la puissance sans l'effet ; la plus forte adverse ici perd la moitié si elle est au moins aussi forte, sinon Héra perd la moitié ; arrondi au-dessus). |
+| Frigg | Jugement, E | 4/3 | Révélation : attire ici la carte adverse la plus forte d'un autre lieu, s'il y a de la place. |
+| Xi Wangmu | Jugement, C | 2/1 | Révélation : ajoute à ta main une Pêche d'immortalité (0/2, ne peut pas être détruite). |
+| Bari Gongju | Jugement, R | 2/2 | Continu : tes cartes détruites ici comptent aussi comme défaussées. |
+| Isis | **Désir**, L | 3/3 | Révélation : reprends en main ta dernière carte détruite. Elle coûte 2 de moins. |
+| Rati | Désir, E | 3/2 | Révélation : ressuscite ici ta dernière carte détruite (sans Révélation). +2 si c'est Kama. |
+| Loki | Désir, E | 3/3 | Effet inchangé, seule la date change. |
+| Anahita | Désir, E | 3/0 | Révélation : copie l'effet (Révélation ou Continu) de la dernière carte révélée avant elle ce tour, des deux côtés. Sans effet sur les Ultra-légendaires. |
+
+**Interprétations et mécanismes (à connaître avant de toucher)**
+- **Anahita et `eid(c)`** : la copie est `c.cp` (id copié). Tous les effets du moteur lisent désormais **`eid(c)`** (= `c.cp||c.id`) au lieu de `c.id` : un remplacement mécanique dans `moteur.js` (hors `aiPlan`, qui lit des cartes en main). Sans `cp`, rien ne change (400 scénarios inchangés). Pour toute **nouvelle** comparaison d'id sur une carte du plateau, utiliser `eid(x)`. `bury()` et le cimetière gardent le vrai id (Anahita). La copie s'efface à la prochaine vraie Révélation (`revealFx` sans `replay`) et au retour en main de Kama. « La dernière carte révélée » = `S.lastAny` (id, mis à jour dans `reveal()`, remis à zéro à chaque tour ; une Anahita ne l'écrase pas, donc deux Anahita copient la même carte). Aucune copie des ultra-légendaires, des jetons, d'une autre Anahita. Fiche : « Copie l'effet de … ».
+- **Héra** : `cardPow()` (garde `HERA`) compare toujours les puissances **sans** l'effet d'Héra, des deux côtés (deux Héra face à face : chacune perd 3, pas de boucle). Sans carte adverse ici : aucun effet. Les protections contre les affaiblissements (Amaterasu, Écorché, Ananké…) valent pour la carte adverse. Héra X Dionysos : inchangée.
+- **Pakhet** : fin de tour, tours 1 à 6 (le tour 6 compris), la plus forte des cartes adverses de coût imprimé ≤ 1 (jetons compris ; ex æquo par `gPick`). Dans `DESTROYERS` (l'IA l'évite à Sauvabelin).
+- **Bari Gongju** : `entomb()` : la carte va au cimetière **et** en défausse (elle est donc relevable par les deux, cas rare à garder en tête), compteur de défausses +1, quêtes comprises ; **Marduk détruit ici revient en main avec +2**, le Reflet Noir entre en jeu. Pas pour Kama (qui revient déjà en main) ni pour les cartes adverses.
+- **Isis / Rati** : « dernière carte détruite » = dernière entrée de `S.graveyard[camp]`. Isis : la carte revient à sa puissance de base (nouvelle copie), `cheap=2` ; main pleine : rien (elle reste au cimetière). Rati : `resurrect()` (place requise dans le lieu), +2 à Rati si c'est Kama.
+- **Nephtys** : détruit la plus forte autre carte à toi non protégée par Ananké ou la Pêche ; si la destruction échoue (Sauvabelin, bouclier), pas de +4.
+- **Frigg** : la carte part de son lieu pour le même lieu, côté adverse ; ni Ananké, ni cartes charmées, ni lieu verrouillé ou plein.
+- **Pêche d'immortalité** : jeton caché `peche_immortalite` (Jugement 0/2), `deathless()` dans `destroy()` et dans les effets qui détruisent sans passer par lui (Nyx, Ereshkigal, Lilith). **L'illustration est provisoire** (placeholder généré : `images/peche_immortalite.webp`, `avatars/`, `mini/`) : à remplacer par celle de Jordan en gardant les noms.
+- **IA** : Anahita jamais jouée en premier ni seule (`late` + malus), posée après une autre carte ; Pakhet estimé comme une frappe sur les petites cartes ; Héra estimée selon la plus forte adverse ; Isis et Rati valorisées si le cimetière n'est pas vide ; Bari Gongju bonifiée avec Marduk en main.
+- **Mesure** (`--cartes` les 10, `--parties 3000`, `--date 2027-02-05`, graine 20261012, ~1 500 decks par carte, marge d'erreur d'environ ±2,5 points, moyenne des 10 : 49,1 %) : victoire en deck / posée / posée dans N % : Nephtys 49,9 / 44,2 / 52 ; Pakhet 48,2 / 48,7 / 53 ; **Héra 52,3** / 53,7 / 54 (un premier passage à 1 000 parties avait donné 55,1 % : bruit) ; Frigg 47,4 / 42,1 / 24 ; Xi Wangmu 50,6 / 49,2 / 61 ; Bari Gongju 50,2 / 49,0 / 60 ; Isis 48,1 / 42,6 / 43 ; Rati 49,7 / 44,0 / 35 ; Loki 48,5 / 46,7 / 54 ; **Anahita 46,9** / 45,7 / **17** (peu posée : l'IA ne la joue qu'après une autre carte). Bari Gongju avec Marduk (4 000 decks chacun) : Bari 49,6, Marduk 49,6 (l'IA n'exploite pas le combo). Aucune carte au-delà de ±6 : **rien à corriger**. Héra à surveiller. Aucune erreur moteur ni de console.
+- Tests : 436 scénarios (+36).
+
 ### Secondes ultra-légendaires de faction (18 octobre 2026, décision de Jordan)
 
 - **Règle** : une faction peut avoir une **seconde** ultra-légendaire de faction, gagnée à **150 parties au total** (même compteur `P.fj` que la première, qui reste à 50 ; donc 100 parties de plus), « pour fidéliser les joueurs dans le temps ». Jamais deux secondes dans la même faction (Jordan : « c'est chaud niveau conditions »). Une seule ultra-légendaire par deck, comme avant.

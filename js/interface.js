@@ -743,6 +743,7 @@ function gzHTML(){
   const mods=(c.mods||[]);
   return `<div class="veil" data-act="gzclose"><div class="zoomwrap">${holoDir(c.id)?`<div class="holoslot" id="holoslot" data-act="holoin">${fullCard(c.id,"big",cur)}</div>`:fullCard(c.id,"big",cur)}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m">Coût ${d.cost} · puissance de base ${d.pow}${onBoard?` · actuelle <b>${cur}</b>`:""}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
+    ${c.cp&&onBoard?`<p class="hint">Copie l'effet de <b>${esc(CARDS[c.cp].name)}</b>.</p>`:""}
     ${c.neg?`<p style="color:var(--ko)">Cette carte a perdu ses effets.</p><p class="hint" style="margin-top:-4px">Ses effets Continu et de fin de tour ne s'appliquent plus. Ses bonus déjà gagnés restent.</p>`:""}
     ${onBoard&&(mods.length||cont)?`<div class="modlist">${mods.map(m=>`<div class="${m.v>0?"up":"down"}">${m.v>0?"+":"−"}${Math.abs(m.v)} · ${esc(m.src)}${c.neg&&m.src===d.name?` <span>(acquis)</span>`:""}</div>`).join("")}${cont?`<div class="${cont>0?"up":"down"}">${cont>0?"+":"−"}${Math.abs(cont)} · effets continus et lieu</div>`:""}</div>`:""}${onBoard&&c.abs&&c.abs.length?`<div class="modlist"><div class="up">Absorbées : ${c.abs.map(x=>`${esc(CARDS[x.id].name)} (+${x.pow})`).join(", ")}</div></div>`:""}
     <button class="ghost" data-act="gzclose">Fermer</button></div></div></div>`;
