@@ -645,7 +645,7 @@ async function inPage() {
     T("Données : Ereshkigal Dame de la Longue Nuit (Jugement, Rare, 5/3, Noël, sortie le 14 décembre), sans effet visuel de légendaire", CARDS.ereshkigal_n.fac === "jugement" && CARDS.ereshkigal_n.r === "R" && CARDS.ereshkigal_n.cost === 5 && CARDS.ereshkigal_n.pow === 3 && CARDS.ereshkigal_n.ex === "noel" && CARDS.ereshkigal_n.rel === "2026-12-14" && CARDS.ereshkigal_n.soon === "2026-12-09" && !CARDS.ereshkigal_n.vfx && CARDS.ereshkigal_n.base === "ereshkigal");
     T("Données : Aphrodite Coupe de Minuit (Désir, Épique, 5/3) et Arès Duelliste du Dernier Soir (Primordial, Rare, 5/4), Nouvel An, sortie le 31 décembre", CARDS.aphrodite_r.fac === "desir" && CARDS.aphrodite_r.r === "E" && CARDS.aphrodite_r.cost === 5 && CARDS.aphrodite_r.pow === 3 && CARDS.ares_n.fac === "primordial" && CARDS.ares_n.r === "R" && CARDS.ares_n.cost === 5 && CARDS.ares_n.pow === 4 && ["aphrodite_r", "ares_n"].every(id => CARDS[id].ex === "nouvelan" && CARDS[id].rel === "2026-12-31" && CARDS[id].soon === "2026-12-26"));
     { const ex = k => Object.keys(CARDS).filter(id => CARDS[id].ex === k).length, fus = k => ULS.filter(u => u.req.length && ulSeason(u) === k).length;
-      T("Comptage : Noël = 5 exclusives, Nouvel An = 6 cartes + 2 fusions = 8", ex("noel") === 5 && ex("nouvelan") === 6 && fus("noel") === 0 && fus("nouvelan") === 2, `${ex("noel")} / ${ex("nouvelan")} + ${fus("nouvelan")}`); }
+      T("Comptage : Noël = 6 exclusives (Circé, Reine du Gui comprise), Nouvel An = 6 cartes + 2 fusions = 8", ex("noel") === 6 && ex("nouvelan") === 6 && fus("noel") === 0 && fus("nouvelan") === 2, `${ex("noel")} / ${ex("nouvelan")} + ${fus("nouvelan")}`); }
     T("Renommages : Qetesh, Vœu du Premier Jour (et le texte de la fusion) ; Éos, Première Aube de l'An ; version anglaise", CARDS.qetesh_r.name === "Qetesh, Vœu du Premier Jour" && CARDS.eos_r.name === "Éos, Première Aube de l'An" && /Exige Qetesh, Vœu du Premier Jour et Jordan/.test(CARDS.ulqetjor_r.fx) && ULof("ulqetjor_r").n === "Qetesh, Vœu du Premier Jour et Jordan" && HELVARA_EN.cards.ares_n.n === "Ares, Duelist of the Last Evening" && HELVARA_EN.cards.ereshkigal_n.n === "Ereshkigal, Lady of the Long Night" && HELVARA_EN.cards.aphrodite_r.n === "Aphrodite, Midnight Cup");
     /* Ereshkigal : coût */
     fresh(); S.turn = 3; { const er = card("ereshkigal_n"), ng = card("nergal"); S.hand.p = [er, ng];
@@ -992,6 +992,18 @@ async function inPage() {
       T("IA : ne joue jamais Anahita en premier, ni seule", first === 0 && alone === 0, `${first}/${alone}`); }
     { let ok = true, err = ""; for (const id of ["nephtys", "pakhet", "hera", "frigg", "xiwangmu", "bari_gongju", "isis", "rati", "loki", "anahita"]) for (const turn of [1, 2, 3, 4, 5, 6]) { try { fresh(); S.turn = turn; S.energy = S.energyE = turn; S.hand.e = [card(id), card(plain[0]), card(plain[1])]; put("p", 0, plain[2], 3); S.graveyard.e = [plain[3]]; aiPlan("e", 5); } catch (e) { ok = false; err = id + " tour " + turn + " " + e.message; } }
       T("IA : aiPlan sans erreur avec chacune des 10 cartes en main aux tours 1 à 6", ok, err); }
+  }
+
+  /* ===== Circé, Reine du Gui (23 octobre) : variante de Noël de Circé ===== */
+  { const c0 = CARDS.circe_n;
+    T("Circé, Reine du Gui : Désir, Légendaire, 5/4, variante de Circé, exclusive Noël, sortie le 14 décembre (annonce le 9)", c0 && c0.fac === "desir" && c0.r === "L" && c0.cost === 5 && c0.pow === 4 && c0.base === "circe" && c0.ex === "noel" && c0.rel === "2026-12-14" && c0.soon === "2026-12-09", "");
+    fresh(); S.turn = 5; S.energy = 8; { const c = card("circe_n"), a = put("e", 0, plain[0], 3), b = put("e", 0, plain[1], 5), far = put("e", 1, plain[2], 7), far2 = put("e", 2, plain[3], 2); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false);
+      T("Circé, Reine du Gui : attire la plus forte d'un autre lieu ; elle et les cartes adverses ici plus faibles que Circé (4) deviennent des Pourceaux, pas les autres", far.id === "pourceau" && S.board.e[0].includes(far) && a.id === "pourceau" && b.id !== "pourceau" && far2.id !== "pourceau" && far.pow === 1 && far.neg, `${far.id}/${a.id}/${b.id}`); }
+    fresh(); S.turn = 5; S.energy = 8; { const c = card("circe_n"), far = put("e", 1, plain[2], 2); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false); T("Circé, Reine du Gui : la carte attirée devient Pourceau même si elle est plus faible", far.id === "pourceau" && S.board.e[0].includes(far), ""); }
+    fresh(); S.turn = 5; S.energy = 8; { const c = card("circe_n"), far = put("e", 1, plain[2], 7); S.hand.p = [c]; for (let i = 0; i < 4; i++) put("e", 0, plain[i], 5); await resolveTurn([{ c, li: 0 }], [], false); T("Circé, Reine du Gui : lieu adverse plein, personne n'est attiré", S.board.e[1].includes(far) && far.id !== "pourceau", ""); }
+    fresh(); S.turn = 5; S.energy = 8; { const c = card("circe_n"); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false); T("Circé, Reine du Gui : sans carte adverse, rien ne plante", find("p", "circe_n").pow === 4, ""); }
+    { let ok = true, err = ""; for (const turn of [1, 2, 3, 4, 5, 6]) { try { fresh(); S.turn = turn; S.energy = S.energyE = turn + 3; S.hand.e = [card("circe_n"), card(plain[0])]; put("p", 0, plain[2], 3); put("p", 1, plain[3], 4); aiPlan("e", 5); } catch (e) { ok = false; err = e.message; } }
+      T("IA : aiPlan sans erreur avec Circé, Reine du Gui aux tours 1 à 6", ok, err); }
   }
 
   return res;

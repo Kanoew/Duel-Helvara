@@ -513,6 +513,12 @@ function revealFx(s,li,c,opts={}){
       if(n){ note=`le reflux emporte ${n} carte${n>1?"s":""}`; snd="debuff"; } break; }
     case "circe": case "ulcirce": { let n=0; if(!shielded(o,li)) for(const t of targets) if(eid(c)==="ulcirce"||pw(o,li,t)<=3){ t.orig=t.id; t.id="pourceau"; t.pow=1; t.neg=true; t.mods=[]; n++; }
       if(n){ note=`${n} Pourceau${n>1?"x":""}`; snd="void"; } break; }
+    case "circe_n": { /* attire la plus forte d'un autre lieu (s'il y a de la place, comme Frigg), puis Pourceaux : elle et les cartes adverses ici plus faibles que Circé */
+      let pulled=null; if(!S.locs[li].locked&&S.board[o][li].length<capOf(o,li)){ const pool=[]; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&!fated(x)&&!charmOf(x)) pool.push([i,x,pw(o,i,x)]);
+        if(pool.length){ const mx=Math.max(...pool.map(q=>q[2])), [i,t]=gPick(pool.filter(q=>q[2]===mx)); S.board[o][i]=S.board[o][i].filter(x=>x!==t); S.board[o][li].push(t); t.fresh=true; flonHook(li,t); pulled=t; } }
+      const lim=pw(s,li,c); let n=0;
+      if(!shielded(o,li)) for(const t of S.board[o][li]) if(t.rev&&!untargetable(s,o,t)&&(t===pulled||pw(o,li,t)<lim)){ t.orig=t.id; t.id="pourceau"; t.pow=1; t.neg=true; t.mods=[]; n++; }
+      if(pulled||n){ note=(pulled?`attire ${CARDS[pulled.orig||pulled.id].name}`:"")+(pulled&&n?", ":"")+(n?`${n} Pourceau${n>1?"x":""}`:""); snd="void"; } break; }
     case "qetesh": { const t=strongest(targets.filter(x=>pw(o,li,x)<=4&&!charmOf(x)),o,li); if(t){ t.charm=s; delete t.charmBy; note=`charme ${nm(t)}`; snd="void"; } break; }
     case "oshun": { let n=0; for(let i=0;i<3;i++) for(const x of S.board[s][i]) if(x!==c&&x.rev){ x.pow+=1; n++; } if(n){ note=`+1 à ${n} carte${n>1?"s":""}`; snd="buff"; } break; }
     case "scathach": { const sp=[0,1,2].filter(i=>i!==li&&!S.locs[i].locked&&S.board[o][i].length<capOf(o,i)); if(sp.length){ const i=gPick(sp); const m=mk("ombre"); m.rev=true; m.fresh=true; m.neg=true; S.board[o][i].push(m); note=`Ombre → ${LOCS[S.locs[i].id].name}`; snd="debuff"; } break; }
@@ -692,6 +698,10 @@ function aiPlan(me="e",tierOv){
       if(foes){ hit+=fs-2.5; pow-=ms; pow+=2*Math.max(0,own.length-(own.length?1:0)+(ctx.pend[li]?ctx.pend[li]*.7:0)); adj+=1.5; } }
     /* Nyx X Circé : toutes les cartes adverses ici deviennent des Pourceaux (puissance 1) : on retire leur puissance moins 1 chacune */
     if(c.id==="ulcirce"){ const fo=S.board[op][li].filter(x=>x.rev&&!fated(x)&&!x.neg); if(fo.length&&!shielded(op,li)) hit+=fo.reduce((a,x)=>a+Math.max(0,cardPow(op,li,x)-1),0)+.5; else adj-=2; }
+    /* Circé, Reine du Gui : les cartes adverses ici plus faibles qu'elle deviennent des Pourceaux (1) ; la plus forte d'un autre lieu est attirée ici (et devient Pourceau) */
+    if(c.id==="circe_n"){ const lim=pow, fo=S.board[op][li].filter(x=>x.rev&&!fated(x)&&cardPow(op,li,x)<lim); if(!shielded(op,li)) hit+=fo.reduce((a,x)=>a+Math.max(0,cardPow(op,li,x)-1),0);
+      let best=-1; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[op][i]) if(x.rev&&!fated(x)) best=Math.max(best,cardPow(op,i,x));
+      if(best>=0&&S.board[op][li].length<capOf(op,li)&&!shielded(op,li)){ hit+=0; adj+=Math.max(0,best-1)*.6; } }
     /* Ereshkigal, Dame de la Longue Nuit : la moitié (arrondie au-dessus) de la puissance de la carte adverse la plus forte ici */
     if(c.id==="ereshkigal_n"){ const fp=S.board[op][li].filter(x=>x.rev&&!untargetable(me,op,x)).map(x=>cardPow(op,li,x)); if(fp.length&&!shielded(op,li)) hit+=Math.ceil(Math.max(0,...fp)/2); }
     /* Arès, Duelliste du Dernier Soir : si la carte adverse la plus forte ici est plus faible, elle tombe (on gagne sa puissance) ; si elle est plus forte, c'est lui qui tombe */
