@@ -610,15 +610,17 @@ function mini(s,li,c,staged){
   /* Ananké : « Fatalité » + puissance qu'elle aura en fin de partie (en direct) ; Hédoné : compteur de charmes */
   const fat=!staged&&!S.final&&c.id==="ananke"&&c.rev&&fated(c)?`<span class="fatb" title="Fatalité : puissance en fin de partie">✠ ${ankEnd(s,li,c)}</span>`:"";
   const sick=!staged&&c.sick>0?`<span class="sickb" title="Malade : −1 au début de chacun des tours suivants">🤒 ${c.sick}</span>`:"";
+  const absb=!staged&&c.id==="tezcatlipoca"&&c.rev&&c.abs&&c.abs.length?`<span class="absb" title="Cartes absorbées : ${c.abs.map(x=>CARDS[x.id].name).join(", ")}">⊕ ${c.abs.length}</span>`:"";
   const hed=!staged&&c.id==="hedone"&&c.rev?`<span class="hedb" title="Charmes">${c.hed||0}/2</span>`:"";
-  return `<button class="mini${CARDS[c.id].r==="U"?hasHoloTile(c.id)?" holof":" holo":""}${chm}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${tileHolo(c.id,"m"+c.uid)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}${fat}${hed}${sick}<span class="pw ${cls}">${p}</span></button>`;
+  return `<button class="mini${CARDS[c.id].r==="U"?hasHoloTile(c.id)?" holof":" holo":""}${chm}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${tileHolo(c.id,"m"+c.uid)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}${fat}${hed}${absb}${sick}<span class="pw ${cls}">${p}</span></button>`;
 }
 function sideHTML(s,li){
-  let bd=S.board[s][li]; if(s==="p"&&S.staged.some(x=>x.li===li)){ const pl=bd.find(x=>x.id==="plume"); if(pl) bd=bd.filter(x=>x!==pl); }   /* la Plume cède sa case à la carte posée */
+  let bd=S.board[s][li]; if(s==="p"&&S.staged.some(x=>x.li===li&&x.c.id!=="herakles")){ const pl=bd.find(x=>x.id==="plume"); if(pl) bd=bd.filter(x=>x!==pl); }   /* la Plume cède sa case à la carte posée */
   const items=bd.map(c=>mini(s,li,c,s==="p"&&!c.rev));
-  if(s==="p") for(const x of S.staged.filter(x=>x.li===li)) items.push(mini("p",li,x.c,true));
-  const cp=capOf(s,li), slots=[];
-  for(let i=0;i<4;i++) slots.push(items[i]||`<div class="slot${i>=cp?" x":""}"></div>`);
+  if(s==="p") for(const x of S.staged.filter(x=>x.li===li&&x.c.id!=="herakles")) items.push(mini("p",li,x.c,true));
+  if(s==="e") for(const x of S.staged.filter(x=>x.li===li&&x.c.id==="herakles")) items.push(mini("e",li,x.c,true));   /* Héraklès posé : il apparaît déjà du côté adverse */
+  const cp=capOf(s,li), slots=[], nSl=Math.max(4,items.length);
+  for(let i=0;i<nSl;i++) slots.push(items[i]||`<div class="slot${i>=cp?" x":""}"></div>`);
   if(s==="e"){ const r=[slots[2],slots[3],slots[0],slots[1]]; slots.splice(0,4,...r); }
   const can=s==="p"&&S.sel&&!S.busy&&canStage(findHand(S.sel),li);
   return `<div class="side ${s==="p"?"me":"foe"}${can?" can":""}" ${s==="p"?`data-act="stage" data-li="${li}"`:""}>${slots.join("")}</div>`;
@@ -742,7 +744,7 @@ function gzHTML(){
   return `<div class="veil" data-act="gzclose"><div class="zoomwrap">${holoDir(c.id)?`<div class="holoslot" id="holoslot" data-act="holoin">${fullCard(c.id,"big",cur)}</div>`:fullCard(c.id,"big",cur)}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m">Coût ${d.cost} · puissance de base ${d.pow}${onBoard?` · actuelle <b>${cur}</b>`:""}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
     ${c.neg?`<p style="color:var(--ko)">Cette carte a perdu ses effets.</p><p class="hint" style="margin-top:-4px">Ses effets Continu et de fin de tour ne s'appliquent plus. Ses bonus déjà gagnés restent.</p>`:""}
-    ${onBoard&&(mods.length||cont)?`<div class="modlist">${mods.map(m=>`<div class="${m.v>0?"up":"down"}">${m.v>0?"+":"−"}${Math.abs(m.v)} · ${esc(m.src)}${c.neg&&m.src===d.name?` <span>(acquis)</span>`:""}</div>`).join("")}${cont?`<div class="${cont>0?"up":"down"}">${cont>0?"+":"−"}${Math.abs(cont)} · effets continus et lieu</div>`:""}</div>`:""}
+    ${onBoard&&(mods.length||cont)?`<div class="modlist">${mods.map(m=>`<div class="${m.v>0?"up":"down"}">${m.v>0?"+":"−"}${Math.abs(m.v)} · ${esc(m.src)}${c.neg&&m.src===d.name?` <span>(acquis)</span>`:""}</div>`).join("")}${cont?`<div class="${cont>0?"up":"down"}">${cont>0?"+":"−"}${Math.abs(cont)} · effets continus et lieu</div>`:""}</div>`:""}${onBoard&&c.abs&&c.abs.length?`<div class="modlist"><div class="up">Absorbées : ${c.abs.map(x=>`${esc(CARDS[x.id].name)} (+${x.pow})`).join(", ")}</div></div>`:""}
     <button class="ghost" data-act="gzclose">Fermer</button></div></div></div>`;
 }
 

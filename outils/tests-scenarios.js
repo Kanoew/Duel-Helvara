@@ -107,14 +107,14 @@ async function inPage() {
     T("Quêtes : même tirage pour un même jour", a1 === a2);
     P.q = keep; P.owned = own; }
   /* 6 quinquies. Secondes ultra-légendaires de faction (Jordan, 18 octobre) : même compteur, 150 parties au total, une seule par faction */
-  { const sec = ["marduk", "ymir", "nammu"], facs = sec.map(id => ULof(id).fac), keepFj = P.fj, keepOwned = P.owned, keepSoon = sec.map(id => CARDS[id].soon), keepRel = sec.map(id => CARDS[id].rel);
-    T("Secondes UL de faction : Marduk Jugement, Ymir Primordial, Nammu Helvara, seuil 150, ultra-légendaires cachées", sec.every((id, i) => ULof(id).quest.n === 150 && ULof(id).fac === CARDS[id].fac && CARDS[id].r === "U" && !REL(id)) && facs.join() === "jugement,primordial,helvara", facs);
-    T("Secondes UL de faction : au plus une seconde par faction, une seule première par faction", new Set(facs).size === 3 && ["jugement", "primordial", "desir", "helvara"].every(f => ULS.filter(u => u.quest && u.quest.k === f && u.quest.n === 50).length === 1));
+  { const sec = ["ymir", "nammu"], facs = sec.map(id => ULof(id).fac), keepFj = P.fj, keepOwned = P.owned, keepSoon = sec.map(id => CARDS[id].soon), keepRel = sec.map(id => CARDS[id].rel);
+    T("Secondes UL de faction : Ymir Primordial, Nammu Helvara (Marduk est devenu légendaire le 23 octobre), seuil 150, ultra-légendaires cachées", sec.every((id, i) => ULof(id).quest.n === 150 && ULof(id).fac === CARDS[id].fac && CARDS[id].r === "U" && !REL(id)) && facs.join() === "primordial,helvara", facs);
+    T("Secondes UL de faction : au plus une seconde par faction, une seule première par faction", new Set(facs).size === 2 && ["jugement", "primordial", "desir", "helvara"].every(f => ULS.filter(u => u.quest && u.quest.k === f && u.quest.n === 50).length === 1));
     P.owned = []; P.fj = Object.assign({}, P.fj, { primordial: 100 });
     T("Secondes UL de faction : à 100 parties, Ananké est gagnée et pas Ymir", ulEarned(ULof("ananke")) && !ulEarned(ULof("ymir")));
     P.fj.primordial = 150; T("Secondes UL de faction : à 150 parties au total, Ymir est gagnée", ulEarned(ULof("ymir")));
     P.fj.primordial = 100; sec.forEach(id => { CARDS[id].rel = "2000-01-01"; CARDS[id].soon = "2000-01-01"; });
-    const j = journalHTML(); T("Journal des factions : une ligne de plus par seconde UL annoncée (Primordial 100/150), rien avant son annonce", (j.match(/class="fjrow"/g) || []).length === 7 && /100\/150/.test(j) && /seconde ultra-légendaire/.test(j), (j.match(/class="fjrow"/g) || []).length);
+    const j = journalHTML(); T("Journal des factions : une ligne de plus par seconde UL annoncée (Primordial 100/150), rien avant son annonce", (j.match(/class="fjrow"/g) || []).length === 6 && /100\/150/.test(j) && /seconde ultra-légendaire/.test(j), (j.match(/class="fjrow"/g) || []).length);
     sec.forEach((id, i) => { CARDS[id].rel = keepRel[i]; CARDS[id].soon = keepSoon[i]; }); const j2 = journalHTML();
     T("Journal des factions : secondes UL cachées, le Journal garde ses 4 lignes", (j2.match(/class="fjrow"/g) || []).length === 4 && !/150/.test(j2), (j2.match(/class="fjrow"/g) || []).length);
     P.fj = keepFj; P.owned = keepOwned; }
@@ -857,6 +857,78 @@ async function inPage() {
       { let ok = true, err = ""; for (const id of IDS) for (const turn of [1, 2, 3, 4, 5, 6]) { try { fresh(); S.turn = turn; S.energy = S.energyE = turn; S.hand.e = [card(id), card(plain[0]), card(plain[1])]; put("p", 0, plain[2], 3); aiPlan("e", 5); } catch (e) { ok = false; err = id + " tour " + turn + " : " + e.message; } }
         T("IA : aiPlan sans erreur avec chacune des 15 cartes en main aux tours 1 à 6", ok, err); }
     }
+  }
+
+  /* ===== Lot du 15 janvier 2027 : Kama, Tezcatlipoca, Éros, Belobog, Horus, Héraklès, Lugh, Marduk ===== */
+  { const sl = (s, li) => S.board[s][li].filter(x => x.id !== "plume").length;
+    /* Kama */
+    fresh(); { const k = put("p", 0, "kama"), a = put("p", 1, plain[0], 2), k2 = put("p", 2, "kama"); destroy("p", 1, a);
+      T("Kama : +2 quand une autre carte de ton côté est détruite (chaque Kama)", k.pow === 5 && k2.pow === 5, `${k.pow}/${k2.pow}`); }
+    fresh(); { const k = put("p", 0, "kama", 5); destroy("p", 0, k);
+      T("Kama : détruit, il revient dans la main avec sa puissance, sans se donner +2", !S.board.p[0].length && S.hand.p.includes(k) && k.pow === 5 && S.graveyard.p.length === 0, `${k.pow}`); }
+    fresh(); { const k = put("p", 0, "kama"); S.hand.p = Array.from({ length: 7 }, () => card(plain[0])); destroy("p", 0, k);
+      T("Kama : main pleine, il va au cimetière", !S.hand.p.includes(k) && S.graveyard.p.includes("kama"), ""); }
+    /* Tezcatlipoca */
+    fresh(); S.turn = 3; S.energy = 6; { const t = put("p", 0, "tezcatlipoca"), a = card(plain[0], 2), b = card(plain[1], 3); S.hand.p = [a, b];
+      await resolveTurn([{ c: a, li: 0 }, { c: b, li: 0 }], [], false);
+      T("Tezcatlipoca : absorbe les cartes jouées ici (2 + 2 + 3 = 7), elles ne prennent pas de place", t.pow === 7 && sl("p", 0) === 1 && t.abs.length === 2, `${t.pow}/${sl("p", 0)}`); }
+    fresh(); S.energy = 6; { const t = put("p", 0, "tezcatlipoca"); for (let i = 0; i < 3; i++) put("p", 0, plain[i], 1); const a = card(plain[3]); S.hand.p = [a]; S.staged = [];
+      T("Tezcatlipoca : on peut encore poser ici quand le lieu est plein", canStage(a, 0) === true && canStage(a, 1) === true, ""); }
+    fresh(); S.turn = 3; S.energy = 6; { const a = card(plain[0], 2); S.hand.p = [a]; const t = card("tezcatlipoca"); t.rev = false; S.hand.p.push(t);
+      await resolveTurn([{ c: t, li: 1 }, { c: a, li: 1 }], [], false); const tt = find("p", "tezcatlipoca");
+      T("Tezcatlipoca posé avant la carte (même tour) : il l'absorbe aussi", tt && tt.pow === 4 && sl("p", 1) === 1, tt && tt.pow); }
+    fresh(); { const t = put("p", 0, "tezcatlipoca"), a = card(plain[0], 2); t.abs = [a]; t.pow = 4; const k = put("p", 1, "kama"); destroy("p", 0, t);
+      T("Tezcatlipoca détruit : les cartes absorbées sont perdues avec lui (cimetière, Kama +2 par carte)", S.graveyard.p.includes(plain[0]) && S.graveyard.p.includes("tezcatlipoca") && k.pow === 3 + 4, `${k.pow}`); }
+    fresh(); S.turn = 3; S.energy = 6; { put("p", 0, "tezcatlipoca"); const e = card("eros"); S.hand.p = [e]; put("e", 1, plain[0], 2);
+      await resolveTurn([{ c: e, li: 0 }], [], false); const t = find("p", "tezcatlipoca"); T("Tezcatlipoca : la Révélation de la carte absorbée se déclenche (Éros : −2 à l'adversaire, +2 à Tezcatlipoca)", t.pow === 2 + 3 + 2 && find("e", plain[0]).pow === 0, `${t.pow}`); }
+    /* Éros */
+    fresh(); S.turn = 3; S.energy = 6; { const m = put("p", 0, plain[0], 1), m2 = put("p", 0, plain[1], 3), f = put("e", 1, plain[2], 4), f2 = put("e", 1, plain[3], 2), f0 = put("e", 0, plain[4], 1), e = card("eros"); S.hand.p = [e];
+      await resolveTurn([{ c: e, li: 0 }], [], false);
+      T("Éros : flèche d'or +2 à ta plus faible autre carte ici, flèche de plomb −2 à la plus faible adverse d'un autre lieu", m.pow === 3 && m2.pow === 3 && f2.pow === 0 && f.pow === 4 && f0.pow === 1, `${m.pow}/${m2.pow}/${f2.pow}/${f.pow}`); }
+    fresh(); S.turn = 3; S.energy = 6; { const e = card("eros"); S.hand.p = [e]; await resolveTurn([{ c: e, li: 0 }], [], false); T("Éros : seul, sans carte à viser, rien ne plante", find("p", "eros").pow === 3, ""); }
+    /* Belobog */
+    fresh(); { const b = card("belobog"), a = put("p", 1, plain[0], 2); S.hand.p = [b]; destroy("p", 1, a);
+      T("Belobog : une de tes cartes est détruite, il entre gratuitement à sa place", find("p", "belobog") === b && S.board.p[1].includes(b) && !S.hand.p.length, ""); }
+    fresh(); { const b = card("belobog"), a = put("p", 1, plain[0], 2), a2 = put("p", 2, plain[1], 2); S.hand.p = [b]; destroy("p", 1, a); const bb = find("p", "belobog"); destroy("p", 2, a2);
+      T("Belobog : une fois par tour", bb && S.board.p[1].includes(bb), ""); }
+    fresh(); { const b = card("belobog"), a = put("e", 1, plain[0], 2); S.hand.p = [b]; destroy("e", 1, a); T("Belobog : ne réagit pas à la destruction d'une carte adverse", S.hand.p.includes(b), ""); }
+    /* Horus */
+    fresh(); S.turn = 4; S.energy = 8; { const h = card("horus"), a = card(plain[0], 2), b = card(plain[1], 2), c = card(plain[2], 2); S.hand.p = [h, a, b, c];
+      await resolveTurn([{ c: h, li: 0 }, { c: a, li: 1 }, { c: b, li: 2 }, { c: c, li: 1 }], [], false); const hh = find("p", "horus");
+      T("Horus : +1 par carte jouée après lui, dans n'importe quel lieu (2 → 5 avec 3 cartes)", hh && hh.pow === 5, hh && hh.pow); }
+    fresh(); S.turn = 4; S.energy = 9; { const h = card("horus"), L = [1, 2, 3, 4].map(i => card(plain[i], 1)); S.hand.p = [h, ...L.slice(0, 3)];
+      await resolveTurn([{ c: h, li: 0 }, ...L.slice(0, 3).map((c, i) => ({ c, li: i % 3 }))], [], false); const hh = find("p", "horus");
+      S.hand.p = [L[3]]; await resolveTurn([{ c: L[3], li: 1 }], [], false);
+      T("Horus : 5 de puissance au maximum", hh.pow === 5, hh.pow); }
+    /* Héraklès */
+    fresh(); S.turn = 3; S.energy = 6; { const hk = card("herakles"); S.hand.p = [hk]; await resolveTurn([{ c: hk, li: 0 }], [], false); const x = find("e", "herakles");
+      T("Héraklès : posé ici, il passe chez l'adversaire (−4)", x && S.board.e[0].includes(x) && !find("p", "herakles") && x.pow === -4 && cardPow("e", 0, x) === -4 && total("e", 0) === -4, x && x.pow); }
+    fresh(); S.energy = 6; { const hk = card("herakles"); S.hand.p = [hk]; for (let i = 0; i < 4; i++) put("e", 0, plain[i], 1);
+      T("Héraklès : injouable dans un lieu où l'adversaire n'a pas de place, jouable ailleurs", canStage(hk, 0) === false && canStage(hk, 1) === true, ""); }
+    fresh(); S.turn = 3; S.energy = 6; { const hk = card("herakles"); S.hand.e = [hk]; await resolveTurn([], [{ c: hk, li: 2 }], false); const x = find("p", "herakles");
+      T("Héraklès joué par l'adversaire : passe de mon côté", x && S.board.p[2].includes(x), ""); }
+    /* Lugh et la Lance */
+    fresh(); S.turn = 2; S.energy = 6; { const l = card("lugh"); S.hand.p = [l]; S.deck.p = [card(plain[0]), card(plain[1]), card(plain[2])]; await resolveTurn([{ c: l, li: 0 }], [], false);
+      const n = S.deck.p.filter(x => x.id === "lance_lugh").length, lg = find("p", "lugh"); T("Lugh : mélange une Lance de Lugh dans le deck (ou elle vient d'être piochée au tour suivant : Lugh à 5)", n === 1 || (n === 0 && lg && lg.pow === 5), `${n}/${S.deck.p.length}`); }
+    fresh(); { const l = put("p", 0, "lugh"); S.deck.p = [card("lance_lugh"), card(plain[0])]; S.hand.p = []; draw("p");
+      T("Lugh : la Lance piochée disparaît (consomme la pioche) et Lugh gagne +4", l.pow === 5 && !S.hand.p.length && S.deck.p.length === 1, `${l.pow}/${S.hand.p.length}`); }
+    fresh(); { S.deck.p = [card("lance_lugh"), card(plain[0])]; S.hand.p = []; draw("p"); T("Lugh : sans Lugh en jeu, la Lance disparaît sans effet", !S.hand.p.length, ""); }
+    fresh(); { T("Lance de Lugh : jeton caché (pas de statistique, pas dans les paquets)", CARDS.lance_lugh.token === true, ""); }
+    /* Marduk */
+    fresh(); { const m = card("marduk"), od = card("odin"); S.hand.p = [m, od]; discard("p", m);
+      T("Marduk : défaussé, il revient dans la main avec +2", S.hand.p.includes(m) && m.pow === 8 && !S.discardPile.p.includes("marduk"), `${m.pow}`); }
+    fresh(); S.turn = 3; S.energy = 6; { const m = card("marduk"), od = card("odin"); od.cost; S.hand.p = [m, od]; S.deck.p = [card(plain[0]), card(plain[1]), card(plain[2])]; await resolveTurn([{ c: od, li: 0 }], [], false);
+      const mm = S.hand.p.find(x => x.id === "marduk"); T("Marduk : Odin le défausse (carte la plus chère), il reste en main à 8", mm && mm.pow === 8, mm && mm.pow); }
+    /* IA : reconnaît le combo Odin → Marduk, et pose Horus / Tezcatlipoca avant les autres */
+    fresh(); S.turn = 3; S.energy = S.energyE = 5; { const m = card("marduk"), od = card("odin"), v = card(plain[0]); S.hand.e = [m, od, v]; let n = 0; for (let i = 0; i < 12; i++) if (aiPlan("e", 5).some(x => x.c === od)) n++;
+      T("IA : avec Marduk en main avant le tour 6, elle joue Odin pour le défausser", n >= 9, `${n}/12`); }
+    fresh(); S.turn = 3; S.energy = S.energyE = 5; { const tz = card("tezcatlipoca"), a = card(plain[0], 3), b = card(plain[1], 3); S.hand.e = [a, tz, b]; const pl = aiPlan("e", 5), it = pl.findIndex(x => x.c === tz), ia = pl.findIndex(x => x.c === a);
+      T("IA : Tezcatlipoca est posé avant les cartes qu'il doit absorber (même lieu)", it < 0 || ia < 0 || it < ia, JSON.stringify(pl.map(x => [x.c.id, x.li]))); }
+    fresh(); S.turn = 3; S.energy = S.energyE = 5; { const hk = card("herakles"), a = card(plain[0], 3); S.hand.e = [hk, a]; let ok = true; for (let i = 0; i < 6; i++) for (const o of [0, 1, 2]) { S.board.p[o] = []; for (let j = 0; j < 4; j++) if (o === 0) S.board.p[o].push(card(plain[j])); } const pl = aiPlan("e", 5);
+      T("IA : Héraklès n'est jamais planifié dans un lieu où l'adversaire n'a pas de place", !pl.some(x => x.c === hk && x.li === 0), JSON.stringify(pl.map(x => [x.c.id, x.li]))); }
+    /* le lot est annoncé le 10 janvier, sort le 15 */
+    T("Lot du 15 janvier : 8 cartes, annonce le 10, sortie le 15 ; Marduk est légendaire (plus ultra-légendaire de faction)", ["kama", "tezcatlipoca", "eros", "belobog", "horus", "herakles", "lugh", "marduk"].every(id => CARDS[id].rel === "2027-01-15" && CARDS[id].soon === "2027-01-10") && CARDS.marduk.r === "L" && !ULof("marduk") && CARDS.marduk.cost === 6 && CARDS.marduk.pow === 6, "");
+    T("Bannière : la vague « jan15 » existe", DROPS.some(d => d.id === "jan15" && d.rel === "2027-01-15"), "");
   }
 
   return res;
