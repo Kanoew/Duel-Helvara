@@ -742,7 +742,7 @@ async function inPage() {
         quetzalcoatl: [3, 2, "desir", "R"], ea: [4, 2, "desir", "L"], anansi: [4, 2, "desir", "L"], dagda: [4, 3, "jugement", "E"], indra: [4, 2, "jugement", "E"], cernunnos: [3, 1, "primordial", "E"], typhon: [4, 4, "primordial", "E"] };
       T("Lot du 1er janvier : les 15 cartes ont leurs coût, puissance, faction et rareté", IDS.every(id => { const d = CARDS[id], x = SP[id]; return d.cost === x[0] && d.pow === x[1] && d.fac === x[2] && d.r === x[3]; }), IDS.filter(id => { const d = CARDS[id], x = SP[id]; return !(d.cost === x[0] && d.pow === x[1] && d.fac === x[2] && d.r === x[3]); }).join());
       T("Lot du 1er janvier : sortie le 1er janvier 2027, annonce le 27 décembre, aucune n'est exclusive ; Plume est un jeton", IDS.every(id => CARDS[id].rel === "2027-01-01" && CARDS[id].soon === "2026-12-27" && !CARDS[id].ex && !CARDS[id].vfx === !CARDS[id].vfx && CARDS[id].fx) && CARDS.plume.token && CARDS.plume.pow === 1 && CARDS.plume.cost === 0);
-      T("Lot du 1er janvier : bannière DROPS du 1er janvier (15 cartes), FR et EN", DROPS.some(d => d.id === "jan1" && d.rel === "2027-01-01" && d.soon === "2026-12-27") && POOL.filter(id => CARDS[id].rel === "2027-01-01").length === 15 && HELVARA_UI_EN.data.DROPS.jan1.length > 20);
+      T("Lot du 1er janvier : bannière DROPS du 1er janvier (15 cartes), FR et EN", DROPS.some(d => d.id === "jan1" && d.rel === "2027-01-01" && d.soon === "2026-12-27") && POOL.filter(id => CARDS[id].rel === "2027-01-01").length === 16 && HELVARA_UI_EN.data.DROPS.jan1.length > 20);
       T("Lot du 1er janvier : Primordial ne gagne que Cernunnos et Typhon, Quetzalcoatl et Ea passent en Désir, Dagda et Indra en Jugement", ["cernunnos", "typhon"].every(id => CARDS[id].fac === "primordial") && ["quetzalcoatl", "ea"].every(id => CARDS[id].fac === "desir") && ["dagda", "indra"].every(id => CARDS[id].fac === "jugement") && IDS.filter(id => CARDS[id].fac === "primordial").length === 2);
       T("Lot du 1er janvier : textes anglais des 15 cartes", IDS.every(id => HELVARA_EN.cards[id] && HELVARA_EN.cards[id].fx && /[a-z]/.test(HELVARA_EN.cards[id].fx)) && HELVARA_EN.cards.plume.n === "Feather");
       const base = async () => { fresh(); S.turn = 3; const t0 = card(plain[0]); S.hand.p = [t0]; S.hand.e = []; await resolveTurn([{ c: t0, li: 0 }], [], false); return { hp: S.hand.p.length, he: S.hand.e.length }; };
@@ -1004,6 +1004,18 @@ async function inPage() {
     fresh(); S.turn = 5; S.energy = 8; { const c = card("circe_n"); S.hand.p = [c]; await resolveTurn([{ c, li: 0 }], [], false); T("Circé, Reine du Gui : sans carte adverse, rien ne plante", find("p", "circe_n").pow === 4, ""); }
     { let ok = true, err = ""; for (const turn of [1, 2, 3, 4, 5, 6]) { try { fresh(); S.turn = turn; S.energy = S.energyE = turn + 3; S.hand.e = [card("circe_n"), card(plain[0])]; put("p", 0, plain[2], 3); put("p", 1, plain[3], 4); aiPlan("e", 5); } catch (e) { ok = false; err = e.message; } }
       T("IA : aiPlan sans erreur avec Circé, Reine du Gui aux tours 1 à 6", ok, err); }
+  }
+
+  /* ===== Fenrir (23 octobre) et effets de neige des légendaires de Noël ===== */
+  { const f0 = CARDS.fenrir;
+    T("Fenrir : Primordial, Légendaire, 5/3, sortie le 1er janvier 2027 (annonce le 27 décembre), effet de neige ; Circé, Reine du Gui : effet de neige aussi", f0 && f0.fac === "primordial" && f0.r === "L" && f0.cost === 5 && f0.pow === 3 && f0.rel === "2027-01-01" && f0.soon === "2026-12-27" && !f0.ex && f0.vfx === "fenrir" && CARDS.circe_n.vfx === "circe_n", "");
+    fresh(); S.turn = 5; S.energy = 8; { const f = card("fenrir"), a = put("p", 1, plain[0], 2); S.hand.p = [f]; destroy("p", 1, a); await resolveTurn([{ c: f, li: 0 }], [], false);
+      const ff = find("p", "fenrir"); T("Fenrir : une carte alliée détruite ce tour-ci : Fatalité (ni détruite ni déplacée) et +2 (3 → 5)", ff && ff.fate === true && fated(ff) && ff.pow === 5 && destroy("p", 0, ff) === false, ff && ff.pow); }
+    fresh(); S.turn = 5; S.energy = 8; { const f = card("fenrir"), a = put("e", 1, plain[0], 2); S.hand.p = [f]; destroy("e", 1, a); await resolveTurn([{ c: f, li: 0 }], [], false); const ff = find("p", "fenrir"); T("Fenrir : seule une carte ALLIÉE compte (pas de Fatalité sinon)", ff && !ff.fate && ff.pow === 3, ""); }
+    fresh(); S.turn = 4; S.energy = 8; { const f = card("fenrir"); S.hand.p = [f]; await resolveTurn([{ c: f, li: 0 }], [], false); const ff = find("p", "fenrir");
+      T("Fenrir : +2 à la fin de chaque tour SUIVANT (pas celui de sa Révélation)", ff && ff.pow === 3, ff && ff.pow);
+      S.turn = 5; await resolveTurn([], [], false); T("Fenrir : +2 à la fin du tour suivant (5)", ff.pow === 5, ff.pow); S.turn = 6; await resolveTurn([], [], false); T("Fenrir : et encore +2 au tour 6 (7)", ff.pow === 7, ff.pow); }
+    fresh(); S.turn = 5; S.energy = 8; { const f = card("fenrir"), a = put("p", 1, plain[0], 2); S.hand.p = [f]; await resolveTurn([{ c: f, li: 0 }], [], false); destroy("p", 1, a);  /* détruite après sa Révélation : rien */ T("Fenrir : une destruction après sa Révélation ne compte pas", !find("p", "fenrir").fate, ""); }
   }
 
   return res;

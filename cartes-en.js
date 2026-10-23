@@ -152,6 +152,7 @@ window.HELVARA_EN = {
     xiwangmu:{fx:"On Reveal: adds a Peach of Immortality to your hand (cost 0, 2 Power, can't be destroyed)."},
     bari_gongju:{fx:"Ongoing: your cards destroyed here also count as discarded."},
     circe_n:{n:"Circe, Queen of Mistletoe", fx:"On Reveal: draws the strongest enemy card from another location here, if there is room. All enemy cards here with less Power than Circe (the drawn card included) become Swine (1 Power, no effect)."},
+    fenrir:{fx:"On Reveal: if an allied card was destroyed this turn, Fenrir gains Fate (can't be destroyed or moved) and +2 Power. Ongoing: at the end of each following turn, +2 more Power."},
     isis:{fx:"On Reveal: take your last destroyed card back into your hand. It costs 2 less."},
     rati:{fx:"On Reveal: resurrect your last destroyed card here (without its Reveal). +2 Power if it is Kama."},
     kama:{fx:"Ongoing: +2 Power whenever another card of yours is destroyed (anywhere). When he is destroyed, he returns to your hand."},

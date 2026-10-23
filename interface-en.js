@@ -10,6 +10,7 @@
 
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
+    [/^Fatalité, \+2$/, ()=>"Fate, +2"],
     [/^attire (.+), (\d+) Pourceaux?$/, (m,a,n)=>`draws ${a} here, ${n} Swine`],
     [/^attire (.+)$/, (m,a)=>`draws ${a} here`],
     [/^Pêche d'immortalité ajoutée à la main$/, ()=>"Peach of Immortality added to hand"],
@@ -441,6 +442,7 @@
     [/^Adversaire : deck (.+) · niveau (.+)$/, (m,f,t)=>`Opponent: ${f} deck · level ${t}`],
     [/^Blitz · match (\d)\/3 · adversaire (.+), niveau (.+)$/, (m,n,f,t)=>`Blitz · match ${n}/3 · ${f} opponent, level ${t}`],
     [/^(Idunn|Ishtar) · ([+−]\d+) à (.+) \((.+)\)$/, (m,c,v,a,w)=>`${c} · ${v} to ${a} (${who(w)})`],
+    [/^Fenrir · \+2 \((.+)\)$/, (m,w)=>`Fenrir · +2 (${who(w)})`],
     [/^Pakhet détruit (.+) \((.+)\)$/, (m,a,w)=>`Pakhet destroys ${a} (${who(w)})`],
     [/^Bari Gongju · (.+) compte aussi comme défaussée \((.+)\)$/, (m,a,w)=>`Bari Gongju · ${a} also counts as discarded (${who(w)})`],
     [/^Kama · \+2 \((.+)\)$/, (m,w)=>`Kama · +2 (${who(w)})`],
@@ -517,7 +519,7 @@
         dec14:"The Star Fold opens for Christmas.",
         feb1:"Nephtys sacrifices her neighbour, Pakhet hunts the small cards, Hera grows jealous, Frigg draws to herself, Xi Wangmu offers the Peach of Immortality, Bari Gongju opens the way of the discarded, Isis and Rati call back the fallen, Loki makes them discard and Anahita copies… and The Source, the new Helvara ultra-legendary.",
         jan15:"Kama always comes back, Tezcatlipoca absorbs everything played at his feet, Eros aims true, Horus keeps watch, Heracles switches sides, Lugh hurls his spear and Marduk is never really discarded… and Hedone draws in the opponent's cards.",
-        jan1:"The Archivist and the Proprietress meet at the Sous-Gare, Ea and Anansi play the game of tricks, the Child Without School comes back every turn, Typhon makes cards cost dearly… and a new fusion, The Archivist X The Proprietress.",
+        jan1:"The Archivist and the Proprietress meet at the Sous-Gare, Ea and Anansi play the game of tricks, the Child Without School comes back every turn, Typhon makes cards cost dearly, Fenrir breaks his chains… and a new fusion, The Archivist X The Proprietress.",
         dec26:"Odin, Thor, Hel, Baldur, Hades, Poseidon, Circe, Qetesh, the people of Lausanne… five new fusions and the Creator's Domain. And among the Judgement: Zeus hurls his lightning, Hephaestus forges his weapons, Tsukuyomi watches over his own, Cronus devours.",
         oct26:"Lilith, Ereshkigal, Psyche, Amaterasu, the Mother of Ash… and the first ultra-legendary, Yarden X Apsu.",
         nov26:"Nemesis, Anubis, Susanoo, Aphrodite, Medea, the Flon Thief… and three new fusions: Aphrodite X Yarden, Calypso X Jordan, Nemesis X Jordan."

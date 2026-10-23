@@ -283,6 +283,14 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - **Mesure** (`--cartes circe_n --parties 3000`, 6 000 decks) : victoire en deck 49,6 %, posée 52,7 %, posée dans 30 % des decks après la précision de Jordan (55 % avant : l'attirée ne devient plus Pourceau d'office) : rien à corriger. **Limite de l'outil** : `--cartes circe_n,circe` (deux versions du même personnage) fait tourner l'outil sans fin (aucun deck légal à construire) ; ne cibler qu'une version à la fois.
 - Tests : 442 scénarios (+6).
 
+### 19e série (23 octobre 2026, Fenrir ; effets de neige de Circé de Noël et de Fenrir) : même règle, ne pas revenir dessus sans l'accord de Jordan
+
+`BUILD` : `alpha-0.24`. Ajout de Jordan : `fenrir`, Primordial, **Légendaire**, 5/3, sortie **2027-01-01** (annonce 2026-12-27), avec le lot du 1er janvier (qui compte donc **16 cartes** ; bannière `jan1` FR et EN mise à jour). Illustration de Jordan (`images/fenrir.webp`, avatar recadré sur le visage, miniature). Statut « non fixée » : valeurs à revoir avec les vraies statistiques.
+- **Effet** : Révélation : si une carte alliée a été détruite **ce tour-ci** (avant sa Révélation, `S.lostT[camp] === S.turn`, posé dans `destroyedHook`, donc toute destruction réelle, jetons exclus), Fenrir gagne Fatalité (`c.fate`, lu par `fated()` : ni détruite ni déplacée, comme Ananké mais sans le calcul de fin de partie ; perdue avec les effets) et +2. Continu : à la fin de chaque tour **suivant** celui de sa Révélation (`c.fenT`), +2 (le tour 6 compris, donc +2 par tour restant).
+- **Effets visuels** : décision de Jordan, des **flocons de neige** (couche `snow`) sur **Circé, Reine du Gui** (`vfx:"circe_n"`, accent vin rouge) et **Fenrir** (`vfx:"fenrir"`, accent bleu glacé), dans `MIX` (`sons-effets.js`).
+- **Mesure** (`--cartes fenrir --parties 3000`, 6 000 decks) : victoire en deck 49,5 %, **posée dans 7 % seulement** des decks, victoire posée 35,9 %, puissance de fin 3,9 : coût 5 pour 3 de puissance, l'IA la joue rarement et elle gagne moins quand elle est jouée. Dans les seuils (aucune correction), mais **à surveiller** : la Fatalité conditionnelle ne se déclenche presque jamais (peu de cartes alliées détruites).
+- Tests : 449 scénarios (+7).
+
 ### Secondes ultra-légendaires de faction (18 octobre 2026, décision de Jordan)
 
 - **Règle** : une faction peut avoir une **seconde** ultra-légendaire de faction, gagnée à **150 parties au total** (même compteur `P.fj` que la première, qui reste à 50 ; donc 100 parties de plus), « pour fidéliser les joueurs dans le temps ». Jamais deux secondes dans la même faction (Jordan : « c'est chaud niveau conditions »). Une seule ultra-légendaire par deck, comme avant.

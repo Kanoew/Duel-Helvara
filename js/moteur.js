@@ -263,7 +263,7 @@ function resurrectAll(s,opts={}){ piles(); let n=0; const ids=gShuffle(S.discard
 let SRC=null;
 const baldurSafe=(s,c)=>eid(c)==="baldur"&&!c.neg&&!(SRC&&(SRC.s===s||SRC.cost<=2));
 /* Ananké, Fatalité (15 octobre, 2e version) : elle ne peut être ni détruite ni déplacée (renvoi en main, dispersion, attraction d'Hédoné compris), par aucun effet. Tout le reste l'atteint : charme, captivité, transformation, vol, perte d'effet (Apsu, Mohini : neg, elle reste à 1), affaiblissement ; Nemesis la bat. */
-const fated=c=>eid(c)==="ananke"&&!c.neg;
+const fated=c=>(eid(c)==="ananke"||c.fate)&&!c.neg;   /* Fatalité : Ananké, et Fenrir quand une carte alliée a été détruite avant lui (c.fate) */
 /* Pêche d'immortalité (Xi Wangmu) : ne peut pas être détruite */
 const deathless=c=>eid(c)==="peche_immortalite"&&!c.neg;
 const noWeak=c=>((eid(c)==="ecorche"||eid(c)==="jordan")&&!c.neg)||c.noweak||c.ward; /* l'Écorché, Jordan, le Tatoueur, Hel X Baldur */
@@ -285,6 +285,7 @@ function kamaBack(s,c){ if(eid(c)!=="kama"||!live(c)||S.hand[s].length>=7) retur
   S.hand[s].push(c); log(`Kama est détruit et revient dans la main (${who(s)})`); return true; }
 /* Quand une de tes cartes (hors jetons) est détruite : tes Kama gagnent +2 ; Belobog, s'il est dans ta main, entre gratuitement à sa place (une fois par tour) */
 function destroyedHook(s,li,c){ if(!real(c)) return;
+  (S.lostT=S.lostT||{p:0,e:0})[s]=S.turn;   /* Fenrir : une carte alliée a été détruite ce tour-ci */
   for(let i=0;i<3;i++) for(const k of S.board[s][i]) if(k!==c&&live(k)&&eid(k)==="kama"){ k.pow+=2; (k.mods=k.mods||[]).push({v:2,src:"Kama"}); log(`Kama · +2 (${who(s)})`); sfx("buff"); }
   const b=S.hand[s].find(x=>eid(x)==="belobog"); S.belT=S.belT||{p:0,e:0};
   if(b&&S.belT[s]!==S.turn&&!S.locs[li].locked&&slotsUsed(s,li)<capOf(s,li)){ S.belT[s]=S.turn; S.hand[s]=S.hand[s].filter(x=>x!==b); makeRoom(s,li); b.rev=true; b.fresh=true; S.board[s][li].push(b);
@@ -414,6 +415,7 @@ function revealFx(s,li,c,opts={}){
         if(weaken(o,i,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Set"}); w++; } }
       if(n){ note=`disperse ${n} carte${n>1?"s":""}`+(w?`, −1 à ${w}`:""); snd="debuff"; } break; }
     case "maree": { let n=0; for(const t of targets.filter(x=>CARDS[x.id].cost<=2)) if(destroy(o,li,t)) n++; if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
+    case "fenrir": { c.fenT=S.turn; if(S.lostT&&S.lostT[s]===S.turn){ c.fate=true; buffSelf(2); note="Fatalité, +2"; } break; }
     case "nephtys": { const cs=mates.filter(x=>!fated(x)&&!deathless(x)); if(!cs.length) break; const mx=Math.max(...cs.map(x=>pw(s,li,x))), t=gPick(cs.filter(x=>pw(s,li,x)===mx));
       if(destroy(s,li,t)){ buffSelf(4); note=`détruit ${nm(t)}, +4`; snd="destroy"; } break; }
     case "frigg": { if(S.locs[li].locked||S.board[o][li].length>=capOf(o,li)) break; const pool=[]; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&!fated(x)&&!charmOf(x)) pool.push([i,x,pw(o,i,x)]);
@@ -698,6 +700,7 @@ function aiPlan(me="e",tierOv){
       if(foes){ hit+=fs-2.5; pow-=ms; pow+=2*Math.max(0,own.length-(own.length?1:0)+(ctx.pend[li]?ctx.pend[li]*.7:0)); adj+=1.5; } }
     /* Nyx X Circé : toutes les cartes adverses ici deviennent des Pourceaux (puissance 1) : on retire leur puissance moins 1 chacune */
     if(c.id==="ulcirce"){ const fo=S.board[op][li].filter(x=>x.rev&&!fated(x)&&!x.neg); if(fo.length&&!shielded(op,li)) hit+=fo.reduce((a,x)=>a+Math.max(0,cardPow(op,li,x)-1),0)+.5; else adj-=2; }
+    if(c.id==="fenrir") pow+=2*Math.max(0,6-S.turn)*.85;   /* +2 à la fin de chaque tour suivant */
     /* Circé, Reine du Gui : les cartes adverses ici plus faibles qu'elle deviennent des Pourceaux (1) ; la plus forte d'un autre lieu est attirée ici (et devient Pourceau) */
     if(c.id==="circe_n"){ const lim=pow, fo=S.board[op][li].filter(x=>x.rev&&!fated(x)&&cardPow(op,li,x)<lim); if(!shielded(op,li)) hit+=fo.reduce((a,x)=>a+Math.max(0,cardPow(op,li,x)-1),0);
       let best=-1; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[op][i]) if(x.rev&&!fated(x)) best=Math.max(best,cardPow(op,i,x));
@@ -896,6 +899,9 @@ async function resolveTurn(mine, theirs, animate){
     SRC={s,cost:CARDS.ishtar.cost}; const ok=t&&weaken(o,li,t,1); SRC=null;
     if(ok){ (t.mods=t.mods||[]).push({v:-1,src:"Ishtar"}); log(`Ishtar · −1 à ${nm(t)} (${who(o)})`); sfx("debuff"); }
   }
+  /* Fenrir : à la fin de chaque tour suivant celui de sa Révélation, +2 de puissance */
+  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="fenrir"&&c.fenT!=null&&S.turn>c.fenT){
+    c.pow+=2; (c.mods=c.mods||[]).push({v:2,src:"Fenrir"}); log(`Fenrir · +2 (${who(s)})`); sfx("buff"); }
   /* Pakhet : à la fin de chaque tour, détruit une carte adverse de coût 1 ou moins ici (la plus forte ; une seule par Pakhet) */
   for(const s of [dflt,opp(dflt)]) for(let li=0;li<3;li++) for(const c of S.board[s][li].slice()) if(live(c)&&eid(c)==="pakhet"&&S.board[s][li].includes(c)){
     const o=opp(s), cs=S.board[o][li].filter(x=>x.rev&&CARDS[x.id].cost<=1&&!untargetable(s,o,x)&&!fated(x)&&!deathless(x));
