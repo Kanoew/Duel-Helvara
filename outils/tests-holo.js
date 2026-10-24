@@ -56,6 +56,10 @@ srv.listen(0, async () => {
     check("production : Nike (entrée de la table HOLO) affiche l'effet, sans ?holo=test", await n(p, ".hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs);
     await zoom(p, "source"); await p.waitForTimeout(2200);
     check("production : La Source (Carla, foil électrique « volt ») affiche l'effet sans erreur", await n(p, ".hc-card.hc-ready") === 1 && await n(p, ".hc-volt") >= 1 && p.errs.length === 0, p.errs); await p.ctx.close();
+    p = await page("/index.html");
+    for (const id of ["ananke_r", "ananke_v"]) { await p.evaluate(`P.owned=[...new Set([...P.owned,"${id}"])];tutoStep=-1;P.tuto=true;screen="deck";zoomId="${id}";render();`); await p.waitForTimeout(2200);
+      check("production : " + id + " (variante d'Ananké, dossier de Jordan) affiche l'effet sans erreur", await n(p, ".hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs); }
+    await p.ctx.close();
     /* vitrine de l'accueil (vidéo de Jordan, 15 octobre : l'ancien reflet d'ultra-légendaire y restait) */
     p = await page("/index.html");
     await p.evaluate(`P.owned=[...new Set([...P.owned,"nike","yarden","amaterasu"])];P.fan=["nike","yarden","amaterasu"];tutoStep=-1;P.tuto=true;screen="home";render();`);
@@ -114,8 +118,8 @@ srv.listen(0, async () => {
 
     /* petites cartes : main, plateau et grille de la Collection (idée de Jordan, 22 octobre : l'effet partout où la carte apparaît) */
     p = await page("/index.html?date=2027-02-05");
-    await p.evaluate(`tutoStep=-1;P.tuto=true;screen="deck";render();`); await p.waitForFunction(() => document.querySelectorAll(".holotile .hc-ready").length === 4, null, { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(100);
-    check("collection : les 4 ultra-légendaires de faction sorties ont l'effet dans la grille", await n(p, ".holotile") === 4 && await n(p, ".holotile .hc-ready") === 4, [await n(p, ".holotile"), await n(p, ".holotile .hc-ready")]);
+    await p.evaluate(`tutoStep=-1;P.tuto=true;screen="deck";render();`); await p.waitForFunction(() => document.querySelectorAll(".holotile .hc-ready").length === 5, null, { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(100);
+    check("collection : les 5 ultra-légendaires de faction sorties le 5 février : Nike, Ananké, Hédoné, La Source et Ananké, Fileuse du Douzième Coup ont l'effet dans la grille", await n(p, ".holotile") === 5 && await n(p, ".holotile .hc-ready") === 5, [await n(p, ".holotile"), await n(p, ".holotile .hc-ready")]);
     check("collection : le nom, le coût et la puissance restent visibles sur la carte holo de la grille", await p.evaluate(() => { const f = document.querySelector(".holotile").closest(".full"); return getComputedStyle(f.querySelector(".band")).display !== "none" && getComputedStyle(f.querySelector(".cost")).display !== "none"; }));
     check("collection : l'ancien reflet violet n'est plus posé sur une carte holo", await p.evaluate(() => !document.querySelector(".holotile").closest(".full").classList.contains("holo")));
     await p.evaluate(`P.deck=["ananke",...P.deck.filter(x=>x!=="ananke")].slice(0,12);newGame();screen="play";

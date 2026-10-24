@@ -1,0 +1,37 @@
+{
+  "aspect": [
+    1060,
+    1580
+  ],
+  "layers": [
+    {
+      "src": "layer0.webp",
+      "amp": -0.003
+    },
+    {
+      "src": "layer1.webp",
+      "amp": 0.011,
+      "foils": [
+        {
+          "type": "prism",
+          "mask": "foil1-0.webp"
+        },
+        {
+          "type": "gold",
+          "mask": "foil1-1.webp"
+        }
+      ]
+    }
+  ],
+  "backAfter": 0,
+  "fx": {
+    "back": {
+      "sparks": 26
+    },
+    "front": {
+      "sparks": 16,
+      "petals": 12,
+      "hearts": 4
+    }
+  }
+}

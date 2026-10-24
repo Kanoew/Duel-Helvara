@@ -2,7 +2,7 @@
    Affiché partout où la carte apparaît : grand format (Collection, partie), révélation d'un paquet, vitrine de l'accueil, et petites cartes (main, plateau, grille de la Collection).
    Activé par donnée : HOLO = { id de carte : dossier sous images/holo/ }. Une carte sans entrée garde son image fixe.
    Si le module, le manifest ou une image ne charge pas, rien ne change à l'écran (l'image fixe reste). */
-const HOLO = { nike: "nike", ananke: "ananke", hedone: "hedone", nike_v: "nike-saint-valentin", source: "carla" };
+const HOLO = { nike: "nike", ananke: "ananke", hedone: "hedone", nike_v: "nike-saint-valentin", ananke_r: "ananke-nouvel-an", ananke_v: "ananke-fil-rouge", source: "carla" };
 /* Mode test : ouvrir le jeu avec ?holo=test ajoute un bouton « Test holo » (zoom et faux paquet sans posséder les cartes) ; cette table sert à y ajouter des cartes d'essai. */
 const HOLO_TEST = {};
 const HOLO_TESTON = /[?&]holo=test\b/.test(location.search);
