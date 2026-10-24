@@ -114,9 +114,9 @@ async function inPage() {
     T("Secondes UL de faction : à 100 parties, Ananké est gagnée et pas Ymir", ulEarned(ULof("ananke")) && !ulEarned(ULof("ymir")));
     P.fj.primordial = 150; T("Secondes UL de faction : à 150 parties au total, Ymir est gagnée", ulEarned(ULof("ymir")));
     P.fj.primordial = 100; sec.forEach(id => { CARDS[id].rel = "2000-01-01"; CARDS[id].soon = "2000-01-01"; });
-    const j = journalHTML(); T("Journal des factions : une ligne de plus par seconde UL annoncée (Primordial 100/150), rien avant son annonce", (j.match(/class="fjrow"/g) || []).length === 6 && /100\/150/.test(j) && /seconde ultra-légendaire/.test(j), (j.match(/class="fjrow"/g) || []).length);
+    const j = journalHTML(); T("Journal des factions : une ligne de plus par seconde UL annoncée (Primordial 100/150), rien avant son annonce (+ la ligne de quête de Noël d'Ananké, visible en décembre)", (j.match(/class="fjrow"/g) || []).length === 7 && /100\/150/.test(j) && /seconde ultra-légendaire/.test(j), (j.match(/class="fjrow"/g) || []).length);
     sec.forEach((id, i) => { CARDS[id].rel = keepRel[i]; CARDS[id].soon = keepSoon[i]; }); const j2 = journalHTML();
-    T("Journal des factions : secondes UL cachées, le Journal garde ses 4 lignes", (j2.match(/class="fjrow"/g) || []).length === 4 && !/150/.test(j2), (j2.match(/class="fjrow"/g) || []).length);
+    T("Journal des factions : secondes UL cachées, le Journal garde ses 4 lignes (+ la quête de Noël d'Ananké en décembre)", (j2.match(/class="fjrow"/g) || []).length === 5 && !/150/.test(j2), (j2.match(/class="fjrow"/g) || []).length);
     P.fj = keepFj; P.owned = keepOwned; }
   /* 7. Ouverture de paquet « Le Tirage » : vrai achat, Passer, fermeture, rachat */
   { const tick = ms => new Promise(r => setTimeout(r, ms)), until = async (f, ms = 8000) => { const t0 = Date.now(); while(Date.now() - t0 < ms){ if(f()) return true; await tick(40); } return false; };
@@ -1016,6 +1016,31 @@ async function inPage() {
       T("Fenrir : +2 à la fin de chaque tour SUIVANT (pas celui de sa Révélation)", ff && ff.pow === 3, ff && ff.pow);
       S.turn = 5; await resolveTurn([], [], false); T("Fenrir : +2 à la fin du tour suivant (5)", ff.pow === 5, ff.pow); S.turn = 6; await resolveTurn([], [], false); T("Fenrir : et encore +2 au tour 6 (7)", ff.pow === 7, ff.pow); }
     fresh(); S.turn = 5; S.energy = 8; { const f = card("fenrir"), a = put("p", 1, plain[0], 2); S.hand.p = [f]; await resolveTurn([{ c: f, li: 0 }], [], false); destroy("p", 1, a);  /* détruite après sa Révélation : rien */ T("Fenrir : une destruction après sa Révélation ne compte pas", !find("p", "fenrir").fate, ""); }
+  }
+
+  /* ===== Variantes d'Ananké (Nouvel An, Saint-Valentin) et Xiuhcoatl (24 octobre) ===== */
+  { const A = CARDS.ananke, R = CARDS.ananke_r, V = CARDS.ananke_v;
+    T("Ananké du Nouvel An et de la Saint-Valentin : même carte (4/1 Primordial ultra-légendaire, texte identique), variantes d'Ananké, sorties le 31 décembre et le 14 février", [R, V].every(c => c.cost === A.cost && c.pow === A.pow && c.fac === "primordial" && c.r === "U" && c.base === "ananke" && c.vfx === "ananke" && !c.ex) && R.rel === "2026-12-31" && R.soon === "2026-12-26" && V.rel === "2027-02-14" && V.soon === "2027-02-09" && R.fx.replace("Ananké du Nouvel An", "Ananké") === A.fx && V.fx.replace("Ananké de la Saint-Valentin", "Ananké") === A.fx, "");
+    T("Quêtes : Ananké du Nouvel An = 20 parties avec Ananké en décembre ; Ananké de la Saint-Valentin = 25 parties en février (comme Nike)", ULof("ananke_r").quest.k === "anankenoel" && ULof("ananke_r").quest.n === 20 && ULof("ananke_v").quest.k === "anankev" && ULof("ananke_v").quest.n === 25 && inWin(NOEL_Q) === (md() >= "12-01" && md() <= "12-31") && NOEL_Q.join() === "12-01,12-31" && VALENTIN.join() === "02-01,02-28", "");
+    { const keep = window.__today, keepQ = P.fj, dk = ["ananke", ...plain.slice(0, 7)]; const count = d => { P.fj = {}; window.__today = d; quiet = false; P.q = P.q || {}; fjCount(dk); quiet = true; return [fjGet("anankenoel"), fjGet("anankev")].join(); };
+      T("Compteurs : une partie avec Ananké dans le deck compte en décembre (Noël), en février (Saint-Valentin), jamais en dehors", count("2026-12-15") === "1,0" && count("2027-02-10") === "0,1" && count("2027-01-10") === "0,0" && count("2026-11-30") === "0,0" && count("2027-03-01") === "0,0", "");
+      P.fj = {}; window.__today = "2026-12-15"; quiet = false; fjCount(["ananke_r", ...plain.slice(0, 7)]); quiet = true; T("Compteurs : la variante dans le deck compte aussi (même personnage)", fjGet("anankenoel") === 1, "");
+      P.fj = {}; window.__today = "2026-12-15"; quiet = false; fjCount(plain.slice(0, 8)); quiet = true; T("Compteurs : sans Ananké dans le deck, rien", fjGet("anankenoel") === 0, "");
+      window.__today = keep; P.fj = keepQ; }
+    for (const id of ["ananke_r", "ananke_v"]) { fresh(); S.turn = 4; { const a = put("p", 0, id); T(id + " : Fatalité comme Ananké (ni détruite ni déplacée), puissance de fin = total adverse + 1", fated(a) && destroy("p", 0, a) === false && S.board.p[0].includes(a), ""); S.final = true; put("e", 0, plain[0], 5); T(id + " : fin de partie, puissance = puissance adverse ici + 1 (6)", cardPow("p", 0, a) === 6, cardPow("p", 0, a)); S.final = false; }
+      fresh(); S.turn = 6; { const a = card(id); S.hand.p = [a]; T(id + " : jamais jouable au tour 6", banned(a) === true, ""); }
+      fresh(); S.turn = 4; S.energy = 8; { const a = card(id); S.hand.p = [a]; put("e", 0, plain[0], 3); put("e", 1, plain[1], 3); const plan = aiPlan("e", 5); aiPlan("e", 5); T(id + " : l'IA la planifie sans erreur", true, JSON.stringify(plan.length)); } }
+    fresh(); S.turn = 4; { const a = put("p", 0, "ananke"), b = put("p", 1, "ananke_v"); const r = S.board.p[0].length + S.board.p[1].length; S.final = true; T("Ananké et sa variante : deux Ananké de camps ou lieux différents se calculent sans boucle", Number.isFinite(cardPow("p", 0, a)) && Number.isFinite(cardPow("p", 1, b)), ""); S.final = false; }
+    { const keep = window.__today, jr = () => { P.owned = P.owned.filter(x => x !== "ananke_r" && x !== "ananke_v"); return journalHTML(); };
+      window.__today = "2026-11-30"; P.fj = { anankenoel: 4 }; T("Journal : pas de ligne de Noël avant le 1er décembre", !jr().includes("Noël · avec Ananké"));
+      window.__today = "2026-12-10"; P.fj = { anankenoel: 4 }; { const h = jr(); T("Journal : la quête de Noël est visible dès le 1er décembre (4 parties), carte et seuil pas encore révélés", h.includes("Noël · avec Ananké") && h.includes("4 parties") && !h.includes("/20") && !h.includes("Ananké du Nouvel An")); }
+      window.__today = "2026-12-26"; { const h = jr(); T("Journal : le 26 décembre la carte est annoncée (4/20)", h.includes("4/20") && h.includes("Récompense : Ananké du Nouvel An")); }
+      P.fj = { anankenoel: 20 }; window.__today = "2026-12-28"; screen = "home"; ulLater = false; P.tuto = true; tutoStep = -1; T("Quête finie le 28 décembre : réclamation en attente de la sortie (31 décembre)", !ulHTML().includes("Ananké du Nouvel An"));
+      window.__today = "2026-12-31"; P.owned = P.owned.filter(x => x !== "ananke_r"); T("Le 31 décembre : Ananké du Nouvel An est réclamable (message de Noël)", ulHTML().includes("Ananké du Nouvel An") && ulHTML().includes("avec Ananké pendant les fêtes de Noël"));
+      window.__today = "2027-02-03"; P.fj = { anankev: 3 }; { const h = jr(); T("Journal : la quête de la Saint-Valentin d'Ananké est visible dès le 1er février", h.includes("Saint-Valentin · avec Ananké") && h.includes("3 parties")); }
+      P.fj = { anankev: 25 }; window.__today = "2027-02-14"; T("Le 14 février : Ananké de la Saint-Valentin est réclamable", ulHTML().includes("Ananké de la Saint-Valentin"));
+      window.__today = keep; P.fj = {}; }
+    T("Xiuhcoatl : Légendaire cachée (aucune date), sans effet, images de Jordan", CARDS.xiuhcoatl.r === "L" && CARDS.xiuhcoatl.rel === "2099-01-01" && CARDS.xiuhcoatl.fx === "", "");
   }
 
   return res;

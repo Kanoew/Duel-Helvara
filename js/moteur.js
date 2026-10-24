@@ -137,7 +137,7 @@ function costFor(s,id,li,isFirst,jf){ let c=CARDS[id].cost; if(id==="ulya") c-=S
 function used(){ return S.staged.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf("p",x.c,x.li,i===0,jugFirst(S.staged,i))),0); }
 /* Nemesis ne peut pas être jouée au tour 6, même avec de l'énergie en réserve (Prométhée) */
 /* Règle de design : les cartes qui verrouillent un lieu (Nemesis, Cronos, Ananké) ne peuvent pas être jouées au tour 6, même avec de l'énergie gardée (Prométhée) */
-const banned=c=>eid(c)==="reflet_noir"||((eid(c)==="nemesis"||eid(c)==="cronos"||eid(c)==="ananke")&&S.turn>=6);
+const banned=c=>eid(c)==="reflet_noir"||((eid(c)==="nemesis"||eid(c)==="cronos"||isAnk(c))&&S.turn>=6);
 /* Plume de Quetzalcoatl : elle occupe une case mais ne compte pas comme une place : la carte suivante la remplace */
 const slotsUsed=(s,li)=>S.board[s][li].filter(x=>eid(x)!=="plume").length;
 function canStage(c,li){
@@ -156,7 +156,7 @@ function ankEnd(s,li,c){ if(ANK) return c.pow; ANK=1; try{ return total(opp(char
 function cardPow(s,li,c){
   if(!c.rev) return 0;
   if(c.captive&&captorLive(c.captive)) return 0;   /* captive (Calypso) : 0, Ananké comprise, même en fin de partie */
-  if(S.final&&fated(c)&&eid(c)==="ananke") return ankEnd(s,li,c);
+  if(S.final&&fated(c)&&isAnk(c)) return ankEnd(s,li,c);
   let p=c.pow; const d=CARDS[c.id];
   for(const o of S.board[s][li]) if(o!==c && live(o) && eid(o)==="mouche") p-=1;
   for(const o of S.board[s][li]) if(o!==c && live(o) && eid(o)==="ulcal") p+=2;
@@ -263,7 +263,7 @@ function resurrectAll(s,opts={}){ piles(); let n=0; const ids=gShuffle(S.discard
 let SRC=null;
 const baldurSafe=(s,c)=>eid(c)==="baldur"&&!c.neg&&!(SRC&&(SRC.s===s||SRC.cost<=2));
 /* Ananké, Fatalité (15 octobre, 2e version) : elle ne peut être ni détruite ni déplacée (renvoi en main, dispersion, attraction d'Hédoné compris), par aucun effet. Tout le reste l'atteint : charme, captivité, transformation, vol, perte d'effet (Apsu, Mohini : neg, elle reste à 1), affaiblissement ; Nemesis la bat. */
-const fated=c=>(eid(c)==="ananke"||c.fate)&&!c.neg;   /* Fatalité : Ananké, et Fenrir quand une carte alliée a été détruite avant lui (c.fate) */
+const fated=c=>(isAnk(c)||c.fate)&&!c.neg;   /* Fatalité : Ananké, et Fenrir quand une carte alliée a été détruite avant lui (c.fate) */
 /* Pêche d'immortalité (Xi Wangmu) : ne peut pas être détruite */
 const deathless=c=>eid(c)==="peche_immortalite"&&!c.neg;
 const noWeak=c=>((eid(c)==="ecorche"||eid(c)==="jordan")&&!c.neg)||c.noweak||c.ward; /* l'Écorché, Jordan, le Tatoueur, Hel X Baldur */
@@ -464,7 +464,7 @@ function revealFx(s,li,c,opts={}){
     case "bia": { const res=(S.bonus[o]||0)>0||((S.unspent&&S.unspent[o])>0&&S.board[o].some(col=>col.some(x=>live(x)&&eid(x)==="promethee")));
       if(res){ S.bonus[o]=0; if(S.biaBlock) S.biaBlock[o]=true; note="l'adversaire perd son énergie conservée"; snd="debuff"; }
       else { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Bia"}); note=`−1 à ${nm(t)}`; snd="debuff"; } } break; }
-    case "ananke": note="Fatalité : ni détruite ni déplacée"; snd="legend"; break;   /* Apsu ne l'atteint que par sa propre Révélation, s'il est posé après elle (Jordan : « Révélation c'est Révélation ») */
+    case "ananke": case "ananke_r": case "ananke_v": note="Fatalité : ni détruite ni déplacée"; snd="legend"; break;   /* Apsu ne l'atteint que par sa propre Révélation, s'il est posé après elle (Jordan : « Révélation c'est Révélation ») */
     case "nike": case "nike_v": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k); break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(4); snd=foes.length?"void":snd; break; }
     case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
@@ -680,7 +680,7 @@ function aiPlan(me="e",tierOv){
       hit+=foeP; pow-=lost; if(foeN>=2||mineN>=2) adj+=2; adj+=S.turn===5?2:S.turn===6?-1:0;
       /* avec Nike en attente : la foudre ramène les petites cartes Jugement en main pour les rejouer avant elle au tour suivant */
       if(nikeWait&&S.turn===5){ let back=0; for(let i=0;i<3;i++) for(const x of S.board[me][i]) if(x.rev&&smallJ(x)&&!shielded(me,i)&&!locIs(i,"sauvabelin")) back++; if(back>=2) adj+=2+1.5*Math.min(4,back); } }
-    if(c.id==="ananke"){ /* fin de partie : puissance adverse ici +1 (elle gagne le lieu). Jamais avec une Nemesis adverse */
+    if(charOf(c.id)==="ananke"){ /* fin de partie : puissance adverse ici +1 (elle gagne le lieu). Jamais avec une Nemesis adverse */
       if(S.board[op][li].some(x=>live(x)&&x.id==="nemesis")) return null;
       /* 4/1, jamais au tour 6 : au tour 4 ou 5, là où l'adversaire a déjà beaucoup de puissance et peu de place pour poser un contre */
       const room=Math.max(0,capOf(op,li)-S.board[op][li].length); pow=op0[li]+opFut[li]*(room?0.6:0)+1; adj+=(S.turn>=4?2:-4)+(room<=0?3:room===1?1:-1); }
@@ -803,7 +803,7 @@ function aiPlan(me="e",tierOv){
         if(c.id==="herakles"){ if(slotsUsed(op,li)<capOf(op,li)){ makeRoom(op,li); x.rev=true; S.board[op][li].push(x); } else S.hand[me].push(x); continue; }
         S.board[me][li].push(x); reveal(me,li,x); afterPlay(me,li,x); }
       if(keep.turn<6) for(const {c,li} of plays) if(c.id==="qetesh_r"){ const x=S.board[me][li].find(y=>y.uid===c.uid); if(x&&live(x)) midnightCharm(me,li,x); }
-      out={m:[0,1,2].map(li=>total(me,li)),o:[0,1,2].map(li=>total(op,li)),inv:[0,1,2].map(li=>nemInv(li)),ank:[0,1,2].map(li=>S.board[me][li].some(x=>x.id==='ananke'&&live(x)))};
+      out={m:[0,1,2].map(li=>total(me,li)),o:[0,1,2].map(li=>total(op,li)),inv:[0,1,2].map(li=>nemInv(li)),ank:[0,1,2].map(li=>S.board[me][li].some(x=>isAnk(x)&&live(x)))};
       /* Hédoné : sa fin de tour n'est pas jouée ici ; on ajoute ce qu'elle rapportera (cartes adverses attirées, comme dans place()) */
       for(const {c,li} of plays) if(c.id==="hedone"){ const x=S.board[me][li].find(y=>y.uid===c.uid); if(!x||!live(x)) continue;
         const room=capOf(op,li)-S.board[op][li].length, others=[0,1,2].some(i=>i!==li&&S.board[op][i].some(y=>y.rev)); if(room>0&&others) out.m[li]+=2.5*Math.min(2,7-S.turn); }

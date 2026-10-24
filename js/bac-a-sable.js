@@ -14,7 +14,7 @@ function sandboxSetup() {
   window.claude = null;     /* aucun compte, aucun salon en ligne */
   const q = freshProfile(); q.name = "Bac à sable"; q.chf = 99999; q.tuto = true; q.starter = true; q.lv = 12;
   q.owned = Object.keys(CARDS).filter(id => !CARDS[id].token);
-  q.fj = { helvara: 9999, primordial: 9999, desir: 9999, jugement: 9999, nikev: 9999 };
+  q.fj = { helvara: 9999, primordial: 9999, desir: 9999, jugement: 9999, nikev: 9999, anankenoel: 9999, anankev: 9999 };
   P = clean(q);
   P.owned = q.owned;        /* toutes les cartes, y compris celles pas encore sorties à cette date (le jeu les cache lui-même) */
   const ok = avail().filter(id => !ULof(id) && !CARDS[id].token), pick = f => ok.filter(id => CARDS[id].fac === f).slice(0, ECO.deckSize);

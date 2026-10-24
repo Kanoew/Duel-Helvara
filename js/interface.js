@@ -235,7 +235,7 @@ function ulHTML(){
   return `<div class="veil"><div class="result ulpop" role="dialog" aria-label="Ultra-légendaire">
     <div class="eyebrow">${u.fac?"Ultra-légendaire de faction":"Fusion disponible"}</div><h2>${CARDS[u.id].name}</h2>
     <div class="ulcard">${fullCard(u.id)}</div>
-    <p class="hint">${u.quest?`Ton journal est complet : ${u.quest.n} parties ${u.quest.k==="nikev"?"avec Nike pendant la Saint-Valentin":`avec la faction ${FAC[u.fac].n}`}. ${CARDS[u.id].name} rejoint ta faction.`:u.fac?`Ta collection compte assez de cartes ${FAC[u.fac].n}. ${CARDS[u.id].name} rejoint ta faction.`:`Tu possédais déjà ${u.n} : leur fusion ultra-légendaire t'attend.`}</p>
+    <p class="hint">${u.quest?`Ton journal est complet : ${u.quest.n} parties ${u.quest.k==="nikev"?"avec Nike pendant la Saint-Valentin":u.quest.k==="anankev"?"avec Ananké pendant la Saint-Valentin":u.quest.k==="anankenoel"?"avec Ananké pendant les fêtes de Noël":`avec la faction ${FAC[u.fac].n}`}. ${CARDS[u.id].name} rejoint ta faction.`:u.fac?`Ta collection compte assez de cartes ${FAC[u.fac].n}. ${CARDS[u.id].name} rejoint ta faction.`:`Tu possédais déjà ${u.n} : leur fusion ultra-légendaire t'attend.`}</p>
     <button class="primary" data-act="ulclaim" data-id="${u.id}">Réclamer la carte</button><button class="ghost" data-act="ullater">Plus tard</button></div></div>`;
 }
 function fanIds(){
@@ -287,9 +287,11 @@ function journalHTML(){
     for(const u of us.slice(1)) if(SHOWN(u.id)) out.push(rowOf(u,`${F.n} · seconde ultra-légendaire`));
     return out; });
   /* Nike de la Saint-Valentin : la quête est visible et compte dès le 1er février (Jordan, 22 octobre), la carte n'est nommée qu'à son annonce (le 9) et sort le 14 */
-  const nv=ULof("nike_v"), nvKnown=!!nv&&SHOWN(nv.id);
-  if(nv&&(nvKnown||inWin(VALENTIN))){ const v=Math.min(fjGet("nikev"),nv.quest.n), g=fjGet("nikev");
-    rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:#f2a7c8">Saint-Valentin · avec Nike</b><span>${nvKnown?`${v}/${nv.quest.n}`:`${g} partie${g>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${nvKnown?Math.round(v/nv.quest.n*100):0}%;background:#f2a7c8"></i></div><small>${nvKnown?(P.owned.includes(nv.id)?`${CARDS[nv.id].name} · obtenue`:`Récompense : ${CARDS[nv.id].name}`):"Récompense : une ultra-légendaire, bientôt"}</small></div>`); }
+  /* Quêtes de fête : visibles et comptées dès l'ouverture de leur fenêtre, la carte n'est nommée qu'à son annonce */
+  for(const q of [{u:"ananke_r",k:"anankenoel",w:NOEL_Q,label:"Noël · avec Ananké",col:"#9fb4ff"},{u:"nike_v",k:"nikev",w:VALENTIN,label:"Saint-Valentin · avec Nike",col:"#f2a7c8"},{u:"ananke_v",k:"anankev",w:VALENTIN,label:"Saint-Valentin · avec Ananké",col:"#f2a7c8"}]){
+    const nv=ULof(q.u), nvKnown=!!nv&&SHOWN(nv.id);
+    if(nv&&(nvKnown||inWin(q.w))){ const v=Math.min(fjGet(q.k),nv.quest.n), g=fjGet(q.k);
+      rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:${q.col}">${q.label}</b><span>${nvKnown?`${v}/${nv.quest.n}`:`${g} partie${g>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${nvKnown?Math.round(v/nv.quest.n*100):0}%;background:${q.col}"></i></div><small>${nvKnown?(P.owned.includes(nv.id)?`${CARDS[nv.id].name} · obtenue`:`Récompense : ${CARDS[nv.id].name}`):"Récompense : une ultra-légendaire, bientôt"}</small></div>`); } }
   return `<section class="sec journal"><h2>Journal des factions</h2><p class="hint">Une partie compte quand ton deck contient au moins 8 cartes d'une faction (IA, Blitz et duels).</p>${rows.join("")}</section>`;
 }
 function profileHTML(){
@@ -608,7 +610,7 @@ function mini(s,li,c,staged){
   const act=(staged?`data-act="unstage" data-uid="${c.uid}"`:`data-act="inspect" data-uid="${c.uid}"`)+` data-lp="c${c.uid}"`;
   const chm=!staged&&charmOf(c)?" charmed":"";
   /* Ananké : « Fatalité » + puissance qu'elle aura en fin de partie (en direct) ; Hédoné : compteur de charmes */
-  const fat=!staged&&!S.final&&c.id==="ananke"&&c.rev&&fated(c)?`<span class="fatb" title="Fatalité : puissance en fin de partie">✠ ${ankEnd(s,li,c)}</span>`:"";
+  const fat=!staged&&!S.final&&charOf(c.id)==="ananke"&&c.rev&&fated(c)?`<span class="fatb" title="Fatalité : puissance en fin de partie">✠ ${ankEnd(s,li,c)}</span>`:"";
   const sick=!staged&&c.sick>0?`<span class="sickb" title="Malade : −1 au début de chacun des tours suivants">🤒 ${c.sick}</span>`:"";
   const absb=!staged&&c.id==="tezcatlipoca"&&c.rev&&c.abs&&c.abs.length?`<span class="absb" title="Cartes absorbées : ${c.abs.map(x=>CARDS[x.id].name).join(", ")}">⊕ ${c.abs.length}</span>`:"";
   const hed=!staged&&c.id==="hedone"&&c.rev?`<span class="hedb" title="Charmes">${c.hed||0}/2</span>`:"";

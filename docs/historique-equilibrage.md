@@ -291,6 +291,17 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - **Mesure** (`--cartes fenrir --parties 3000`, 6 000 decks) : victoire en deck 49,5 %, **posée dans 7 % seulement** des decks, victoire posée 35,9 %, puissance de fin 3,9 : coût 5 pour 3 de puissance, l'IA la joue rarement et elle gagne moins quand elle est jouée. Dans les seuils (aucune correction), mais **à surveiller** : la Fatalité conditionnelle ne se déclenche presque jamais (peu de cartes alliées détruites).
 - Tests : 449 scénarios (+7).
 
+### 20e série (24 octobre 2026, variantes d'Ananké ; Xiuhcoatl) : même règle, ne pas revenir dessus sans l'accord de Jordan
+
+`BUILD` : `alpha-0.25`. Même principe que Nike de la Saint-Valentin (même carte, autre illustration, quête dédiée) : `ananke_r` et `ananke_v`, Primordial, **ultra-légendaires de faction**, 4/1, texte et effet identiques à Ananké (seul le « comprise » change), `base:"ananke"`, `vfx:"ananke"`, **sans holo** (la règle des 4 holos d'ici février est respectée : pas de dossier `images/holo/` pour elles), pas d'`ex` (gagnées en jouant, pas dans les paquets). Illustrations de Jordan.
+- **Ananké du Nouvel An** (`ananke_r`, **nom provisoire**, non donné par Jordan : « Ananké du Nouvel An ») : sortie **2026-12-31**, annonce 2026-12-26. Quête : **20 parties avec Ananké (ou une variante) dans le deck pendant tout décembre** (`NOEL_Q = 12-01 → 12-31`, compteur `anankenoel`), « durant la période de Noël » selon Jordan. Ligne du Journal « Noël · avec Ananké », visible dès le 1er décembre, carte nommée à l'annonce.
+- **Ananké de la Saint-Valentin** (`ananke_v`, nom provisoire : « Ananké de la Saint-Valentin ») : « même chose et même période que Nike » : sortie **2027-02-14**, annonce 2027-02-09, **25 parties** avec Ananké dans le deck pendant tout février (`VALENTIN`, compteur `anankev`).
+- **Point d'attention** : la quête de Noël finit le 31 décembre, jour même de la sortie : une partie du 31 décembre compte, mais celui qui termine après ne peut plus rien gagner (il faudrait élargir la fenêtre jusqu'à la fin du Nouvel An, 18 janvier). À arbitrer par Jordan.
+- **Moteur** : helper `isAnk(c)` (`charOf(eid(c))==="ananke"`) dans `banned`, `fated`, `cardPow` (puissance de fin de partie), `sim()` ; `revealFx` : `case "ananke": case "ananke_r": case "ananke_v"`. Interface : pastille ✠ de fin de partie, textes de réclamation (FR et EN), lignes du Journal généralisées (liste `quêtes de fête` : Noël-Ananké, Valentin-Nike, Valentin-Ananké).
+- **Xiuhcoatl** : `xiuhcoatl`, Légendaire, **cachée (2099), sans effet**, 3/3 et Primordial provisoires (Jordan n'a donné ni date ni effet ni faction).
+- Mesure : aucune (effet strictement identique à Ananké, déjà mesurée) ; le jeu d'IA gère les variantes comme Ananké (même `place()`).
+- Tests : 471 scénarios (+22 : données, compteurs de quête par période, Journal, réclamation, Fatalité, puissance de fin de partie, interdiction au tour 6, IA).
+
 ### Secondes ultra-légendaires de faction (18 octobre 2026, décision de Jordan)
 
 - **Règle** : une faction peut avoir une **seconde** ultra-légendaire de faction, gagnée à **150 parties au total** (même compteur `P.fj` que la première, qui reste à 50 ; donc 100 parties de plus), « pour fidéliser les joueurs dans le temps ». Jamais deux secondes dans la même faction (Jordan : « c'est chaud niveau conditions »). Une seule ultra-légendaire par deck, comme avant.

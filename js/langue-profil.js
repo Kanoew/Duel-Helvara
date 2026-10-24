@@ -58,6 +58,7 @@ const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike com
   {id:"ulhel",req:["hel","baldur"],n:"Hel et Baldur"},
   {id:"ulpele_r",req:["pele_r",["jordan","jordan_n"]],n:"Pele et Jordan"},{id:"ulqetjor_r",req:["qetesh_r",["jordan","jordan_n"]],n:"Qetesh, Vœu du Premier Jour et Jordan"},
   {id:"ulsomnambule",req:["somnambule","reine_sevelin"],n:"La Somnambule et La Reine"},{id:"ularchiviste",req:["archiviste","patronne"],n:"L'Archiviste et La Patronne"},
+  {id:"ananke_r",req:[],fac:"primordial",min:8,n:"8 cartes Primordial, Ananké du Nouvel An comprise",quest:{k:"anankenoel",n:20}},{id:"ananke_v",req:[],fac:"primordial",min:8,n:"8 cartes Primordial, Ananké de la Saint-Valentin comprise",quest:{k:"anankev",n:25}},
   {id:"nike_v",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike de la Saint-Valentin comprise",quest:{k:"nikev",n:25}},{id:"ulqetjor_v",req:["qetesh_v",["jordan","jordan_n"]],n:"Qetesh de la Saint-Valentin et Jordan"},
   {id:"ulprombia",req:["promethee","bia"],n:"Prométhée et Bia"},{id:"ulheradio",req:["hera","dionysos"],n:"Héra et Dionysos"},{id:"ulposathe",req:["poseidon","athena"],n:"Poséidon et Athéna"},
   {id:"ulnikebia",req:["nike","bia"],n:"Nike et Bia"},{id:"ulmaatset",req:["maat","set"],n:"Mā‘at et Set"},{id:"ulprompan",req:["promethee","pandore"],n:"Prométhée et Pandore"},
@@ -82,7 +83,8 @@ const ULof=id=>ULS.find(u=>u.id===id);
 /* Journal des factions : les ultra-légendaires de faction se gagnent en jouant.
    Une partie compte pour une faction si le deck joué contient au moins 8 cartes de cette faction (IA classée, Blitz, duel ; jamais le tutoriel).
    Nike de la Saint-Valentin : parties jouées avec Nike (ou sa variante) dans le deck pendant la Saint-Valentin. */
-const FJ_KEYS=["helvara","primordial","desir","jugement","nikev"], FJ_MIN=8;
+const FJ_KEYS=["helvara","primordial","desir","jugement","nikev","anankenoel","anankev"], FJ_MIN=8;
+const NOEL_Q=["12-01","12-31"]; /* quête d'Ananké du Nouvel An : tout décembre (Jordan, 24 octobre) */
 const VALENTIN=["02-01","02-28"]; /* fenêtre de la Saint-Valentin pour le journal : tout février (Jordan, 15 octobre) */
 const fjGet=k=>(P.fj&&P.fj[k])|0;
 function fjCount(deck){
@@ -90,6 +92,8 @@ function fjCount(deck){
   P.fj=P.fj||{};
   for(const f of Object.keys(FAC)) if(deck.filter(id=>CARDS[id]&&CARDS[id].fac===f).length>=FJ_MIN) P.fj[f]=fjGet(f)+1;
   if(inWin(VALENTIN)&&deck.some(id=>CARDS[id]&&charOf(id)==="nike")) P.fj.nikev=fjGet("nikev")+1;
+  if(inWin(NOEL_Q)&&deck.some(id=>CARDS[id]&&charOf(id)==="ananke")) P.fj.anankenoel=fjGet("anankenoel")+1;
+  if(inWin(VALENTIN)&&deck.some(id=>CARDS[id]&&charOf(id)==="ananke")) P.fj.anankev=fjGet("anankev")+1;
 }
 /* Une ultra-légendaire de faction se réclame quand sa quête est remplie. Une fusion ne se gagne plus en réunissant ses sources : elle sort des paquets
    (boutique-modes.js, 1 à 5 % par paquet). Seules les fusions que le joueur pouvait déjà réclamer le 12 octobre 2026 (P.ulk, figé au premier chargement) restent réclamables. */
@@ -97,6 +101,7 @@ const ulEarned=u=>u.quest?fjGet(u.quest.k)>=u.quest.n:((P.ulk||[]).includes(u.id
 /* Une ultra-légendaire de fusion exige ses cartes ; une ultra-légendaire de faction exige assez de cartes de sa faction (elle comprise). */
 const ulOk=(u,list)=>u.fac?list.filter(x=>x!==u.id&&CARDS[x]&&CARDS[x].fac===u.fac).length>=u.min-1:u.req.every(r=>hasReq(list,r));
 const charOf=id=>CARDS[id].base||id;
+const isAnk=c=>charOf(eid(c))==="ananke"; /* Ananké et ses variantes (Nouvel An, Saint-Valentin) : même carte, autre illustration */
 const isNike=id=>!!CARDS[id]&&charOf(id)==="nike"; /* Nike et sa variante de la Saint-Valentin (même carte, autre illustration) */
 const OCT_REL="2026-10-01";
 const ECO = {win:50, draw:20, loss:10, deckSize:12, tuto:100, dup:{D:10,C:10,R:20,E:40,L:80,U:150}};
