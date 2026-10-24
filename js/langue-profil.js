@@ -58,7 +58,7 @@ const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike com
   {id:"ulhel",req:["hel","baldur"],n:"Hel et Baldur"},
   {id:"ulpele_r",req:["pele_r",["jordan","jordan_n"]],n:"Pele et Jordan"},{id:"ulqetjor_r",req:["qetesh_r",["jordan","jordan_n"]],n:"Qetesh, Vœu du Premier Jour et Jordan"},
   {id:"ulsomnambule",req:["somnambule","reine_sevelin"],n:"La Somnambule et La Reine"},{id:"ularchiviste",req:["archiviste","patronne"],n:"L'Archiviste et La Patronne"},
-  {id:"ananke_r",req:[],fac:"primordial",min:8,n:"8 cartes Primordial, Ananké du Nouvel An comprise",quest:{k:"anankenoel",n:20}},{id:"ananke_v",req:[],fac:"primordial",min:8,n:"8 cartes Primordial, Ananké de la Saint-Valentin comprise",quest:{k:"anankev",n:25}},
+  {id:"ananke_r",req:[],fac:"primordial",min:8,n:"8 cartes Primordial, Ananké, Fileuse du Douzième Coup comprise",quest:{k:"anankenoel",n:20}},{id:"ananke_v",req:[],fac:"primordial",min:8,n:"8 cartes Primordial, Ananké, Fil Rouge comprise",quest:{k:"anankev",n:25}},
   {id:"nike_v",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike de la Saint-Valentin comprise",quest:{k:"nikev",n:25}},{id:"ulqetjor_v",req:["qetesh_v",["jordan","jordan_n"]],n:"Qetesh de la Saint-Valentin et Jordan"},
   {id:"ulprombia",req:["promethee","bia"],n:"Prométhée et Bia"},{id:"ulheradio",req:["hera","dionysos"],n:"Héra et Dionysos"},{id:"ulposathe",req:["poseidon","athena"],n:"Poséidon et Athéna"},
   {id:"ulnikebia",req:["nike","bia"],n:"Nike et Bia"},{id:"ulmaatset",req:["maat","set"],n:"Mā‘at et Set"},{id:"ulprompan",req:["promethee","pandore"],n:"Prométhée et Pandore"},
@@ -84,7 +84,7 @@ const ULof=id=>ULS.find(u=>u.id===id);
    Une partie compte pour une faction si le deck joué contient au moins 8 cartes de cette faction (IA classée, Blitz, duel ; jamais le tutoriel).
    Nike de la Saint-Valentin : parties jouées avec Nike (ou sa variante) dans le deck pendant la Saint-Valentin. */
 const FJ_KEYS=["helvara","primordial","desir","jugement","nikev","anankenoel","anankev"], FJ_MIN=8;
-const NOEL_Q=["12-01","12-31"]; /* quête d'Ananké du Nouvel An : tout décembre (Jordan, 24 octobre) */
+const NOEL_Q=["12-01","12-31"]; /* quête d'Ananké, Fileuse du Douzième Coup : tout décembre (Jordan, 24 octobre) */
 const VALENTIN=["02-01","02-28"]; /* fenêtre de la Saint-Valentin pour le journal : tout février (Jordan, 15 octobre) */
 const fjGet=k=>(P.fj&&P.fj[k])|0;
 function fjCount(deck){
