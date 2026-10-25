@@ -204,8 +204,8 @@ pre{background:var(--deep);border:1px solid var(--line);border-radius:10px;paddi
 .stat .k{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mist)}
 .stat.gold{border-color:rgba(219,168,98,.45)}
 .stat.gold .v{color:var(--warm)}
-.play{margin-top:16px;width:100%;background:var(--me);color:#06121b;border:0;border-radius:12px;padding:15px 18px;font:700 17px var(--body);letter-spacing:.04em;cursor:pointer}
-.play:disabled{background:var(--lake);color:var(--mist);cursor:default}
+.play{margin-top:16px;width:100%;background:linear-gradient(180deg,#e6bd7a,var(--warm));color:#1b1206;box-shadow:0 4px 16px rgba(219,168,98,.22);border:0;border-radius:12px;padding:15px 18px;font:700 17px var(--body);letter-spacing:.04em;cursor:pointer}
+.play:disabled{background:var(--lake);color:var(--mist);cursor:default;box-shadow:none}
 .hint{color:var(--mist);font-size:12.5px;margin-top:8px}
 .fan{position:relative;aspect-ratio:1.4/1;max-width:100%;width:100%;background:none;border:0;padding:0;cursor:pointer;display:block}
 .fan .full{pointer-events:none}
