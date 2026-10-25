@@ -914,3 +914,11 @@ body:has(.sandbar) #app{padding-top:62px}
 
 .holoslot{position:relative}
 .holoslot>.cadre.cz{position:absolute;inset:0;z-index:6;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;border-radius:12px}
+
+.cdjour{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:10px 0}
+.cdjour .cdth{flex:0 0 58px;width:58px;aspect-ratio:2/3;padding:0;border:1px solid var(--warm);border-radius:8px;overflow:hidden;background:var(--lake);cursor:pointer}
+.cdjour .cdart,.cdjour .cdart .art{display:block;width:100%;height:100%}
+.cdjour .cdart .art{background-size:cover;background-position:center}
+.cdjour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cdjour .cdtx b{font-family:var(--display);font-size:17px}
+.cdjour .eyebrow{color:var(--warm)}

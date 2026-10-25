@@ -1052,6 +1052,21 @@ async function inPage() {
     T("Xiuhcoatl : Légendaire cachée (aucune date), sans effet, images de Jordan", CARDS.xiuhcoatl.r === "L" && CARDS.xiuhcoatl.rel === "2099-01-01" && CARDS.xiuhcoatl.fx === "", "");
   }
 
+  /* ===== Carte du jour (25 octobre) ===== */
+  { const keepT = window.__today, keepOwn = P.owned, keepChf = P.chf, keepCd = P.cd, keepQ = quiet;
+    fresh(); window.__today = "2026-11-20"; P.owned = plain.slice(0, 6); P.cd = { day: "", id: "", got: false };
+    const a = cardOfDay(); T("Carte du jour : une carte de la collection est tirée", !!a && P.owned.includes(a) && P.cd.day === "2026-11-20", a);
+    P.owned = plain.slice(0, 12); T("Carte du jour : la même toute la journée, même si la collection grandit", cardOfDay() === a, "");
+    window.__today = "2026-11-21"; const b = cardOfDay(); T("Carte du jour : nouvelle carte le lendemain (de la collection), compteur remis à zéro", !!b && P.owned.includes(b) && P.cd.got === false && P.cd.day === "2026-11-21", b);
+    fresh(); S.turn = 3; S.energy = 6; { const id = P.cd.id, c = card(id), o = card(plain.find(x => x !== id)); S.hand.p = [c, o]; P.chf = 100; quiet = true;
+      await resolveTurn([{ c: o, li: 0 }], [], false); T("Carte du jour : une autre carte jouée ne rapporte rien", P.chf === 100 && !P.cd.got, `${P.chf}`);
+      S.hand.p = [c]; S.energy = 6; await resolveTurn([{ c, li: 1 }], [], false); T("Carte du jour : partie de test (silencieuse), rien", P.chf === 100, `${P.chf}`);
+      quiet = false; S.hand.p = [card(id)]; S.turn = 3; S.energy = 6; const cc = S.hand.p[0]; await resolveTurn([{ c: cc, li: 2 }], [], false); T("Carte du jour : jouée dans une vraie partie → +10 CHF", P.chf === 110 && P.cd.got === true, `${P.chf}`);
+      S.hand.p = [card(id)]; S.turn = 4; S.energy = 6; await resolveTurn([{ c: S.hand.p[0], li: 0 }], [], false); T("Carte du jour : une seule fois par jour", P.chf === 110, `${P.chf}`); quiet = true; }
+    P.cd = { day: "2026-11-21", id: plain[0], got: false }; P.owned = plain.slice(0, 5); P.starter = true; P.tuto = true; tutoStep = -1; screen = "home"; P.deck = [];
+    { const h = cardDayHTML(); T("Carte du jour : l'accueil l'affiche avec le gain, et invite à l'ajouter au deck si elle n'y est pas", /Carte du jour/.test(h) && /Ajoute-la à ton deck/.test(h) && /10 CHF/.test(h), ""); P.deck = [plain[0]]; T("Carte du jour : dans le deck : « Joue-la »", /Joue-la dans une partie/.test(cardDayHTML()), ""); P.cd.got = true; T("Carte du jour : après le gain, « obtenus ✓ »", /obtenus/.test(cardDayHTML()), ""); }
+    window.__today = keepT; P.owned = keepOwn; P.chf = keepChf; P.cd = keepCd; quiet = keepQ; }
+
   return res;
 }
 

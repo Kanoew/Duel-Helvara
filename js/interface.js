@@ -262,6 +262,13 @@ function vitrineHTML(){
   return `<section class="vitrinewrap">${seasonDeco("fan")}<div class="fan"${fan.length===3?' data-n="3"':""} aria-label="Vitrine : glisse pour faire tourner les cartes">${order.map((id,k)=>{ const h=!!holoDir(id)&&CARDS[id].r==="U"; return `<button class="fcard" data-act="fantap" data-pos="${pos[k]}" data-id="${id}" aria-label="${pos[k]===0?"Agrandir ":"Mettre en avant "}${CARDS[id].name}">${fullCard(id,h?"fanh":"")}${h?tileHolo(id,"f"+id,12,true):""}</button>`; }).join("")}</div>
     <div class="vfoot"><span class="hint">Glisse pour faire tourner</span><button class="ghost small" data-act="fanpick">Choisir mes cartes</button></div></section>`;
 }
+function cardDayHTML(){
+  if(!P.starter||!P.tuto) return "";
+  const id=cardOfDay(); if(!id) return "";
+  const got=P.cd.got, inDeck=P.deck.includes(id);
+  return `<section class="sec cdjour"><button class="cdth" data-act="zoom" data-id="${id}" aria-label="Voir ${esc(CARDS[id].name)}"><span class="cdart">${art(id,"sm")}</span></button>
+    <div class="cdtx"><div class="eyebrow">Carte du jour</div><b>${esc(CARDS[id].name)}</b><span class="hint">${got?`Jouée aujourd'hui : +${CD_GAIN} CHF obtenus ✓`:inDeck?`Joue-la dans une partie : +${CD_GAIN} CHF`:`Ajoute-la à ton deck et joue-la : +${CD_GAIN} CHF`}</span></div></section>`;
+}
 let vIdx=0;
 function homeHTML(){
   const inGame=S && !S.over && !S.blitz;
@@ -278,6 +285,7 @@ function homeHTML(){
   </div>
   ${seasonBarHTML()}
   ${featureHTML()}
+  ${cardDayHTML()}
   ${bannerHTML()}
 `;
 }

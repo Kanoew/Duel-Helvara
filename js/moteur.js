@@ -856,7 +856,7 @@ async function resolveTurn(mine, theirs, animate){
   S.turnPlays={p:mine.map(x=>x.c),e:(S.mp?theirs:[...theirs.filter(x=>!isNike(x.c.id)),...theirs.filter(x=>isNike(x.c.id))]).map(x=>x.c)};
   S.hand.p=S.hand.p.filter(c=>!mine.some(x=>x.c===c));
   for(const x of theirs) S.hand.e=S.hand.e.filter(c=>c!==x.c);
-  if(mine.length){ S.disc.p=0; if(!(S.mp&&S.mp.replaying)&&!S.tut){ ensureQuests(); qProg("cards12",mine.length);
+  if(mine.length){ S.disc.p=0; cardOfDayPlayed(mine); if(!(S.mp&&S.mp.replaying)&&!S.tut){ ensureQuests(); qProg("cards12",mine.length);
     const cd=x=>CARDS[x.c.id]; qProg("cheap5",mine.filter(x=>cd(x).cost>=1&&cd(x).cost<=2).length); qProg("helv4",mine.filter(x=>cd(x).fac==="helvara").length);
     if(S.turn===6&&mine.some(x=>cd(x).cost>=6)) qProg("six6"); if(mine.some(x=>cd(x).r==="U")) qProg("fusion"); } }
   if(theirs.length) S.disc.e=0;

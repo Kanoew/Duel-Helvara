@@ -206,3 +206,9 @@ Ouvrir `https://kanoew.github.io/Duel-Helvara/?date=2027-02-05` simule cette dat
 ## Cadres de fête (25 octobre 2026)
 
 Images de Jordan dans `images/cadres/<saison>.webp` (720 × 1080, transparentes : `halloween`, `noel`, `nouvel-an`, `saint-valentin`, `paques`). `frameKey(id)` (`js/interface.js`) : cartes avec `ex` (`halloween`, `noel`, `nouvelan`, plus `valentin` et `paques` à venir), sinon id en `_v` (Saint-Valentin), `_r` (Nouvel An) ou `_p` (Pâques) ; jamais pour un jeton. `fullCard()` ajoute `<i class="cadre">` (collection, accueil, paquets, zoom) ; **pas en partie** (`screen==="play"`) ni au tutoriel. Cartes holo en zoom : `frameCadre()` dans `.holoslot` (z-index au-dessus du holo). Réglage `P.cadres` (« Cadres de fête », Activés / Coupés, activé par défaut). Le cadre Saint-Valentin et Pâques attendent leurs saisons (pas encore codées).
+
+## Filtres multiples et carte du jour (25 octobre 2026)
+
+- **Filtres de la Collection** : `deckFilter`, `costFilter`, `rarFilter` sont des **tableaux** (plusieurs puces par rangée = « ou », rangées combinées = « et », rangée vide = tout) ; `togg()` ajoute ou retire une valeur, « Toutes » vide la rangée ; « Possession » reste à choix unique.
+- **Carte du jour** : `cardOfDay()` (`js/langue-profil.js`) tire une carte de la collection (`P.cd = {day,id,got}`, graine `date|uid|cd`, stable toute la journée). `cardOfDayPlayed(mine)` (appelé dans `resolveTurn`) donne **+10 CHF une fois par jour** si la carte est jouée dans une vraie partie (ni tutoriel, ni partie silencieuse de test, ni rejeu de duel). Bloc `cardDayHTML()` sur l'accueil (après avoir fini le tutoriel et reçu le deck de départ).
+
