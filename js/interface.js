@@ -63,7 +63,8 @@ const frameCadre=id=>frameOn()&&frameKey(id)?frameEl(frameKey(id),1):"";
 const frameVars=k=>{ const o=FRAME_OPEN[k]; return o?`--fl:${o[0]*100}%;--fr:${o[1]*100}%;--ft:${o[2]*100}%;--fb:${o[3]*100}%;--bs:${o[4]}%;--ds:${o[5]}%`:""; };
 const frameEl=(k,cz)=>`<i class="cadre${cz?" cz":""}" style="background-image:url('images/cadres/${k}.webp');--ci:url('images/cadres/${k}.webp')" aria-hidden="true"></i>`;
 const framePad=id=>{ const k=frameOn()&&frameKey(id), o=k&&FRAME_OPEN[k]; return o?` fr" style="padding:${(o[2]*150).toFixed(2)}% ${(o[1]*100).toFixed(2)}% ${(o[3]*150).toFixed(2)}% ${(o[0]*100).toFixed(2)}%`:""; };
-const frameOn=()=>P.cadres!==false&&screen!=="play"&&!(S&&S.tut);
+const FRAMES_READY=false;   /* cadres suspendus le 25 octobre (rendu jugé mauvais par Jordan) : en attendant des cadres dessinés autour de la carte, l'affichage des cartes est celui d'avant */
+const frameOn=()=>FRAMES_READY&&P.cadres!==false&&screen!=="play"&&!(S&&S.tut);
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
   /* carte holo en grand : l'image fixe n'a plus les animations d'ultra-légendaire (reflet arc-en-ciel, ambiance, inclinaison) : l'effet holo prend la suite et elles apparaissaient quelques instants avant de disparaître */
