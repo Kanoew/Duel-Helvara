@@ -50,7 +50,7 @@ Réponses en **français**.
 - **Pages légales en deux langues** : les modifier ensemble. Une seule adresse e-mail publique est autorisée dans le dépôt (celle des pages légales).
 - **Supabase** : ne pas relancer `nettoyage.sql` en entier (son bloc 2 vide les anonymes du classement) ; les scripts SQL sont collés par Jordan dans Supabase → SQL Editor.
 - **Effet holo** : `js/holo-card.js` est le module d'origine (ne pas le réécrire) ; les dossiers `images/holo/<nom>/` viennent de la session de Jordan (ne pas les générer ici).
-- **Nouvelle carte** : trois images (carte, avatar recadré à la main, miniature), sinon la grille de la collection affiche une case vide.
+- **Nouvelle carte** : trois images (carte, avatar recadré à la main, miniature), sinon la grille de la collection affiche une case vide. **Exception : les jetons** (`token:true`) n'ont pas de miniature (jamais dans la collection) ; l'avatar reste nécessaire (plateau).
 
 ---
 
