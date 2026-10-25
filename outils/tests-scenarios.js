@@ -183,7 +183,7 @@ async function inPage() {
   { const tick = ms => new Promise(r => setTimeout(r, ms)), $ = x => document.querySelector(x), $$ = x => [...document.querySelectorAll(x)];
     const normal = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id));
     P.owned = normal.filter((_, i) => i % 2 === 0).concat(["ulya"]); P.deck = []; P.tuto = true; tutoStep = -1; P.starter = true;
-    window.render = realRender; screen = "deck"; deckFilter = costFilter = rarFilter = ownFilter = "all"; searchQ = ""; filtOpen = true; render();
+    window.render = realRender; screen = "deck"; deckFilter = []; costFilter = []; rarFilter = []; ownFilter = "all"; searchQ = ""; filtOpen = true; render();
     const shown = () => $$("#collgrid > *").length, avail = () => POOL.filter(id => SHOWN(id)).length;
     const clickChip = (act, f) => { const b = $(`[data-act=${act}][data-f="${f}"]`); if(b) b.click(); return !!b; };
     const shownN = () => $$("#collgrid > *").length;
@@ -191,23 +191,32 @@ async function inPage() {
     T("Filtres : les 4 rangées de puces existent (faction, coût 0 à 6+, rareté, possession)", !!$("[data-act=filter]") && $$("[data-act=fcost]").length === 8 && $$("[data-act=frar]").length === 6 && $$("[data-act=fown]").length === 3, "");
     clickChip("fcost", "3"); const n3 = POOL.filter(id => SHOWN(id) && CARDS[id].cost === 3).length;
     T("Filtres : coût 3 → seulement les cartes de coût 3", shown() === n3 && n3 > 5, `${shown()} / ${n3}`);
-    clickChip("fcost", "6"); const n6 = POOL.filter(id => SHOWN(id) && CARDS[id].cost >= 6).length;
+    clickChip("fcost", "all"); clickChip("fcost", "6"); const n6 = POOL.filter(id => SHOWN(id) && CARDS[id].cost >= 6).length;
     T("Filtres : coût 6+ → toutes les cartes de coût 6 ou plus", shown() === n6 && n6 > 5, `${shown()} / ${n6}`);
     clickChip("fcost", "all"); clickChip("frar", "U"); const nu = POOL.filter(id => SHOWN(id) && CARDS[id].r === "U").length;
     T("Filtres : rareté Ultra → seulement les ultra-légendaires", shown() === nu && nu > 3, `${shown()} / ${nu}`);
-    clickChip("frar", "R"); clickChip("fcost", "2"); clickChip("filter", "primordial");
+    clickChip("frar", "all"); clickChip("frar", "R"); clickChip("fcost", "all"); clickChip("fcost", "2"); clickChip("filter", "primordial");
     const nc = POOL.filter(id => SHOWN(id) && CARDS[id].r === "R" && CARDS[id].cost === 2 && CARDS[id].fac === "primordial").length;
     T("Filtres : faction + coût + rareté se combinent (intersection)", shown() === nc, `${shown()} / ${nc}`);
-    deckFilter = costFilter = rarFilter = "all"; clickChip("fown", "owned");
+    /* Filtres multiples (25 octobre) : plusieurs valeurs d'un groupe s'additionnent, les groupes se combinent */
+    deckFilter = []; costFilter = []; rarFilter = []; render(); clickChip("filter", "primordial"); clickChip("filter", "helvara"); { const nm = POOL.filter(id => SHOWN(id) && ["primordial", "helvara"].includes(CARDS[id].fac)).length;
+      T("Filtres multiples : Primordial + Helvara en même temps → les deux factions", shown() === nm && nm > 5 && deckFilter.length === 2, `${shown()} / ${nm}`); }
+    clickChip("filter", "helvara"); T("Filtres multiples : un second clic retire la puce", deckFilter.join() === "primordial", deckFilter.join());
+    clickChip("fcost", "1"); clickChip("fcost", "4"); { const nm = POOL.filter(id => SHOWN(id) && CARDS[id].fac === "primordial" && [1, 4].includes(CARDS[id].cost)).length;
+      T("Filtres multiples : plusieurs coûts (1 et 4) + une faction", shown() === nm, `${shown()} / ${nm}`); }
+    clickChip("fcost", "6"); clickChip("fcost", "1"); clickChip("fcost", "4"); { const nm = POOL.filter(id => SHOWN(id) && CARDS[id].fac === "primordial" && CARDS[id].cost >= 6).length; T("Filtres multiples : « 6+ » seul", shown() === nm, `${shown()} / ${nm}`); }
+    clickChip("frar", "E"); clickChip("frar", "L"); { const nm = POOL.filter(id => SHOWN(id) && CARDS[id].fac === "primordial" && CARDS[id].cost >= 6 && ["E", "L"].includes(CARDS[id].r)).length; T("Filtres multiples : plusieurs raretés (épique et légendaire)", shown() === nm, `${shown()} / ${nm}`); }
+    clickChip("filter", "all"); clickChip("fcost", "all"); clickChip("frar", "all"); T("Filtres multiples : « Toutes » vide le groupe", deckFilter.length === 0 && costFilter.length === 0 && rarFilter.length === 0 && shown() === avail(), "");
+    deckFilter = []; costFilter = []; rarFilter = []; clickChip("fown", "owned");
     T("Filtres : Possédées → seulement les cartes possédées", shown() === POOL.filter(id => SHOWN(id) && P.owned.includes(id)).length && $$(".grid .locked").length === 0, `${shown()} cartes`);
     clickChip("fown", "missing");
     T("Filtres : Manquantes → seulement les cartes à trouver", $$(".grid > *").every(e => e.classList.contains("locked")) && shown() === POOL.filter(id => SHOWN(id) && !P.owned.includes(id)).length, "");
     clickChip("frar", "U"); clickChip("fcost", "0");
     T("Filtres : aucune carte correspondante → message clair", shown() === 0 || !!$(".grid .hint"), shown() + " affichées");
     $("[data-act=freset]").click();
-    T("Filtres : « Réinitialiser les filtres » remet tout à zéro", shown() === avail() && $("[data-act=freset]").disabled && costFilter === "all" && rarFilter === "all" && ownFilter === "all" && deckFilter === "all", "");
+    T("Filtres : « Réinitialiser les filtres » remet tout à zéro", shown() === avail() && $("[data-act=freset]").disabled && costFilter.length === 0 && rarFilter.length === 0 && ownFilter === "all" && deckFilter.length === 0, "");
     /* 9b. Collection : lire avant d'ajouter, mini-deck, recherche par mot-clé, panneau Filtrer */
-    filtOpen = false; deckFilter = costFilter = rarFilter = ownFilter = "all"; searchQ = ""; P.deck = []; render();
+    filtOpen = false; deckFilter = []; costFilter = []; rarFilter = []; ownFilter = "all"; searchQ = ""; P.deck = []; render();
     T("Collection : le bouton Filtrer ouvre le panneau des choix (au lieu de tout afficher)", !$("[data-act=fcost]") && !!$("[data-act=filtopen]"), "");
     $("[data-act=filtopen]").click(); T("Collection : le panneau contient faction, coût, rareté, possession et « Voir N cartes »", !!$("[data-act=fcost]") && !!$("[data-act=filtclose].primary"), "");
     clickChip("fcost", "2"); $("[data-act=filtclose].primary").click();

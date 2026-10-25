@@ -338,19 +338,21 @@ function searchOK(id,q=searchQ){
   const d=CARDS[id], hay=normQ([d.name,d.fx,FAC[d.fac].n,RAR[d.r].n,"cout "+d.cost,"puissance "+d.pow].join(" "));
   return w.every(x=>hay.includes(x));
 }
-const filtCount=()=>[deckFilter,costFilter,rarFilter,ownFilter].filter(x=>x!=="all").length;
+/* Filtres multiples (Jordan, 25 octobre) : plusieurs valeurs d'un même groupe s'additionnent (« ou »), les groupes se combinent (« et ») ; un groupe vide = tout */
+const filtCount=()=>[deckFilter,costFilter,rarFilter].filter(x=>x.length).length+(ownFilter!=="all"?1:0);
+const togg=(arr,k)=>arr.includes(k)?arr.filter(x=>x!==k):[...arr,k];
 function collMatch(id){
   const d=CARDS[id];
   if(!searchOK(id)) return false;
-  if(deckFilter!=="all"&&d.fac!==deckFilter) return false;
-  if(costFilter!=="all"&&(costFilter==="6"?d.cost<6:d.cost!==+costFilter)) return false;
-  if(rarFilter!=="all"&&d.r!==rarFilter) return false;
+  if(deckFilter.length&&!deckFilter.includes(d.fac)) return false;
+  if(costFilter.length&&!costFilter.some(k=>k==="6"?d.cost>=6:d.cost===+k)) return false;
+  if(rarFilter.length&&!rarFilter.includes(d.r)) return false;
   if(ownFilter==="owned"&&!P.owned.includes(id)) return false;
   if(ownFilter==="missing"&&P.owned.includes(id)) return false;
   return true;
 }
 function filterChips(){
-  const chip=(act,cur,k,label,col)=>`<button class="chipbtn" aria-pressed="${cur===k}" data-act="${act}" data-f="${k}" ${col?`style="--cc:${col}"`:""}>${label}</button>`;
+  const chip=(act,cur,k,label,col)=>`<button class="chipbtn" aria-pressed="${Array.isArray(cur)?(k==="all"?!cur.length:cur.includes(k)):cur===k}" data-act="${act}" data-f="${k}" ${col?`style="--cc:${col}"`:""}>${label}</button>`;
   const row=(label,html)=>`<div class="fgroup"><span class="flabel">${label}</span><div class="chips">${html}</div></div>`;
   return row("Faction",[["all","Toutes"],...Object.entries(FAC).map(([k,v])=>[k,v.n])].map(([k,n])=>chip("filter",deckFilter,k,n,k!=="all"&&FAC[k].c)).join(""))
     +row("Coût",chip("fcost",costFilter,"all","Tous")+COST_KEYS.map(k=>chip("fcost",costFilter,k,k==="6"?"6+":k)).join(""))
@@ -362,7 +364,7 @@ function filtHTML(){
   if(!filtOpen||screen!=="deck") return "";
   const n=POOL.filter(id=>SHOWN(id)&&collMatch(id)).length;
   return `<div class="veil" data-act="filtclose"><div class="result filtpanel" role="dialog" aria-label="Filtrer les cartes">
-    <h2>Filtrer les cartes</h2>${filterChips()}
+    <h2>Filtrer les cartes</h2><p class="hint">Plusieurs choix possibles par rangée.</p>${filterChips()}
     <div class="row2"><button class="ghost" data-act="freset" ${filtersOn()?"":"disabled"}>Réinitialiser</button><button class="primary" data-act="filtclose">Voir ${n} carte${n>1?"s":""}</button></div></div></div>`;
 }
 /* Une carte de la collection : toucher = la lire en grand (avec Ajouter / Retirer), le petit bouton « Deck » = ajouter ou retirer d'un geste */
@@ -1020,11 +1022,11 @@ document.addEventListener("click", e=>{
     case "seasonpack": { /* le bandeau de saison de l'accueil mène au paquet d'édition de la saison : boutique, paquet en tête et surligné */
       const pid=el.dataset.pid; if(!PACKS.some(x=>x.id===pid)) return; packFocus=pid; sheet=null; seasonNote=""; dailyNote=""; screen="shop"; sfx("click"); render(); window.scrollTo(0,0);
       requestAnimationFrame(()=>{ const t=document.querySelector(`.packtile[data-pid="${pid}"]`); if(t) t.scrollIntoView({block:"center",behavior:"smooth"}); }); return; }
-    case "filter": deckFilter=el.dataset.f; sfx("click"); render(); return;
-    case "fcost": costFilter=el.dataset.f; sfx("click"); render(); return;
-    case "frar": rarFilter=el.dataset.f; sfx("click"); render(); return;
+    case "filter": deckFilter=el.dataset.f==="all"?[]:togg(deckFilter,el.dataset.f); sfx("click"); render(); return;
+    case "fcost": costFilter=el.dataset.f==="all"?[]:togg(costFilter,el.dataset.f); sfx("click"); render(); return;
+    case "frar": rarFilter=el.dataset.f==="all"?[]:togg(rarFilter,el.dataset.f); sfx("click"); render(); return;
     case "fown": ownFilter=el.dataset.f; sfx("click"); render(); return;
-    case "freset": deckFilter=costFilter=rarFilter=ownFilter="all"; searchQ=""; sfx("click"); render(); return;
+    case "freset": deckFilter=[]; costFilter=[]; rarFilter=[]; ownFilter="all"; searchQ=""; sfx("click"); render(); return;
     case "filtopen": filtOpen=true; sfx("click"); render(); return;
     case "filtclose": if(el.classList.contains("veil")&&e.target.closest(".filtpanel")) return; filtOpen=false; sfx("click"); render(); return;
     case "toggle": { const id=el.dataset.id;
