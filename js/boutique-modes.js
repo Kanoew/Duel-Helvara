@@ -17,7 +17,7 @@ function starterRoll(){
    à la 10e ouverture sans fusion (`P.pity`), il en contient une. Le tirage ne choisit que parmi les fusions que le joueur n'a pas encore ;
    s'il les a toutes, la place devient une légendaire (paquets qui en contiennent). Une fusion saisonnière (qui exige une variante `ex`)
    ne sort que du paquet de sa saison. Une fusion exige toujours ses deux personnages dans le deck (ulOk). */
-const ulSeason=u=>{ for(const r of u.req) for(const x of [].concat(r)) if(CARDS[x]&&CARDS[x].ex) return CARDS[x].ex; return null; };
+const ulSeason=u=>{ if(CARDS[u.id]&&CARDS[u.id].ex) return CARDS[u.id].ex; for(const r of u.req) for(const x of [].concat(r)) if(CARDS[x]&&CARDS[x].ex) return CARDS[x].ex; return null; };
 function ulPool(pk){
   if(!pk||!pk.ul) return [];
   const fus=ULS.filter(u=>u.req.length&&!u.fac&&CARDS[u.id]&&REL(u.id)&&!P.owned.includes(u.id));

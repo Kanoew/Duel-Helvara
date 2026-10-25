@@ -183,6 +183,7 @@ const HOLLY=`<svg viewBox="0 0 60 44" aria-hidden="true"><path d="M30 24C20 8 6 
 function seasonDeco(where){ const se=season(); if(!se) return "";
   if(se==="halloween") return where==="fan"?`<div class="sdeco" aria-hidden="true"><span class="web l">${WEB}</span><span class="web r">${WEB}</span></div><div class="sdeco front" aria-hidden="true">${SPIDER}</div>`
     :`<div class="sdeco bar" aria-hidden="true">${PUMPKIN(1)}${PUMPKIN(.72)}<span class="web c">${WEB}</span></div>`;
+  if(se==="valentin") return "";   /* pas de guirlande : le fond et les cadres suffisent */
   if(where==="fan") return `<div class="sdeco" aria-hidden="true">${GARLAND(se==="nouvelan")}</div>`;
   return se==="noel"?`<div class="sdeco bar" aria-hidden="true"><span class="holly">${HOLLY}</span></div>`:"";
 }

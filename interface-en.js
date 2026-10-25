@@ -513,11 +513,13 @@
         breche:{name:"Breach of the Seal",desc:"Anything can come out of it, legendaries included."},
         halloween:{name:"Pumpkin Fold",desc:"Halloween edition. More epics and legendaries than anywhere else."},
         nouvelan:{name:"Twelfth Stroke Fold",desc:"New Year edition. More epics and legendaries than anywhere else."},
-        noel:{name:"Star Fold",desc:"Christmas edition. More epics and legendaries than anywhere else."}
+        noel:{name:"Star Fold",desc:"Christmas edition. More epics and legendaries than anywhere else."},
+        valentin:{name:"The Fold of Love",desc:"Valentine's Day edition. More epics and legendaries than anywhere else."}
       },
       SEASON:{
         halloween:{sub:"Pumpkin Night",who:"Player of Helvara · Halloween night",eyebrow:"Pumpkin Night · until November 2",title:"The veil is thin in Helvara",hint:"Pumpkins burn along the quays. The Pumpkin Fold hides Lady Joanna, and Morrigan, Nyx, Izzy, Yarden, Ares, Nergal and Medea in their Halloween versions.",btn:"Open the Pumpkin Fold",win:"Victory under the russet moon",lose:"The dead won tonight"},
         noel:{sub:"Star Vigil",who:"Player of Helvara · Christmas Eve",eyebrow:"Star Vigil · until January 2",title:"Snow falls on Helvara",hint:"The vineyards are white and the lake holds its breath. The Star Fold hides Aphrodite, Sekhmet, Calypso, Apsu, Ereshkigal and Circe in their Christmas versions.",btn:"Open the Star Fold",win:"Victory under the Star",lose:"The winter night prevails"},
+        valentin:{sub:"Night of Hearts",who:"Player of Helvara · Valentine's Day",eyebrow:"Night of Hearts · until February 28",title:"The roses have thorns in Helvara",hint:"Lanterns glow red over the lake. The Fold of Love hides Qetesh, Circe, Ereshkigal, Hel, Eos, Calypso and Kitsune in their Valentine's Day versions, and two fusions with Jordan.",btn:"Open the Fold of Love",win:"Victory beneath the roses",lose:"The heart breaks"},
         nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel, Eos, Pele, Qetesh, Aphrodite and Ares in their New Year's Eve versions.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
       },
       DROPS:{

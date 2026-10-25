@@ -121,13 +121,16 @@ const PACKS = [
   {id:"noel", name:"Pli de l'Étoile", img:"images/packs/noel.webp", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["12-14","01-02"],
    desc:"Édition de Noël. Plus d'épiques et de légendaires que partout ailleurs."},
   {id:"nouvelan", name:"Pli du Douzième Coup", img:"images/packs/nouvelan.webp", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["12-31","01-18"],
-   desc:"Édition du Nouvel An. Plus d'épiques et de légendaires que partout ailleurs."}
+   desc:"Édition du Nouvel An. Plus d'épiques et de légendaires que partout ailleurs."},
+  {id:"valentin", name:"Le Pli d'Amour", img:"images/packs/valentin.webp", price:250, n:3, odds:[["C",25],["R",35],["E",28],["L",12]], ul:UL_SEASON, win:["02-14","02-28"],
+   desc:"Édition de la Saint-Valentin. Plus d'épiques et de légendaires que partout ailleurs."}
 ];
 const md=()=>today().slice(5);
-function season(){ for(const id of ["nouvelan","halloween","noel"]){ /* le Nouvel An prend la main dès le 31 décembre */ const pk=PACKS.find(x=>x.id===id); if(pk&&inWin(pk.win)) return id; } return null; }
+function season(){ for(const id of ["nouvelan","valentin","halloween","noel"]){ /* le Nouvel An prend la main dès le 31 décembre */ const pk=PACKS.find(x=>x.id===id); if(pk&&inWin(pk.win)) return id; } return null; }
 const SEASON={
   halloween:{sub:"Nuit des Citrouilles",who:"Joueur d'Helvara · nuit d'Halloween",eyebrow:"Nuit des Citrouilles · jusqu'au 2 novembre",title:"Le voile est mince à Helvara",hint:"Les citrouilles brûlent sur les quais. Le Pli des Citrouilles cache Dame Joanna, et Morrigan, Nyx, Izzy, Yarden, Arès, Nergal et Médée dans leurs versions d'Halloween.",btn:"Ouvrir le Pli des Citrouilles",win:"Victoire sous la lune rousse",lose:"Les morts ont gagné cette nuit"},
   noel:{sub:"Veillée de l'Étoile",who:"Joueur d'Helvara · veillée de Noël",eyebrow:"Veillée de l'Étoile · jusqu'au 2 janvier",title:"La neige tombe sur Helvara",hint:"Les vignes sont blanches et le lac retient son souffle. Le Pli de l'Étoile cache Aphrodite, Sekhmet, Calypso, Apsu, Ereshkigal et Circé dans leurs versions de Noël.",btn:"Ouvrir le Pli de l'Étoile",win:"Victoire sous l'Étoile",lose:"La nuit d'hiver l'emporte"},
+  valentin:{sub:"Nuit des Cœurs",who:"Joueur d'Helvara · Saint-Valentin",eyebrow:"Nuit des Cœurs · jusqu'au 28 février",title:"Les roses ont des épines à Helvara",hint:"Les lanternes rougeoient sur le lac. Le Pli d'Amour cache Qetesh, Circé, Ereshkigal, Hel, Éos, Calypso et Kitsune dans leurs versions de la Saint-Valentin, et deux fusions avec Jordan.",btn:"Ouvrir le Pli d'Amour",win:"Victoire sous les roses",lose:"Le cœur se brise"},
   nouvelan:{sub:"Nuit du Douzième Coup",who:"Joueur d'Helvara · nuit du Réveillon",eyebrow:"Nuit du Douzième Coup · jusqu'au 18 janvier",title:"Minuit sonne sur Helvara",hint:"La cathédrale compte les coups et les morts écoutent. Le Pli du Douzième Coup cache Hel, Éos, Pele, Qetesh, Aphrodite et Arès dans leurs versions du Réveillon.",btn:"Ouvrir le Pli du Douzième Coup",win:"Victoire au dernier coup",lose:"L'année est partie sans toi"}
 };
 function inWin(w){ if(!w) return true; const d=md(); return w[0]<=w[1]?(d>=w[0]&&d<=w[1]):(d>=w[0]||d<=w[1]); }

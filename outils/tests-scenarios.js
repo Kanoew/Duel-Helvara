@@ -1067,6 +1067,16 @@ async function inPage() {
     { const h = cardDayHTML(); T("Carte du jour : l'accueil l'affiche avec le gain, et invite à l'ajouter au deck si elle n'y est pas", /Carte du jour/.test(h) && /Ajoute-la à ton deck/.test(h) && /10 CHF/.test(h), ""); P.deck = [plain[0]]; T("Carte du jour : dans le deck : « Joue-la »", /Joue-la dans une partie/.test(cardDayHTML()), ""); P.cd.got = true; T("Carte du jour : après le gain, « obtenus ✓ »", /obtenus/.test(cardDayHTML()), ""); }
     window.__today = keepT; P.owned = keepOwn; P.chf = keepChf; P.cd = keepCd; quiet = keepQ; }
 
+  /* ===== Saison de la Saint-Valentin : Le Pli d'Amour (25 octobre) ===== */
+  { const keep = window.__today, pk = PACKS.find(x => x.id === "valentin"), ids = Object.keys(CARDS).filter(id => CARDS[id].ex === "valentin");
+    T("Saint-Valentin : paquet « Le Pli d'Amour » à 250 CHF, 3 cartes, du 14 au 28 février, 5 % de fusion", !!pk && pk.name === "Le Pli d'Amour" && pk.price === 250 && pk.n === 3 && pk.win.join() === "02-14,02-28" && pk.ul === 5, "");
+    T("Saint-Valentin : toutes les variantes de la Saint-Valentin sont exclusives, sorties le 14 février (annonce le 9)", ["qetesh_v", "circe_v", "ereshkigal_v", "hel_v", "eos_v", "calypso_v", "kitsune_v", "ulqetjor_v", "ulnikejor_v"].every(id => CARDS[id].ex === "valentin" && CARDS[id].rel === "2027-02-14" && CARDS[id].soon === "2027-02-09"), ids.join());
+    T("Saint-Valentin : les fusions Qetesh X Jordan et Nike V X Jordan n'existent que dans ce paquet", ulPool(PACKS.find(x => x.id === "valentin")).every(id => ulSeason(ULof(id)) === "valentin") && ulSeason(ULof("ulqetjor_v")) === "valentin" && ulSeason(ULof("ulnikejor_v")) === "valentin" && !ulPool(PACKS.find(x => x.id === "breche")).some(id => /_v$/.test(id)), ulPool(PACKS.find(x => x.id === "valentin")).join());
+    window.__today = "2027-02-20"; T("Saint-Valentin : saison active le 20 février, pas le 10", season() === "valentin", season()); window.__today = "2027-02-10"; T("Saint-Valentin : le 10 février le paquet est annoncé (« bientôt ») sans être ouvert", season() === null && soonWin(pk.win) && !inWin(pk.win), season());
+    window.__today = "2027-03-05"; T("Saint-Valentin : plus de saison après le 28 février", season() === null, "");
+    T("Saint-Valentin : textes de saison FR et EN et musique", !!SEASON.valentin.title && !!HELVARA_UI_EN.data.SEASON.valentin && !!HELVARA_UI_EN.data.PACKS.valentin && !!MUSIC.home_valentin, "");
+    window.__today = keep; }
+
   return res;
 }
 
