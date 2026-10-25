@@ -913,7 +913,7 @@ body:has(.sandbar) #app{padding-top:62px}
 .full.holopre{border-color:rgba(232,184,90,.42);box-shadow:inset 0 0 0 1px rgba(232,184,90,.3)}
 
 .holoslot{position:relative}
-.holoslot>.cadre.cz{position:absolute;inset:0;z-index:6;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;border-radius:12px}
+.holoslot>.cadre.cz{position:absolute;inset:0;z-index:6;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none}
 
 .cdjour{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:10px 0}
 .cdjour .cdth{flex:0 0 58px;width:58px;aspect-ratio:2/3;padding:0;border:1px solid var(--warm);border-radius:8px;overflow:hidden;background:var(--lake);cursor:pointer}
@@ -922,3 +922,15 @@ body:has(.sandbar) #app{padding-top:62px}
 .cdjour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cdjour .cdtx b{font-family:var(--display);font-size:17px}
 .cdjour .eyebrow{color:var(--warm)}
+
+/* Cadres de fête, version « bordure » : l'illustration est réduite à l'ouverture du cadre (variables --fl --fr --ft --fb), le cadre couvre toute la carte */
+.full.fr .art,.full.fr .holotile{inset:var(--ft) var(--fr) var(--fb) var(--fl);border-radius:4px}
+.full.fr .band{left:var(--fl);right:var(--fr);bottom:var(--fb);padding:22px 6px 5px}
+.full.fr .band .n{font-size:.92em}
+.full.fr .cost{left:calc(var(--fl) + 3px);top:calc(var(--ft) + 3px)}
+.full.fr .pw{right:calc(var(--fr) + 3px);top:calc(var(--ft) + 3px)}
+.full.fr .cadre{z-index:3}
+.holoslot.fr{box-sizing:border-box}
+.holoslot.fr>.full{width:100%}
+.full.fr .band .e{display:none}
+.full.fr .cost,.full.fr .pw{z-index:4}
