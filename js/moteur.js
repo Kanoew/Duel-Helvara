@@ -54,6 +54,8 @@ function newGame(){
     log:[], sel:null, info:null, busy:false, over:null};
   S.feat=!firstEver&&locIds.includes(featureLoc())?featureLoc():null; /* lieu à l'honneur présent dans cette partie */
   const ai=aiDeck(S.aiTier); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac;
+  /* Replay (25 octobre) : graine du hasard de la partie et ordre exact des decks ; les coups de chaque tour sont ajoutés par resolveTurn */
+  { const seed=(Math.random()*2147483647)|0; RNG=mulberry(seed); S.rec={v:BUILD,seed,locs:locIds.slice(),feat:S.feat||null,dp:S.deck.p.map(c=>c.id),de:S.deck.e.map(c=>c.id),fac:S.aiFac,tier:S.aiTier,turns:[]}; }
   for(let i=0;i<3;i++){draw("p");draw("e");}
   log(`Adversaire : deck ${FAC[ai.fac].n} · niveau ${TIERS[S.aiTier]}`);
   screen="play"; startTurn();
@@ -795,8 +797,8 @@ function aiPlan(me="e",tierOv){
   const winP=(add,hit)=>{ const p=[0,1,2].map(li=>{ let m=me0[li]+add[li]+meFut[li]-(op0[li]-hit[li]+opFut[li]); if(nemInv(li)) m=-m; return 1/(1+Math.exp(-1.6*m/sd)); });
     return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
   /* simulation exacte d'un plan sur une copie de la partie (Révélations comprises), sans son ni journal visibles */
-  const sim=plays=>{ const keep=S, kq=quiet; let out=null;
-    try{ quiet=true; S=structuredClone(keep);
+  const sim=plays=>{ const keep=S, kq=quiet, kr=RNG; let out=null;
+    try{ quiet=true; RNG=mulberry(7); S=structuredClone(keep);
       S.lastRev={p:null,e:null}; S.lastAny=null; S.turnPlays={...(S.turnPlays||{}),[me]:plays.map(({c})=>S.hand[me].find(y=>y.uid===c.uid)).filter(Boolean)};
       S.unspent={p:0,e:0,...(S.unspent||{})}; S.unspent[me]=Math.max(0,(me==="e"?S.energyE:S.energy)-plays.reduce((a,x,i)=>a+costOf(me,x.c,x.li,i===0,jugFirst(plays,i)),0));
       for(const {c,li} of plays){ const x=S.hand[me].find(y=>y.uid===c.uid); if(!x) continue; S.hand[me]=S.hand[me].filter(y=>y!==x);
@@ -807,7 +809,7 @@ function aiPlan(me="e",tierOv){
       /* Hédoné : sa fin de tour n'est pas jouée ici ; on ajoute ce qu'elle rapportera (cartes adverses attirées, comme dans place()) */
       for(const {c,li} of plays) if(c.id==="hedone"){ const x=S.board[me][li].find(y=>y.uid===c.uid); if(!x||!live(x)) continue;
         const room=capOf(op,li)-S.board[op][li].length, others=[0,1,2].some(i=>i!==li&&S.board[op][i].some(y=>y.rev)); if(room>0&&others) out.m[li]+=2.5*Math.min(2,7-S.turn); }
-    }catch(e){ out=null; } finally{ S=keep; quiet=kq; }
+    }catch(e){ out=null; } finally{ S=keep; quiet=kq; RNG=kr; }   /* le hasard de la vraie partie n'est jamais consommé par la simulation (replay) */
     return out; };
   const exactP=r=>{ const p=[0,1,2].map(li=>{ let m=r.m[li]+meFut[li]-(r.o[li]+opFut[li]); if(r.inv[li]) m=-m; if(r.ank&&r.ank[li]) return r.inv[li]?.03:(capOf(op,li)-S.board[op][li].length<=0?.95:.8); return 1/(1+Math.exp(-1.6*m/sd)); });
     return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
@@ -849,6 +851,7 @@ async function endTurn(){
 }
 async function resolveTurn(mine, theirs, animate){
   const wait=ms=>animate?sleep(ms):Promise.resolve();
+  if(S.rec&&S.rec.turns.length<S.turn) S.rec.turns.push({p:mine.map(x=>[x.c.id,x.li]),e:theirs.map(x=>[x.c.id,x.li])});
   S.busy=true; S.sel=null; S.info=null; S.staged=[]; S.nudge=false; S.lastRev={p:null,e:null}; S.lastAny=null;
   /* Prométhée : énergie non dépensée ; Nike : ordre dans lequel chaque joueur a posé ses cartes (l'IA garde Nike pour la fin) */
   const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0,jugFirst(list,i))),0);
@@ -856,7 +859,7 @@ async function resolveTurn(mine, theirs, animate){
   S.turnPlays={p:mine.map(x=>x.c),e:(S.mp?theirs:[...theirs.filter(x=>!isNike(x.c.id)),...theirs.filter(x=>isNike(x.c.id))]).map(x=>x.c)};
   S.hand.p=S.hand.p.filter(c=>!mine.some(x=>x.c===c));
   for(const x of theirs) S.hand.e=S.hand.e.filter(c=>c!==x.c);
-  if(mine.length){ S.disc.p=0; cardOfDayPlayed(mine); if(!(S.mp&&S.mp.replaying)&&!S.tut){ ensureQuests(); qProg("cards12",mine.length);
+  if(mine.length){ S.disc.p=0; cardOfDayPlayed(mine); if(!(S.mp&&S.mp.replaying)&&!S.tut&&!S.rp){ ensureQuests(); qProg("cards12",mine.length);
     const cd=x=>CARDS[x.c.id]; qProg("cheap5",mine.filter(x=>cd(x).cost>=1&&cd(x).cost<=2).length); qProg("helv4",mine.filter(x=>cd(x).fac==="helvara").length);
     if(S.turn===6&&mine.some(x=>cd(x).cost>=6)) qProg("six6"); if(mine.some(x=>cd(x).r==="U")) qProg("fusion"); } }
   if(theirs.length) S.disc.e=0;
@@ -942,7 +945,7 @@ async function resolveTurn(mine, theirs, animate){
   /* Cernunnos : à la fin de chaque tour où son camp ne mène pas ici, sa puissance double (8 au maximum) */
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="cernunnos"&&leader(li)!==s&&c.pow>0&&c.pow<8){
     const g=Math.min(8,c.pow*2)-c.pow; c.pow+=g; (c.mods=c.mods||[]).push({v:g,src:"Cernunnos"}); log(`Cernunnos double sa puissance : +${g} (${who(s)})`); sfx("buff"); }
-  if(S.turn>=2&&S.turn<=4) aiOath();
+  if(S.turn>=2&&S.turn<=4&&!S.rp) aiOath();
   if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
   /* L'Enfant sans École : à la fin de chaque tour sauf le sixième, elle retourne dans ta main et gagne +1 définitivement (main pleine : pas de retour, donc pas de gain : Jordan, 22 octobre) */
   if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li].slice()) if(live(c)&&eid(c)==="enfant"&&!(c.captive&&captorLive(c.captive))){
@@ -952,7 +955,7 @@ async function resolveTurn(mine, theirs, animate){
   render(); await wait(300);
   for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) c.fresh=false;
   S.busy=false;
-  if(S.turn>=6) finish(); else startTurn();
+  if(S.turn>=6){ if(S.rp) rpEnd(); else finish(); } else startTurn();
 }
 function loseStar(){ if(P.st>0) P.st--; else if(P.lv<MAXLV&&!isFloor(P.lv)){ P.lv--; P.st=maxSt(P.lv)-1; } }
 function applyRank(res,oath,cross){
@@ -1008,9 +1011,39 @@ function finish(){
   const rk=applyRank(res,oath,S.oath!=null&&S.oath===S.aiOath);
   /* lieu à l'honneur : +25 CHF à la fin de la première partie du jour contre l'IA (victoire ou non) */
   let feat=0; if(S.feat&&qLive()&&P.ld!==today()){ P.ld=today(); feat=FEATURE_CHF; }
-  P.chf+=gain+feat; pushHist("IA",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew,{gain,lv:P.lv}); save(); lbPublish();
+  P.chf+=gain+feat; pushHist("IA",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew,{gain,lv:P.lv});
+  if(S.rec&&S.rec.turns.length===6&&P.hist&&P.hist[0]){ S.rec.t=P.hist[0].t; S.rec.fin=S.locs.map((L,li)=>[total("p",li),total("e",li)]); P.rps=[S.rec,...(P.rps||[])].slice(0,RPS_MAX); }   /* les 3 dernières parties contre l'IA sont rejouables */
+  save(); lbPublish();
   S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,rk,qDone,feat};
   if(rk.up) setTimeout(()=>sfx("legend"),900);
   endCine(S.over); endMusic(res); setTimeout(()=>sfx("coin"),700);
   render();
+}
+
+/* ===== Replay des parties contre l'IA (Jordan, 25 octobre 2026) =====
+   On rejoue avec le vrai moteur : mêmes decks (ordre exact), même graine du hasard (gPick / gShuffle), mêmes coups. Aucune écriture dans le profil (pas de stats, de quête, de rang, de CHF). */
+const RPS_MAX=3;
+function rpStart(t){
+  const r=(P.rps||[]).find(x=>x.t===t); if(!r) return false;
+  if(S&&!S.over&&!S.blitz&&!S.rp) return false;   /* une vraie partie est en cours : on ne l'écrase pas */
+  uidN=0; RNG=mulberry(r.seed);
+  S={turn:0, energy:0, energyE:0, bonus:{p:0,e:0}, destroyed:0,
+    locs:r.locs.map(id=>({id,rev:false,stopped:false,locked:false})),
+    board:{p:[[],[],[]],e:[[],[],[]]}, hand:{p:[],e:[]},
+    deck:{p:r.dp.map(mk), e:r.de.map(mk)}, aiTier:r.tier, aiFac:r.fac,
+    staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
+    log:[], sel:null, info:null, busy:false, over:null, feat:r.feat||null, rp:{r,auto:false,done:false,ok:null}};
+  for(let i=0;i<3;i++){draw("p");draw("e");}
+  screen="play"; startTurn(); return true;
+}
+async function rpStep(){
+  if(!S||!S.rp||S.busy||S.rp.done) return;
+  const r=S.rp.r, t=r.turns[S.turn-1]; if(!t){ S.rp.done=true; render(); return; }
+  const used=new Set(), pick=(side,list)=>list.map(([id,li])=>{ const c=S.hand[side].find(x=>x.id===id&&!used.has(x)); if(c) used.add(c); return c?{c,li}:null; }).filter(Boolean);
+  await resolveTurn(pick("p",t.p),pick("e",t.e),true);
+}
+function rpEnd(){
+  const r=S.rp.r; S.rp.done=true; S.rp.auto=false;
+  S.rp.ok=!r.fin||r.fin.every(([a,b],li)=>total("p",li)===a&&total("e",li)===b);
+  log(S.rp.ok?"Fin du replay":"Le replay diffère de la partie d'origine (version du jeu différente)"); render();
 }

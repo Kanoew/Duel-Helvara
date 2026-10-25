@@ -212,3 +212,11 @@ Images de Jordan dans `images/cadres/<saison>.webp` (720 × 1080, transparentes 
 - **Filtres de la Collection** : `deckFilter`, `costFilter`, `rarFilter` sont des **tableaux** (plusieurs puces par rangée = « ou », rangées combinées = « et », rangée vide = tout) ; `togg()` ajoute ou retire une valeur, « Toutes » vide la rangée ; « Possession » reste à choix unique.
 - **Carte du jour** : `cardOfDay()` (`js/langue-profil.js`) tire une carte de la collection (`P.cd = {day,id,got}`, graine `date|uid|cd`, stable toute la journée). `cardOfDayPlayed(mine)` (appelé dans `resolveTurn`) donne **+10 CHF une fois par jour** si la carte est jouée dans une vraie partie (ni tutoriel, ni partie silencieuse de test, ni rejeu de duel). Bloc `cardDayHTML()` sur l'accueil (après avoir fini le tutoriel et reçu le deck de départ).
 
+## Replay des parties contre l'IA (25 octobre 2026)
+
+Les **3 dernières parties normales contre l'IA** (ni Blitz, ni duel, ni tutoriel) sont rejouables depuis l'historique (bouton « ▶ Revoir la partie »). Principe : on rejoue **avec le vrai moteur**.
+- **Enregistrement** : `newGame()` crée `S.rec = {v:BUILD, seed, locs, feat, dp, de, fac, tier, turns}` : graine du hasard (`RNG=mulberry(seed)`, donc `gPick` / `gShuffle` identiques), ordre exact des deux decks (`dp` est remis à jour si le joueur change sa main), et `resolveTurn()` ajoute à chaque tour les coups des deux camps (`[id, lieu]`). Au `finish()`, l'enregistrement (≈ 700 octets) est ajouté à `P.rps` (3 au plus, `RPS_MAX`) avec la date de l'historique (`t`) et les puissances finales (`fin`). Nettoyé par `cleanRps()`.
+- **`sim()` (simulation de l'IA) isole le hasard** : elle remplace `RNG` pendant son travail, sinon elle consommerait le tirage de la vraie partie et le replay divergerait.
+- **Lecture** : `rpStart(t)` reconstruit la partie (`S.rp`), `rpStep()` joue un tour (`resolveTurn` avec les coups enregistrés), `rpEnd()` compare les puissances finales à `fin` (« le replay diffère » si la version du moteur a changé : `v` ≠ `BUILD`). Aucune écriture dans le profil : `qLive()`, quêtes et carte du jour ignorent `S.rp`, `finish()` n'est jamais appelé, pas de serment adverse. Refusé si une vraie partie est en cours.
+- Piège : tout nouveau tirage dans une partie doit passer par `gPick` / `gShuffle`, **sinon le replay diverge** (règle déjà figée).
+

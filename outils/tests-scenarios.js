@@ -1077,6 +1077,28 @@ async function inPage() {
     T("Saint-Valentin : textes de saison FR et EN et musique", !!SEASON.valentin.title && !!HELVARA_UI_EN.data.SEASON.valentin && !!HELVARA_UI_EN.data.PACKS.valentin && !!MUSIC.home_valentin, "");
     window.__today = keep; }
 
+  /* ===== Replay des parties contre l'IA (25 octobre) ===== */
+  { const keepRps = P.rps, keepHist = P.hist, keepOwn = P.owned, keepDeck = P.deck; let ok = true, det = [];
+    for (let g = 0; g < 4; g++) {
+      P.owned = Object.keys(CARDS).filter(id => !CARDS[id].token && REL(id) && CARDS[id].r !== "U" && !CARDS[id].ex); const fl = Object.keys(FAC), pool = P.owned.filter(id => CARDS[id].fac === fl[g % fl.length]); P.deck = pool.slice(0, 12);
+      P.tuto = true; newGame(); quiet = true; S.busy = false; const rec = S.rec;
+      if (!rec) { ok = false; break; }
+      for (let t = 1; t <= 6; t++) { const plan = aiPlan("p", 3); const mine = plan.map(x => ({ c: S.hand.p.find(c => c.uid === x.c.uid) || x.c, li: x.li })); await resolveTurn(mine, aiPlan("e", 3), false); }
+      const tot = () => JSON.stringify(S.locs.map((L, li) => [total("p", li), total("e", li)])), end1 = tot();
+      rec.t = 1000 + g; rec.fin = JSON.parse(end1); P.rps = [rec];
+      const saveS = S; S = null; const started = rpStart(rec.t); for (let t = 1; t <= 6; t++) await rpStep();
+      det.push(`${started}/${S.rp.done}/${S.rp.ok}/${tot() === end1}`); if (!(started && S.rp.done && S.rp.ok && tot() === end1)) ok = false; S = null; }
+    T("Replay : une partie rejouée avec le vrai moteur redonne exactement les mêmes puissances (4 decks, hasard compris)", ok, det.join(" "));
+    fresh(); P.deck = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)).slice(0, 12); newGame(); quiet = true; const live = S; P.rps = [{ t: 5 }];
+    T("Replay : refusé tant qu'une vraie partie est en cours (elle n'est jamais écrasée)", (P.rps = [live.rec && Object.assign({}, live.rec, { t: 7 })], rpStart(7)) === false && S === live, "");
+    { const bad = cleanRps([{ t: 1, seed: 5, locs: ["x", "y", "z"], turns: [] }, null, "a", { t: 9, seed: 3, locs: ["ruelle", "ouchy", "sousgare"], turns: Array(6).fill({ p: [["maui", 1], ["inconnue", 0]], e: [] }), dp: Object.keys(CARDS).filter(id => !CARDS[id].token).slice(0, 12), de: Object.keys(CARDS).filter(id => !CARDS[id].token).slice(0, 12), fac: "xx", tier: 99 }]);
+      T("Replay : la sauvegarde ignore les enregistrements invalides, borne le niveau et écarte les cartes inconnues", bad.length === 1 && bad[0].tier === 6 && bad[0].turns[0].p.length === 1 && bad[0].fac === "helvara", JSON.stringify(bad.length)); }
+    { const recs = Array.from({ length: 5 }, (_, i) => ({ t: i + 1, seed: i, locs: ["ruelle", "ouchy", "sousgare"], turns: Array(6).fill({ p: [], e: [] }), dp: Object.keys(CARDS).filter(id => !CARDS[id].token).slice(0, 12), de: Object.keys(CARDS).filter(id => !CARDS[id].token).slice(0, 12), fac: "helvara", tier: 1 }));
+      T("Replay : trois parties au plus conservées", cleanRps(recs).length === 3 && RPS_MAX === 3, ""); }
+    S = null; P.hist = [{ mode: "IA", res: "win", opp: "x", sc: "2–1", t: 4242, deck: "d", locs: [{ id: "ruelle", p: 2, e: 1, w: "p" }], cards: ["maui"], gain: 0, pt: 3, et: 2, lv: 1 }]; P.rps = [{ t: 4242, seed: 1, locs: ["ruelle", "ouchy", "sousgare"], turns: [], v: "x" }]; screen = "hist"; histFilter = "all"; histOpen = new Set([4242]);
+    { const h = histHTML(); T("Replay : le bouton « Revoir la partie » apparaît dans l'historique pour les parties enregistrées seulement", /data-act="rpstart" data-t="4242"/.test(h), ""); P.rps = []; T("Replay : pas de bouton sans enregistrement", !/rpstart/.test(histHTML()), ""); }
+    P.rps = keepRps; P.hist = keepHist; P.owned = keepOwn; P.deck = keepDeck; S = null; quiet = true; }
+
   return res;
 }
 

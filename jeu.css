@@ -937,3 +937,9 @@ body:has(.sandbar) #app{padding-top:62px}
 .holoslot.fr>.full{width:100%}
 .full.fr .band .e{display:none}
 .full.fr .cost,.full.fr .pw{z-index:4}
+
+.rpbadge{padding:3px 9px;border-radius:999px;border:1px solid var(--warm);color:var(--warm);font-size:11px;font-weight:700;letter-spacing:.12em}
+.rpbar{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.rpbar .primary{flex:1 1 auto;min-width:150px}
+.rpnote{width:100%;text-align:center;color:var(--mist)}
+.hreplay{margin-top:8px}

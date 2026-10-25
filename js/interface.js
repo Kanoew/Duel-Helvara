@@ -224,6 +224,7 @@ function histHTML(){
           ${hasLocs?`<div class="hlocs">${h.locs.map(l=>`<div class="hloc ${l.w==="p"?"won":l.w==="e"?"lost":""}"><div class="ln">${esc(LOCS[l.id].name)}</div><div class="lsc"><span class="me">${l.p}</span> – <span class="foe">${l.e}</span></div></div>`).join("")}</div>`:""}
           ${h.pt||h.et?`<div class="hrank"><span>Puissance totale :</span> ${h.pt} – ${h.et}${h.lv!=null?` · <span>Rang :</span> ${rankName(h.lv)}`:""}</div>`:""}
           ${h.gain?`<div class="hgain">+${h.gain} CHF</div>`:""}
+          ${(P.rps||[]).some(r=>r.t===h.t)?`<button class="primary small hreplay" data-act="rpstart" data-t="${h.t}">▶ Revoir la partie</button>`:""}
           ${hasCards?`<div class="hdeck">${h.cards.filter(id=>CARDS[id]).map(id=>`<div class="mini" title="${esc(CARDS[id].name)}"><img src="images/avatars/${id}.webp" alt="${esc(CARDS[id].name)}" loading="lazy"></div>`).join("")}</div>`:""}
         </div>`:""}
       </div>`;
@@ -274,9 +275,10 @@ function cardDayHTML(){
   return `<section class="sec cdjour"><button class="cdth" data-act="zoom" data-id="${id}" aria-label="Voir ${esc(CARDS[id].name)}"><span class="cdart">${art(id,"sm")}</span></button>
     <div class="cdtx"><div class="eyebrow">Carte du jour</div><b>${esc(CARDS[id].name)}</b><span class="hint">${got?`Jouée aujourd'hui : +${CD_GAIN} CHF obtenus ✓`:inDeck?`Joue-la dans une partie : +${CD_GAIN} CHF`:`Ajoute-la à ton deck et joue-la : +${CD_GAIN} CHF`}</span></div></section>`;
 }
+async function rpAuto(){ while(S&&S.rp&&S.rp.auto&&!S.rp.done){ if(!S.busy) await rpStep(); await sleep(900); } }
 let vIdx=0;
 function homeHTML(){
-  const inGame=S && !S.over && !S.blitz;
+  const inGame=S && !S.over && !S.blitz && !S.rp;
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
   return `
   ${seasonNote?`<div class="notice">${seasonNote}</div>`:""}${dailyNote?`<div class="notice">${dailyNote}</div>`:""}
@@ -727,8 +729,20 @@ function resultHTML(){
     <div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`}
   </div></div>`;
 }
+function replayHTML(){
+  const rp=S.rp, left=S.energy-used();
+  return `<div class="status"><div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div><span class="rpbadge">REPLAY</span>
+    <button class="endbtn" data-act="rpquit">Quitter le replay</button></div>
+  ${rp.r.v!==BUILD?`<div class="notice">Partie jouée avec une version plus ancienne du jeu : le replay peut différer.</div>`:""}
+  <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
+  <div class="rpbar">${rp.done?`<div class="rpnote">${rp.ok===false?"Le replay diffère de la partie d'origine.":"Fin du replay."}</div><button class="primary" data-act="rpquit">Retour à l'historique</button>`
+    :`<button class="primary" data-act="rpnext" ${S.busy?"disabled":""}>${S.turn>=6?"Dernier tour ▶":`Tour ${S.turn} ▶`}</button><button class="toggle" data-act="rpauto" aria-pressed="${!!rp.auto}">${rp.auto?"Auto : activé":"Lecture auto"}</button>`}</div>
+  <div class="log" aria-live="polite">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>
+  ${gzHTML()}`;
+}
 function gameHTML(){
   if(!S) return `<p class="hint">Aucune partie en cours.</p>`;
+  if(S.rp) return replayHTML();
   const left=S.energy-used();
   return `
   <div class="status">
@@ -968,6 +982,10 @@ document.addEventListener("click", e=>{
     case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; sheet=null; render(); return;
     case "sheetin": case "holoin": return;
     case "go": { const to=el.dataset.to; packFocus=null; if(to==="board"||to==="home") lbRefresh(); sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
+    case "rpstart": { const ok=rpStart(+el.dataset.t); if(!ok){ sfx("debuff"); seasonNote="Termine ou quitte ta partie en cours avant de revoir une partie."; screen="home"; } else sfx("click"); render(); window.scrollTo(0,0); return; }
+    case "rpnext": if(S&&S.rp&&!S.busy) rpStep().then(()=>{ render(); }); return;
+    case "rpauto": if(S&&S.rp){ S.rp.auto=!S.rp.auto; sfx("click"); render(); if(S.rp.auto) rpAuto(); } return;
+    case "rpquit": S=null; screen="hist"; sfx("click"); render(); window.scrollTo(0,0); return;
     case "play": sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
@@ -1066,7 +1084,7 @@ document.addEventListener("click", e=>{
   if(act==="oathskip"){ S.aiOathSkip=true; render(); return; }
   if(act==="oathno"){ S.oathPick=null; render(); return; }
   if(act==="oathok"){ if(oathOK()&&S.oath==null&&S.oathPick!=null){ S.oath=S.oathPick; S.oathPick=null; S.oathMode=false; log(`Serment prêté sur ${LOCS[S.locs[S.oath].id].name}`); sfx("legend"); } render(); return; }
-  if(act==="mull"){ if(S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.staged.length){ const n=S.hand.p.length; S.deck.p=shuffle([...S.deck.p,...S.hand.p]); S.hand.p=[]; for(let i=0;i<n;i++) draw("p"); S.mull=true; S.sel=null; log("Main changée"); sfx("pack"); } render(); return; }
+  if(act==="mull"){ if(S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.staged.length){ const n=S.hand.p.length; S.deck.p=shuffle([...S.deck.p,...S.hand.p]); S.hand.p=[]; if(S.rec) S.rec.dp=S.deck.p.map(c=>c.id); for(let i=0;i<n;i++) draw("p"); S.mull=true; S.sel=null; log("Main changée"); sfx("pack"); } render(); return; }
   if(act==="hand"){ const uid=+el.dataset.uid; S.sel=S.sel===uid?null:uid; S.info=null; sfx("select"); render(); return; }
   if(act==="unstage"){ e.stopPropagation(); const uid=+el.dataset.uid; const x=S.staged.find(s=>s.c.uid===uid);
     if(x){ S.staged=S.staged.filter(s=>s!==x); S.hand.p.push(x.c); sfx("undo"); } render(); return; }

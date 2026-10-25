@@ -302,6 +302,10 @@ Toutes ces cartes sont **pas encore sorties** (vérifié le 12 octobre). `BUILD`
 - Mesure : aucune (effet strictement identique à Ananké, déjà mesurée) ; le jeu d'IA gère les variantes comme Ananké (même `place()`).
 - Tests : 471 scénarios (+22 : données, compteurs de quête par période, Journal, réclamation, Fatalité, puissance de fin de partie, interdiction au tour 6, IA).
 
+### 21e série (25 octobre 2026, saison de la Saint-Valentin, replay, cadres) : pas de changement d'équilibrage
+
+`BUILD` : `alpha-0.26`. Aucune carte modifiée côté effet. Saison de la Saint-Valentin codée (paquet « Le Pli d'Amour », 250 CHF, du 14 au 28 février ; variantes `_v` exclusives avec `ex:"valentin"`, dates 14 février / annonce 9 ; `ulSeason()` lit aussi l'`ex` de la fusion). Replay des 3 dernières parties contre l'IA : le moteur enregistre graine et coups (voir « Replay » dans `docs/reference-technique.md`) ; `sim()` n'utilise plus le hasard de la partie. Cadres de fête en version bordure (images 3:4 de Jordan). 500 scénarios.
+
 ### Secondes ultra-légendaires de faction (18 octobre 2026, décision de Jordan)
 
 - **Règle** : une faction peut avoir une **seconde** ultra-légendaire de faction, gagnée à **150 parties au total** (même compteur `P.fj` que la première, qui reste à 50 ; donc 100 parties de plus), « pour fidéliser les joueurs dans le temps ». Jamais deux secondes dans la même faction (Jordan : « c'est chaud niveau conditions »). Une seule ultra-légendaire par deck, comme avant.

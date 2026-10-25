@@ -179,7 +179,7 @@ const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","
 /* ======= SAUVEGARDE ======= */
 const HIST_MAX=20;
 const SAVE_KEY = "duel-helvara-save-v1", OWNER_KEY = "duel-helvara-save-owner";
-function freshProfile(){ return {ld:"", name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, cd:{day:"",id:"",got:false}, cadres:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}, maj:MAJ[0].id}; }
+function freshProfile(){ return {ld:"", name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, cd:{day:"",id:"",got:false}, rps:[], cadres:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}, maj:MAJ[0].id}; }
 let migratedNote="";
 const COVERS=["primordial","desir","jugement","helvara"];
 function defDecks(){ return COVERS.map((c,i)=>({name:`Deck ${i+1}`,cover:c,cards:[]})); }
@@ -202,6 +202,18 @@ function pushHist(mode,res,opp,pw,ew,x={}){
   const cards=S&&S.blitz&&P.bz&&P.bz.run?P.bz.run.deck:P.deck;
   P.hist=[{mode,res,opp,sc:`${pw}–${ew}`,t:Date.now(),deck:mode==="Blitz"?"Deck de Blitz":(P.decks&&P.decks[P.di]?P.decks[P.di].name:""),
     locs,cards:[...(cards||[])].slice(0,12),gain:x.gain|0,pt:locs.reduce((a,l)=>a+l.p,0),et:locs.reduce((a,l)=>a+l.e,0),lv:x.lv==null?null:x.lv},...(P.hist||[])].slice(0,HIST_MAX);
+}
+/* Replays : on ne garde que des identifiants de cartes et de lieux connus, des nombres bornés, 3 parties au plus */
+function cleanRps(a){
+  if(!Array.isArray(a)) return [];
+  const ids=l=>Array.isArray(l)?l.filter(x=>typeof x==="string"&&CARDS[x]).slice(0,40):[];
+  const plays=l=>Array.isArray(l)?l.filter(x=>Array.isArray(x)&&typeof x[0]==="string"&&CARDS[x[0]]&&(x[1]|0)>=0&&(x[1]|0)<=2).slice(0,12).map(x=>[x[0],x[1]|0]):[];
+  return a.filter(r=>r&&typeof r==="object"&&Array.isArray(r.locs)&&r.locs.length===3&&r.locs.every(l=>typeof l==="string"&&LOCS[l])&&Array.isArray(r.turns)&&r.turns.length===6&&Number.isFinite(+r.seed)&&Number(r.t)>0).slice(0,3).map(r=>({
+    v:String(r.v||"").slice(0,20), seed:(+r.seed)|0, t:Number(r.t), locs:r.locs.slice(), feat:(typeof r.feat==="string"&&LOCS[r.feat])?r.feat:null,
+    dp:ids(r.dp), de:ids(r.de), fac:FAC[r.fac]?r.fac:"helvara", tier:Math.min(6,Math.max(0,r.tier|0)),
+    turns:r.turns.map(t=>({p:plays(t&&t.p),e:plays(t&&t.e)})),
+    fin:Array.isArray(r.fin)&&r.fin.length===3?r.fin.map(x=>[Math.max(-999,Math.min(999,(x&&x[0])|0)),Math.max(-999,Math.min(999,(x&&x[1])|0))]):null}))
+    .filter(r=>r.dp.length>=12&&r.de.length>=12);
 }
 function cleanHist(h){
   const n=(v,max)=>Math.min(max,Math.max(0,Number(v)|0));
@@ -227,6 +239,7 @@ function clean(p){
     season:(typeof p.season==="string"&&/^\d{4}-\d{2}$/.test(p.season))?p.season:seasonKey(), sw:num(p.sw,0), sl:num(p.sl,0), sd:num(p.sd,0),
     tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, vm:Math.min(100,num(p.vm,35)), vs:Math.min(100,num(p.vs,100)), cine:p.cine!==false, cadres:p.cadres!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
     ld:(typeof p.ld==="string"?p.ld.slice(0,10):""), bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,HIST_MAX).map(cleanHist):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
+    rps:cleanRps(p.rps),
     cd:(p.cd&&typeof p.cd.day==="string"&&typeof p.cd.id==="string"&&CARDS[p.cd.id])?{day:p.cd.day.slice(0,10),id:p.cd.id,got:!!p.cd.got}:{day:"",id:"",got:false},
     daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
     q:(p.q&&typeof p.q.day==="string"&&Array.isArray(p.q.list))?{day:p.q.day,rr:!!p.q.rr,list:p.q.list.filter(x=>x&&QDEF[x.id]).slice(0,2).map(x=>({id:x.id,p:Math.min(QDEF[x.id].n,num(x.p,0)),c:!!x.c,...(typeof x.x==="string"?{x:x.x.slice(0,24)}:{})}))}:null,
@@ -310,7 +323,7 @@ function weekKey(){ const d=new Date(today()+"T12:00:00"); d.setDate(d.getDate()
 function ensureWeek(){ const k=weekKey(); if(P.wq&&P.wq.wk===k) return false; P.wq={wk:k,p:0,c:false}; return true; }
 function qProg(id,n=1){ if(!P.q||n<=0) return; for(const q of P.q.list) if(q.id===id&&!q.c) q.p=Math.min(QDEF[id].n,q.p+n); }
 /* Hors tutoriel, hors simulation de l'IA et hors reprise d'un duel en ligne */
-const qLive=()=>!!(P.q&&S&&!S.tut&&!quiet&&!(S.mp&&S.mp.replaying));
+const qLive=()=>!!(P.q&&S&&!S.tut&&!S.rp&&!quiet&&!(S.mp&&S.mp.replaying));
 /* Fin de partie gagnée : faction, personnage, Blitz, quête de la semaine */
 function qEnd(res,blitz){
   if(res!=="win") return; const dk=(blitz&&P.bz&&P.bz.run)?P.bz.run.deck:P.deck;
