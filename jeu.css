@@ -163,7 +163,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-grad
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .full{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.14);max-width:100%}
 .full .art{position:absolute;inset:0}
-.full .cadre{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none}
 .full .art.ph{--monosz:48px}
 .full .cost{width:30px;height:34px;font-size:17px;left:6px;top:6px}
 .full .pw{width:32px;height:32px;font-size:18px;right:6px;top:6px;bottom:auto}
@@ -916,7 +915,6 @@ body:has(.sandbar) #app{padding-top:62px}
 .full.holopre{border-color:rgba(232,184,90,.42);box-shadow:inset 0 0 0 1px rgba(232,184,90,.3)}
 
 .holoslot{position:relative}
-.holoslot>.cadre.cz{position:absolute;inset:0;z-index:6;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none}
 
 .cdjour{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:10px 0}
 .cdjour .cdth{flex:0 0 58px;width:58px;aspect-ratio:2/3;padding:0;border:1px solid var(--warm);border-radius:8px;overflow:hidden;background:var(--lake);cursor:pointer}
@@ -926,32 +924,12 @@ body:has(.sandbar) #app{padding-top:62px}
 .cdjour .cdtx b{font-family:var(--display);font-size:17px}
 .cdjour .eyebrow{color:var(--warm)}
 
-/* Cadres de fête, version « bordure » : l'illustration est réduite à l'ouverture du cadre (variables --fl --fr --ft --fb), le cadre couvre toute la carte */
-.full.fr .art,.full.fr .holotile{inset:var(--ft) var(--fr) var(--fb) var(--fl);border-radius:4px}
-.full.fr .band{left:var(--fl);right:var(--fr);bottom:var(--fb);padding:22px 6px 5px}
-.full.fr .band .n{font-size:.92em}
-.full.fr .cost{left:calc(var(--fl) + 3px);top:calc(var(--ft) + 3px)}
-.full.fr .pw{right:calc(var(--fr) + 3px);top:calc(var(--ft) + 3px)}
-.full.fr .cadre{z-index:3}
-.holoslot.fr{box-sizing:border-box}
-.holoslot.fr>.full{width:100%}
-.full.fr .band .e{display:none}
-.full.fr .cost,.full.fr .pw{z-index:4}
-
-.rpbadge{padding:3px 9px;border-radius:999px;border:1px solid var(--warm);color:var(--warm);font-size:11px;font-weight:700;letter-spacing:.12em}
-.rpbar{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:12px 0}
-.rpbar .primary{flex:1 1 auto;min-width:150px}
-.rpnote{width:100%;text-align:center;color:var(--mist)}
-.hreplay{margin-top:8px}
-
-/* zones de sécurité : le texte et les pastilles restent à l'écart des gros ornements des coins */
-.full.fr .band{left:calc(var(--fl) + var(--bs));right:calc(var(--fr) + var(--bs));bottom:calc(var(--fb) + 1.5%);padding:16px 2px 3px}
-.full.fr .cost{left:calc(var(--fl) + var(--ds) + 2px)}
-.full.fr .pw{right:calc(var(--fr) + var(--ds) + 2px)}
-/* reflet holographique sur le cadre lui-même : un balayage lumineux limité aux pixels du cadre (masque), couleurs d'origine conservées (mode « lumière ») */
-.cadre::after{content:"";position:absolute;inset:0;pointer-events:none;-webkit-mask:var(--ci) center/100% 100% no-repeat;mask:var(--ci) center/100% 100% no-repeat;
-  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.5) 46%,rgba(170,215,255,.35) 50%,rgba(255,190,235,.35) 54%,transparent 65%) 0 0/260% 100%;mix-blend-mode:soft-light;opacity:.8;animation:cadreSheen 6s linear infinite}
-.grid .cadre::after,.hdeck .cadre::after{animation:none;background-position:30% 0;opacity:.5}   /* en grille : reflet fixe, pas d'animation (performances) */
-.full:not(.holo):not(.holof):not(.big) .cadre::after{animation:none}
-@keyframes cadreSheen{from{background-position:100% 0}to{background-position:0 0}}
-@media (prefers-reduced-motion:reduce){.cadre::after{animation:none!important}}
+/* Cadres de fête (Jordan, 25 octobre) : cadre 900 × 1350 autour de la carte 720 × 1080 (à 10 % / 10 % des bords), jamais dessus.
+   La carte est donc affichée à 80 % de son emplacement ; le cadre remplit tout l'emplacement et laisse passer les clics. */
+.fslot{position:relative;aspect-ratio:2/3;width:100%;display:block}
+.fslot>.full,.fslot>.full.big{position:absolute!important;left:10%!important;top:10%!important;width:80%!important;height:80%!important;aspect-ratio:auto;max-width:none!important;margin:0!important}
+.fslot>.cadre{position:absolute;inset:0;z-index:7;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}
+.fslot.big{width:min(425px,94vw)}
+.holoslot.fr{width:min(425px,94vw);padding:15% 10%;box-sizing:border-box}
+.holoslot.fr>.full{width:100%;position:relative;left:auto;top:auto;height:auto}
+.holoslot>.cadre.cz{position:absolute;inset:0;z-index:7;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}

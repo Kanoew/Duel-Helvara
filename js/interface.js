@@ -55,26 +55,28 @@ function holoTilesAttach(root){
   });
   for(const [k,v] of HOLO_TILES) if(!live.has(k)){ holoKill(v.h); HOLO_TILES.delete(k); }
 }
-/* Cadres de fête (Jordan, 25 octobre) : cartes exclusives d'une saison et variantes Saint-Valentin / Nouvel An, affichés à l'accueil et dans la Collection (pas en partie), désactivables dans les Réglages */
-const FRAME_OPEN={"paques":[0.117,0.117,0.134,0.113,16,9],"halloween":[0.144,0.145,0.11,0.11,9,3],"saint-valentin":[0.126,0.127,0.11,0.11,9,7],"noel":[0.095,0.115,0.114,0.083,17,16],"nouvel-an":[0.188,0.188,0.159,0.136,13,12]};   /* [gauche, droite, haut, bas, marge du texte, marge des pastilles] : ouverture du cadre en fraction de l'image, puis zones de sécurité (en % de la carte) à garder libres de tout ornement */
-const FRAME_EX={halloween:"halloween",noel:"noel",nouvelan:"nouvel-an",paques:"paques",valentin:"saint-valentin"};
-const frameKey=id=>{ const d=CARDS[id]; if(!d||d.token) return null; if(d.ex&&FRAME_EX[d.ex]) return FRAME_EX[d.ex]; if(/_v$/.test(id)) return "saint-valentin"; if(/_r$/.test(id)) return "nouvel-an"; if(/_p$/.test(id)) return "paques"; return null; };
-const frameCadre=id=>frameOn()&&frameKey(id)?frameEl(frameKey(id),1):"";
-const frameVars=k=>{ const o=FRAME_OPEN[k]; return o?`--fl:${o[0]*100}%;--fr:${o[1]*100}%;--ft:${o[2]*100}%;--fb:${o[3]*100}%;--bs:${o[4]}%;--ds:${o[5]}%`:""; };
-const frameEl=(k,cz)=>`<i class="cadre${cz?" cz":""}" style="background-image:url('images/cadres/${k}.webp');--ci:url('images/cadres/${k}.webp')" aria-hidden="true"></i>`;
-const framePad=id=>{ const k=frameOn()&&frameKey(id), o=k&&FRAME_OPEN[k]; return o?` fr" style="padding:${(o[2]*150).toFixed(2)}% ${(o[1]*100).toFixed(2)}% ${(o[3]*150).toFixed(2)}% ${(o[0]*100).toFixed(2)}%`:""; };
-const FRAMES_READY=false;   /* cadres suspendus le 25 octobre (rendu jugé mauvais par Jordan) : en attendant des cadres dessinés autour de la carte, l'affichage des cartes est celui d'avant */
-const frameOn=()=>FRAMES_READY&&P.cadres!==false&&screen!=="play"&&!(S&&S.tut);
+/* Cadres de fête (Jordan, 25 octobre) : un seul cadre actif à la fois selon la date (ou ?cadre=nom pour tester, rien n'est enregistré). Réglage « Cadres de fête » : Auto / Désactivés.
+   Cadre = PNG/WebP 900 × 1350 transparent au centre : la carte (720 × 1080) occupe 10 % / 10 % de marge ; elle est donc affichée à 80 % de son emplacement et le cadre l'entoure sans jamais la couvrir. */
+const FRAME_WIN={halloween:["10-12","11-02"],noel:["12-01","12-26"],nouvelan:["12-27","01-05"],saintvalentin:["02-01","02-15"],paques:["03-14","04-04"]};
+const FRAME_URL=(()=>{ const m=/[?&]cadre=([a-z]+)/.exec(location.search); return m?m[1]:null; })();
+const frameCur=()=>{ if(FRAME_URL) return FRAME_WIN[FRAME_URL]?FRAME_URL:null; if(P.cadres===false) return null; return Object.keys(FRAME_WIN).find(k=>inWin(FRAME_WIN[k]))||null; };
+const FRAME_OK={};   /* clé -> true / false une fois le fichier chargé ou en échec ; la carte ne change jamais tant que le cadre n'est pas prêt */
+function frameLoad(k){ if(k in FRAME_OK) return; FRAME_OK[k]=null; const im=new Image(); im.onload=()=>{ FRAME_OK[k]=im.naturalWidth===900&&im.naturalHeight===1350; if(FRAME_OK[k]&&typeof render==="function") render(); }; im.onerror=()=>{ FRAME_OK[k]=false; }; im.src="images/cadres/"+k+".webp"; }
+const frameKey=()=>{ const k=frameCur(); if(!k) return null; frameLoad(k); return FRAME_OK[k]===true?k:null; };
+const frameEl=(k,cz)=>`<i class="cadre${cz?" cz":""}" style="background-image:url('images/cadres/${k}.webp')" aria-hidden="true"></i>`;
+const frameOn=()=>screen!=="play"&&!(S&&S.tut)&&!!frameKey();
+const frameCadre=id=>frameOn()?frameEl(frameKey(),1):"";
+const framePad=id=>frameOn()?" fr":"";
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
   /* carte holo en grand : l'image fixe n'a plus les animations d'ultra-légendaire (reflet arc-en-ciel, ambiance, inclinaison) : l'effet holo prend la suite et elles apparaissaient quelques instants avant de disparaître */
   const hp=/\b(big|fanh)\b/.test(extra)&&d.r==="U"&&!!holoDir(id);
   const fx=!hp&&/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
   const tl=/\btileh\b/.test(extra)&&hasHoloTile(id);
-  const fk=frameOn()&&!hp&&frameKey(id);
-  return `<div class="full ${extra}${fk?" fr":""}${d.r==="U"&&!hp&&!tl?" holo":""}${hp?" holopre":""}${tl?" holof":""}${rc(d)}${fx}"${fk?` style="${frameVars(fk)}"`:""}>${art(id,/\bbig\b/.test(extra)?"big":undefined)}${tl?tileHolo(id,"g"+id):""}${fk?frameEl(fk):""}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
+  const fk=!hp&&!/\b(fanh|tileh)\b/.test(extra)&&frameOn()&&frameKey();   /* pas de cadre en grille de collection : 2 cartes par ligne, la carte y est déjà chargée de texte */
+  return `${fk?`<div class="fslot${/\bbig\b/.test(extra)?" big":""}">`:""}<div class="full ${extra}${d.r==="U"&&!hp&&!tl?" holo":""}${hp?" holopre":""}${tl?" holof":""}${rc(d)}${fx}">${art(id,/\bbig\b/.test(extra)?"big":undefined)}${tl?tileHolo(id,"g"+id):""}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${fxH(d.fx)}</div>`:""}</div>
-    <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
+    <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>${fk?frameEl(fk)+"</div>":""}`;
 }
 function thumb(id,act){
   const d=CARDS[id];
@@ -115,7 +117,7 @@ function sheetHTML(){
     <div class="setrow"><span>Son</span><span class="footbtns"><button class="toggle" data-act="music" aria-pressed="${P.music}">Musique : ${P.music?"activée":"coupée"}</button><button class="toggle" data-act="sfx" aria-pressed="${P.sfx}">Effets : ${P.sfx?"activés":"coupés"}</button></span></div>
     <div class="setrow"><span>Volume de la musique</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vm??35}" data-vol="vm" aria-label="Volume de la musique"><b data-volv="vm">${P.vm??35}</b></span></div>
     <div class="setrow"><span>Volume des effets</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vs??100}" data-vol="vs" aria-label="Volume des effets"><b data-volv="vs">${P.vs??100}</b></span></div>
-    <div class="setrow"><span>Cadres de fête</span><button class="toggle" data-act="cadres" aria-pressed="${P.cadres!==false}">${P.cadres!==false?"Activés":"Coupés"}</button></div>
+    <div class="setrow"><span>Cadres de fête</span><button class="toggle" data-act="cadres" aria-pressed="${P.cadres!==false}">${P.cadres!==false?"Auto":"Désactivés"}</button></div>
     <div class="setrow"><span>Cinématiques</span><button class="toggle" data-act="cine" aria-pressed="${P.cine!==false}">${P.cine!==false?"Activée":"Coupée"}</button></div>
     <div class="setrow"><span>Tutoriel</span><button class="toggle" data-act="tuto">Revoir le tutoriel</button></div>
     <div class="setrow"><span>Nouveautés</span><button class="toggle" data-act="majshow">Notes de mise à jour</button></div>

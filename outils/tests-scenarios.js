@@ -1099,6 +1099,17 @@ async function inPage() {
     { const h = histHTML(); T("Replay : le bouton « Revoir la partie » apparaît dans l'historique pour les parties enregistrées seulement", /data-act="rpstart" data-t="4242"/.test(h), ""); P.rps = []; T("Replay : pas de bouton sans enregistrement", !/rpstart/.test(histHTML()), ""); }
     P.rps = keepRps; P.hist = keepHist; P.owned = keepOwn; P.deck = keepDeck; S = null; quiet = true; }
 
+  /* ===== Cadres de fête (25 octobre) : activation par date, réglage, structure autour de la carte ===== */
+  { const keep = window.__today, keepC = P.cadres, keepScr = screen, keepOk = FRAME_OK.halloween; const at = d => { window.__today = d; return frameCur(); };
+    T("Cadres : un seul cadre actif selon la date (Halloween, Noël, Nouvel An, Saint-Valentin, Pâques), aucun hors fenêtre", [at("2026-10-20"), at("2026-12-10"), at("2026-12-30"), at("2027-02-10"), at("2027-03-20"), at("2027-06-01")].join() === "halloween,noel,nouvelan,saintvalentin,paques,", [at("2026-10-20"), at("2026-12-10")].join());
+    P.cadres = false; T("Cadres : réglage « Désactivés » → aucun cadre quelle que soit la date", at("2026-10-20") === null, ""); P.cadres = true;
+    T("Cadres : le paramètre ?cadre= n'est pas lu en test et ne s'enregistre pas (profil intact)", FRAME_URL === null && P.cadres === true, "");
+    window.__today = "2026-10-20"; FRAME_OK.halloween = true; screen = "deck"; S = null;
+    { const h = fullCard("maui"); T("Cadres : la carte est entourée (80 % de l'emplacement) avec le cadre au-dessus, sans rien changer à l'illustration", /class="fslot"/.test(h) && /class="cadre"/.test(h) && /images\/cadres\/halloween\.webp/.test(h) && /class="full /.test(h), "");
+      T("Cadres : pas de cadre en grille de collection (« tileh »)", !/fslot/.test(fullCard("maui", "tileh")), ""); screen = "play"; T("Cadres : jamais en partie", !/fslot/.test(fullCard("maui")), ""); }
+    FRAME_OK.halloween = false; screen = "deck"; T("Cadres : fichier manquant ou invalide → la carte s'affiche normalement, sans cadre", !/fslot/.test(fullCard("maui")), "");
+    FRAME_OK.halloween = keepOk; window.__today = keep; P.cadres = keepC; screen = keepScr; }
+
   return res;
 }
 
