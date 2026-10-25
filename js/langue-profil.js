@@ -63,7 +63,7 @@ const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike com
   {id:"ulprombia",req:["promethee","bia"],n:"Prométhée et Bia"},{id:"ulheradio",req:["hera","dionysos"],n:"Héra et Dionysos"},{id:"ulposathe",req:["poseidon","athena"],n:"Poséidon et Athéna"},
   {id:"ulnikebia",req:["nike","bia"],n:"Nike et Bia"},{id:"ulmaatset",req:["maat","set"],n:"Mā‘at et Set"},{id:"ulprompan",req:["promethee","pandore"],n:"Prométhée et Pandore"},
   {id:"ulinaere",req:["inanna","ereshkigal"],n:"Inanna et Ereshkigal"},{id:"ulnikejor_v",req:["nike_v",["jordan","jordan_n"]],n:"Nike de la Saint-Valentin et Jordan"},
-  {id:"ulaphares",req:["aphrodite","ares"],n:"Aphrodite et Arès"},{id:"ultyphgaia",req:["typhon","gaia"],n:"Typhon et Gaïa"},{id:"ulvianike",req:["via","nike"],n:"Via et Nike"},{id:"ulviaprom",req:["via","promethee"],n:"Via et Prométhée"},{id:"ularesathe",req:["ares","athena"],n:"Arès et Athéna"},
+  {id:"ulaphares",req:["aphrodite","ares"],n:"Aphrodite et Arès"},{id:"ultyphgaia",req:["typhon","gaia"],n:"Typhon et Gaïa"},{id:"ularesathe",req:["ares","athena"],n:"Arès et Athéna"},
   {id:"ulbaldere",req:["baldur","ereshkigal"],n:"Baldur et Ereshkigal"},{id:"ulbaldfrigg",req:["baldur","frigg"],n:"Baldur et Frigg"},{id:"ulsusama",req:["susanoo","amaterasu"],n:"Susanoo et Amaterasu"},
   {id:"ulcircal",req:["circe","calypso"],n:"Circé et Calypso"},{id:"uloshoya",req:["oshun","oya"],n:"Oshun et Oya"},{id:"ulhadper",req:["hades","persephone"],n:"Hadès et Perséphone"}];
 const SHOWN=id=>!CARDS[id].rel||today()>=(CARDS[id].soon||"0000");
