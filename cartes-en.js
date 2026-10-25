@@ -152,7 +152,7 @@ window.HELVARA_EN = {
     xiwangmu:{fx:"On Reveal: adds a Peach of Immortality to your hand (cost 0, 2 Power, can't be destroyed)."},
     bari_gongju:{fx:"Ongoing: your cards destroyed here also count as discarded."},
     circe_n:{n:"Circe, Queen of Mistletoe", fx:"On Reveal: draws the strongest enemy card from another location here, if there is room. All enemy cards here with less Power than Circe (the drawn card included) become Swine (1 Power, no effect)."},
-    kitsune_v:{n:"Kitsune, Heart of Embers"}, kitsune_r:{n:"Kitsune, First Fire of Inari"}, eos_v:{n:"Eos, Crystal Arrow"}, tlazolteotl:{n:"Tlazolteotl"}, dumuzi:{n:"Dumuzi"}, calypso_v:{n:"Calypso, Storm of Roses"},
+    kitsune_v:{n:"Kitsune, Heart of Embers"}, kitsune_r:{n:"Kitsune, First Fire of Inari"}, eos_v:{n:"Eos, Crystal Arrow"}, shamash:{n:"Shamash"}, dumuzi:{n:"Dumuzi"}, calypso_v:{n:"Calypso, Storm of Roses"},
     rhea:{n:"Rhea"}, jormungandr:{n:"Jormungandr"}, sif:{n:"Sif"},
     fenrir:{fx:"On Reveal: if an allied card was destroyed this turn, Fenrir gains Fate (can't be destroyed or moved) and +2 Power. Ongoing: at the end of each following turn, +2 more Power."},
     isis:{fx:"On Reveal: take your last destroyed card back into your hand. It costs 2 less."},

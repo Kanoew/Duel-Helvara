@@ -6,13 +6,7 @@
   "layers": [
     {
       "src": "layer0.webp",
-      "amp": -0.004,
-      "foils": [
-        {
-          "type": "gold",
-          "mask": "foil0-0.webp"
-        }
-      ]
+      "amp": -0.004
     },
     {
       "src": "layer1.webp",
