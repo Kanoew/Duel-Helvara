@@ -943,3 +943,15 @@ body:has(.sandbar) #app{padding-top:62px}
 .rpbar .primary{flex:1 1 auto;min-width:150px}
 .rpnote{width:100%;text-align:center;color:var(--mist)}
 .hreplay{margin-top:8px}
+
+/* zones de sécurité : le texte et les pastilles restent à l'écart des gros ornements des coins */
+.full.fr .band{left:calc(var(--fl) + var(--bs));right:calc(var(--fr) + var(--bs));bottom:calc(var(--fb) + 1.5%);padding:16px 2px 3px}
+.full.fr .cost{left:calc(var(--fl) + var(--ds) + 2px)}
+.full.fr .pw{right:calc(var(--fr) + var(--ds) + 2px)}
+/* reflet holographique sur le cadre lui-même : un balayage lumineux limité aux pixels du cadre (masque), couleurs d'origine conservées (mode « lumière ») */
+.cadre::after{content:"";position:absolute;inset:0;pointer-events:none;-webkit-mask:var(--ci) center/100% 100% no-repeat;mask:var(--ci) center/100% 100% no-repeat;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.5) 46%,rgba(170,215,255,.35) 50%,rgba(255,190,235,.35) 54%,transparent 65%) 0 0/260% 100%;mix-blend-mode:soft-light;opacity:.8;animation:cadreSheen 6s linear infinite}
+.grid .cadre::after,.hdeck .cadre::after{animation:none;background-position:30% 0;opacity:.5}   /* en grille : reflet fixe, pas d'animation (performances) */
+.full:not(.holo):not(.holof):not(.big) .cadre::after{animation:none}
+@keyframes cadreSheen{from{background-position:100% 0}to{background-position:0 0}}
+@media (prefers-reduced-motion:reduce){.cadre::after{animation:none!important}}

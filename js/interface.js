@@ -56,11 +56,12 @@ function holoTilesAttach(root){
   for(const [k,v] of HOLO_TILES) if(!live.has(k)){ holoKill(v.h); HOLO_TILES.delete(k); }
 }
 /* Cadres de fête (Jordan, 25 octobre) : cartes exclusives d'une saison et variantes Saint-Valentin / Nouvel An, affichés à l'accueil et dans la Collection (pas en partie), désactivables dans les Réglages */
-const FRAME_OPEN={"paques":[0.117,0.117,0.134,0.113],"halloween":[0.144,0.145,0.11,0.11],"saint-valentin":[0.126,0.127,0.11,0.11],"noel":[0.095,0.115,0.114,0.083],"nouvel-an":[0.188,0.188,0.159,0.136]};   /* [gauche, droite, haut, bas] : marges de l'ouverture du cadre, en fraction de l'image */
+const FRAME_OPEN={"paques":[0.117,0.117,0.134,0.113,16,9],"halloween":[0.144,0.145,0.11,0.11,9,3],"saint-valentin":[0.126,0.127,0.11,0.11,9,7],"noel":[0.095,0.115,0.114,0.083,17,16],"nouvel-an":[0.188,0.188,0.159,0.136,13,12]};   /* [gauche, droite, haut, bas, marge du texte, marge des pastilles] : ouverture du cadre en fraction de l'image, puis zones de sécurité (en % de la carte) à garder libres de tout ornement */
 const FRAME_EX={halloween:"halloween",noel:"noel",nouvelan:"nouvel-an",paques:"paques",valentin:"saint-valentin"};
 const frameKey=id=>{ const d=CARDS[id]; if(!d||d.token) return null; if(d.ex&&FRAME_EX[d.ex]) return FRAME_EX[d.ex]; if(/_v$/.test(id)) return "saint-valentin"; if(/_r$/.test(id)) return "nouvel-an"; if(/_p$/.test(id)) return "paques"; return null; };
-const frameCadre=id=>frameOn()&&frameKey(id)?`<i class="cadre cz" style="background-image:url('images/cadres/${frameKey(id)}.webp')" aria-hidden="true"></i>`:"";
-const frameVars=k=>{ const o=FRAME_OPEN[k]; return o?`--fl:${o[0]*100}%;--fr:${o[1]*100}%;--ft:${o[2]*100}%;--fb:${o[3]*100}%`:""; };
+const frameCadre=id=>frameOn()&&frameKey(id)?frameEl(frameKey(id),1):"";
+const frameVars=k=>{ const o=FRAME_OPEN[k]; return o?`--fl:${o[0]*100}%;--fr:${o[1]*100}%;--ft:${o[2]*100}%;--fb:${o[3]*100}%;--bs:${o[4]}%;--ds:${o[5]}%`:""; };
+const frameEl=(k,cz)=>`<i class="cadre${cz?" cz":""}" style="background-image:url('images/cadres/${k}.webp');--ci:url('images/cadres/${k}.webp')" aria-hidden="true"></i>`;
 const framePad=id=>{ const k=frameOn()&&frameKey(id), o=k&&FRAME_OPEN[k]; return o?` fr" style="padding:${(o[2]*150).toFixed(2)}% ${(o[1]*100).toFixed(2)}% ${(o[3]*150).toFixed(2)}% ${(o[0]*100).toFixed(2)}%`:""; };
 const frameOn=()=>P.cadres!==false&&screen!=="play"&&!(S&&S.tut);
 function fullCard(id,extra="",powOv=null){
@@ -70,7 +71,7 @@ function fullCard(id,extra="",powOv=null){
   const fx=!hp&&/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
   const tl=/\btileh\b/.test(extra)&&hasHoloTile(id);
   const fk=frameOn()&&!hp&&frameKey(id);
-  return `<div class="full ${extra}${fk?" fr":""}${d.r==="U"&&!hp&&!tl?" holo":""}${hp?" holopre":""}${tl?" holof":""}${rc(d)}${fx}"${fk?` style="${frameVars(fk)}"`:""}>${art(id,/\bbig\b/.test(extra)?"big":undefined)}${tl?tileHolo(id,"g"+id):""}${fk?`<i class="cadre" style="background-image:url('images/cadres/${fk}.webp')" aria-hidden="true"></i>`:""}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
+  return `<div class="full ${extra}${fk?" fr":""}${d.r==="U"&&!hp&&!tl?" holo":""}${hp?" holopre":""}${tl?" holof":""}${rc(d)}${fx}"${fk?` style="${frameVars(fk)}"`:""}>${art(id,/\bbig\b/.test(extra)?"big":undefined)}${tl?tileHolo(id,"g"+id):""}${fk?frameEl(fk):""}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${fxH(d.fx)}</div>`:""}</div>
     <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }
