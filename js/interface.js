@@ -55,13 +55,18 @@ function holoTilesAttach(root){
   });
   for(const [k,v] of HOLO_TILES) if(!live.has(k)){ holoKill(v.h); HOLO_TILES.delete(k); }
 }
+/* Cadres de fête (Jordan, 25 octobre) : cartes exclusives d'une saison et variantes Saint-Valentin / Nouvel An, affichés à l'accueil et dans la Collection (pas en partie), désactivables dans les Réglages */
+const FRAME_EX={halloween:"halloween",noel:"noel",nouvelan:"nouvel-an",paques:"paques",valentin:"saint-valentin"};
+const frameKey=id=>{ const d=CARDS[id]; if(!d||d.token) return null; if(d.ex&&FRAME_EX[d.ex]) return FRAME_EX[d.ex]; if(/_v$/.test(id)) return "saint-valentin"; if(/_r$/.test(id)) return "nouvel-an"; if(/_p$/.test(id)) return "paques"; return null; };
+const frameCadre=id=>frameOn()&&frameKey(id)?`<i class="cadre cz" style="background-image:url('images/cadres/${frameKey(id)}.webp')" aria-hidden="true"></i>`:"";
+const frameOn=()=>P.cadres!==false&&screen!=="play"&&!(S&&S.tut);
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
   /* carte holo en grand : l'image fixe n'a plus les animations d'ultra-légendaire (reflet arc-en-ciel, ambiance, inclinaison) : l'effet holo prend la suite et elles apparaissaient quelques instants avant de disparaître */
   const hp=/\b(big|fanh)\b/.test(extra)&&d.r==="U"&&!!holoDir(id);
   const fx=!hp&&/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
   const tl=/\btileh\b/.test(extra)&&hasHoloTile(id);
-  return `<div class="full ${extra}${d.r==="U"&&!hp&&!tl?" holo":""}${hp?" holopre":""}${tl?" holof":""}${rc(d)}${fx}">${art(id,/\bbig\b/.test(extra)?"big":undefined)}${tl?tileHolo(id,"g"+id):""}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
+  return `<div class="full ${extra}${d.r==="U"&&!hp&&!tl?" holo":""}${hp?" holopre":""}${tl?" holof":""}${rc(d)}${fx}">${art(id,/\bbig\b/.test(extra)?"big":undefined)}${tl?tileHolo(id,"g"+id):""}${frameOn()&&frameKey(id)?`<i class="cadre" style="background-image:url('images/cadres/${frameKey(id)}.webp')" aria-hidden="true"></i>`:""}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${fxH(d.fx)}</div>`:""}</div>
     <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }
@@ -104,6 +109,7 @@ function sheetHTML(){
     <div class="setrow"><span>Son</span><span class="footbtns"><button class="toggle" data-act="music" aria-pressed="${P.music}">Musique : ${P.music?"activée":"coupée"}</button><button class="toggle" data-act="sfx" aria-pressed="${P.sfx}">Effets : ${P.sfx?"activés":"coupés"}</button></span></div>
     <div class="setrow"><span>Volume de la musique</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vm??35}" data-vol="vm" aria-label="Volume de la musique"><b data-volv="vm">${P.vm??35}</b></span></div>
     <div class="setrow"><span>Volume des effets</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vs??100}" data-vol="vs" aria-label="Volume des effets"><b data-volv="vs">${P.vs??100}</b></span></div>
+    <div class="setrow"><span>Cadres de fête</span><button class="toggle" data-act="cadres" aria-pressed="${P.cadres!==false}">${P.cadres!==false?"Activés":"Coupés"}</button></div>
     <div class="setrow"><span>Cinématiques</span><button class="toggle" data-act="cine" aria-pressed="${P.cine!==false}">${P.cine!==false?"Activée":"Coupée"}</button></div>
     <div class="setrow"><span>Tutoriel</span><button class="toggle" data-act="tuto">Revoir le tutoriel</button></div>
     <div class="setrow"><span>Nouveautés</span><button class="toggle" data-act="majshow">Notes de mise à jour</button></div>
@@ -464,7 +470,7 @@ function fanPickHTML(){
 /* --- carte agrandie --- */
 function zoomHTML(){
   if(!zoomId) return ""; const d=CARDS[zoomId], F=FAC[d.fac], R=RAR[d.r];
-  return `<div class="veil" data-act="unzoom"><div class="zoomwrap">${holoDir(zoomId)?`<div class="holoslot" id="holoslot" data-act="holoin">${fullCard(zoomId,"big")}</div>`:fullCard(zoomId,"big")}
+  return `<div class="veil" data-act="unzoom"><div class="zoomwrap">${holoDir(zoomId)?`<div class="holoslot" id="holoslot" data-act="holoin">${fullCard(zoomId,"big")}${frameCadre(zoomId)}</div>`:fullCard(zoomId,"big")}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(zoomId)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
     ${screen==="deck"&&P.owned.includes(zoomId)&&!d.token?`<p class="deckstate ${P.deck.includes(zoomId)?"in":""}">${P.deck.includes(zoomId)?`Dans ton deck · ${P.deck.length}/${ECO.deckSize}`:`Pas dans ton deck · ${P.deck.length}/${ECO.deckSize}`}</p>${deckMsg?`<p class="deckmsg">${deckMsg}</p>`:""}<button class="primary" data-act="toggle" data-id="${zoomId}">${P.deck.includes(zoomId)?"Retirer du deck":"Ajouter au deck"}</button>`:""}
     <div class="row2"><button class="ghost" data-act="unzoom">Fermer</button>${P.owned.includes(zoomId)&&P.avatar!==zoomId?`<button class="ghost" data-act="avset" data-id="${zoomId}">En faire mon avatar</button>`:""}</div></div></div></div>`;
@@ -953,6 +959,7 @@ document.addEventListener("click", e=>{
     case "cancelname": editName=false; render(); return;
     case "music": P.music=!P.music; save(); render(); return;
     case "cine": P.cine=P.cine===false; save(); render(); return;
+    case "cadres": P.cadres=P.cadres===false; save(); render(); return;
     case "lang": setLang(LANG==="fr"?"en":"fr"); sfx("click"); render(); return;
     case "htoggle": { const t=+el.dataset.t; if(histOpen.has(t)) histOpen.delete(t); else histOpen.add(t); render(); return; }
     case "hfilt": histFilter=el.dataset.f||"all"; sfx("click"); render(); return;

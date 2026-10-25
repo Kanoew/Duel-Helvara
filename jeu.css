@@ -163,6 +163,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-grad
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .full{position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.14);max-width:100%}
 .full .art{position:absolute;inset:0}
+.full .cadre{position:absolute;inset:0;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none}
 .full .art.ph{--monosz:48px}
 .full .cost{width:30px;height:34px;font-size:17px;left:6px;top:6px}
 .full .pw{width:32px;height:32px;font-size:18px;right:6px;top:6px;bottom:auto}
@@ -910,3 +911,6 @@ body:has(.sandbar) #app{padding-top:62px}
 /* carte holo en grand : seule l'illustration (nom, coût, texte sont dans l'encadré en dessous), comme l'effet qui prend la suite : le passage ne se voit plus */
 .full.holopre>.band,.full.holopre>.cost,.full.holopre>.pw,.full.holopre>.lgp{display:none}
 .full.holopre{border-color:rgba(232,184,90,.42);box-shadow:inset 0 0 0 1px rgba(232,184,90,.3)}
+
+.holoslot{position:relative}
+.holoslot>.cadre.cz{position:absolute;inset:0;z-index:6;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;border-radius:12px}
