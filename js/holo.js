@@ -20,9 +20,10 @@ function holoMount(slot, id, opts) {
     try {
       const mod = await holoLoad(); if (h.dead) return;
       el = document.createElement("div"); el.className = "holohost"; h.slot.appendChild(el);
-      const card = await mod.HoloCard.load(el, "images/holo/" + dir + "/manifest.json", Object.assign({ radius: 12 }, opts));
+      const card = await mod.HoloCard.load(el, "images/holo/" + dir + "/manifest.json", Object.assign({ radius: 12 }, opts && { ...opts, overlay: undefined }));
       if (h.dead) { card.destroy(); el.remove(); return; }
       h.card = card; h.el = el;
+      if (opts && opts.overlay) { const hc = el.querySelector(".hc-card"); if (hc) { const i = document.createElement("i"); i.className = "cadre"; i.style.backgroundImage = "url('images/cadres/" + opts.overlay + ".webp')"; i.setAttribute("aria-hidden", "true"); hc.appendChild(i); } }
       /* même illustration dessous (sans texte) : l'effet prend la place tout de suite, sans fondu (il « montait » et faisait une coupure) */
       requestAnimationFrame(() => { if (!h.dead) h.slot.classList.add("holo-on"); });
     } catch (e) { if (el) el.remove(); const f = h.slot.querySelector(".full.holopre"); if (f) { f.classList.remove("holopre"); f.classList.add("holo"); } }   /* repli : l'image fixe retrouve son reflet d'ultra-légendaire */

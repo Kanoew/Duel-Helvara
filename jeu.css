@@ -923,15 +923,6 @@ body:has(.sandbar) #app{padding-top:62px}
 .cdjour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cdjour .cdtx b{font-family:var(--display);font-size:17px}
 .cdjour .eyebrow{color:var(--warm)}
-/* Cadres de fête (Jordan, 26 octobre) : conteneur de la taille du cadre, carte dans sa fenêtre (légèrement étirée, sous le rail), cadre par-dessus */
-.zoomwrap.wide{width:min(1000px,100%)}
-.fz{position:relative;max-width:100%}
-.fz>.fzc{position:absolute;overflow:hidden}
-.fz>.fzc>.full,.fz>.fzc>.full.big,.fz>.fzc>.holoslot{width:100%!important;height:100%;max-width:none;aspect-ratio:auto;border:0;border-radius:0}
-.fz>.fzc>.holoslot>.full.big{height:100%;aspect-ratio:auto}
-.fz>.fzc>.holoslot .hc-card{width:100%}
-.fz>.cadre{position:absolute;inset:0;z-index:7;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}
-.holoslot.hfr{position:relative;max-width:100%}
-.holoslot.hfr>.fz{width:100%}
-.holoslot.hfr.holo-on>.fz{display:none}
-.holoslot.hfr .holohost{width:100%}
+/* Cadres de fête : cadre fin posé dans la carte (il suit son inclinaison) ; clics laissés à la carte */
+.full>.cadre,.hc-card>.cadre{position:absolute;inset:0;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}
+.hc-card>.cadre{z-index:7}

@@ -1106,14 +1106,13 @@ async function inPage() {
     T("Cadres : une carte ordinaire n'a pas de cadre (Maui, Nike, Jordan le Narrateur, jetons)", [frameCur("maui"), frameCur("nike"), frameCur("jordan_n"), frameCur("plume")].every(x => x === null), "");
     P.cadres = false; T("Cadres : réglage « Désactivés » → aucun cadre", frameCur("morrigan_h") === null, ""); P.cadres = true;
     T("Cadres : le paramètre ?cadre= n'est pas lu en test et ne s'enregistre pas (profil intact)", FRAME_URL === null && P.cadres === true, "");
-    screen = "deck"; S = null; frameKey("morrigan_h"); await new Promise(r => setTimeout(r, 800)); frameKey("morrigan_h"); await new Promise(r => setTimeout(r, 1200));
-    T("Cadres : frames.json chargé avec les 5 fenêtres", FRAME_KEYS.every(k => FRAMES[k] && FRAMES[k].x1 > FRAMES[k].x0 && FRAMES[k].y1 > FRAMES[k].y0), Object.keys(FRAMES).join());
-    { const w = frameWrap("<div class=full></div>", 340, false, "morrigan_h"), small = frameWrap("<div class=full></div>", 100, false, "morrigan_h"), none = frameWrap("<div class=full></div>", 340, false, "maui");
-      T("Cadres : le conteneur a la forme du cadre, la carte est dans sa fenêtre (en %) et le cadre est posé par-dessus", !!w && /class="fz"/.test(w) && /class="fzc"/.test(w) && /class="cadre"/.test(w) && /aspect-ratio:1493\/2000/.test(w), (w || "").slice(0, 120));
-      T("Cadres : carte trop petite (moins de 230 px) → pas de cadre ; carte ordinaire → pas de cadre", small === null && none === null, ""); screen = "play"; T("Cadres : jamais en partie", frameWrap("x", 340, false, "morrigan_h") === null, ""); screen = "deck"; }
-    FRAME_IMG.halloween = false; T("Cadres : image manquante ou invalide → pas de cadre, la carte s'affiche normalement", frameWrap("x", 340, false, "morrigan_h") === null, ""); FRAME_IMG.halloween = true;
-    zoomId = "morrigan_h"; { const z = zoomHTML(); T("Cadres : le zoom d'une carte de saison contient son cadre, celui d'une carte ordinaire non", /class="fz"/.test(z) && /halloween\.webp/.test(z), ""); } zoomId = "maui"; T("Cadres : zoom d'une carte ordinaire sans cadre", !/class="fz"/.test(zoomHTML()), ""); zoomId = null;
-    T("Cadres : plus de cadre dans la grille ni dans les petites cartes (fullCard sans enveloppe)", !/fz|cadre/.test(fullCard("morrigan_h", "tileh")) && !/fz|cadre/.test(fullCard("morrigan_h")), "");
+    screen = "deck"; S = null;
+    T("Cadres : une carte de saison contient son calque de cadre (dans la carte, donc il suit l'inclinaison)", /<i class="cadre"[^>]*halloween\.webp/.test(fullCard("morrigan_h", "big")), "");
+    T("Cadres : une carte ordinaire n'a pas de calque", !/class="cadre"/.test(fullCard("maui", "big")), "");
+    P.cadres = false; T("Cadres : réglage « Désactivés » → pas de calque", !/class="cadre"/.test(fullCard("morrigan_h", "big")), ""); P.cadres = true;
+    screen = "play"; T("Cadres : jamais en partie", !/class="cadre"/.test(fullCard("morrigan_h", "big")), ""); screen = "deck";
+    T("Cadres : pas de calque dans l'éventail", !/class="cadre"/.test(fullCard("morrigan_h", "fanh")), "");
+    zoomId = "morrigan_h"; T("Cadres : le zoom d'une carte de saison contient son cadre", /halloween\.webp/.test(zoomHTML()), ""); zoomId = "maui"; T("Cadres : zoom d'une carte ordinaire sans cadre", !/class="cadre"/.test(zoomHTML()), ""); zoomId = null;
     P.cadres = false; screen = keepScr; zoomId = keepZ; }
 
   return res;
