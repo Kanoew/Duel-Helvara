@@ -57,9 +57,19 @@ function holoTilesAttach(root){
 }
 /* Cadres de fête (Jordan, 25 octobre) : un seul cadre actif à la fois selon la date (ou ?cadre=nom pour tester, rien n'est enregistré). Réglage « Cadres de fête » : Auto / Désactivés.
    Cadre = PNG/WebP 900 × 1350 transparent au centre : la carte (720 × 1080) occupe 10 % / 10 % de marge ; elle est donc affichée à 80 % de son emplacement et le cadre l'entoure sans jamais la couvrir. */
-const FRAME_WIN={halloween:["10-12","11-02"],noel:["12-01","12-26"],nouvelan:["12-27","01-05"],saintvalentin:["02-01","02-15"],paques:["03-14","04-04"]};
+/* Cadres de fête (Jordan, 25-26 octobre) : un cadre est lié à la CARTE, en permanence, pas à la date : cartes exclusives d'une saison (champ ex) et variantes _v (Saint-Valentin), _r (Nouvel An), _p (Pâques).
+   Réglage « Cadres de fête » : Activés / Désactivés. ?cadre=<clé> force un cadre sur toutes les cartes (test, rien n'est enregistré), ?cadre=aucun les coupe. Clés : halloween, noel, nouvelan, saintvalentin, paques. */
+const FRAME_KEYS=["halloween","noel","nouvelan","saintvalentin","paques"];
+const FRAME_EX={halloween:"halloween",noel:"noel",nouvelan:"nouvelan",valentin:"saintvalentin",paques:"paques"};
 const FRAME_URL=(()=>{ const m=/[?&]cadre=([a-z]+)/.exec(location.search); return m?m[1]:null; })();
-const frameCur=()=>{ if(FRAME_URL) return FRAME_WIN[FRAME_URL]?FRAME_URL:null; if(P.cadres===false) return null; return Object.keys(FRAME_WIN).find(k=>inWin(FRAME_WIN[k]))||null; };
+const frameCur=id=>{
+  if(FRAME_URL) return FRAME_KEYS.includes(FRAME_URL)?FRAME_URL:null;
+  if(P.cadres===false) return null;
+  const d=CARDS[id]; if(!d||d.token) return null;
+  if(d.ex&&FRAME_EX[d.ex]) return FRAME_EX[d.ex];
+  if(id==="jordan_n") return null;
+  const m=/_(v|r|p)$/.exec(id); return m?{v:"saintvalentin",r:"nouvelan",p:"paques"}[m[1]]:null;
+};
 const FRAMES={};   /* frames.json : fichier, taille et fenêtre de chaque cadre (écrit par outils/cadres.js) ; null tant qu'il n'est pas chargé */
 let FRAMES_STATE=0;   /* 0 pas demandé, 1 en cours, 2 prêt, 3 échec */
 const FRAME_IMG={};   /* clé -> true / false une fois l'image chargée ou en échec ; la carte ne change jamais tant que le cadre n'est pas prêt */
@@ -68,12 +78,12 @@ function frameLoad(k){
   if(FRAMES_STATE!==2||!FRAMES[k]||k in FRAME_IMG) return;
   FRAME_IMG[k]=null; const im=new Image(); im.onload=()=>{ FRAME_IMG[k]=im.naturalWidth===FRAMES[k].w&&im.naturalHeight===FRAMES[k].h; if(FRAME_IMG[k]&&typeof render==="function") render(); }; im.onerror=()=>{ FRAME_IMG[k]=false; }; im.src="images/cadres/"+FRAMES[k].file; }
 const FRAME_B=10, FRAME_MIN=230;   /* la carte passe 10 px sous le rail (pas de jointure) ; carte affichée à moins de 230 px de large : pas de cadre */
-const frameKey=()=>{ const k=frameCur(); if(!k) return null; frameLoad(k); return FRAME_IMG[k]===true?k:null; };
+const frameKey=id=>{ const k=frameCur(id); if(!k) return null; frameLoad(k); return FRAME_IMG[k]===true?k:null; };
 /* Cadre autour d'une carte agrandie : le conteneur a la taille du cadre ; la carte occupe la fenêtre élargie de FRAME_B px (en %), le cadre est posé par-dessus, clics laissés à la carte.
    Largeur du conteneur = largeur de carte voulue × W / (largeur de la fenêtre + 2b). Renvoie null si le cadre n'est pas disponible ou si la carte serait trop petite. */
 const FRAME_HOLO={halloween:"halloween",noel:"hiver",nouvelan:"nouvel-an",saintvalentin:"saint-valentin",paques:"paques"};   /* cadre statique -> dossier du cadre holo (images/holo/frames/) */
-function frameWrap(inner,cardW,holo){
-  if(screen==="play"||(S&&S.tut)) return null; const k=frameKey(); if(!k||!FRAMES[k]) return null; const f=FRAMES[k];
+function frameWrap(inner,cardW,holo,id){
+  if(screen==="play"||(S&&S.tut)) return null; const k=frameKey(id); if(!k||!FRAMES[k]) return null; const f=FRAMES[k];
   const b=FRAME_B*f.w/1792, wb=f.x1-f.x0+1+2*b, hb=f.y1-f.y0+1+2*b, vw=Math.min(innerWidth||390,1000), cw=Math.min(cardW,vw*.94*wb/f.w);
   if(cw<FRAME_MIN) return null;
   const pc=v=>(v*100).toFixed(3)+"%";
@@ -130,7 +140,7 @@ function sheetHTML(){
     <div class="setrow"><span>Son</span><span class="footbtns"><button class="toggle" data-act="music" aria-pressed="${P.music}">Musique : ${P.music?"activée":"coupée"}</button><button class="toggle" data-act="sfx" aria-pressed="${P.sfx}">Effets : ${P.sfx?"activés":"coupés"}</button></span></div>
     <div class="setrow"><span>Volume de la musique</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vm??35}" data-vol="vm" aria-label="Volume de la musique"><b data-volv="vm">${P.vm??35}</b></span></div>
     <div class="setrow"><span>Volume des effets</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vs??100}" data-vol="vs" aria-label="Volume des effets"><b data-volv="vs">${P.vs??100}</b></span></div>
-    <div class="setrow"><span>Cadres de fête</span><button class="toggle" data-act="cadres" aria-pressed="${P.cadres!==false}">${P.cadres!==false?"Auto":"Désactivés"}</button></div>
+    <div class="setrow"><span>Cadres de fête</span><button class="toggle" data-act="cadres" aria-pressed="${P.cadres!==false}">${P.cadres!==false?"Activés":"Désactivés"}</button></div>
     <div class="setrow"><span>Cinématiques</span><button class="toggle" data-act="cine" aria-pressed="${P.cine!==false}">${P.cine!==false?"Activée":"Coupée"}</button></div>
     <div class="setrow"><span>Tutoriel</span><button class="toggle" data-act="tuto">Revoir le tutoriel</button></div>
     <div class="setrow"><span>Nouveautés</span><button class="toggle" data-act="majshow">Notes de mise à jour</button></div>
@@ -504,7 +514,7 @@ function fanPickHTML(){
 /* --- carte agrandie --- */
 function zoomHTML(){
   if(!zoomId) return ""; const d=CARDS[zoomId], F=FAC[d.fac], R=RAR[d.r];
-  const plain=fullCard(zoomId,"big"), cwant=Math.min(340,(innerWidth||390)*.82), fw=frameWrap(plain,cwant,!!holoDir(zoomId)), card=holoDir(zoomId)?`<div class="holoslot" id="holoslot" data-act="holoin">${plain}</div>`:plain;
+  const plain=fullCard(zoomId,"big"), cwant=Math.min(340,(innerWidth||390)*.82), fw=frameWrap(plain,cwant,!!holoDir(zoomId),zoomId), card=holoDir(zoomId)?`<div class="holoslot" id="holoslot" data-act="holoin">${plain}</div>`:plain;
   return `<div class="veil" data-act="unzoom"><div class="zoomwrap${fw?" wide":""}">${fw||card}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(zoomId)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
     ${screen==="deck"&&P.owned.includes(zoomId)&&!d.token?`<p class="deckstate ${P.deck.includes(zoomId)?"in":""}">${P.deck.includes(zoomId)?`Dans ton deck · ${P.deck.length}/${ECO.deckSize}`:`Pas dans ton deck · ${P.deck.length}/${ECO.deckSize}`}</p>${deckMsg?`<p class="deckmsg">${deckMsg}</p>`:""}<button class="primary" data-act="toggle" data-id="${zoomId}">${P.deck.includes(zoomId)?"Retirer du deck":"Ajouter au deck"}</button>`:""}

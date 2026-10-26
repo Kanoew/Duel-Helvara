@@ -1100,20 +1100,21 @@ async function inPage() {
     { const h = histHTML(); T("Replay : le bouton « Revoir la partie » apparaît dans l'historique pour les parties enregistrées seulement", /data-act="rpstart" data-t="4242"/.test(h), ""); P.rps = []; T("Replay : pas de bouton sans enregistrement", !/rpstart/.test(histHTML()), ""); }
     P.rps = keepRps; P.hist = keepHist; P.owned = keepOwn; P.deck = keepDeck; S = null; quiet = true; }
 
-  /* ===== Cadres de fête (26 octobre) : activation par date, réglage, structure autour de la carte ===== */
-  { const keep = window.__today, keepC = P.cadres, keepScr = screen, keepZ = zoomId; const at = d => { window.__today = d; return frameCur(); }; P.cadres = true;
-    T("Cadres : un seul cadre actif selon la date (Halloween, Noël, Nouvel An, Saint-Valentin, Pâques), aucun hors fenêtre", [at("2026-10-20"), at("2026-12-10"), at("2026-12-30"), at("2027-02-10"), at("2027-03-20"), at("2027-06-01")].join() === "halloween,noel,nouvelan,saintvalentin,paques,", "");
-    P.cadres = false; T("Cadres : réglage « Désactivés » → aucun cadre quelle que soit la date", at("2026-10-20") === null, ""); P.cadres = true;
+  /* ===== Cadres de fête (26 octobre) : liés à la carte (saison, variantes), en permanence ===== */
+  { const keepC = P.cadres, keepScr = screen, keepZ = zoomId; P.cadres = true;
+    T("Cadres : les cartes de saison ont leur cadre quelle que soit la date (Halloween, Noël, Nouvel An, Saint-Valentin, Pâques)", [frameCur("morrigan_h"), frameCur("aphrodite_n"), frameCur("hel_r"), frameCur("eos_v"), frameCur("ananke_v"), frameCur("ananke_r"), frameCur("ulqetjor_v")].join() === "halloween,noel,nouvelan,saintvalentin,saintvalentin,nouvelan,saintvalentin", [frameCur("morrigan_h"), frameCur("aphrodite_n"), frameCur("hel_r")].join());
+    T("Cadres : une carte ordinaire n'a pas de cadre (Maui, Nike, Jordan le Narrateur, jetons)", [frameCur("maui"), frameCur("nike"), frameCur("jordan_n"), frameCur("plume")].every(x => x === null), "");
+    P.cadres = false; T("Cadres : réglage « Désactivés » → aucun cadre", frameCur("morrigan_h") === null, ""); P.cadres = true;
     T("Cadres : le paramètre ?cadre= n'est pas lu en test et ne s'enregistre pas (profil intact)", FRAME_URL === null && P.cadres === true, "");
-    window.__today = "2026-10-20"; screen = "deck"; S = null; frameKey(); await new Promise(r => setTimeout(r, 800)); frameKey(); await new Promise(r => setTimeout(r, 1200));
-    T("Cadres : frames.json chargé avec les 5 fenêtres", ["halloween", "noel", "nouvelan", "saintvalentin", "paques"].every(k => FRAMES[k] && FRAMES[k].x1 > FRAMES[k].x0 && FRAMES[k].y1 > FRAMES[k].y0), Object.keys(FRAMES).join());
-    { const w = frameWrap("<div class=full></div>", 340), small = frameWrap("<div class=full></div>", 100);
+    screen = "deck"; S = null; frameKey("morrigan_h"); await new Promise(r => setTimeout(r, 800)); frameKey("morrigan_h"); await new Promise(r => setTimeout(r, 1200));
+    T("Cadres : frames.json chargé avec les 5 fenêtres", FRAME_KEYS.every(k => FRAMES[k] && FRAMES[k].x1 > FRAMES[k].x0 && FRAMES[k].y1 > FRAMES[k].y0), Object.keys(FRAMES).join());
+    { const w = frameWrap("<div class=full></div>", 340, false, "morrigan_h"), small = frameWrap("<div class=full></div>", 100, false, "morrigan_h"), none = frameWrap("<div class=full></div>", 340, false, "maui");
       T("Cadres : le conteneur a la forme du cadre, la carte est dans sa fenêtre (en %) et le cadre est posé par-dessus", !!w && /class="fz"/.test(w) && /class="fzc"/.test(w) && /class="cadre"/.test(w) && /aspect-ratio:1493\/2000/.test(w), (w || "").slice(0, 120));
-      T("Cadres : carte trop petite (moins de 230 px) → pas de cadre", small === null, ""); screen = "play"; T("Cadres : jamais en partie", frameWrap("x", 340) === null, ""); screen = "deck"; }
-    FRAME_IMG.halloween = false; T("Cadres : image manquante ou invalide → pas de cadre, la carte s'affiche normalement", frameWrap("x", 340) === null, ""); FRAME_IMG.halloween = true;
-    zoomId = "maui"; { const z = zoomHTML(); T("Cadres : le zoom d'une carte contient le cadre actif", /class="fz"/.test(z) && /halloween\.webp/.test(z), ""); } zoomId = null;
-    T("Cadres : plus de cadre dans la grille ni dans les petites cartes (fullCard sans enveloppe)", !/fz|cadre/.test(fullCard("maui", "tileh")) && !/fz|cadre/.test(fullCard("maui")), "");
-    window.__today = keep; P.cadres = false; screen = keepScr; zoomId = keepZ; }
+      T("Cadres : carte trop petite (moins de 230 px) → pas de cadre ; carte ordinaire → pas de cadre", small === null && none === null, ""); screen = "play"; T("Cadres : jamais en partie", frameWrap("x", 340, false, "morrigan_h") === null, ""); screen = "deck"; }
+    FRAME_IMG.halloween = false; T("Cadres : image manquante ou invalide → pas de cadre, la carte s'affiche normalement", frameWrap("x", 340, false, "morrigan_h") === null, ""); FRAME_IMG.halloween = true;
+    zoomId = "morrigan_h"; { const z = zoomHTML(); T("Cadres : le zoom d'une carte de saison contient son cadre, celui d'une carte ordinaire non", /class="fz"/.test(z) && /halloween\.webp/.test(z), ""); } zoomId = "maui"; T("Cadres : zoom d'une carte ordinaire sans cadre", !/class="fz"/.test(zoomHTML()), ""); zoomId = null;
+    T("Cadres : plus de cadre dans la grille ni dans les petites cartes (fullCard sans enveloppe)", !/fz|cadre/.test(fullCard("morrigan_h", "tileh")) && !/fz|cadre/.test(fullCard("morrigan_h")), "");
+    P.cadres = false; screen = keepScr; zoomId = keepZ; }
 
   return res;
 }
