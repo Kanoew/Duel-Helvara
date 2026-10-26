@@ -60,23 +60,33 @@ function holoTilesAttach(root){
 const FRAME_WIN={halloween:["10-12","11-02"],noel:["12-01","12-26"],nouvelan:["12-27","01-05"],saintvalentin:["02-01","02-15"],paques:["03-14","04-04"]};
 const FRAME_URL=(()=>{ const m=/[?&]cadre=([a-z]+)/.exec(location.search); return m?m[1]:null; })();
 const frameCur=()=>{ if(FRAME_URL) return FRAME_WIN[FRAME_URL]?FRAME_URL:null; if(P.cadres===false) return null; return Object.keys(FRAME_WIN).find(k=>inWin(FRAME_WIN[k]))||null; };
-const FRAME_OK={};   /* clé -> true / false une fois le fichier chargé ou en échec ; la carte ne change jamais tant que le cadre n'est pas prêt */
-function frameLoad(k){ if(k in FRAME_OK) return; FRAME_OK[k]=null; const im=new Image(); im.onload=()=>{ FRAME_OK[k]=im.naturalWidth===900&&im.naturalHeight===1350; if(FRAME_OK[k]&&typeof render==="function") render(); }; im.onerror=()=>{ FRAME_OK[k]=false; }; im.src="images/cadres/"+k+".webp"; }
-const frameKey=()=>{ const k=frameCur(); if(!k) return null; frameLoad(k); return FRAME_OK[k]===true?k:null; };
-const frameEl=(k,cz)=>`<i class="cadre${cz?" cz":""}" style="background-image:url('images/cadres/${k}.webp')" aria-hidden="true"></i>`;
-const frameOn=()=>screen!=="play"&&!(S&&S.tut)&&!!frameKey();
-const frameCadre=id=>frameOn()?frameEl(frameKey(),1):"";
-const framePad=id=>frameOn()?" fr":"";
+const FRAMES={};   /* frames.json : fichier, taille et fenêtre de chaque cadre (écrit par outils/cadres.js) ; null tant qu'il n'est pas chargé */
+let FRAMES_STATE=0;   /* 0 pas demandé, 1 en cours, 2 prêt, 3 échec */
+const FRAME_IMG={};   /* clé -> true / false une fois l'image chargée ou en échec ; la carte ne change jamais tant que le cadre n'est pas prêt */
+function frameLoad(k){
+  if(FRAMES_STATE===0){ FRAMES_STATE=1; fetch("images/cadres/frames.json").then(r=>r.ok?r.json():Promise.reject()).then(j=>{ Object.assign(FRAMES,j); FRAMES_STATE=2; if(typeof render==="function") render(); }).catch(()=>{ FRAMES_STATE=3; }); }
+  if(FRAMES_STATE!==2||!FRAMES[k]||k in FRAME_IMG) return;
+  FRAME_IMG[k]=null; const im=new Image(); im.onload=()=>{ FRAME_IMG[k]=im.naturalWidth===FRAMES[k].w&&im.naturalHeight===FRAMES[k].h; if(FRAME_IMG[k]&&typeof render==="function") render(); }; im.onerror=()=>{ FRAME_IMG[k]=false; }; im.src="images/cadres/"+FRAMES[k].file; }
+const FRAME_B=10, FRAME_MIN=230;   /* la carte passe 10 px sous le rail (pas de jointure) ; carte affichée à moins de 230 px de large : pas de cadre */
+const frameKey=()=>{ const k=frameCur(); if(!k) return null; frameLoad(k); return FRAME_IMG[k]===true?k:null; };
+/* Cadre autour d'une carte agrandie : le conteneur a la taille du cadre ; la carte occupe la fenêtre élargie de FRAME_B px (en %), le cadre est posé par-dessus, clics laissés à la carte.
+   Largeur du conteneur = largeur de carte voulue × W / (largeur de la fenêtre + 2b). Renvoie null si le cadre n'est pas disponible ou si la carte serait trop petite. */
+function frameWrap(inner,cardW){
+  if(screen==="play"||(S&&S.tut)) return null; const k=frameKey(); if(!k||!FRAMES[k]) return null; const f=FRAMES[k];
+  const b=FRAME_B*f.w/1792, wb=f.x1-f.x0+1+2*b, hb=f.y1-f.y0+1+2*b, vw=Math.min(innerWidth||390,1000), cw=Math.min(cardW,vw*.94*wb/f.w);
+  if(cw<FRAME_MIN) return null;
+  const pc=v=>(v*100).toFixed(3)+"%";
+  return `<div class="fz" style="width:${Math.round(cw*f.w/wb)}px;aspect-ratio:${f.w}/${f.h}"><div class="fzc" style="left:${pc((f.x0-b)/f.w)};top:${pc((f.y0-b)/f.h)};width:${pc(wb/f.w)};height:${pc(hb/f.h)}">${inner}</div><i class="cadre" style="background-image:url('images/cadres/${f.file}')" aria-hidden="true"></i></div>`;
+}
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
   /* carte holo en grand : l'image fixe n'a plus les animations d'ultra-légendaire (reflet arc-en-ciel, ambiance, inclinaison) : l'effet holo prend la suite et elles apparaissaient quelques instants avant de disparaître */
   const hp=/\b(big|fanh)\b/.test(extra)&&d.r==="U"&&!!holoDir(id);
   const fx=!hp&&/\bbig\b/.test(extra)&&(d.r==="L"||d.r==="U")?` tilt${d.r==="U"&&d.vfx?" amb":""}" data-vfx="${d.vfx||""}`:"";
   const tl=/\btileh\b/.test(extra)&&hasHoloTile(id);
-  const fk=!hp&&!/\b(fanh|tileh)\b/.test(extra)&&frameOn()&&frameKey();   /* pas de cadre en grille de collection : 2 cartes par ligne, la carte y est déjà chargée de texte */
-  return `${fk?`<div class="fslot${/\bbig\b/.test(extra)?" big":""}">`:""}<div class="full ${extra}${d.r==="U"&&!hp&&!tl?" holo":""}${hp?" holopre":""}${tl?" holof":""}${rc(d)}${fx}">${art(id,/\bbig\b/.test(extra)?"big":undefined)}${tl?tileHolo(id,"g"+id):""}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
+  return `<div class="full ${extra}${d.r==="U"&&!hp&&!tl?" holo":""}${hp?" holopre":""}${tl?" holof":""}${rc(d)}${fx}">${art(id,/\bbig\b/.test(extra)?"big":undefined)}${tl?tileHolo(id,"g"+id):""}${d.r==="L"?'<i class="lgp" aria-hidden="true"></i>':""}<span class="cost">${d.cost}</span>
     <div class="band"><div class="n">${d.name}</div><div class="f"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(id)}</span></div>${d.fx?`<div class="e">${fxH(d.fx)}</div>`:""}</div>
-    <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>${fk?frameEl(fk)+"</div>":""}`;
+    <span class="pw ${powOv!=null&&powOv>d.pow?"up":powOv!=null&&powOv<d.pow?"down":""}">${powOv!=null?powOv:d.pow}</span></div>`;
 }
 function thumb(id,act){
   const d=CARDS[id];
@@ -491,7 +501,8 @@ function fanPickHTML(){
 /* --- carte agrandie --- */
 function zoomHTML(){
   if(!zoomId) return ""; const d=CARDS[zoomId], F=FAC[d.fac], R=RAR[d.r];
-  return `<div class="veil" data-act="unzoom"><div class="zoomwrap">${holoDir(zoomId)?`<div class="holoslot${framePad(zoomId)}" id="holoslot" data-act="holoin">${fullCard(zoomId,"big")}${frameCadre(zoomId)}</div>`:fullCard(zoomId,"big")}
+  const card=holoDir(zoomId)?`<div class="holoslot" id="holoslot" data-act="holoin">${fullCard(zoomId,"big")}</div>`:fullCard(zoomId,"big"), fw=frameWrap(card,Math.min(340,(innerWidth||390)*.82));
+  return `<div class="veil" data-act="unzoom"><div class="zoomwrap${fw?" wide":""}">${fw||card}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(zoomId)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
     ${screen==="deck"&&P.owned.includes(zoomId)&&!d.token?`<p class="deckstate ${P.deck.includes(zoomId)?"in":""}">${P.deck.includes(zoomId)?`Dans ton deck · ${P.deck.length}/${ECO.deckSize}`:`Pas dans ton deck · ${P.deck.length}/${ECO.deckSize}`}</p>${deckMsg?`<p class="deckmsg">${deckMsg}</p>`:""}<button class="primary" data-act="toggle" data-id="${zoomId}">${P.deck.includes(zoomId)?"Retirer du deck":"Ajouter au deck"}</button>`:""}
     <div class="row2"><button class="ghost" data-act="unzoom">Fermer</button>${P.owned.includes(zoomId)&&P.avatar!==zoomId?`<button class="ghost" data-act="avset" data-id="${zoomId}">En faire mon avatar</button>`:""}</div></div></div></div>`;

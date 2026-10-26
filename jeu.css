@@ -923,13 +923,11 @@ body:has(.sandbar) #app{padding-top:62px}
 .cdjour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cdjour .cdtx b{font-family:var(--display);font-size:17px}
 .cdjour .eyebrow{color:var(--warm)}
-
-/* Cadres de fête (Jordan, 25 octobre) : cadre 900 × 1350 autour de la carte 720 × 1080 (à 10 % / 10 % des bords), jamais dessus.
-   La carte est donc affichée à 80 % de son emplacement ; le cadre remplit tout l'emplacement et laisse passer les clics. */
-.fslot{position:relative;aspect-ratio:2/3;width:100%;display:block}
-.fslot>.full,.fslot>.full.big{position:absolute!important;left:10%!important;top:10%!important;width:80%!important;height:80%!important;aspect-ratio:auto;max-width:none!important;margin:0!important}
-.fslot>.cadre{position:absolute;inset:0;z-index:7;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}
-.fslot.big{width:min(425px,94vw)}
-.holoslot.fr{width:min(425px,94vw);padding:15% 10%;box-sizing:border-box}
-.holoslot.fr>.full{width:100%;position:relative;left:auto;top:auto;height:auto}
-.holoslot>.cadre.cz{position:absolute;inset:0;z-index:7;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}
+/* Cadres de fête (Jordan, 26 octobre) : conteneur de la taille du cadre, carte dans sa fenêtre (légèrement étirée, sous le rail), cadre par-dessus */
+.zoomwrap.wide{width:min(1000px,100%)}
+.fz{position:relative;max-width:100%}
+.fz>.fzc{position:absolute;overflow:hidden}
+.fz>.fzc>.full,.fz>.fzc>.full.big,.fz>.fzc>.holoslot{width:100%!important;height:100%;max-width:none;aspect-ratio:auto;border:0;border-radius:0}
+.fz>.fzc>.holoslot>.full.big{height:100%;aspect-ratio:auto}
+.fz>.fzc>.holoslot .hc-card{width:100%}
+.fz>.cadre{position:absolute;inset:0;z-index:7;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}
