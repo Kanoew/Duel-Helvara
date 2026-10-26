@@ -210,6 +210,14 @@ Affichage : `frameOn(id)` (jamais en partie ni au tutoriel) ; `fullCard()` ajout
 
 
 
+## Vague du 1er mars 2027 : mécaniques nouvelles (26 octobre 2026)
+
+- **Mot-clé « Capacité »** (`fxH`, `.kw-cap`) : effet que le joueur déclenche. La Nageuse du Lac : bouton « 🏊 Nageuse » dans la barre sous l'en-tête (`swimmer()`, `swimOk(li)`, `swimTo(li)`), état `S.swimP={c,li,from}` (hors de `S.staged`). La traversée se fait au début de `resolveTurn`, avant la pose des cartes ; elle voyage comme propriété `swim` du tableau de coups (`mine.swim`), dans l'historique en ligne sous la forme `[uid, lieu, "s"]` (`mapPlays`, `mpLock`) et dans le replay (`rec.turns[].sw`). L'IA ne l'utilise pas.
+- **Déplacements** : tout passe par `flonHook(i,t)` (Flon, Athlète, Chang'e). Un nouveau déplacement doit l'appeler.
+- **Destruction** : Sun Wukong (Clone, `c.cloned`, jeton `clone_wukong` à `gone`) et Osiris (`c.revU`, jeton `revenant`) sont dans `entomb()`, donc couvrent aussi Nyx, Lilith, Poseidon qui contournent `destroy()`. Chang'e est protégée via `deathless()` (`c.moon`). La Barmaid est dans `destroyedHook()`.
+- **Temporaire** : Méduse (`medCap` plafonne `cardPow`, `medUntil`) et le Clone (`gone`) expirent dans `resolveTurn`, avant le décompte final. Déméter : `S.harv`, appliqué dans `startTurn` avant la pioche. Thémis : `themisOn(li)` dans `canStage` et `aiPlan.place`, `c.arr` (tour d'arrivée, posé par `revealFx` et `resurrect`). Hypnos : test dans `reveal()` (`/Révélation :/` sur le texte de la carte), `c.spent`. Nüwa : remplace `S.locs[li].id` (`gPick` sur `locPool()`).
+- Piège : « la plus faible/forte » des nouvelles cartes utilise `minR`/`maxR` (égalité au hasard), pas `weakest`/`strongest`.
+
 ## Filtres multiples et carte du jour (25 octobre 2026)
 
 - **Filtres de la Collection** : `deckFilter`, `costFilter`, `rarFilter` sont des **tableaux** (plusieurs puces par rangée = « ou », rangées combinées = « et », rangée vide = tout) ; `togg()` ajoute ou retire une valeur, « Toutes » vide la rangée ; « Possession » reste à choix unique.

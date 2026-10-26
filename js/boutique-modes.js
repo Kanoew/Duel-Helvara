@@ -143,7 +143,7 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.26", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.27", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Jetons et codes de salon : crypto.getRandomValues (pas Math.random). Code = LIEU- + 6 caractères sans I, L, O ni 0/1 (31 symboles, tirage sans biais). */
@@ -289,13 +289,15 @@ function mpStart(om,replay){
   if(replay) mpReplay(om); else { sfx("loc"); render(); window.scrollTo(0,0); }
 }
 function mapPlays(side,plays){ const out=[]; if(!Array.isArray(plays)) return out;
-  for(const pl of plays){ if(!Array.isArray(pl)) continue; const [uid,li]=pl; const c=S.hand[side].find(x=>x.uid===uid);
+  for(const pl of plays){ if(!Array.isArray(pl)) continue; const [uid,li]=pl;
+    if(pl[2]==="s"){ for(let f=0;f<3;f++){ const c=S.board[side][f].find(x=>x.uid===uid); if(c&&li>=0&&li<3) out.swim={c,li:li|0,from:f}; } continue; }   /* Nageuse du Lac : [uid, lieu, "s"] */
+    const c=S.hand[side].find(x=>x.uid===uid);
     if(c&&li>=0&&li<3&&!out.some(x=>x.c===c)) out.push({c,li:li|0}); } return out; }
 async function mpReplay(om){
   while(S&&S.mp&&!S.over){
     const mine=myMp.hist&&myMp.hist[S.turn], theirs=om.hist&&om.hist[S.turn];
     if(mine&&theirs){ await resolveTurn(mapPlays("p",mine), mapPlays("e",theirs), false); continue; }
-    if(mine){ const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.mp.locked=true; }
+    if(mine){ const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.swimP=st.swim||null; S.mp.locked=true; }
     break;
   }
   if(S&&S.mp){ S.mp.replaying=false; }
@@ -303,7 +305,7 @@ async function mpReplay(om){
 }
 function mpLock(){
   if(!S.mp||S.mp.locked||S.busy||S.over) return;
-  const hist=Object.assign({},myMp.hist||{}); hist[S.turn]=S.staged.map(x=>[x.c.uid,x.li]);
+  const hist=Object.assign({},myMp.hist||{}); hist[S.turn]=S.staged.map(x=>[x.c.uid,x.li]); if(S.swimP) hist[S.turn].push([S.swimP.c.uid,S.swimP.li,"s"]);
   S.mp.locked=true; mpPush({t:S.turn,hist}); mpSaveSession({mp:myMp,oppNick:S.mp.oppNick});
   render(); mpTryResolve();
 }
@@ -312,7 +314,8 @@ function mpTryResolve(){
   const o=mpOpp(); if(!o) return; const om=o.presence.mp;
   if(om.g!==S.mp.g||!om.hist||!om.hist[S.turn]) return;
   S.mp.locked=false; S.mp.oppLocked=false;
-  resolveTurn(S.staged.slice(), mapPlays("e",om.hist[S.turn]), true);
+  const mineP=S.staged.slice(); if(S.swimP) mineP.swim=S.swimP;
+  resolveTurn(mineP, mapPlays("e",om.hist[S.turn]), true);
 }
 async function mpResume(){
   const s=mpSession(); if(!s||!rtReady()||mpConn||!MP_CODE.test(s.mp.code||"")) return; mpConn=true; mpMsg=""; render();

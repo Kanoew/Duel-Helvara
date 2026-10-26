@@ -108,7 +108,9 @@ function startTurn(){
     if(t){ log(`Minuit · ${nm(c)} charme ${nm(t)} (${who(s)})`); sfx("legend"); } }
   /* Loviatar : la carte ressuscitée malade perd 1 au début de chacun des tours restants (compteur c.sick) */
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(c.sick>0){ c.sick--; c.pow-=1; (c.mods=c.mods||[]).push({v:-1,src:"Loviatar (maladie)"}); log(`Maladie · ${nm(c)} perd 1 (${who(s)})`); }
-  draw("p"); draw("e"); S.sel=null; render();
+  /* Déméter : la récolte, au début du tour suivant sa Révélation, avant la pioche : toute la main gagne +1 (par Déméter jouée) */
+  if(S.harv) for(const k of ["p","e"]) if(S.harv[k]){ const n=S.harv[k]; S.harv[k]=0; for(const x of S.hand[k]){ x.pow+=n; (x.mods=x.mods||[]).push({v:n,src:"Déméter"}); } if(S.hand[k].length){ log(`Déméter · la main de ${who(k)} gagne +${n}`); sfx("buff"); } }
+  draw("p"); draw("e"); S.sel=null; S.swimP=null; S.swimSel=false; render();
 }
 
 /* --- règles utilitaires --- */
@@ -120,7 +122,13 @@ const nemInv=li=>(["p","e"].reduce((n,s)=>n+S.board[s][li].filter(o=>live(o)&&ei
 /* Charme : celui de Qetesh dure jusqu'à la fin ; celui d'Hédoné (charmBy) cesse dès qu'elle quitte le jeu ou perd ses effets */
 const charmOf=c=>c.charm&&(!c.charmBy||captorLive(c.charmBy))?c.charm:null;
 function captorLive(uid){ for(const s of ["p","e"]) for(const col of S.board[s]) for(const o of col) if(o.uid===uid&&live(o)) return true; return false; }
-const stagedAt=li=>S.staged.filter(x=>x.li===li&&eid(x.c)!=="herakles").length;
+const stagedAt=li=>S.staged.filter(x=>x.li===li&&eid(x.c)!=="herakles").length+(S.swimP?(S.swimP.li===li?1:0)-(S.swimP.from===li?1:0):0);
+/* Thémis : à partir du tour suivant son arrivée, chaque joueur ne peut jouer qu'une carte par tour dans son lieu (les deux camps) */
+const themisOn=li=>["p","e"].some(s=>S.board[s][li].some(x=>live(x)&&eid(x)==="themis"&&(x.arr||0)<S.turn));
+/* La Nageuse du Lac : une fois par partie, avant de jouer, elle passe dans un autre lieu révélé où il reste une place alliée (disponible dès le tour suivant son arrivée) */
+function swimmer(s="p"){ if(S.busy||S.over||S.swimP) return null; for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="nageuse_lac"&&(c.arr==null||c.arr<S.turn)&&!c.swum&&!fated(c)&&!c.captive) return {c,li}; return null; }
+function swimOk(li){ const w=swimmer(); return !!w&&li!==w.li&&S.locs[li].rev&&!S.locs[li].locked&&slotsUsed("p",li)+stagedAt(li)<capOf("p",li); }
+function swimTo(li){ const w=swimmer(); if(!w||!swimOk(li)) return false; S.swimP={c:w.c,li,from:w.li}; S.swimSel=false; return true; }
 const live=(c)=>c.rev&&!c.neg;
 /* Anahita : identité dont la carte copie l'effet (c.cp), sinon la sienne. Tous les effets Continu et Révélation lisent eid(c) */
 const eid=c=>c.cp||c.id;
@@ -146,6 +154,7 @@ function canStage(c,li){
   if(S&&S.tut){ if(!tutReq().some(([id,l])=>id===c.id&&l===li&&!S.staged.some(x=>eid(x.c)===id))) return false; }
   if(!c||S.locs[li].locked||muted("p",li)) return false;
   if(banned(c)) return false;
+  if(themisOn(li)&&stagedAt(li)-(S.swimP&&S.swimP.li===li?1:0)>=1) return false;
   if(eid(c)==="herakles"){ if(slotsUsed("e",li)>=capOf("e",li)) return false; }   /* Héraklès : seulement là où l'adversaire a de la place (il passe de son côté) */
   else if(!tezAt("p",li)&&slotsUsed("p",li)+stagedAt(li)>=capOf("p",li)) return false;   /* Tezcatlipoca : les cartes jouées ici sont absorbées, elles ne prennent pas de place */
   return used()+costOf("p",c,li,S.staged.length===0,jugFirst(S.staged,S.staged.length))<=S.energy;
@@ -167,6 +176,7 @@ function cardPow(s,li,c){
   for(const o of S.board[opp(s)][li]) if(live(o) && eid(o)==="meute") p+=2;   /* La Meute du M2 : les cartes adverses ici ont +2 */
   if(d.cost===3&&!d.token&&eid(c)!=="musicien") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c && live(o) && eid(o)==="musicien") p+=2;   /* Le Musicien : tes autres cartes de coût d'origine 3 */
   if(!c.neg){
+    if(eid(c)==="gaia") for(let i=0;i<3;i++) if(i!==li&&slotsUsed(s,i)>=capOf(s,i)) p+=2;   /* Gaïa : +2 par autre lieu où ton côté est plein */
     if(eid(c)==="costumes" && inPlay("thot")) p+=4;
     if(eid(c)==="freyr" && hasHere(s,li,"freya")) p+=2;
     if(eid(c)==="tsukuyomi" && S.board[s][li].some(x=>x!==c&&x.rev&&CARDS[x.id].fac==="jugement")) p+=2;
@@ -197,6 +207,7 @@ function cardPow(s,li,c){
       if(hFoe.length&&!shielded(s,li)&&!sunlit(s)&&!noWeak(c)&&!baldurSafe(s,c)&&!fated(c)&&!untargetable(o,s,c)){ const t=top(s);
         if(t&&t.x===c){ const hv=cardPow(o,li,hFoe[0]); if(t.v>=hv) p-=Math.ceil(Math.max(0,t.v)/2); } }
     } finally{ HERA=0; } } }
+  if(c.medCap!=null) p=Math.min(p,c.medCap);   /* Méduse : ne peut plus gagner de puissance (plafond = sa puissance juste après l'affaiblissement) */
   return p;
 }
 let HERA=0;
@@ -253,7 +264,7 @@ function hedoneTurn(first){
 function resurrect(s,id,li,from,opts={}){
   if(S.locs[li].locked&&!opts.anyLoc) return null; if(S.board[s][li].length>=capOf(s,li)) return null;
   const pile=from==="grave"?S.graveyard[s]:S.discardPile[s]; const k=pile.lastIndexOf(id); if(k<0) return null; pile.splice(k,1);
-  const c=mk(id); c.fresh=true; c.risen=true; S.board[s][li].push(c);
+  const c=mk(id); c.fresh=true; c.risen=true; c.arr=S.turn; S.board[s][li].push(c);
   if(opts.ward) c.ward=true; if(opts.sick!=null) c.sick=opts.sick;   /* Loviatar : −1 au début de chacun des tours restants (voir startTurn) */
   if(opts.withReveal) reveal(s,li,c); else c.rev=true;
   return c;
@@ -267,9 +278,13 @@ const baldurSafe=(s,c)=>eid(c)==="baldur"&&!c.neg&&!(SRC&&(SRC.s===s||SRC.cost<=
 /* Ananké, Fatalité (15 octobre, 2e version) : elle ne peut être ni détruite ni déplacée (renvoi en main, dispersion, attraction d'Hédoné compris), par aucun effet. Tout le reste l'atteint : charme, captivité, transformation, vol, perte d'effet (Apsu, Mohini : neg, elle reste à 1), affaiblissement ; Nemesis la bat. */
 const fated=c=>(isAnk(c)||c.fate)&&!c.neg;   /* Fatalité : Ananké, et Fenrir quand une carte alliée a été détruite avant lui (c.fate) */
 /* Pêche d'immortalité (Xi Wangmu) : ne peut pas être détruite */
-const deathless=c=>eid(c)==="peche_immortalite"&&!c.neg;
+const deathless=c=>(eid(c)==="peche_immortalite"||(eid(c)==="change"&&c.moon))&&!c.neg;   /* Chang'e : après son premier déplacement */
 const noWeak=c=>((eid(c)==="ecorche"||eid(c)==="jordan")&&!c.neg)||c.noweak||c.ward; /* l'Écorché, Jordan, le Tatoueur, Hel X Baldur */
-function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)||baldurSafe(s,c)) return false; c.pow-=n; return true; }
+function weaken(s,li,c,n){ if(shielded(s,li)||sunlit(s)||noWeak(c)||baldurSafe(s,c)) return false;
+  /* La Couturière de la Cité : une fois par tour, elle empêche le premier affaiblissement subi par l'une de tes cartes ici */
+  const co=S.board[s][li].find(x=>live(x)&&eid(x)==="couturiere"&&x.coutT!==S.turn);
+  if(co&&S.board[s][li].includes(c)){ co.coutT=S.turn; log(`La Couturière protège ${nm(c)} (${who(s)})`); sfx("buff"); return false; }
+  c.pow-=n; return true; }
 /* Styx : les cartes Jugement de son côté, dans son lieu, ne peuvent pas être détruites */
 /* Styx : une carte Jugement de son camp détruite ici par un effet ADVERSE revient en main, avec la puissance qu'elle avait.
    (Un effet de son propre camp, comme la Ficelle Dévorante, ou la Faille ne la ramènent pas.) */
@@ -288,11 +303,17 @@ function kamaBack(s,c){ if(eid(c)!=="kama"||!live(c)||S.hand[s].length>=7) retur
 /* Quand une de tes cartes (hors jetons) est détruite : tes Kama gagnent +2 ; Belobog, s'il est dans ta main, entre gratuitement à sa place (une fois par tour) */
 function destroyedHook(s,li,c){ if(!real(c)) return;
   (S.lostT=S.lostT||{p:0,e:0})[s]=S.turn;   /* Fenrir : une carte alliée a été détruite ce tour-ci */
+  for(const k of S.board[s][li]) if(k!==c&&live(k)&&eid(k)==="voyante_barbare"&&(k.bar||0)<2){ k.bar=(k.bar||0)+1; draw(s); log(`La Barmaid aux Squelettes · ${who(s)} pioche 1 carte`); sfx("buff"); }   /* deux déclenchements au maximum */
   for(let i=0;i<3;i++) for(const k of S.board[s][i]) if(k!==c&&live(k)&&eid(k)==="kama"){ k.pow+=2; (k.mods=k.mods||[]).push({v:2,src:"Kama"}); log(`Kama · +2 (${who(s)})`); sfx("buff"); }
   const b=S.hand[s].find(x=>eid(x)==="belobog"); S.belT=S.belT||{p:0,e:0};
   if(b&&S.belT[s]!==S.turn&&!S.locs[li].locked&&slotsUsed(s,li)<capOf(s,li)){ S.belT[s]=S.turn; S.hand[s]=S.hand[s].filter(x=>x!==b); makeRoom(s,li); b.rev=true; b.fresh=true; S.board[s][li].push(b);
     log(`Belobog entre en jeu à la place de ${nm(c)} : ${LOCS[S.locs[li].id].name} (${who(s)})`); sfx("legend"); } }
 const entomb=(s,li,c)=>{
+  /* Sun Wukong : la première fois qu'il est détruit, un Clone de même puissance prend sa place ; Osiris : un Revenant à l'opposé de la puissance positive de la première carte alliée détruite ici */
+  const lastPow=real(c)?cardPow(s,li,c):0;
+  if(real(c)&&eid(c)==="sun_wukong"&&!c.neg&&!c.cloned){ c.cloned=true; const k=mk("clone_wukong"); k.pow=lastPow; k.rev=true; k.fresh=true; if(S.turn<6) k.gone=S.turn+1; S.board[s][li].push(k); log(`Sun Wukong laisse un Clone (${who(s)})`); sfx("void"); }
+  if(real(c)){ const os=S.board[s][li].find(x=>x!==c&&live(x)&&eid(x)==="osiris"&&!x.revU); if(os){ os.revU=true; const o=opp(s);
+    if(S.board[o][li].length<capOf(o,li)){ const k=mk("revenant"); k.pow=-Math.max(0,lastPow); k.rev=true; k.fresh=true; S.board[o][li].push(k); log(`Osiris · un Revenant à ${k.pow} apparaît chez ${who(o)}`); sfx("void"); } } }
   const lost=c.abs&&c.abs.length?c.abs:null; if(lost) c.abs=[];
   if(!styxReturn(s,li,c)&&!kamaBack(s,c)){ bury(s,c);
     /* Bari Gongju : tes cartes détruites ici comptent aussi comme défaussées (Marduk revient en main, le Reflet Noir entre en jeu…) */
@@ -314,7 +335,9 @@ function afterPlay(s,li,c){
 /* garde-fou : si un lieu déborde (Tezcatlipoca détruit avant d'avoir absorbé une carte), les dernières cartes en trop sont perdues */
 function trimOverflow(){ for(const s of ["p","e"]) for(let li=0;li<3;li++) while(S.board[s][li].some(y=>eid(y)==="tezcatlipoca")&&slotsUsed(s,li)>capOf(s,li)){ const x=S.board[s][li].slice().reverse().find(y=>eid(y)!=="tezcatlipoca"&&!CARDS[y.id].token); if(!x) break; S.board[s][li]=S.board[s][li].filter(y=>y!==x); bury(s,x); log(`Plus de place : ${nm(x)} est perdue (${who(s)})`); } }
 /* Le Flon : une carte qui arrive ici par un déplacement gagne +2 */
-function flonHook(i,t){ if(locIs(i,"flon")){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Le Flon"}); } }
+function flonHook(i,t){ if(locIs(i,"flon")){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Le Flon"}); }
+  if(!t.neg&&eid(t)==="athlete_stade"&&(t.athl||0)<4){ t.athl=(t.athl||0)+2; t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"L'Athlète"}); }   /* L'Athlète du Stade : +2 par déplacement, +4 au plus */
+  if(!t.neg&&eid(t)==="change") t.moon=true; }   /* Chang'e : après son premier déplacement, elle ne peut plus être détruite */
 /* Sauvabelin : aucune carte ne peut être détruite dans ce lieu, quelle que soit la source */
 const forest=li=>locIs(li,"sauvabelin");
 function destroy(s,li,c){ if(forest(li)||shielded(s,li)||c.ward||fated(c)||deathless(c)||baldurSafe(s,c)) return false; S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.destroyed++; entomb(s,li,c); if(s==="e") S.killE=(S.killE||0)+1; danteHook(li); return true; }
@@ -342,7 +365,9 @@ const JPARTNERS=new Set((()=>{ const out=[]; for(const u of ULS) if(u.req.some(r
 
 function reveal(s,li,c){
   const prevSrc=SRC; SRC={s,cost:CARDS[c.id].cost};
-  try{ revealFx(s,li,c); } finally { SRC=prevSrc; }
+  /* Hypnos : annule la Révélation de la prochaine carte adverse révélée ici (une carte qui en a une), puis son effet disparaît */
+  const hy=/Révélation :/.test(CARDS[eid(c)].fx||"")?S.board[opp(s)][li].find(x=>live(x)&&eid(x)==="hypnos"&&!x.spent):null;
+  try{ if(hy){ hy.spent=true; c.rev=true; c.fresh=true; c.arr=S.turn; log(`Hypnos endort la Révélation de ${nm(c)} (${who(opp(s))})`); sfx("void"); } else revealFx(s,li,c); } finally { SRC=prevSrc; }
   if(eid(c)!=="anahita") S.lastAny=eid(c);   /* Anahita copie la dernière carte révélée, des deux côtés */
   if(!isAph(c)) (S.lastRev=S.lastRev||{p:null,e:null})[s]=c;   /* Aphrodite rejoue la dernière Révélation du tour */
   /* La Source : les Révélations de tes autres cartes Helvara jouées dans son lieu se déclenchent deux fois (si elle est déjà en jeu, révélée et sans effets annulés) */
@@ -356,7 +381,7 @@ const replayable=x=>x.rev&&!x.neg&&!CARDS[x.id].token&&charOf(x.id)!=="aphrodite
 function replayFx(s,li,x){ const prev=SRC; SRC={s,cost:CARDS[x.id].cost}; try{ revealFx(s,li,x,{replay:true}); } finally { SRC=prev; } }
 function revealFx(s,li,c,opts={}){
   if(!opts.replay&&c.cp) delete c.cp;   /* Anahita : la copie ne dure que jusqu'à sa prochaine vraie Révélation */
-  c.rev=true; if(!opts.replay) c.fresh=true; piles();
+  c.rev=true; if(!opts.replay){ c.fresh=true; c.arr=S.turn; } piles();
   const o=opp(s), d=CARDS[c.id];
   const foes=S.board[o][li].filter(x=>x.rev);
   const targets=foes.filter(x=>!untargetable(s,o,x));
@@ -364,11 +389,38 @@ function revealFx(s,li,c,opts={}){
   const pw=(side,l,x)=>cardPow(side,l,x);
   const strongest=(arr,side,l)=>arr.slice().sort((a,b)=>pw(side,l,b)-pw(side,l,a))[0];
   const weakest=(arr,side,l)=>arr.slice().sort((a,b)=>pw(side,l,a)-pw(side,l,b))[0];
+  /* égalités départagées au hasard (règle commune des cartes du 1er mars) */
+  const minR=(arr,side,l)=>{ if(!arr.length) return null; const m=Math.min(...arr.map(x=>pw(side,l,x))); return gPick(arr.filter(x=>pw(side,l,x)===m)); };
+  const maxR=(arr,side,l)=>{ if(!arr.length) return null; const m=Math.max(...arr.map(x=>pw(side,l,x))); return gPick(arr.filter(x=>pw(side,l,x)===m)); };
   let note="", snd="reveal";
   const buffSelf=n=>{ c.pow+=n; note=(note?note+", ":"")+`+${n}`; snd="buff"; };
   S.forge=S.forge||{p:0,e:0};
   if(S.forge[s]&&eid(c)!=="brigid"&&!opts.replay){ S.forge[s]=0; c.pow+=3; (c.mods=c.mods||[]).push({v:3,src:"Brigid"}); note="+3 (Brigid)"; snd="buff"; }
   switch(eid(c)){
+    case "voix_flon": { let n=0; for(let i=0;i<3;i++){ if(i===li) continue; const t=minR(S.board[s][i].filter(x=>x.rev),s,i); if(t){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"La Voix du Flon"}); n++; } } if(n){ note=`+2 à ${n} carte${n>1?"s":""}`; snd="buff"; } break; }
+    case "joueuse_palud": { draw(s); const hd=S.hand[s]; if(hd.length){ const m=Math.min(...hd.map(x=>CARDS[x.id].cost)), t=gPick(hd.filter(x=>CARDS[x.id].cost===m)); discard(s,t); note=`pioche 1 carte, défausse ${nm(t)}`; snd="buff"; } break; }
+    case "strategue": { const t=minR(mates.filter(x=>!fated(x)),s,li); if(!t) break;
+      const spots=[0,1,2].filter(i=>i!==li&&S.locs[i].rev&&!S.locs[i].locked&&S.board[s][i].length<capOf(s,i)&&leader(i)!==s); if(!spots.length) break;
+      const i=gPick(spots); S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][i].push(t); flonHook(i,t); t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"La Stratège"}); if(s==="p"&&qLive()) qProg("move2");
+      note=`${nm(t)} part vers ${LOCS[S.locs[i].id].name}, +2`; snd="buff"; break; }
+    case "kali": { let n=0; const a=minR(mates,s,li); if(a&&destroy(s,li,a)) n++;
+      const b=minR(S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)),o,li); if(b&&destroy(o,li,b)) n++;
+      if(n){ c.pow+=2*n; (c.mods=c.mods||[]).push({v:2*n,src:"Kali"}); note=`détruit ${n} carte${n>1?"s":""}, +${2*n}`; snd="destroy"; } break; }
+    case "meduse": { const t=maxR(targets,o,li); if(!t) break;
+      if(weaken(o,li,t,2)){ (t.mods=t.mods||[]).push({v:-2,src:"Méduse"}); t.medCap=cardPow(o,li,t); t.medUntil=S.turn+1; note=`−2 à ${nm(t)}, il ne peut plus gagner de puissance`; snd="debuff"; } break; }
+    case "shamash": { const bon=x=>x.pow-CARDS[x.id].pow, cs=targets.filter(x=>bon(x)>0); if(!cs.length) break;
+      const mx=Math.max(...cs.map(bon)), t=gPick(cs.filter(x=>bon(x)===mx)), b=bon(t);
+      if(weaken(o,li,t,b)){ (t.mods=t.mods||[]).push({v:-b,src:"Shamash"}); note=`${nm(t)} perd ses bonus (−${b})`; snd="debuff"; } break; }
+    case "cerridwen": { const hd=S.hand[s].filter(x=>!CARDS[x.id].token); if(!hd.length) break;
+      const m=Math.min(...hd.map(x=>CARDS[x.id].cost)), out=gPick(hd.filter(x=>CARDS[x.id].cost===m)), cands=S.deck[s].filter(x=>!CARDS[x.id].token&&CARDS[x.id].cost===m+1); if(!cands.length) break;
+      const inn=gPick(cands); S.deck[s]=S.deck[s].filter(x=>x!==inn); S.hand[s]=S.hand[s].filter(x=>x!==out); S.hand[s].push(inn); S.deck[s].splice(Math.floor(rnd()*(S.deck[s].length+1)),0,out);
+      note=`échange ${nm(out)} contre ${nm(inn)}`; snd="buff"; break; }
+    case "voyante": { const dk=S.deck[s]; if(!dk.length) break; const top=dk.splice(0,Math.min(3,dk.length)), nxt=S.turn+1, sc=x=>{ const k=CARDS[x.id].cost; return k<=nxt?100+k:-k; };
+      let best=top[0]; for(const x of top) if(sc(x)>sc(best)) best=x;
+      dk.unshift(best); dk.push(...gShuffle(top.filter(x=>x!==best))); note="regarde 3 cartes, garde la meilleure sur le dessus"; snd="buff"; break; }
+    case "demeter": { if(S.turn<6){ S.harv=S.harv||{p:0,e:0}; S.harv[s]++; note="la main grandira au prochain tour"; snd="buff"; } break; }
+    case "nuwa": { const here=S.locs[li].id; let pool=locPool().filter(id=>id!==here&&!S.locs.some(l=>l.id===id)); if(!pool.length) pool=locPool().filter(id=>id!==here); if(!pool.length) break;
+      const id=gPick(pool); S.locs[li]=Object.assign({},S.locs[li],{id}); note=`${LOCS[here].name} devient ${LOCS[id].name}`; snd="void"; break; }
     case "jordan_n": { const ok=new Set(); for(const u of ULS) if(u.req.some(r=>Array.isArray(r)?r.includes("jordan_n"):r==="jordan_n")) for(const r of u.req) for(const id of (Array.isArray(r)?r:[r])) if(charOf(id)!=="jordan") ok.add(id); const y=S.deck[s].find(x=>ok.has(x.id)); if(y&&S.hand[s].length<7){ S.deck[s]=S.deck[s].filter(x=>x!==y); S.hand[s].push(y); note=`ajoute ${nm(y)} à sa main`; snd="buff"; } break; }
     case "joanna": { let n=0; for(let i=0;i<3;i++) if(i!==li&&!S.locs[i].locked&&S.board[s][i].some(x=>x.rev)&&S.board[s][i].length<capOf(s,i)){ const t=mk("lanterne"); t.rev=true; t.fresh=true; S.board[s][i].push(t); n++; } if(n) note=`${n} Lanterne${n>1?"s":""}`; break; }
     case "ares_h": { let n=0; for(const x of targets) if(weaken(o,li,x,2)) n++; if(n){ c.pow+=n; note=`−2 à ${n}, +${n}`; snd="debuff"; } break; }
@@ -636,6 +688,7 @@ function aiPlan(me="e",tierOv){
     const d=CARDS[c.id];
     const tezHere=!!tezAt(me,li)||ctx.plays.some(x=>x.li===li&&x.c.id==="tezcatlipoca");
     if(S.locs[li].locked||muted(me,li)||banned(c)) return null;
+    if(themisOn(li)&&ctx.pend[li]>=1) return null;
     if(c.id==="herakles"){ if(slotsUsed(op,li)>=capOf(op,li)) return null; }
     else if(!tezHere&&slotsUsed(me,li)+ctx.pend[li]>=capOf(me,li)) return null;
     const cost=costOf(me,c,li,ctx.first,ctx.jf); if(cost>ctx.en) return null;
@@ -846,13 +899,13 @@ async function endTurn(){
   if(S.busy||S.over) return;
   if(S.mp) return mpLock();
   if(S.tut&&!tutDone()){ S.nudge=true; sfx("debuff"); render(); return; }
-  const mine=S.staged.slice();
+  const mine=S.staged.slice(); if(S.swimP) mine.swim=S.swimP;
   await resolveTurn(mine, aiPlan(), true);
 }
 async function resolveTurn(mine, theirs, animate){
   const wait=ms=>animate?sleep(ms):Promise.resolve();
-  if(S.rec&&S.rec.turns.length<S.turn) S.rec.turns.push({p:mine.map(x=>[x.c.id,x.li]),e:theirs.map(x=>[x.c.id,x.li])});
-  S.busy=true; S.sel=null; S.info=null; S.staged=[]; S.nudge=false; S.lastRev={p:null,e:null}; S.lastAny=null;
+  if(S.rec&&S.rec.turns.length<S.turn) S.rec.turns.push({p:mine.map(x=>[x.c.id,x.li]),e:theirs.map(x=>[x.c.id,x.li]),sw:mine.swim?[mine.swim.from,mine.swim.li]:null});
+  S.busy=true; S.sel=null; S.info=null; S.staged=[]; S.swimP=null; S.swimSel=false; S.nudge=false; S.lastRev={p:null,e:null}; S.lastAny=null;
   /* Prométhée : énergie non dépensée ; Nike : ordre dans lequel chaque joueur a posé ses cartes (l'IA garde Nike pour la fin) */
   const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0,jugFirst(list,i))),0);
   const unspent=S.unspent={p:Math.max(0,S.energy-spent("p",mine)),e:Math.max(0,S.energyE-spent("e",theirs))}; S.biaBlock={p:false,e:false};
@@ -865,6 +918,10 @@ async function resolveTurn(mine, theirs, animate){
   if(theirs.length) S.disc.e=0;
   /* Vesta : la réduction est prise par la première carte Jugement de coût 1 ou plus jouée (avant les Révélations : une Vesta jouée ce tour vaut pour la suite) */
   S.vesta=S.vesta||{p:0,e:0}; for(const [k,l] of [["p",mine],["e",theirs]]) if(l.some(x=>vestaT(x.c.id))) S.vesta[k]=0;
+  /* La Nageuse du Lac : le déplacement annoncé se fait avant la pose des cartes (les deux camps) */
+  for(const [side,list] of [["p",mine],["e",theirs]]){ const w=list.swim; if(!w) continue; const c=w.c, from=S.board[side].findIndex(col=>col.includes(c));
+    if(from<0||c.swum||!live(c)||fated(c)||w.li===from||!S.locs[w.li].rev||S.locs[w.li].locked||S.board[side][w.li].length>=capOf(side,w.li)) continue;
+    c.swum=true; S.board[side][from]=S.board[side][from].filter(x=>x!==c); S.board[side][w.li].push(c); flonHook(w.li,c); log(`La Nageuse du Lac traverse vers ${LOCS[S.locs[w.li].id].name} (${who(side)})`); sfx("buff"); }
   const eatPlume=(s,li,c)=>{ const pl=S.board[s][li].find(x=>eid(x)==="plume"); if(pl){ S.board[s][li]=S.board[s][li].filter(x=>x!==pl); c.pow+=1; (c.mods=c.mods||[]).push({v:1,src:"Plume"}); } };
   const crossed=[];   /* Héraklès : posé après les autres cartes, il passe du côté de l'adversaire (s'il y reste de la place, sinon il retourne dans la main) */
   for(const x of mine){ if(!CARDS[x.c.id].token) (S.played=S.played||[]).push([x.c.id,S.locs[x.li].id]); if(x.c.id==="herakles"){ crossed.push(["p",x]); continue; } eatPlume("p",x.li,x.c); S.board.p[x.li].push(x.c); }
@@ -902,6 +959,10 @@ async function resolveTurn(mine, theirs, animate){
     SRC={s,cost:CARDS.ishtar.cost}; const ok=t&&weaken(o,li,t,1); SRC=null;
     if(ok){ (t.mods=t.mods||[]).push({v:-1,src:"Ishtar"}); log(`Ishtar · −1 à ${nm(t)} (${who(o)})`); sfx("debuff"); }
   }
+  /* Fin des effets temporaires : le Clone de Sun Wukong disparaît (sans compter comme une destruction) ; Méduse : la cible récupère les 2 points retirés (les gains empêchés ne sont pas rattrapés) */
+  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li].slice()){
+    if(c.gone===S.turn){ S.board[s][li]=S.board[s][li].filter(x=>x!==c); log(`Le Clone de Sun Wukong disparaît (${who(s)})`); }
+    else if(c.medUntil===S.turn){ delete c.medCap; delete c.medUntil; c.pow+=2; (c.mods=c.mods||[]).push({v:2,src:"Méduse (fin)"}); log(`Méduse · ${nm(c)} récupère 2 de puissance (${who(s)})`); sfx("buff"); } }
   /* Fenrir : à la fin de chaque tour suivant celui de sa Révélation, +2 de puissance */
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="fenrir"&&c.fenT!=null&&S.turn>c.fenT){
     c.pow+=2; (c.mods=c.mods||[]).push({v:2,src:"Fenrir"}); log(`Fenrir · +2 (${who(s)})`); sfx("buff"); }
@@ -1040,7 +1101,9 @@ async function rpStep(){
   if(!S||!S.rp||S.busy||S.rp.done) return;
   const r=S.rp.r, t=r.turns[S.turn-1]; if(!t){ S.rp.done=true; render(); return; }
   const used=new Set(), pick=(side,list)=>list.map(([id,li])=>{ const c=S.hand[side].find(x=>x.id===id&&!used.has(x)); if(c) used.add(c); return c?{c,li}:null; }).filter(Boolean);
-  await resolveTurn(pick("p",t.p),pick("e",t.e),true);
+  const mp=pick("p",t.p), me=pick("e",t.e);
+  if(t.sw){ const c=S.board.p[t.sw[0]].find(x=>eid(x)==="nageuse_lac"); if(c) mp.swim={c,li:t.sw[1],from:t.sw[0]}; }
+  await resolveTurn(mp,me,true);
 }
 function rpEnd(){
   const r=S.rp.r; S.rp.done=true; S.rp.auto=false;

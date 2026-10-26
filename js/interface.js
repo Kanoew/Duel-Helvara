@@ -1,6 +1,6 @@
 // Code couleur des mots-clés d'effet (Révélation, Continu, Fatalité) : le mot seul est coloré, avec un symbole pour ne pas dépendre de la couleur
-const FXK={"Révélation":"rev","On Reveal":"rev","Continu":"cont","Ongoing":"cont","Fatalité":"fat","Fate":"fat"};
-function fxH(t){ return String(t||"").replace(/(^|\. )(Révélation|Continu|Fatalité|On Reveal|Ongoing|Fate)( ?:)/g,(m,a,k,c)=>`${a}<span class="kw kw-${FXK[k]}">${k}</span>${c}`); }
+const FXK={"Révélation":"rev","On Reveal":"rev","Continu":"cont","Ongoing":"cont","Capacité":"cap","Ability":"cap","Fatalité":"fat","Fate":"fat"};
+function fxH(t){ return String(t||"").replace(/(^|\. )(Révélation|Continu|Capacité|Fatalité|On Reveal|Ongoing|Ability|Fate)( ?:)/g,(m,a,k,c)=>`${a}<span class="kw kw-${FXK[k]}">${k}</span>${c}`); }
 /* Duel d'Helvara : rendu des écrans, interactions et démarrage.
    Extrait d'index.html le 12 octobre 2026 sans aucun changement de code : les fichiers js/ se chargent dans l'ordre d'index.html et partagent la même portée globale. */
 /* ======= RENDU ======= */
@@ -649,19 +649,21 @@ function mini(s,li,c,staged){
 }
 function sideHTML(s,li){
   let bd=S.board[s][li]; if(s==="p"&&S.staged.some(x=>x.li===li&&x.c.id!=="herakles")){ const pl=bd.find(x=>x.id==="plume"); if(pl) bd=bd.filter(x=>x!==pl); }   /* la Plume cède sa case à la carte posée */
+  if(s==="p"&&S.swimP&&S.swimP.from===li) bd=bd.filter(x=>x!==S.swimP.c);   /* Nageuse du Lac : déjà partie vers son nouveau lieu */
   const items=bd.map(c=>mini(s,li,c,s==="p"&&!c.rev));
+  if(s==="p"&&S.swimP&&S.swimP.li===li) items.push(mini("p",li,S.swimP.c,true));
   if(s==="p") for(const x of S.staged.filter(x=>x.li===li&&x.c.id!=="herakles")) items.push(mini("p",li,x.c,true));
   if(s==="e") for(const x of S.staged.filter(x=>x.li===li&&x.c.id==="herakles")) items.push(mini("e",li,x.c,true));   /* Héraklès posé : il apparaît déjà du côté adverse */
   const cp=capOf(s,li), slots=[], nSl=Math.max(4,items.length);
   for(let i=0;i<nSl;i++) slots.push(items[i]||`<div class="slot${i>=cp?" x":""}"></div>`);
   if(s==="e"){ const r=[slots[2],slots[3],slots[0],slots[1]]; slots.splice(0,4,...r); }
-  const can=s==="p"&&S.sel&&!S.busy&&canStage(findHand(S.sel),li);
+  const can=s==="p"&&!S.busy&&((S.sel&&canStage(findHand(S.sel),li))||(S.swimSel&&swimOk(li)));
   return `<div class="side ${s==="p"?"me":"foe"}${can?" can":""}" ${s==="p"?`data-act="stage" data-li="${li}"`:""}>${slots.join("")}</div>`;
 }
 const VEIL="linear-gradient(180deg,rgba(8,12,20,.45),rgba(8,12,20,.85))";
 function locHTML(li){
   const L=S.locs[li], d=LOCS[L.id], a=total("p",li), b=total("e",li), w=leader(li);
-  const can=S.sel&&!S.busy&&canStage(findHand(S.sel),li);
+  const can=!S.busy&&((S.sel&&canStage(findHand(S.sel),li))||(S.swimSel&&swimOk(li)));
   const img=L.rev?d.img:"images/lieux/inconnu.webp";
   const cross=S.oath===li&&S.aiOath===li;
   const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
@@ -760,7 +762,7 @@ function gameHTML(){
     ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
   </div>
   ${S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
-  <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${pilesHTML()}</div>
+  <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${(swimmer()||S.swimP)&&!(S.mp&&S.mp.locked)?`<button class="toggle${S.swimSel?" on":""}" data-act="swim">${S.swimP?"Annuler la traversée":S.swimSel?"Choisis un lieu…":"🏊 Nageuse : changer de lieu"}</button>`:""}${pilesHTML()}</div>
   ${aiOathBar()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
@@ -1094,11 +1096,12 @@ document.addEventListener("click", e=>{
   if(act==="oathok"){ if(oathOK()&&S.oath==null&&S.oathPick!=null){ S.oath=S.oathPick; S.oathPick=null; S.oathMode=false; log(`Serment prêté sur ${LOCS[S.locs[S.oath].id].name}`); sfx("legend"); } render(); return; }
   if(act==="mull"){ if(S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.staged.length){ const n=S.hand.p.length; S.deck.p=shuffle([...S.deck.p,...S.hand.p]); S.hand.p=[]; if(S.rec) S.rec.dp=S.deck.p.map(c=>c.id); for(let i=0;i<n;i++) draw("p"); S.mull=true; S.sel=null; log("Main changée"); sfx("pack"); } render(); return; }
   if(act==="hand"){ const uid=+el.dataset.uid; S.sel=S.sel===uid?null:uid; S.info=null; sfx("select"); render(); return; }
-  if(act==="unstage"){ e.stopPropagation(); const uid=+el.dataset.uid; const x=S.staged.find(s=>s.c.uid===uid);
+  if(act==="swim"){ if(S.swimP){ S.swimP=null; sfx("undo"); } else S.swimSel=!S.swimSel; S.sel=null; S.info=null; render(); return; }
+  if(act==="unstage"){ e.stopPropagation(); const uid=+el.dataset.uid; if(S.swimP&&S.swimP.c.uid===uid){ S.swimP=null; sfx("undo"); render(); return; } const x=S.staged.find(s=>s.c.uid===uid);
     if(x){ S.staged=S.staged.filter(s=>s!==x); S.hand.p.push(x.c); sfx("undo"); } render(); return; }
   if(act==="inspect"){ e.stopPropagation(); S.sel=null; gz="c"+el.dataset.uid; sfx("select"); render(); return; }
   if(act==="stage"){ const li=+el.dataset.li;
-    if(S.sel) stageSel(li); else { gz="l"+li; sfx("select"); }
+    if(S.swimSel){ if(swimTo(li)) sfx("place"); else S.swimSel=false; } else if(S.sel) stageSel(li); else { gz="l"+li; sfx("select"); }
     render(); }
 });
 document.addEventListener("submit", e=>{

@@ -1100,6 +1100,95 @@ async function inPage() {
     { const h = histHTML(); T("Replay : le bouton « Revoir la partie » apparaît dans l'historique pour les parties enregistrées seulement", /data-act="rpstart" data-t="4242"/.test(h), ""); P.rps = []; T("Replay : pas de bouton sans enregistrement", !/rpstart/.test(histHTML()), ""); }
     P.rps = keepRps; P.hist = keepHist; P.owned = keepOwn; P.deck = keepDeck; S = null; quiet = true; }
 
+  /* ===== Vague du 1er mars 2027 (20 cartes) ===== */
+  { const byCost = n => Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].cost === n && CARDS[id].r !== "U" && !ULof(id));
+    const M = ["voix_flon","joueuse_palud","couturiere","strategue","gaia","kali","hypnos","sun_wukong","meduse","osiris","athlete_stade","nageuse_lac","voyante_barbare","voyante","demeter","nuwa","cerridwen","change","shamash","themis"];
+    T("1er mars : les 20 cartes sortent le 1er mars 2027 (annonce le 24 février) et ont un effet", M.every(id => CARDS[id].rel === "2027-03-01" && CARDS[id].soon === "2027-02-24" && CARDS[id].fx), M.filter(id => CARDS[id].rel !== "2027-03-01").join());
+    T("1er mars : raretés et coûts du bloc (La Voix du Flon C 3/2, Osiris L 5/3, Nageuse C 1/2, Kali E 5/5)", CARDS.voix_flon.r === "C" && CARDS.voix_flon.cost === 3 && CARDS.voix_flon.pow === 2 && CARDS.osiris.r === "L" && CARDS.osiris.cost === 5 && CARDS.nageuse_lac.cost === 1 && CARDS.kali.pow === 5, "");
+    /* La Voix du Flon */
+    fresh(); S.turn = 3; { const a = put("p", 1, plain[0], 1), b = put("p", 1, plain[1], 3), c = put("p", 2, plain[2], 2), v = card("voix_flon"); S.hand.p = [v];
+      await resolveTurn([{ c: v, li: 0 }], [], false); T("La Voix du Flon : +2 à la carte la plus faible de chacun des deux autres lieux", a.pow === 3 && b.pow === 3 && c.pow === 4, `${a.pow} ${b.pow} ${c.pow}`); }
+    /* La Joueuse de la Palud */
+    fresh(); S.turn = 3; { const hi = card(byCost(3)), lo = card(byCost(1)), dr = card(byCost(2)), j = card("joueuse_palud"); S.hand.p = [j, hi, lo]; S.deck.p = [dr];
+      await resolveTurn([{ c: j, li: 0 }], [], false); T("La Joueuse de la Palud : pioche 1 carte puis défausse la carte de coût le plus faible", !S.hand.p.includes(lo) && S.hand.p.includes(hi) && S.hand.p.includes(dr) && S.discardPile.p.includes(lo.id), S.hand.p.map(c => CARDS[c.id].cost).join()); }
+    /* La Couturière de la Cité : une fois par tour */
+    fresh(); S.turn = 3; { const co = put("p", 0, "couturiere"), a = put("p", 0, plain[0], 3); co.pow = 3; const ar = card("ares_h"); S.hand.e = [ar];
+      await resolveTurn([], [{ c: ar, li: 0 }], false); T("La Couturière : empêche le premier affaiblissement du tour, pas le second", [co.pow, a.pow].filter(x => x === 3).length === 1 && [co.pow, a.pow].filter(x => x === 1).length === 1, `${co.pow} ${a.pow}`); }
+    /* La Stratège */
+    fresh(); S.turn = 3; { const w = put("p", 0, plain[0], 1), st = card("strategue"); S.hand.p = [st]; await resolveTurn([{ c: st, li: 0 }], [], false);
+      T("La Stratège : sa plus faible alliée ici part vers un autre lieu et gagne +2", !S.board.p[0].includes(w) && (S.board.p[1].includes(w) || S.board.p[2].includes(w)) && w.pow === 3, w.pow); }
+    fresh(); S.turn = 3; { const w = put("p", 0, plain[0], 1); put("p", 1, plain[1], 9); put("p", 2, plain[2], 9); const st = card("strategue"); S.hand.p = [st]; await resolveTurn([{ c: st, li: 0 }], [], false);
+      T("La Stratège : si tu mènes déjà les deux autres lieux, elle ne déplace rien", S.board.p[0].includes(w) && w.pow === 1, w.pow); }
+    /* Gaïa */
+    fresh(); S.turn = 3; { const g = put("p", 0, "gaia"); for (let i = 0; i < 4; i++) put("p", 1, plain[i], 1); const a = cardPow("p", 0, g); for (let i = 0; i < 4; i++) put("p", 2, plain[i], 1); const b = cardPow("p", 0, g);
+      T("Gaïa : +2 pour chaque autre lieu où ton côté est plein", a === 5 && b === 7, `${a} ${b}`); }
+    /* Kali */
+    fresh(); S.turn = 3; { const a = put("p", 0, plain[0], 1), b = put("p", 0, plain[1], 4), e1 = put("e", 0, plain[2], 2), e2 = put("e", 0, plain[3], 5), k = card("kali"); S.hand.p = [k]; await resolveTurn([{ c: k, li: 0 }], [], false);
+      T("Kali : détruit sa plus faible alliée puis la plus faible adverse, +2 par carte détruite", !S.board.p[0].includes(a) && S.board.p[0].includes(b) && !S.board.e[0].includes(e1) && S.board.e[0].includes(e2) && k.pow === 9, k.pow); }
+    /* Hypnos */
+    fresh(); S.turn = 3; { const h = put("e", 0, "hypnos"), t = put("p", 1, plain[0], 2), v = card("voix_flon"), v2 = card("voix_flon"); S.hand.p = [v];
+      await resolveTurn([{ c: v, li: 0 }], [], false); const cut = t.pow === 2 && h.spent === true; S.hand.p = [v2]; S.turn = 3; await resolveTurn([{ c: v2, li: 0 }], [], false);
+      T("Hypnos : annule la Révélation de la prochaine carte adverse ici, puis disparaît", cut && t.pow === 4, `${cut} ${t.pow}`); }
+    /* Sun Wukong */
+    fresh(); S.turn = 3; S.locs[0].id = "sousgare"; { const w = put("p", 0, "sun_wukong"), ny = card("nyx"); S.hand.e = [ny]; await resolveTurn([], [{ c: ny, li: 0 }], false);
+      const cl = S.board.p[0].find(x => x.id === "clone_wukong"); T("Sun Wukong : détruit, il laisse un Clone de même puissance (et passe au cimetière)", !!cl && cl.pow === 5 && S.graveyard.p.includes("sun_wukong"), cl && cl.pow);
+      S.turn = 4; await resolveTurn([], [], false); T("Sun Wukong : le Clone disparaît à la fin du tour suivant", !S.board.p[0].some(x => x.id === "clone_wukong"), ""); }
+    fresh(); S.turn = 5; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); const cl = S.board.p[0].find(x => x.id === "clone_wukong"); S.turn = 6; await resolveTurn([], [], false);
+      T("Sun Wukong : détruit au tour 5, le Clone disparaît à la fin du tour 6 (avant le décompte)", !!cl && !S.board.p[0].some(x => x.id === "clone_wukong"), ""); }
+    fresh(); S.turn = 6; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); await resolveTurn([], [], false); T("Sun Wukong : détruit au tour 6, le Clone reste jusqu'au décompte final", S.board.p[0].some(x => x.id === "clone_wukong"), ""); }
+    fresh(); S.turn = 3; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); const cl = S.board.p[0].find(x => x.id === "clone_wukong"); destroy("p", 0, cl);
+      T("Sun Wukong : le Clone peut être détruit normalement, et une seconde destruction ne crée pas de second Clone", !S.board.p[0].some(x => x.id === "clone_wukong") && S.board.p[0].length === 0, ""); }
+    /* Méduse */
+    fresh(); S.turn = 3; { const f = put("e", 0, plain[0], 5), m = card("meduse"); S.hand.p = [m]; await resolveTurn([{ c: m, li: 0 }], [], false);
+      const after = cardPow("e", 0, f); f.pow += 3; const capped = cardPow("e", 0, f); S.turn = 4; await resolveTurn([], [], false);
+      T("Méduse : −2 à la plus forte adverse, qui ne peut plus gagner de puissance ; à la fin du tour suivant elle récupère les 2 points", after === 3 && capped === 3 && f.medCap == null && f.pow === 8 - 0, `${after} ${capped} ${f.pow} ${f.medCap}`); }
+    /* Osiris */
+    fresh(); S.turn = 3; { const o = put("p", 0, "osiris"), a = put("p", 0, plain[0], 4), ny = card("nyx"); S.hand.e = [ny]; await resolveTurn([], [{ c: ny, li: 0 }], false);
+      const rv = S.board.e[0].find(x => x.id === "revenant"); T("Osiris : une carte alliée détruite ici laisse un Revenant à l'opposé de sa puissance chez l'adversaire", !S.board.p[0].includes(a) && !!rv && rv.pow === -4, rv && rv.pow);
+      const b = put("p", 0, plain[1], 2); destroy("p", 0, b); T("Osiris : une seule fois par partie", S.board.e[0].filter(x => x.id === "revenant").length === 1, ""); }
+    fresh(); S.turn = 3; { put("p", 0, "osiris"); for (let i = 0; i < 3; i++) put("e", 0, plain[i], 1); put("e", 0, plain[3], 1); const a = put("p", 0, plain[0], -2); destroy("p", 0, a);
+      T("Osiris : aucun emplacement adverse libre, aucun Revenant", !S.board.e[0].some(x => x.id === "revenant"), ""); }
+    fresh(); S.turn = 3; { put("p", 0, "osiris"); const a = put("p", 0, plain[0], -2); destroy("p", 0, a); const rv = S.board.e[0].find(x => x.id === "revenant"); T("Osiris : puissance négative ou nulle → Revenant à 0", rv && rv.pow === 0, rv && rv.pow); }
+    /* L'Athlète du Stade */
+    fresh(); S.turn = 3; { const at = put("p", 0, "athlete_stade"), st = card("strategue"); S.hand.p = [st]; await resolveTurn([{ c: st, li: 0 }], [], false);
+      T("L'Athlète : déplacé par La Stratège, il gagne +4 au total (+2 de son effet, +2 de La Stratège)", at.pow === 2 + 4 && at.athl === 2, `${at.pow} ${at.athl}`); const x = put("p", 1, "athlete_stade"); flonHook(1, x); flonHook(1, x); flonHook(1, x); T("L'Athlète : +4 au maximum par son propre effet", x.pow === 2 + 4 && x.athl === 4, x.pow); }
+    /* La Nageuse du Lac */
+    fresh(); S.turn = 3; { const n = put("p", 0, "nageuse_lac"); n.arr = 2; T("Nageuse : disponible dès le tour suivant son arrivée", !!swimmer() && swimOk(1) && !swimOk(0), "");
+      swimTo(2); const stub = S.swimP; const mine = []; mine.swim = stub; await resolveTurn(mine, [], false);
+      T("Nageuse : le déplacement annoncé se fait avant la pose, une seule fois par partie", S.board.p[2].includes(n) && n.swum === true && !swimmer(), ""); }
+    fresh(); S.turn = 3; { const n = put("p", 0, "nageuse_lac"); n.arr = 3; T("Nageuse : pas disponible le tour de son arrivée", !swimmer(), ""); }
+    fresh(); S.turn = 3; { const n = put("p", 0, "nageuse_lac"); n.arr = 1; for (let i = 0; i < 4; i++) put("p", 1, plain[i], 1); T("Nageuse : jamais vers un lieu où ton côté est plein", !swimOk(1) && swimOk(2), ""); }
+    /* La Barmaid aux Squelettes */
+    fresh(); S.turn = 3; { put("p", 0, "voyante_barbare"); S.deck.p = [card(plain[0]), card(plain[1]), card(plain[2])]; S.hand.p = []; const xs = [put("p", 0, plain[3], 1), put("p", 0, plain[4], 1), put("p", 0, plain[5], 1)]; for (const x of xs) destroy("p", 0, x);
+      T("La Barmaid : pioche quand une autre carte alliée est détruite ici, deux fois au maximum par partie", S.hand.p.length === 2, S.hand.p.length); }
+    /* La Voyante */
+    fresh(); S.turn = 3; { const c1 = card(byCost(1)), c0 = card(byCost(0)), c4 = card(byCost(4)), c2 = card(byCost(2)), c3 = card(byCost(3)), v = card("voyante"); S.deck.p = [c1, c0, c4, c2, c3]; S.hand.p = [v];
+      await resolveTurn([{ c: v, li: 0 }], [], false); const d = S.deck.p;
+      T("La Voyante : la meilleure des 3 cartes (jouable au tour suivant) passe au-dessus (pioche du tour suivant), les deux autres dessous", S.hand.p.includes(c4) && d.length === 4 && d.slice(-2).includes(c1) && d.slice(-2).includes(c0) && d[0] === c2, S.hand.p.map(c => CARDS[c.id].cost).join() + " | " + d.map(c => CARDS[c.id].cost).join()); }
+    /* Déméter */
+    fresh(); S.turn = 3; { const x = card(plain[0], 1), d = card("demeter"); S.hand.p = [d, x]; await resolveTurn([{ c: d, li: 0 }], [], false); T("Déméter : au début du tour suivant, toute la main gagne +1", x.pow === 2, x.pow); }
+    fresh(); S.turn = 5; { const x = card(plain[0], 1), d = card("demeter"); S.hand.p = [d, x]; await resolveTurn([{ c: d, li: 0 }], [], false); S.hand.p = [x]; T("Déméter : le bonus arrive avant la pioche et pas avant le tour suivant", x.pow === 2, x.pow); }
+    fresh(); S.turn = 6; { const x = card(plain[0], 1), d = card("demeter"); S.hand.p = [d, x]; await resolveTurn([{ c: d, li: 0 }], [], false); T("Déméter : jouée au dernier tour, pas de récolte", x.pow === 1 && !(S.harv && S.harv.p), x.pow); }
+    /* Nüwa */
+    fresh(); S.turn = 3; { const a = put("p", 1, plain[0], 2), nu = card("nuwa"), was = S.locs[1].id; S.hand.p = [nu]; await resolveTurn([{ c: nu, li: 1 }], [], false);
+      T("Nüwa : remplace le lieu par un autre (différent), les cartes restent", S.locs[1].id !== was && !!LOCS[S.locs[1].id] && S.board.p[1].includes(a) && S.board.p[1].includes(nu), `${was} → ${S.locs[1].id}`); }
+    /* Cerridwen */
+    fresh(); S.turn = 3; { const a = card(byCost(1)), b = card(byCost(3)), want = card(byCost(2)), other = card(byCost(4)), ce = card("cerridwen"); const fill = [5, 5, 5, 5, 5].map(n => card(byCost(n) || byCost(4))); S.hand.p = [ce, a, b, ...fill]; S.deck.p = [other, want];
+      await resolveTurn([{ c: ce, li: 0 }], [], false); T("Cerridwen : échange la carte de coût le plus faible de la main contre une carte du deck coûtant 1 de plus", S.hand.p.includes(want) && !S.hand.p.includes(a) && S.deck.p.includes(a) && S.hand.p.includes(b), S.hand.p.map(c => CARDS[c.id].cost).join()); }
+    fresh(); S.turn = 3; { const a = card(byCost(1)), ce = card("cerridwen"); const fill = [5, 5, 5, 5, 5, 5].map(n => card(byCost(n) || byCost(4))); S.hand.p = [ce, a, ...fill]; S.deck.p = [card(byCost(3))]; await resolveTurn([{ c: ce, li: 0 }], [], false); T("Cerridwen : sans carte à +1 dans le deck, ne fait rien", S.hand.p.includes(a) && S.deck.p.length === 1, ""); }
+    /* Chang'e */
+    fresh(); S.turn = 3; { const ch = put("p", 0, "change"); const before = destroy("p", 1, put("p", 1, "change")); T("Chang'e : détruisable avant son premier déplacement", before === true, "");
+      flonHook(0, ch); const ok = destroy("p", 0, ch); T("Chang'e : après son premier déplacement, elle ne peut plus être détruite", ok === false && S.board.p[0].includes(ch), ""); }
+    /* Shamash */
+    fresh(); S.turn = 3; { const base = CARDS[plain[0]].pow, f1 = put("e", 0, plain[0], base + 2), f2 = put("e", 0, plain[1], CARDS[plain[1]].pow + 3), sh = card("shamash"); S.hand.p = [sh]; await resolveTurn([{ c: sh, li: 0 }], [], false);
+      T("Shamash : la carte adverse au plus grand bonus perd tous ses bonus (l'autre garde les siens)", f2.pow === CARDS[plain[1]].pow && f1.pow === base + 2, `${f1.pow} ${f2.pow}`); }
+    fresh(); S.turn = 3; { const f = put("e", 0, plain[0], CARDS[plain[0]].pow), sh = card("shamash"); S.hand.p = [sh]; await resolveTurn([{ c: sh, li: 0 }], [], false); T("Shamash : sans bonus adverse positif ici, ne fait rien", f.pow === CARDS[plain[0]].pow, ""); }
+    /* Thémis */
+    fresh(); S.turn = 3; { const th = put("e", 0, "themis"); th.arr = 2; const a = card(byCost(1)), b = card(byCost(1)); S.hand.p = [a, b]; S.energy = 9; const first = canStage(a, 0); S.staged.push({ c: a, li: 0 }); S.hand.p = [b];
+      T("Thémis : chaque joueur ne peut jouer qu'une carte ici par tour (dès le tour suivant son arrivée), les autres lieux restent libres", first && !canStage(b, 0) && canStage(b, 1), ""); S.staged = []; }
+    fresh(); S.turn = 3; { const th = put("e", 0, "themis"); th.arr = 3; const a = card(byCost(1)), b = card(byCost(1)); S.hand.p = [a, b]; S.energy = 9; S.staged.push({ c: a, li: 0 }); T("Thémis : sans effet le tour de son arrivée", canStage(b, 0), ""); S.staged = []; }
+  }
+
   /* ===== Cadres de fête (26 octobre) : liés à la carte (saison, variantes), en permanence ===== */
   { const keepC = P.cadres, keepScr = screen, keepZ = zoomId; P.cadres = true;
     T("Cadres : les cartes de saison ont leur cadre quelle que soit la date (Halloween, Noël, Nouvel An, Saint-Valentin, Pâques)", [frameCur("morrigan_h"), frameCur("aphrodite_n"), frameCur("hel_r"), frameCur("eos_v"), frameCur("ananke_v"), frameCur("ananke_r"), frameCur("ulqetjor_v")].join() === "halloween,noel,nouvelan,saintvalentin,saintvalentin,nouvelan,saintvalentin", [frameCur("morrigan_h"), frameCur("aphrodite_n"), frameCur("hel_r")].join());
