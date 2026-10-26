@@ -42,6 +42,14 @@ const CSS = `
 @keyframes hc-volt { 0%, 100% { filter: brightness(.7); } 42% { filter: brightness(1.25); } 48% { filter: brightness(.85); } 54% { filter: brightness(1.75); } 62% { filter: brightness(.95); } }
 .hc-still .hc-volt { animation: none; }
 @media (prefers-reduced-motion: reduce) { .hc-volt { animation: none; } }
+.hc-ember { mix-blend-mode: screen; opacity: calc(var(--hc-foil) * 1.2);
+  background: radial-gradient(circle at calc(var(--hc-fx) * 100%) calc(var(--hc-fy) * 100%), #fff2b0, #ff9a1f 35%, #ff4d00 70%);
+  animation: hc-ember 2.6s ease-in-out infinite; }
+@keyframes hc-ember { 0%, 100% { filter: brightness(.65); } 30% { filter: brightness(1.3); } 38% { filter: brightness(.8); } 60% { filter: brightness(1.55); } 80% { filter: brightness(.9); } }
+.hc-still .hc-ember { animation: none; }
+@media (prefers-reduced-motion: reduce) { .hc-ember { animation: none; } }
+.hc-art { position: absolute; overflow: hidden; }
+.hc-framed { background: transparent; box-shadow: none; border-radius: 0; overflow: visible; }
 .hc-flash { position: absolute; inset: 0; opacity: 0; mix-blend-mode: screen; pointer-events: none;
   background: radial-gradient(ellipse 62% 34% at 62% 13%, rgba(255,246,226,.95), rgba(150,185,255,.28) 55%, transparent 76%); }
 .hc-glare { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
@@ -155,6 +163,7 @@ export class HoloCard {
    * @param {number} [opts.foil=0.7]  0 à 1, intensité du foil
    * @param {boolean} [opts.idle=true] la carte oscille doucement quand personne ne la touche
    * @param {'auto'|'high'|'low'} [opts.quality='auto']  'low' réduit les particules et la résolution du canvas
+   * @param {string} [opts.frame]     URL d'un frame.json : la carte est alors dessinée dans un cadre (voir README)
    * @param {number} [opts.radius]    rayon des coins en px (22 par défaut)
    */
   constructor(host, manifest, opts = {}) {
@@ -179,7 +188,13 @@ export class HoloCard {
     if (!res.ok) throw new Error('holo-card : manifest introuvable (' + manifestUrl + ')');
     const manifest = await res.json();
     const baseUrl = opts.baseUrl || manifestUrl.replace(/[^/]*$/, '');
-    const card = new HoloCard(host, manifest, Object.assign({}, opts, { baseUrl }));
+    const o = Object.assign({}, opts, { baseUrl });
+    if (opts.frame) {   // cadre optionnel : URL d'un frame.json
+      const fr = await fetch(opts.frame);
+      if (!fr.ok) throw new Error('holo-card : cadre introuvable (' + opts.frame + ')');
+      o.frameManifest = await fr.json(); o.frameBase = opts.frame.replace(/[^/]*$/, '');
+    }
+    const card = new HoloCard(host, manifest, o);
     try { await card.ready; } catch (e) { card.destroy(); throw e; }
     return card;
   }
@@ -187,9 +202,17 @@ export class HoloCard {
   _build() {
     const { host, m } = this;
     host.classList.add('hc-host');
-    host.style.aspectRatio = m.aspect[0] + ' / ' + m.aspect[1];
+    const FM = this.fm = this.o.frameManifest || null;
+    const ar = FM ? FM.aspect : m.aspect;
+    host.style.aspectRatio = ar[0] + ' / ' + ar[1];
     if (this.o.radius != null) host.style.setProperty('--hc-radius', this.o.radius + 'px');
-    const card = this.card = el('div', 'hc-card');
+    const card = this.card = el('div', 'hc-card' + (FM ? ' hc-framed' : ''));
+    let art = card;   // sans cadre : les couches sont directement dans la carte
+    if (FM) {
+      art = this.art = el('div', 'hc-art'); const w = FM.window;
+      art.style.left = (w[0] * 100) + '%'; art.style.top = (w[1] * 100) + '%'; art.style.width = (w[2] * 100) + '%'; art.style.height = (w[3] * 100) + '%';
+      card.appendChild(art);
+    } else this.art = card;
     this.layers = []; this.imgs = []; this.flash = null;
     const cBack = this.cBack = el('canvas', 'hc-fx'), cFront = this.cFront = el('canvas', 'hc-fx');
     let z = 1;
@@ -202,11 +225,21 @@ export class HoloCard {
         });
       });
       if (L.flash) { const f = el('div', 'hc-flash'); d.appendChild(f); this.flash = f; }
-      card.appendChild(d); this.layers.push({ el: d, amp: L.amp || 0 });
-      if (i === m.backAfter) { cBack.style.zIndex = z++; card.appendChild(cBack); }
+      art.appendChild(d); this.layers.push({ el: d, amp: L.amp || 0 });
+      if (i === m.backAfter) { cBack.style.zIndex = z++; art.appendChild(cBack); }
     });
-    cFront.style.zIndex = z++; card.appendChild(cFront);
-    const gl = el('div', 'hc-glare'), fr = el('div', 'hc-frame'); gl.style.zIndex = 80; fr.style.zIndex = 90; card.appendChild(gl); card.appendChild(fr);
+    cFront.style.zIndex = z++; art.appendChild(cFront);
+    const gl = el('div', 'hc-glare'); gl.style.zIndex = 80; art.appendChild(gl);
+    if (FM) {
+      const d = el('div', 'hc-layer hc-fr'); d.style.zIndex = 10; d.style.transform = 'none';
+      const im = el('img'); im.alt = ''; im.decoding = 'async'; im.src = (this.o.frameBase || '') + FM.src; d.appendChild(im); this.imgs.push(im);
+      (FM.foils || []).forEach(F => {
+        (F.type === 'gold' ? ['goldhue', 'goldshine'] : [F.type]).forEach(cls => {
+          const e = el('div', 'hc-foil hc-' + cls); e.style.setProperty('--hc-mask', 'url("' + (this.o.frameBase || '') + F.mask + '")'); d.appendChild(e);
+        });
+      });
+      card.appendChild(d); this.frameLayer = { el: d, amp: FM.amp == null ? .012 : FM.amp };
+    } else { const fr = el('div', 'hc-frame'); fr.style.zIndex = 90; card.appendChild(fr); }
     if (this.reduce) card.classList.add('hc-still');
     host.appendChild(card);
     const fx = m.fx || {};
@@ -227,7 +260,7 @@ export class HoloCard {
   }
 
   _measure() {
-    this.W = this.card.offsetWidth || 1; this.H = this.card.offsetHeight || 1;
+    this.W = this.art.offsetWidth || 1; this.H = this.art.offsetHeight || 1;
     this.dpr = Math.min(window.devicePixelRatio || 1, this.q.dprCap);
     [this.cBack, this.cFront].forEach(c => { c.width = Math.round(this.W * this.dpr); c.height = Math.round(this.H * this.dpr); });
   }
@@ -265,10 +298,10 @@ export class HoloCard {
   }
 
   _frame = (now) => {
-    if (!this.running) return;
     /* option maxFps (ajout Duel d'Helvara, petites cartes) : saute les images en trop pour ménager le téléphone */
     if (this.o.maxFps && now - (this._drawn || 0) < 1000 / this.o.maxFps - 3) { requestAnimationFrame(this._frame); return; }
     this._drawn = now;
+    if (!this.running) return;
     const dt = Math.min(.05, (now - this.last) / 1000); this.last = now; const t = (now - this.t0) / 1000;
     const idle = this.o.idle !== false && !this.reduce;
     if (!this.active) { this.target.x = idle ? Math.sin(t * .55) * .75 : 0; this.target.y = idle ? Math.cos(t * .4) * .5 : 0; }
@@ -278,6 +311,7 @@ export class HoloCard {
     card.style.setProperty('--hc-fx', ((cur.x + 1) / 2).toFixed(4)); card.style.setProperty('--hc-fy', ((cur.y + 1) / 2).toFixed(4));
     card.style.setProperty('--hc-foil', this.foil.toFixed(2));
     card.style.transform = 'rotateY(' + (cur.x * 11).toFixed(2) + 'deg) rotateX(' + (-cur.y * 9).toFixed(2) + 'deg)';
+    if (this.frameLayer) { const F = this.frameLayer, FW = card.offsetWidth; F.el.style.transform = 'translate3d(' + (cur.x * F.amp * FW * depth).toFixed(2) + 'px,' + (cur.y * F.amp * FW * .6 * depth).toFixed(2) + 'px,0) scale(1.012)'; }
     this.layers.forEach(L => { L.el.style.transform = 'translate3d(' + (cur.x * L.amp * W * depth).toFixed(2) + 'px,' + (cur.y * L.amp * W * .6 * depth).toFixed(2) + 'px,0) scale(1.06)'; });
     drawFx(this.cBack, this.fb, t, dt, cur.x * .006 * W * depth, cur.y * .006 * W * .6 * depth, W, H, this.dpr, this.q.motion);
     drawFx(this.cFront, this.ff, t, dt, cur.x * .022 * W * depth, cur.y * .022 * W * .6 * depth, W, H, this.dpr, this.q.motion);

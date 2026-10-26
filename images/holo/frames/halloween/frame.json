@@ -1,0 +1,20 @@
+{
+  "src": "frame.webp",
+  "aspect": [
+    1792,
+    2400
+  ],
+  "window": [
+    0.15234,
+    0.1188,
+    0.69475,
+    0.77323
+  ],
+  "amp": 0.012,
+  "foils": [
+    {
+      "type": "ember",
+      "mask": "foil0.webp"
+    }
+  ]
+}

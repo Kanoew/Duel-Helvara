@@ -71,12 +71,15 @@ const FRAME_B=10, FRAME_MIN=230;   /* la carte passe 10 px sous le rail (pas de 
 const frameKey=()=>{ const k=frameCur(); if(!k) return null; frameLoad(k); return FRAME_IMG[k]===true?k:null; };
 /* Cadre autour d'une carte agrandie : le conteneur a la taille du cadre ; la carte occupe la fenêtre élargie de FRAME_B px (en %), le cadre est posé par-dessus, clics laissés à la carte.
    Largeur du conteneur = largeur de carte voulue × W / (largeur de la fenêtre + 2b). Renvoie null si le cadre n'est pas disponible ou si la carte serait trop petite. */
-function frameWrap(inner,cardW){
+const FRAME_HOLO={halloween:"halloween",noel:"hiver",nouvelan:"nouvel-an",saintvalentin:"saint-valentin",paques:"paques"};   /* cadre statique -> dossier du cadre holo (images/holo/frames/) */
+function frameWrap(inner,cardW,holo){
   if(screen==="play"||(S&&S.tut)) return null; const k=frameKey(); if(!k||!FRAMES[k]) return null; const f=FRAMES[k];
   const b=FRAME_B*f.w/1792, wb=f.x1-f.x0+1+2*b, hb=f.y1-f.y0+1+2*b, vw=Math.min(innerWidth||390,1000), cw=Math.min(cardW,vw*.94*wb/f.w);
   if(cw<FRAME_MIN) return null;
   const pc=v=>(v*100).toFixed(3)+"%";
-  return `<div class="fz" style="width:${Math.round(cw*f.w/wb)}px;aspect-ratio:${f.w}/${f.h}"><div class="fzc" style="left:${pc((f.x0-b)/f.w)};top:${pc((f.y0-b)/f.h)};width:${pc(wb/f.w)};height:${pc(hb/f.h)}">${inner}</div><i class="cadre" style="background-image:url('images/cadres/${f.file}')" aria-hidden="true"></i></div>`;
+  const W=Math.round(cw*f.w/wb), fz=`<div class="fz" style="width:${holo?"100%":W+"px"};aspect-ratio:${f.w}/${f.h}"><div class="fzc" style="left:${pc((f.x0-b)/f.w)};top:${pc((f.y0-b)/f.h)};width:${pc(wb/f.w)};height:${pc(hb/f.h)}">${inner}</div><i class="cadre" style="background-image:url('images/cadres/${f.file}')" aria-hidden="true"></i></div>`;
+  /* carte holo : l'effet (carte + cadre à foils) se monte dans ce conteneur ; le cadre fixe sert de repli le temps du chargement */
+  return holo?`<div class="holoslot hfr" id="holoslot" data-act="holoin" data-hframe="${FRAME_HOLO[k]}" style="width:${W}px">${fz}</div>`:fz;
 }
 function fullCard(id,extra="",powOv=null){
   const d=CARDS[id], F=FAC[d.fac], R=RAR[d.r];
@@ -501,7 +504,7 @@ function fanPickHTML(){
 /* --- carte agrandie --- */
 function zoomHTML(){
   if(!zoomId) return ""; const d=CARDS[zoomId], F=FAC[d.fac], R=RAR[d.r];
-  const card=holoDir(zoomId)?`<div class="holoslot" id="holoslot" data-act="holoin">${fullCard(zoomId,"big")}</div>`:fullCard(zoomId,"big"), fw=frameWrap(card,Math.min(340,(innerWidth||390)*.82));
+  const plain=fullCard(zoomId,"big"), cwant=Math.min(340,(innerWidth||390)*.82), fw=frameWrap(plain,cwant,!!holoDir(zoomId)), card=holoDir(zoomId)?`<div class="holoslot" id="holoslot" data-act="holoin">${plain}</div>`:plain;
   return `<div class="veil" data-act="unzoom"><div class="zoomwrap${fw?" wide":""}">${fw||card}
     <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(zoomId)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx?`<p>${fxH(d.fx)}</p>`:""}
     ${screen==="deck"&&P.owned.includes(zoomId)&&!d.token?`<p class="deckstate ${P.deck.includes(zoomId)?"in":""}">${P.deck.includes(zoomId)?`Dans ton deck · ${P.deck.length}/${ECO.deckSize}`:`Pas dans ton deck · ${P.deck.length}/${ECO.deckSize}`}</p>${deckMsg?`<p class="deckmsg">${deckMsg}</p>`:""}<button class="primary" data-act="toggle" data-id="${zoomId}">${P.deck.includes(zoomId)?"Retirer du deck":"Ajouter au deck"}</button>`:""}
@@ -821,7 +824,7 @@ function render(){
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
   else if(screen==="home") holoPrefetch(fanIds()); /* accueil : les cartes holo de la vitrine (celle du centre et celles qui viennent de tourner) */
   else if(screen==="play") holoPrefetch(P.deck); /* en partie : seulement la carte holo de ton deck (le reste se charge à la demande) */
-  { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,bigId); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }
+  { const hs=document.getElementById("holoslot"); if(hs){ if(holoKeep&&zoomHolo){ hs.appendChild(holoKeep); hs.classList.add("holo-on"); } else zoomHolo=holoMount(hs,bigId,hs.dataset.hframe?{frame:"images/holo/frames/"+hs.dataset.hframe+"/frame.json"}:undefined); } else if(holoKeep){ holoKill(zoomHolo); zoomHolo=null; } }
   document.body.classList.toggle("hasdock",screen!=="play");
   document.body.classList.toggle("inplay",screen==="play");
   setTimeout(()=>FX.decorate(app),30);

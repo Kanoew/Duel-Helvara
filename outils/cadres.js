@@ -7,7 +7,7 @@ const { chromium } = require("/opt/node-tools/node_modules/playwright"); const f
 const ROOT = path.join(__dirname, ".."), DIR = path.join(ROOT, "images", "cadres");
 /* mesures de référence fournies par Jordan (fichier 1792 × 2400) : x0, x1, y0, y1 ; tolérance ±3 px, ramenée à la taille réelle du fichier */
 const REF = { paques: [298, 1494, 296, 2073], noel: [333, 1459, 327, 2053], halloween: [274, 1517, 298, 2128], nouvelan: [343, 1448, 405, 1994], saintvalentin: [294, 1496, 306, 2092] };
-const PROV = { paques: "provisoire (marche dans le rail)", nouvelan: "provisoire (rayons de feux d'artifice dans la fenêtre)" };
+const PROV = { paques: "final selon Jordan : marche du rail dans la fenêtre", nouvelan: "final selon Jordan : rayons de feux d'artifice dans la fenêtre" };
 (async () => {
   const files = fs.readdirSync(DIR).filter(f => /\.(webp|png)$/.test(f)); let bad = 0; const out = {};
   const srv = http.createServer((q, r) => { fs.readFile(path.join(ROOT, decodeURIComponent(q.url.split("?")[0])), (e, d) => { if (e) { r.writeHead(404); r.end(); return; } r.writeHead(200, { "content-type": q.url.includes(".webp") ? "image/webp" : q.url.includes(".png") ? "image/png" : "text/html" }); r.end(d); }); }).listen(0);

@@ -1,0 +1,20 @@
+{
+  "src": "frame.webp",
+  "aspect": [
+    1792,
+    2400
+  ],
+  "window": [
+    0.17672,
+    0.13625,
+    0.64655,
+    0.71958
+  ],
+  "amp": 0.012,
+  "foils": [
+    {
+      "type": "shimmer",
+      "mask": "foil0.webp"
+    }
+  ]
+}

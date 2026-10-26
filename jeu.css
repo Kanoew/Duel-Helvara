@@ -931,3 +931,7 @@ body:has(.sandbar) #app{padding-top:62px}
 .fz>.fzc>.holoslot>.full.big{height:100%;aspect-ratio:auto}
 .fz>.fzc>.holoslot .hc-card{width:100%}
 .fz>.cadre{position:absolute;inset:0;z-index:7;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}
+.holoslot.hfr{position:relative;max-width:100%}
+.holoslot.hfr>.fz{width:100%}
+.holoslot.hfr.holo-on>.fz{display:none}
+.holoslot.hfr .holohost{width:100%}

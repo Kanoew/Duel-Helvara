@@ -15,7 +15,7 @@ srv.listen(0, async () => {
     p.on("pageerror", e => p.errs.push(e.message)); p.on("console", m => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) p.errs.push(m.text()); });
     await p.route("**/vendor/supabase.js*", r => r.fulfill({ contentType: "text/javascript", body: FAKE }));
     if (o.route) await o.route(p);
-    await p.goto("http://localhost:" + port + url); await p.waitForTimeout(900); p.ctx = ctx; return p;
+    await p.goto("http://localhost:" + port + url + (url.includes("?") ? "&" : "?") + "cadre=aucun");   /* les cadres de fête dépendent de la date : désactivés ici pour des tests stables */ await p.waitForTimeout(900); p.ctx = ctx; return p;
   }
   const zoom = (p, id) => p.evaluate(`P.owned=[...new Set([...P.owned,"nike","ananke","hedone","nike_v","source","yarden","amaterasu"])];tutoStep=-1;P.tuto=true;screen="deck";zoomId="${id}";render();`);
   const n = (p, s) => p.evaluate(s => document.querySelectorAll(s).length, s);
