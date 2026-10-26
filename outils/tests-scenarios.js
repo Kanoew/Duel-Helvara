@@ -1104,7 +1104,7 @@ async function inPage() {
   { const byCost = n => Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].cost === n && CARDS[id].r !== "U" && !ULof(id));
     const M = ["voix_flon","joueuse_palud","couturiere","strategue","gaia","kali","hypnos","sun_wukong","meduse","osiris","athlete_stade","nageuse_lac","voyante_barbare","voyante","demeter","nuwa","cerridwen","change","shamash","themis"];
     T("1er mars : les 20 cartes sortent le 1er mars 2027 (annonce le 24 février) et ont un effet", M.every(id => CARDS[id].rel === "2027-03-01" && CARDS[id].soon === "2027-02-24" && CARDS[id].fx), M.filter(id => CARDS[id].rel !== "2027-03-01").join());
-    T("1er mars : raretés et coûts du bloc (La Voix du Flon C 3/2, Osiris L 5/3, Nageuse C 1/2, Kali E 5/5)", CARDS.voix_flon.r === "C" && CARDS.voix_flon.cost === 3 && CARDS.voix_flon.pow === 2 && CARDS.osiris.r === "L" && CARDS.osiris.cost === 5 && CARDS.nageuse_lac.cost === 1 && CARDS.kali.pow === 5, "");
+    T("1er mars : raretés et coûts du bloc (La Voix du Flon C 3/2, Osiris L 5/3, Nageuse C 1/2, Kali E 5/5)", CARDS.voix_flon.r === "C" && CARDS.voix_flon.cost === 3 && CARDS.voix_flon.pow === 2 && CARDS.osiris.r === "L" && CARDS.osiris.cost === 5 && CARDS.nageuse_lac.cost === 1 && CARDS.kali.pow === 4, "");
     /* La Voix du Flon */
     fresh(); S.turn = 3; { const a = put("p", 1, plain[0], 1), b = put("p", 1, plain[1], 3), c = put("p", 2, plain[2], 2), v = card("voix_flon"); S.hand.p = [v];
       await resolveTurn([{ c: v, li: 0 }], [], false); T("La Voix du Flon : +2 à la carte la plus faible de chacun des deux autres lieux", a.pow === 3 && b.pow === 3 && c.pow === 4, `${a.pow} ${b.pow} ${c.pow}`); }
@@ -1124,7 +1124,7 @@ async function inPage() {
       T("Gaïa : +2 pour chaque autre lieu où ton côté est plein", a === 5 && b === 7, `${a} ${b}`); }
     /* Kali */
     fresh(); S.turn = 3; { const a = put("p", 0, plain[0], 1), b = put("p", 0, plain[1], 4), e1 = put("e", 0, plain[2], 2), e2 = put("e", 0, plain[3], 5), k = card("kali"); S.hand.p = [k]; await resolveTurn([{ c: k, li: 0 }], [], false);
-      T("Kali : détruit sa plus faible alliée puis la plus faible adverse, +2 par carte détruite", !S.board.p[0].includes(a) && S.board.p[0].includes(b) && !S.board.e[0].includes(e1) && S.board.e[0].includes(e2) && k.pow === 9, k.pow); }
+      T("Kali : détruit sa plus faible alliée puis la plus faible adverse, +2 par carte détruite", !S.board.p[0].includes(a) && S.board.p[0].includes(b) && !S.board.e[0].includes(e1) && S.board.e[0].includes(e2) && k.pow === 8, k.pow); }
     /* Hypnos */
     fresh(); S.turn = 3; { const h = put("e", 0, "hypnos"), t = put("p", 1, plain[0], 2), v = card("voix_flon"), v2 = card("voix_flon"); S.hand.p = [v];
       await resolveTurn([{ c: v, li: 0 }], [], false); const cut = t.pow === 2 && h.spent === true; S.hand.p = [v2]; S.turn = 3; await resolveTurn([{ c: v2, li: 0 }], [], false);
@@ -1133,8 +1133,12 @@ async function inPage() {
     fresh(); S.turn = 3; S.locs[0].id = "sousgare"; { const w = put("p", 0, "sun_wukong"), ny = card("nyx"); S.hand.e = [ny]; await resolveTurn([], [{ c: ny, li: 0 }], false);
       const cl = S.board.p[0].find(x => x.id === "clone_wukong"); T("Sun Wukong : détruit, il laisse un Clone de même puissance (et passe au cimetière)", !!cl && cl.pow === 5 && S.graveyard.p.includes("sun_wukong"), cl && cl.pow);
       S.turn = 4; await resolveTurn([], [], false); T("Sun Wukong : le Clone disparaît à la fin du tour suivant", !S.board.p[0].some(x => x.id === "clone_wukong"), ""); }
-    fresh(); S.turn = 5; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); const cl = S.board.p[0].find(x => x.id === "clone_wukong"); S.turn = 6; await resolveTurn([], [], false);
-      T("Sun Wukong : détruit au tour 5, le Clone disparaît à la fin du tour 6 (avant le décompte)", !!cl && !S.board.p[0].some(x => x.id === "clone_wukong"), ""); }
+    fresh(); S.turn = 4; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); S.turn = 5; await resolveTurn([], [], false);
+      T("Sun Wukong : détruit au tour 4, le Clone disparaît à la fin du tour 5", !S.board.p[0].some(x => x.id === "clone_wukong"), ""); }
+    fresh(); S.turn = 5; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); S.turn = 6; await resolveTurn([], [], false);
+      T("Expiration au tour 6 : un Clone né au tour 5 reste jusqu'au décompte final (retouche du 26 octobre)", S.board.p[0].some(x => x.id === "clone_wukong"), ""); }
+    fresh(); S.turn = 5; { const f = put("e", 0, plain[0], 5), m = card("meduse"); S.hand.p = [m]; await resolveTurn([{ c: m, li: 0 }], [], false);
+      T("Expiration au tour 6 : Méduse jouée au tour 5, le malus et le blocage restent au décompte final", cardPow("e", 0, f) === 3 && f.medCap === 3, `${cardPow("e", 0, f)} ${f.medCap}`); }
     fresh(); S.turn = 6; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); await resolveTurn([], [], false); T("Sun Wukong : détruit au tour 6, le Clone reste jusqu'au décompte final", S.board.p[0].some(x => x.id === "clone_wukong"), ""); }
     fresh(); S.turn = 3; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); const cl = S.board.p[0].find(x => x.id === "clone_wukong"); destroy("p", 0, cl);
       T("Sun Wukong : le Clone peut être détruit normalement, et une seconde destruction ne crée pas de second Clone", !S.board.p[0].some(x => x.id === "clone_wukong") && S.board.p[0].length === 0, ""); }
@@ -1182,6 +1186,8 @@ async function inPage() {
     /* Shamash */
     fresh(); S.turn = 3; { const base = CARDS[plain[0]].pow, f1 = put("e", 0, plain[0], base + 2), f2 = put("e", 0, plain[1], CARDS[plain[1]].pow + 3), sh = card("shamash"); S.hand.p = [sh]; await resolveTurn([{ c: sh, li: 0 }], [], false);
       T("Shamash : la carte adverse au plus grand bonus perd tous ses bonus (l'autre garde les siens)", f2.pow === CARDS[plain[1]].pow && f1.pow === base + 2, `${f1.pow} ${f2.pow}`); }
+    fresh(); S.turn = 3; { const bs = CARDS[plain[0]].pow, f = put("e", 0, plain[0], bs + 4), sh = card("shamash"); weaken("e", 0, f, 2); S.hand.p = [sh]; await resolveTurn([{ c: sh, li: 0 }], [], false);
+      T("Shamash : ne retire que les bonus positifs, pas les affaiblissements (+4 −2 → base −2)", f.pow === bs - 2, f.pow + " / base " + bs); }
     fresh(); S.turn = 3; { const f = put("e", 0, plain[0], CARDS[plain[0]].pow), sh = card("shamash"); S.hand.p = [sh]; await resolveTurn([{ c: sh, li: 0 }], [], false); T("Shamash : sans bonus adverse positif ici, ne fait rien", f.pow === CARDS[plain[0]].pow, ""); }
     /* Thémis */
     fresh(); S.turn = 3; { const th = put("e", 0, "themis"); th.arr = 2; const a = card(byCost(1)), b = card(byCost(1)); S.hand.p = [a, b]; S.energy = 9; const first = canStage(a, 0); S.staged.push({ c: a, li: 0 }); S.hand.p = [b];

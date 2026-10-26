@@ -182,7 +182,7 @@ window.HELVARA_EN = {
     ananke:{n:"Ananke", fx:"Can't be played on turn 6. Fate: can be neither destroyed nor moved. End of game: her Power becomes the opponent's total Power here, +1 Power. Requires 8 Primordial cards in the deck, Ananke included."},
     source:{n:"The Source", fx:"Ongoing: the Reveals of your other Helvara cards played here trigger twice. Requires 8 Helvara cards in the deck, The Source included."},
     hedone:{n:"Hedone", fx:"Ongoing: at the end of each turn, pulls the opponent's weakest card from another location here, if there is room, and charms it while Hedone stays in play. 2 times max. Requires 8 Desire cards in the deck, Hedone included."},
-    possedee:{n:"The Possessed"}, voyante:{n:"The Seer", fx:"On Reveal: look at the top 3 cards of your deck. The best one to play next turn stays on top, the others go underneath in random order."}, penitente:{n:"The Penitent"},
+    possedee:{n:"The Possessed"}, voyante:{n:"The Seer", fx:"On Reveal: look at the top 3 cards of your deck. The most expensive card playable next turn stays on top, the others go underneath in random order. Does not draw."}, penitente:{n:"The Penitent"},
     gaia:{n:"Gaia", fx:"Ongoing: +2 Power for each of the other two locations where your side is full."}, hera:{n:"Hera", fx:"Ongoing: jealousy. Compares Hera's Power (without the effect) to the strongest enemy card here. If that card is at least as strong, it loses half its Power (rounded up). Otherwise, Hera loses half of hers (rounded up)."},
     reine_sevelin:{n:"The Queen of Sévelin"}, somnambule:{n:"The Flon Sleepwalker"}, couturiere:{n:"The Seamstress of the Cité", fx:"Ongoing: each turn, prevents the first weakening one of your cards here would suffer."},
     
