@@ -536,7 +536,7 @@ function revealFx(s,li,c,opts={}){
         S.board[s][i]=S.board[s][i].filter(x=>x!==t); S.board[s][li].push(t);
         if(wins&&(!best||(!was&&best.was)||(was===best.was&&gap<best.gap))) best={i,was,gap}; }
       if(best){ S.board[s][li]=S.board[s][li].filter(x=>x!==t); S.board[s][best.i].push(t); flonHook(best.i,t); if(s==="p"&&qLive()) qProg("move2"); note=`${nm(t)} part vers ${LOCS[S.locs[best.i].id].name}`; snd="buff"; } break; }
-    case "konohana": c.bloom=S.turn+1; note="en fleur jusqu'au prochain tour"; break;
+    case "konohana": if(S.turn<5){ c.bloom=S.turn+1; note="en fleur jusqu'au prochain tour"; } else note="en fleur jusqu'au décompte final"; break;   /* tour 5 ou 6 : la floraison ne passe qu'après le décompte, donc jamais (règle d'expiration du 26 octobre) */
     case "mohini": { const t=strongest(targets,o,li); if(t&&!t.neg){ t.neg=true; note=`${nm(t)} perd ses effets`; snd="void"; } break; }
     case "melinoe": { const t=gPick(S.hand[s]); if(t){ discard(s,t); note=`défausse ${nm(t)}`; buffSelf(3); } break; }
     case "comptable": if(mates.length) buffSelf(mates.length); break;

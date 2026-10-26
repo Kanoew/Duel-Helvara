@@ -1142,6 +1142,8 @@ async function inPage() {
     fresh(); S.turn = 6; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); await resolveTurn([], [], false); T("Sun Wukong : détruit au tour 6, le Clone reste jusqu'au décompte final", S.board.p[0].some(x => x.id === "clone_wukong"), ""); }
     fresh(); S.turn = 3; { const w = put("p", 0, "sun_wukong"); destroy("p", 0, w); const cl = S.board.p[0].find(x => x.id === "clone_wukong"); destroy("p", 0, cl);
       T("Sun Wukong : le Clone peut être détruit normalement, et une seconde destruction ne crée pas de second Clone", !S.board.p[0].some(x => x.id === "clone_wukong") && S.board.p[0].length === 0, ""); }
+    fresh(); S.turn = 5; { const k = card("konohana"); S.hand.p = [k]; await resolveTurn([{ c: k, li: 0 }], [], false); T("Expiration au tour 6 : Konohanasakuya-Hime jouée au tour 5 garde sa puissance au décompte final", k.pow === CARDS.konohana.pow, k.pow); }
+    fresh(); S.turn = 4; { const k = card("konohana"); S.hand.p = [k]; await resolveTurn([{ c: k, li: 0 }], [], false); S.turn = 5; await resolveTurn([], [], false); T("Konohanasakuya-Hime jouée au tour 4 : la floraison passe à la fin du tour 5 (comme avant)", k.pow === 0, k.pow); }
     /* Méduse */
     fresh(); S.turn = 3; { const f = put("e", 0, plain[0], 5), m = card("meduse"); S.hand.p = [m]; await resolveTurn([{ c: m, li: 0 }], [], false);
       const after = cardPow("e", 0, f); f.pow += 3; const capped = cardPow("e", 0, f); S.turn = 4; await resolveTurn([], [], false);
