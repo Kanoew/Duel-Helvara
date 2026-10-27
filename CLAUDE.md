@@ -189,5 +189,5 @@ Ce fichier est lu en entier à chaque session : il doit rester **court** (object
 ## Où trouver le détail (à lire seulement quand la tâche le demande)
 
 - `docs/reference-technique.md` : repères du moteur, IA, quêtes, musique, sauvegarde, classement, duels en ligne, raretés et brillance, cinématiques, légal et CSP, performances sur téléphone, écran de partie, retours et statistiques, outil d'équilibrage, collection, accueil, journal des factions, holo 2.5D, bac à sable, durcissement, textes d'effets, optimisation et PWA.
-- `docs/historique-equilibrage.md` : décisions d'équilibrage série par série (1re à 23e), secondes ultra-légendaires, fusions dans les paquets. Archive datée : avant de toucher une carte, `grep -n "<id>"` dans ce fichier pour retrouver pourquoi elle est comme elle est.
+- `docs/historique-equilibrage.md` : décisions d'équilibrage série par série (1re à 24e), secondes ultra-légendaires, fusions dans les paquets. Archive datée : avant de toucher une carte, `grep -n "<id>"` dans ce fichier pour retrouver pourquoi elle est comme elle est.
 - `docs/calendrier-et-en-attente.md` : calendrier de sortie, thème de la vague du 15 novembre, cartes cachées et valeurs provisoires, questions restées ouvertes.

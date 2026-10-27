@@ -1197,6 +1197,40 @@ async function inPage() {
     fresh(); S.turn = 3; { const th = put("e", 0, "themis"); th.arr = 3; const a = card(byCost(1)), b = card(byCost(1)); S.hand.p = [a, b]; S.energy = 9; S.staged.push({ c: a, li: 0 }); T("Thémis : sans effet le tour de son arrivée", canStage(b, 0), ""); S.staged = []; }
   }
 
+  /* ===== Èṣù, Apophis, Hélios, Apophis Œuf de Malheur, Œuf maudit (27 octobre) ===== */
+  { T("Cartes d'avril : Èṣù (L Désir 3/3), Apophis (L Primordial 4/2, 15 mars), Hélios (L Jugement 4/4), Apophis Œuf de Malheur (E Primordial 4/3, variante `ex:paques`), jeton Œuf maudit", CARDS.eshu.r === "L" && CARDS.eshu.fac === "desir" && CARDS.apophis.cost === 4 && CARDS.apophis.pow === 2 && CARDS.apophis.rel === "2027-03-15" && CARDS.helios.fac === "jugement" && CARDS.apophis_p.base === "apophis" && CARDS.apophis_p.ex === "paques" && CARDS.oeuf_maudit.token === true, "");
+    /* Èṣù */
+    fresh(); S.turn = 3; { const es = put("p", 0, "eshu"), a = put("p", 1, plain[0], 1), e1 = put("e", 1, plain[1], 3), es2 = put("p", 2, "eshu");
+      flonHook(0, a); flonHook(0, a); flonHook(2, e1); flonHook(0, es); S.turn = 4; flonHook(0, a);
+      T("Èṣù : +2 à une carte alliée qui se déplace (une fois par tour), −1 à une adverse, Èṣù ne se bénéficie pas à elle-même (mais une autre Èṣù oui), deux Èṣù ne cumulent pas", a.pow === 1 + 2 + 2 && e1.pow === 2 && es.pow === 5, `${a.pow} ${e1.pow} ${es.pow}`); }
+    fresh(); S.turn = 3; { put("p", 0, "eshu"); const w = put("e", 1, plain[1], 3); w.ward = true; flonHook(0, w); T("Èṣù : les protections contre l'affaiblissement s'appliquent", w.pow === 3, w.pow); }
+    /* Apophis : fins de tour */
+    fresh(); S.turn = 3; { const id = put("e", 0, "idunn"), ev = put("e", 0, plain[1], 1), ap = put("p", 0, "apophis"), mine = put("p", 0, plain[0], 1); await resolveTurn([], [], false);
+      T("Apophis : l'Idunn adverse ici se déclenche pour Apophis (+1 à la plus faible de SON camp, rien chez l'adversaire)", mine.pow === 2 && ev.pow === 1, `${mine.pow} ${ev.pow}`); }
+    fresh(); S.turn = 3; { const id = put("e", 0, "idunn"), ev = put("e", 0, plain[1], 1), other = put("p", 1, "apophis"), mine = put("p", 1, plain[0], 1); await resolveTurn([], [], false);
+      T("Apophis : seulement dans son lieu (Idunn ailleurs, effet normal)", ev.pow === 2, ev.pow); }
+    fresh(); S.turn = 3; { const f = put("e", 0, "fenrir"); f.fenT = 1; const ap = put("p", 0, "apophis"); await resolveTurn([], [], false);
+      T("Apophis : Fenrir adverse (condition d'origine remplie) donne +2 à Apophis, pas à Fenrir", ap.pow === 4 && f.pow === CARDS.fenrir.pow, `${ap.pow} ${f.pow}`); }
+    fresh(); S.turn = 6; { const an = put("e", 0, "ananke"), ev = put("e", 0, plain[1], 3), ap = put("p", 0, "apophis"); await resolveTurn([], [], false);
+      T("Apophis : la Fatalité d'Ananké (fin de partie) se déclenche pour Apophis (puissance adverse +1), Ananké garde sa puissance", cardPow("p", 0, ap) === total("e", 0) + 1 && cardPow("e", 0, an) === an.pow, `${cardPow("p", 0, ap)} ${total("e", 0)} ${cardPow("e", 0, an)}`); }
+    fresh(); S.turn = 6; { const an = put("e", 0, "ananke"), ev = put("e", 0, plain[1], 3); await resolveTurn([], [], false); T("Sans Apophis, Ananké reste inchangée (Fatalité normale)", cardPow("e", 0, an) === total("p", 0) + 1, cardPow("e", 0, an)); }
+    /* Hélios */
+    fresh(); S.turn = 3; { const h = put("p", 0, "helios"), n = put("p", 0, "nageuse_lac"), o = put("p", 0, plain[0], 1); await resolveTurn([], [], false);
+      T("Hélios : à la fin du tour elle passe à droite ; ses autres cartes qui peuvent se déplacer seules gagnent +2 (pas les autres)", S.board.p[1].includes(h) && n.pow === CARDS.nageuse_lac.pow + 2 && o.pow === 1 && h.pow === 4, `${S.board.p.map(c => c.length)} ${n.pow} ${o.pow}`); }
+    fresh(); S.turn = 3; { const h = put("p", 2, "helios"); await resolveTurn([], [], false); T("Hélios : à droite elle reste sur place (jamais de retour)", S.board.p[2].includes(h), ""); }
+    fresh(); S.turn = 3; { const h = put("p", 0, "helios"), n = put("p", 0, "nageuse_lac"); for (let i = 0; i < 4; i++) put("p", 1, plain[i], 1); await resolveTurn([], [], false);
+      T("Hélios : destination pleine, aucun déplacement ni bonus", S.board.p[0].includes(h) && n.pow === CARDS.nageuse_lac.pow, ""); }
+    fresh(); S.turn = 1; S.locs[1].rev = false; { const h = put("p", 0, "helios"); await resolveTurn([], [], false); T("Hélios : jamais vers un lieu pas encore révélé", S.board.p[0].includes(h), ""); }
+    fresh(); S.turn = 3; { const h = put("p", 0, "helios"), es = put("p", 2, "eshu"); await resolveTurn([], [], false); T("Hélios : son déplacement déclenche les effets de déplacement (Èṣù : +2)", h.pow === 4 + 2, h.pow); }
+    /* Apophis, Œuf de Malheur + Œuf maudit */
+    fresh(); S.turn = 3; { const a = card("apophis_p"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); const egg = S.board.e[0].find(x => x.id === "oeuf_maudit");
+      T("Apophis, Œuf de Malheur : crée un Œuf maudit du côté adverse ici", !!egg && !S.board.p[0].some(x => x.id === "oeuf_maudit"), ""); }
+    fresh(); S.turn = 3; { for (let i = 0; i < 4; i++) put("e", 0, plain[i], 1); const a = card("apophis_p"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); T("Apophis, Œuf de Malheur : aucun emplacement libre, aucun Œuf", !S.board.e[0].some(x => x.id === "oeuf_maudit"), ""); }
+    fresh(); S.turn = 3; { const x = put("e", 0, plain[0], 3), y = put("e", 0, plain[1], 3), e1 = put("e", 0, "oeuf_maudit"), z = put("p", 0, plain[2], 3);
+      T("Œuf maudit : −1 à ses autres cartes ici, pas à lui-même ni au camp d'en face", cardPow("e", 0, x) === 2 && cardPow("e", 0, e1) === 0 && cardPow("p", 0, z) === 3, `${cardPow("e", 0, x)} ${cardPow("e", 0, e1)}`);
+      const e2 = put("e", 0, "oeuf_maudit"); y.ward = true; T("Œuf maudit : les Œufs cumulent (−1 par œuf, l'autre Œuf compte), protégé par les protections contre l'affaiblissement", cardPow("e", 0, x) === 1 && cardPow("e", 0, e1) === -1 && cardPow("e", 0, y) === 3, `${cardPow("e", 0, x)} ${cardPow("e", 0, e1)} ${cardPow("e", 0, y)}`); }
+  }
+
   /* ===== Cadres de fête (26 octobre) : liés à la carte (saison, variantes), en permanence ===== */
   { const keepC = P.cadres, keepScr = screen, keepZ = zoomId; P.cadres = true;
     T("Cadres : les cartes de saison ont leur cadre quelle que soit la date (Halloween, Noël, Nouvel An, Saint-Valentin, Pâques)", [frameCur("morrigan_h"), frameCur("aphrodite_n"), frameCur("hel_r"), frameCur("eos_v"), frameCur("ananke_v"), frameCur("ananke_r"), frameCur("ulqetjor_v")].join() === "halloween,noel,nouvelan,saintvalentin,saintvalentin,nouvelan,saintvalentin", [frameCur("morrigan_h"), frameCur("aphrodite_n"), frameCur("hel_r")].join());

@@ -122,6 +122,7 @@ const nemInv=li=>(["p","e"].reduce((n,s)=>n+S.board[s][li].filter(o=>live(o)&&ei
 /* Charme : celui de Qetesh dure jusqu'à la fin ; celui d'Hédoné (charmBy) cesse dès qu'elle quitte le jeu ou perd ses effets */
 const charmOf=c=>c.charm&&(!c.charmBy||captorLive(c.charmBy))?c.charm:null;
 function captorLive(uid){ for(const s of ["p","e"]) for(const col of S.board[s]) for(const o of col) if(o.uid===uid&&live(o)) return true; return false; }
+const SELFMOVE=new Set(["nageuse_lac"]);   /* cartes dotées d'un effet leur permettant de se déplacer elles-mêmes (Hélios) */
 const stagedAt=li=>S.staged.filter(x=>x.li===li&&eid(x.c)!=="herakles").length+(S.swimP?(S.swimP.li===li?1:0)-(S.swimP.from===li?1:0):0);
 /* Thémis : à partir du tour suivant son arrivée, chaque joueur ne peut jouer qu'une carte par tour dans son lieu (les deux camps) */
 const themisOn=li=>["p","e"].some(s=>S.board[s][li].some(x=>live(x)&&eid(x)==="themis"&&(x.arr||0)<S.turn));
@@ -167,7 +168,8 @@ function ankEnd(s,li,c){ if(ANK) return c.pow; ANK=1; try{ return total(opp(char
 function cardPow(s,li,c){
   if(!c.rev) return 0;
   if(c.captive&&captorLive(c.captive)) return 0;   /* captive (Calypso) : 0, Ananké comprise, même en fin de partie */
-  if(S.final&&fated(c)&&isAnk(c)) return ankEnd(s,li,c);
+  if(S.final&&fated(c)&&isAnk(c)&&!apoOf(s,li)) return ankEnd(s,li,c);   /* Apophis adverse ici : la Fatalité d'Ananké se déclenche pour elle */
+  if(S.final&&eid(c)==="apophis"&&!c.neg&&S.board[opp(s)][li].some(x=>fated(x)&&isAnk(x))) return ankEnd(s,li,c);
   let p=c.pow; const d=CARDS[c.id];
   for(const o of S.board[s][li]) if(o!==c && live(o) && eid(o)==="mouche") p-=1;
   for(const o of S.board[s][li]) if(o!==c && live(o) && eid(o)==="ulcal") p+=2;
@@ -194,6 +196,7 @@ function cardPow(s,li,c){
   if(c.risen&&S.board[s].some(col=>col.some(o=>live(o)&&eid(o)==="izanami"))) p+=2; /* Izanami : tes cartes ressuscitées */
   if(locIs(li,"domaine")&&JPARTNERS.has(c.id)) p+=2;
   if(!shielded(s,li)&&!sunlit(s)&&!noWeak(c)&&!(eid(c)==="baldur"&&!c.neg)) p-=S.board[opp(s)][li].filter(o=>live(o)&&eid(o)==="hathor").length;
+  if(!shielded(s,li)&&!sunlit(s)&&!noWeak(c)&&!(eid(c)==="baldur"&&!c.neg)) p-=S.board[s][li].filter(o=>o!==c&&live(o)&&eid(o)==="oeuf_maudit").length;   /* Œuf maudit : −1 à ses autres cartes ici (cumulable) */
   if(locIs(li,"tour") && d.pow>=5 && !d.token) p+=2;
   if(locIs(li,"encheres") && !d.token) p+=2;
   if(locIs(li,"escaliers") && d.fac==="helvara" && !d.token) p+=2;
@@ -240,6 +243,10 @@ function discard(s,c){ if(s==="p"&&qLive()) qProg("disc3"); S.hand[s]=S.hand[s].
   if(real(c)) S.discardPile[s].push(c.id); }
 function bury(s,c){ piles(); if(real(c)) S.graveyard[s].push(c.id);
   if(eid(c)==="mjolnir"&&c.thor){ for(const col of S.board[s]) for(const t of col) if(t.uid===c.thor&&live(t)){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Mjölnir"}); log(`Thor récupère Mjölnir : +2 (${who(s)})`); } } }
+/* Apophis : les effets de fin de tour des cartes adverses ici se déclenchent pour elle. eot(id) liste les déclenchements de fin de tour de la carte `id` :
+   {s0,c0} = la carte d'origine (ses conditions, ses compteurs), {s,c} = la source de l'effet (la carte elle-même, ou Apophis si un Apophis adverse est dans son lieu). Un déclenchement détourné ne l'est qu'une fois. */
+const apoOf=(s,li)=>S.board[opp(s)][li].find(x=>live(x)&&eid(x)==="apophis")||null;
+function eot(id,first="p"){ const out=[]; for(const s0 of [first,opp(first)]) for(let li=0;li<3;li++) for(const c0 of S.board[s0][li].slice()) if(live(c0)&&eid(c0)===id){ const a=apoOf(s0,li); out.push(a?{s0,li,c0,s:opp(s0),c:a}:{s0,li,c0,s:s0,c:c0}); } return out; }
 /* Qetesh du Nouvel An, minuit : la carte adverse la plus forte ici de puissance 5 ou moins (lue maintenant) est charmée (renvoie la cible ou null) */
 function midnightCharm(s,li,c){
   const o=opp(s);
@@ -250,14 +257,14 @@ function midnightCharm(s,li,c){
    Les cartes insaisissables (Ananké, Uzume) ne sont jamais attirées ; égalité de puissance : gPick. `first` fixe l'ordre des deux camps (identique chez les deux joueurs en duel). */
 function hedoneTurn(first){
   let n=0;
-  for(const s of [first,opp(first)]) for(let li=0;li<3;li++) for(const h of S.board[s][li].slice()){
-    if(eid(h)!=="hedone"||!live(h)||(h.hed||0)>=2||S.locs[li].locked) continue;
+  for(const {s,li,c0,c:h} of eot("hedone",first)){
+    if((c0.hed||0)>=2||S.locs[li].locked||!S.board[s][li].includes(h)) continue;
     const o=opp(s); if(S.board[o][li].length>=capOf(o,li)) continue;
     const pool=[]; for(let i=0;i<3;i++) if(i!==li) for(const x of S.board[o][i]) if(x.rev&&!untargetable(s,o,x)&&!fated(x)&&!charmOf(x)) pool.push([i,x,cardPow(o,i,x)]);
     if(!pool.length) continue;
     const mn=Math.min(...pool.map(q=>q[2])), [i,t]=gPick(pool.filter(q=>q[2]===mn));
     S.board[o][i]=S.board[o][i].filter(x=>x!==t); S.board[o][li].push(t); t.fresh=true; flonHook(li,t);
-    t.charm=s; t.charmBy=h.uid; h.hed=(h.hed||0)+1; n++;
+    t.charm=s; t.charmBy=h.uid; c0.hed=(c0.hed||0)+1; n++;
     log(`Hédoné attire ${nm(t)} et la charme (${who(s)})`); sfx("legend"); }
   return n; }
 /* Ressusciter : la carte revient révélée, à sa puissance de base, sans Révélation (sauf withReveal). */
@@ -337,7 +344,12 @@ function trimOverflow(){ for(const s of ["p","e"]) for(let li=0;li<3;li++) while
 /* Le Flon : une carte qui arrive ici par un déplacement gagne +2 */
 function flonHook(i,t){ if(locIs(i,"flon")){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Le Flon"}); }
   if(!t.neg&&eid(t)==="athlete_stade"&&(t.athl||0)<4){ t.athl=(t.athl||0)+2; t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"L'Athlète"}); }   /* L'Athlète du Stade : +2 par déplacement, +4 au plus */
-  if(!t.neg&&eid(t)==="change") t.moon=true; }   /* Chang'e : après son premier déplacement, elle ne peut plus être détruite */
+  if(!t.neg&&eid(t)==="change") t.moon=true;
+  /* Èṣù, Reine des Carrefours : la première fois que chaque autre carte se déplace à chaque tour, +2 si elle est à son camp, −1 si elle est adverse (plusieurs Èṣù ne cumulent pas) */
+  if(t.esT!==S.turn){ const es=["p","e"].map(side=>({side,c:S.board[side].flat().find(x=>x!==t&&live(x)&&eid(x)==="eshu")})).find(x=>x.c);
+    if(es){ const ts=["p","e"].find(side=>S.board[side].some(col=>col.includes(t))); t.esT=S.turn;
+      if(ts===es.side){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Èṣù"}); log(`Èṣù · +2 à ${nm(t)} (${who(ts)})`); sfx("buff"); }
+      else if(ts){ const prev=SRC; SRC={s:es.side,cost:CARDS.eshu.cost}; const ok=weaken(ts,i,t,1); SRC=prev; if(ok){ (t.mods=t.mods||[]).push({v:-1,src:"Èṣù"}); log(`Èṣù · −1 à ${nm(t)} (${who(ts)})`); sfx("debuff"); } } } } }   /* Chang'e : après son premier déplacement, elle ne peut plus être détruite */
 /* Sauvabelin : aucune carte ne peut être détruite dans ce lieu, quelle que soit la source */
 const forest=li=>locIs(li,"sauvabelin");
 function destroy(s,li,c){ if(forest(li)||shielded(s,li)||c.ward||fated(c)||deathless(c)||baldurSafe(s,c)) return false; S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.destroyed++; entomb(s,li,c); if(s==="e") S.killE=(S.killE||0)+1; danteHook(li); return true; }
@@ -397,6 +409,7 @@ function revealFx(s,li,c,opts={}){
   S.forge=S.forge||{p:0,e:0};
   if(S.forge[s]&&eid(c)!=="brigid"&&!opts.replay){ S.forge[s]=0; c.pow+=3; (c.mods=c.mods||[]).push({v:3,src:"Brigid"}); note="+3 (Brigid)"; snd="buff"; }
   switch(eid(c)){
+    case "apophis_p": { const o2=opp(s); if(S.board[o2][li].length<capOf(o2,li)){ const k=mk("oeuf_maudit"); k.rev=true; k.fresh=true; S.board[o2][li].push(k); note="un Œuf maudit apparaît chez l'adversaire"; snd="void"; } break; }
     case "voix_flon": { let n=0; for(let i=0;i<3;i++){ if(i===li) continue; const t=minR(S.board[s][i].filter(x=>x.rev),s,i); if(t){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"La Voix du Flon"}); n++; } } if(n){ note=`+2 à ${n} carte${n>1?"s":""}`; snd="buff"; } break; }
     case "joueuse_palud": { draw(s); const hd=S.hand[s]; if(hd.length){ const m=Math.min(...hd.map(x=>CARDS[x.id].cost)), t=gPick(hd.filter(x=>CARDS[x.id].cost===m)); discard(s,t); note=`pioche 1 carte, défausse ${nm(t)}`; snd="buff"; } break; }
     case "strategue": { const t=minR(mates.filter(x=>!fated(x)),s,li); if(!t) break;
@@ -943,18 +956,18 @@ async function resolveTurn(mine, theirs, animate){
   }
   trimOverflow();
   /* Idunn : fin de tour (pas après le tour 6) */
-  if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="idunn"){
+  if(S.turn<6) for(const {s,li} of eot("idunn")){
     const t=S.board[s][li].filter(x=>x.rev).sort((a,b)=>cardPow(s,li,a)-cardPow(s,li,b))[0]; if(t){ t.pow+=1; (t.mods=t.mods||[]).push({v:1,src:"Idunn"}); log(`Idunn · +1 à ${nm(t)} (${who(s)})`); sfx("buff"); }
   }
   /* Konohanasakuya-Hime : la floraison passe à la fin du tour qui suit son arrivée */
-  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="konohana"&&c.bloom===S.turn&&c.pow>0){
+  for(const {s,li,c,c0} of eot("konohana")) if(c0.bloom===S.turn&&c0.pow>0&&c.pow>0){
     (c.mods=c.mods||[]).push({v:-c.pow,src:"Floraison passée"}); c.pow=0; log(`Konohanasakuya-Hime · la floraison est passée (${who(s)})`); sfx("debuff"); }
   /* Poison de Médée, Mariée Spectrale : −1 à chaque fin de tour, jusqu'à 0 */
   for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(c.poison&&c.rev&&cardPow(s,li,c)>0&&(SRC={s:opp(s),cost:CARDS.medee_h.cost},weaken(s,li,c,1))&&!(SRC=null)){
     (c.mods=c.mods||[]).push({v:-1,src:"Poison de Médée"}); log(`Poison de Médée · −1 à ${nm(c)} (${who(s)})`); sfx("debuff"); }
   SRC=null;
   /* Ishtar : fin de tour (pas après le tour 6) */
-  if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="ishtar"){
+  if(S.turn<6) for(const {s,li} of eot("ishtar")){
     const o=opp(s); const t=S.board[o][li].filter(x=>x.rev&&!untargetable(s,o,x)).sort((a,b)=>cardPow(o,li,b)-cardPow(o,li,a))[0];
     SRC={s,cost:CARDS.ishtar.cost}; const ok=t&&weaken(o,li,t,1); SRC=null;
     if(ok){ (t.mods=t.mods||[]).push({v:-1,src:"Ishtar"}); log(`Ishtar · −1 à ${nm(t)} (${who(o)})`); sfx("debuff"); }
@@ -964,10 +977,10 @@ async function resolveTurn(mine, theirs, animate){
     if(c.gone===S.turn){ S.board[s][li]=S.board[s][li].filter(x=>x!==c); log(`Le Clone de Sun Wukong disparaît (${who(s)})`); }
     else if(c.medUntil===S.turn){ delete c.medCap; delete c.medUntil; c.pow+=2; c.malus=Math.max(0,(c.malus||0)-2); (c.mods=c.mods||[]).push({v:2,src:"Méduse (fin)"}); log(`Méduse · ${nm(c)} récupère 2 de puissance (${who(s)})`); sfx("buff"); } }
   /* Fenrir : à la fin de chaque tour suivant celui de sa Révélation, +2 de puissance */
-  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="fenrir"&&c.fenT!=null&&S.turn>c.fenT){
+  for(const {s,li,c,c0} of eot("fenrir")) if(c0.fenT!=null&&S.turn>c0.fenT){
     c.pow+=2; (c.mods=c.mods||[]).push({v:2,src:"Fenrir"}); log(`Fenrir · +2 (${who(s)})`); sfx("buff"); }
   /* Pakhet : à la fin de chaque tour, détruit une carte adverse de coût 1 ou moins ici (la plus forte ; une seule par Pakhet) */
-  for(const s of [dflt,opp(dflt)]) for(let li=0;li<3;li++) for(const c of S.board[s][li].slice()) if(live(c)&&eid(c)==="pakhet"&&S.board[s][li].includes(c)){
+  for(const {s,li,c} of eot("pakhet",dflt)) if(S.board[s][li].includes(c)){
     const o=opp(s), cs=S.board[o][li].filter(x=>x.rev&&CARDS[x.id].cost<=1&&!untargetable(s,o,x)&&!fated(x)&&!deathless(x));
     if(!cs.length) continue; const mx=Math.max(...cs.map(x=>cardPow(o,li,x))), t=gPick(cs.filter(x=>cardPow(o,li,x)===mx));
     SRC={s,cost:CARDS.pakhet.cost}; const ok=destroy(o,li,t); SRC=null;
@@ -989,27 +1002,33 @@ async function resolveTurn(mine, theirs, animate){
       pool.forEach((c,i)=>{ const d=vals[i]-c.pow; if(d){ (c.mods=c.mods||[]).push({v:d,src:"Le Cirque"}); c.pow=vals[i]; c.malus=0; } });
       log(`Le Cirque mélange les puissances de ${pool.length} cartes`); sfx("void"); } }
   /* Carillonneur : +1 à chaque fin de tour ; au tour 6, le glas partage la moitié de sa puissance */
-  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="carillonneur"){
+  for(const {s,li,c,c0} of eot("carillonneur")){
     SRC={s,cost:CARDS.carillonneur.cost}; c.pow+=1; (c.mods=c.mods||[]).push({v:1,src:"Le Carillonneur"});
-    if(S.turn===6&&!c.knell){ c.knell=true; const v=Math.floor(Math.max(0,cardPow(s,li,c))/2); const ms=S.board[s][li].filter(x=>x!==c&&x.rev);
+    if(S.turn===6&&!c0.knell){ c0.knell=true; const v=Math.floor(Math.max(0,cardPow(s,li,c))/2); const ms=S.board[s][li].filter(x=>x!==c&&x.rev);
       if(v&&ms.length){ ms.forEach(x=>{ x.pow+=v; (x.mods=x.mods||[]).push({v,src:"Le glas"}); }); log(`Le glas sonne : +${v} à ${ms.length} carte${ms.length>1?"s":""} (${who(s)})`); sfx("legend"); } }
     SRC=null; }
   /* Le Tombeau : fin du tour 6, les défaussés reviennent */
   if(S.turn===6&&animate){ const tb=[0,1,2].filter(li=>locIs(li,"tombeau")); if(tb.length){ tb.forEach(li=>FX.play("tombeau_rise",{li})); await wait(700); } }
   if(S.turn===6){ piles(); S.locs.forEach((L,li)=>{ if(locIs(li,"tombeau")) for(const s of ["p","e"]){ let n=0; for(const id of gShuffle(S.discardPile[s].slice())){ if(!resurrect(s,id,li,"discard",{anyLoc:true})) break; n++; } if(n){ log(`Le Tombeau rend ${n} carte${n>1?"s":""} (${who(s)})`); sfx("void"); } } }); }
   /* La Messagère d'Hécate : à chaque fin de tour, +2 si son camp ne mène pas ici (6 au maximum) */
-  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="messagere"&&leader(li)!==s){
-    const g=Math.min(2,6-(c.msgBonus||0)); if(g>0){ c.msgBonus=(c.msgBonus||0)+g; c.pow+=g; (c.mods=c.mods||[]).push({v:g,src:"La Messagère"}); log(`La Messagère d'Hécate · +${g} (${who(s)})`); sfx("buff"); } }
+  for(const {s0,s,li,c,c0} of eot("messagere")) if(leader(li)!==s0){
+    const g=Math.min(2,6-(c0.msgBonus||0)); if(g>0){ c0.msgBonus=(c0.msgBonus||0)+g; c.pow+=g; (c.mods=c.mods||[]).push({v:g,src:"La Messagère"}); log(`La Messagère d'Hécate · +${g} (${who(s)})`); sfx("buff"); } }
   /* Prométhée : l'énergie non dépensée passe au tour suivant, 10 d'énergie au plus au tour suivant (énergie du tour + réserve + Freyr ; Jordan, 16 octobre : la réserve seule plafonnée à 10 donnait 16 au tour 6) */
-  if(S.turn<6) for(const s of ["p","e"]) if(unspent[s]>0&&!S.biaBlock[s]&&S.board[s].some(col=>col.some(c=>live(c)&&eid(c)==="promethee"))){
-    const k=Math.min(unspent[s],Math.max(0,10-(S.turn+1)-S.bonus[s])); if(k>0){ S.bonus[s]+=k; log(`Prométhée garde ${k} énergie en réserve (${who(s)})`); sfx("buff"); if(animate){ const li=S.board[s].findIndex(col=>col.some(c=>live(c)&&eid(c)==="promethee")); if(li>=0) FX.play("promethee",{li}); } } }
+  const promes=eot("promethee");
+  if(S.turn<6) for(const s of ["p","e"]) if(unspent[s]>0&&!S.biaBlock[s]&&promes.some(x=>x.s===s)){
+    const k=Math.min(unspent[s],Math.max(0,10-(S.turn+1)-S.bonus[s])); if(k>0){ S.bonus[s]+=k; log(`Prométhée garde ${k} énergie en réserve (${who(s)})`); sfx("buff"); if(animate){ const e0=promes.find(x=>x.s===s); if(e0) FX.play("promethee",{li:e0.li}); } } }
   /* Cernunnos : à la fin de chaque tour où son camp ne mène pas ici, sa puissance double (8 au maximum) */
-  for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="cernunnos"&&leader(li)!==s&&c.pow>0&&c.pow<8){
+  for(const {s0,s,li,c,c0} of eot("cernunnos")) if(leader(li)!==s0&&c0.pow>0&&c0.pow<8&&c.pow>0&&c.pow<8){
     const g=Math.min(8,c.pow*2)-c.pow; c.pow+=g; (c.mods=c.mods||[]).push({v:g,src:"Cernunnos"}); log(`Cernunnos double sa puissance : +${g} (${who(s)})`); sfx("buff"); }
+  /* Hélios : à la fin de chaque tour, elle passe dans le lieu immédiatement à droite (jamais de retour) ; tes autres cartes du lieu quitté qui peuvent se déplacer elles-mêmes gagnent +2 */
+  for(const {s,li,c} of eot("helios")){ const to=li+1;
+    if(to>2||!S.board[s][li].includes(c)||fated(c)||(c.captive&&captorLive(c.captive))||!S.locs[to].rev||S.locs[to].locked||S.board[s][to].length>=capOf(s,to)) continue;
+    S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.board[s][to].push(c); flonHook(to,c); log(`Hélios passe vers ${LOCS[S.locs[to].id].name} (${who(s)})`); sfx("legend");
+    for(const x of S.board[s][li]) if(x!==c&&live(x)&&SELFMOVE.has(eid(x))){ x.pow+=2; (x.mods=x.mods||[]).push({v:2,src:"Hélios"}); log(`Hélios · +2 à ${nm(x)} (${who(s)})`); } }
   if(S.turn>=2&&S.turn<=4&&!S.rp) aiOath();
   if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
   /* L'Enfant sans École : à la fin de chaque tour sauf le sixième, elle retourne dans ta main et gagne +1 définitivement (main pleine : pas de retour, donc pas de gain : Jordan, 22 octobre) */
-  if(S.turn<6) for(const s of ["p","e"]) for(let li=0;li<3;li++) for(const c of S.board[s][li].slice()) if(live(c)&&eid(c)==="enfant"&&!(c.captive&&captorLive(c.captive))){
+  if(S.turn<6) for(const {s,li,c,c0} of eot("enfant")) if(!(c0.captive&&captorLive(c0.captive))&&S.board[s][li].includes(c)){
     if(S.hand[s].length<7){ c.pow+=1; (c.mods=c.mods||[]).push({v:1,src:"L'Enfant"}); S.board[s][li]=S.board[s][li].filter(x=>x!==c); c.rev=false; c.fresh=false; S.hand[s].push(c); log(`L'Enfant sans École retourne dans la main, +1 (${who(s)})`); sfx("buff"); }
     else log(`L'Enfant sans École : main pleine, elle reste en jeu (${who(s)})`); }
   if(S.turn>=6) S.final=true;   /* Ananké : la puissance de fin de partie se calcule maintenant, après tout le reste */
