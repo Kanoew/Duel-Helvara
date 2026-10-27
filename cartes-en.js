@@ -16,7 +16,7 @@ window.HELVARA_EN = {
     themis:{fx:"Ongoing: from the turn after she arrives, each player can only play one card here per turn."},
     clone_wukong:{n:"Sun Wukong's Clone", fx:"Token left by Sun Wukong. Vanishes at the end of the next turn."},
     revenant:{n:"Revenant", fx:"Token left by Osiris on the enemy side."},
-    eshu:{n:"Èṣù, Queen of the Crossroads", fx:"Ongoing: the first time each other card moves each turn, it gets +2 Power if it is yours, or loses 1 Power if it is the enemy's."},
+    eshu:{n:"Èṣù, Queen of the Crossroads", fx:"Ongoing: the first time each of your other cards moves each turn, gets +2 Power; the first time each enemy card moves each turn, it loses 1 Power."},
     apophis:{fx:"Ongoing: the end-of-turn and end-of-game effects of enemy cards here trigger for Apophis instead."},
     helios:{n:"Helios", fx:"Ongoing: at the end of each turn, moves to the location immediately to the right. If she moves this way, your other cards in the location she left that have an effect letting them move themselves get +2 Power."},
     apophis_p:{n:"Apophis, Egg of Misfortune", fx:"On Reveal: create a Cursed Egg on the enemy side here."},

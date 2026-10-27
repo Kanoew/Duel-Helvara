@@ -349,10 +349,10 @@ function trimOverflow(){ for(const s of ["p","e"]) for(let li=0;li<3;li++) while
 function flonHook(i,t){ if(locIs(i,"flon")){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Le Flon"}); }
   if(!t.neg&&eid(t)==="athlete_stade"&&(t.athl||0)<4){ t.athl=(t.athl||0)+2; t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"L'Athlète"}); }   /* L'Athlète du Stade : +2 par déplacement, +4 au plus */
   if(!t.neg&&eid(t)==="change") t.moon=true;
-  /* Èṣù, Reine des Carrefours : la première fois que chaque autre carte se déplace à chaque tour, +2 si elle est à son camp, −1 si elle est adverse (plusieurs Èṣù ne cumulent pas) */
+  /* Èṣù, Reine des Carrefours : la première fois que chaque autre carte se déplace à chaque tour, Èṣù gagne +2 si la carte est à son camp, la carte perd 1 si elle est adverse (plusieurs Èṣù ne cumulent pas) */
   if(t.esT!==S.turn){ const es=["p","e"].map(side=>({side,c:S.board[side].flat().find(x=>x!==t&&live(x)&&eid(x)==="eshu")})).find(x=>x.c);
     if(es){ const ts=["p","e"].find(side=>S.board[side].some(col=>col.includes(t))); t.esT=S.turn;
-      if(ts===es.side){ t.pow+=2; (t.mods=t.mods||[]).push({v:2,src:"Èṣù"}); log(`Èṣù · +2 à ${nm(t)} (${who(ts)})`); sfx("buff"); }
+      if(ts===es.side){ es.c.pow+=2; (es.c.mods=es.c.mods||[]).push({v:2,src:"Èṣù (carrefour)"}); log(`Èṣù · +2 (${nm(t)} se déplace) (${who(ts)})`); sfx("buff"); }
       else if(ts){ const prev=SRC; SRC={s:es.side,cost:CARDS.eshu.cost}; const ok=weaken(ts,i,t,1); SRC=prev; if(ok){ (t.mods=t.mods||[]).push({v:-1,src:"Èṣù"}); log(`Èṣù · −1 à ${nm(t)} (${who(ts)})`); sfx("debuff"); } } } } }   /* Chang'e : après son premier déplacement, elle ne peut plus être détruite */
 /* Sauvabelin : aucune carte ne peut être détruite dans ce lieu, quelle que soit la source */
 const forest=li=>locIs(li,"sauvabelin");

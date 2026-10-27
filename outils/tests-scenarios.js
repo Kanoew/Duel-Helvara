@@ -1205,11 +1205,12 @@ async function inPage() {
 
   /* ===== Èṣù, Apophis, Hélios, Apophis Œuf de Malheur, Œuf maudit (27 octobre) ===== */
   { T("Cartes d'avril : Èṣù (L Désir 3/3), Apophis (L Primordial 4/2, 15 mars), Hélios (L Jugement 4/4), Apophis Œuf de Malheur (E Primordial 4/3, variante `ex:paques`), jeton Œuf maudit", CARDS.eshu.r === "L" && CARDS.eshu.fac === "desir" && CARDS.apophis.cost === 4 && CARDS.apophis.pow === 2 && CARDS.apophis.rel === "2027-03-15" && CARDS.helios.fac === "jugement" && CARDS.apophis_p.base === "apophis" && CARDS.apophis_p.ex === "paques" && CARDS.oeuf_maudit.token === true, "");
-    /* Èṣù */
-    fresh(); S.turn = 3; { const es = put("p", 0, "eshu"), a = put("p", 1, plain[0], 1), e1 = put("e", 1, plain[1], 3), es2 = put("p", 2, "eshu");
-      flonHook(0, a); flonHook(0, a); flonHook(2, e1); flonHook(0, es); S.turn = 4; flonHook(0, a);
-      T("Èṣù : +2 à une carte alliée qui se déplace (une fois par tour), −1 à une adverse, Èṣù ne se bénéficie pas à elle-même (mais une autre Èṣù oui), deux Èṣù ne cumulent pas", a.pow === 1 + 2 + 2 && e1.pow === 2 && es.pow === 5, `${a.pow} ${e1.pow} ${es.pow}`); }
-    fresh(); S.turn = 3; { put("p", 0, "eshu"); const w = put("e", 1, plain[1], 3); w.ward = true; flonHook(0, w); T("Èṣù : les protections contre l'affaiblissement s'appliquent", w.pow === 3, w.pow); }
+    /* Èṣù (version du 27 octobre : c'est Èṣù qui gagne) */
+    fresh(); S.turn = 3; { const es = put("p", 0, "eshu"), a = put("p", 1, plain[0], 1), b = put("p", 1, plain[1], 1), e1 = put("e", 1, plain[2], 3);
+      flonHook(0, a); flonHook(0, a); flonHook(2, b); flonHook(2, e1); S.turn = 4; flonHook(0, a);
+      T("Èṣù : elle gagne +2 la première fois que chacune de tes autres cartes se déplace à chaque tour (a: 1 fois au tour 3, 1 fois au tour 4 ; b : 1 fois), la carte adverse perd 1, les cartes déplacées ne gagnent rien", es.pow === 3 + 2 + 2 + 2 && a.pow === 1 && b.pow === 1 && e1.pow === 2, `${es.pow} ${a.pow} ${e1.pow}`); }
+    fresh(); S.turn = 3; { const es = put("p", 0, "eshu"), es2 = put("p", 2, "eshu"); flonHook(1, es); T("Èṣù : elle ne se bénéficie pas à elle-même, une autre Èṣù oui, sans cumul (+2 une seule fois)", es.pow === 3 && es2.pow === 5, `${es.pow} ${es2.pow}`); }
+    fresh(); S.turn = 3; { put("p", 0, "eshu"); const w = put("e", 1, plain[1], 3); w.ward = true; flonHook(0, w); T("Èṣù : les protections contre l'affaiblissement s'appliquent à la carte adverse", w.pow === 3, w.pow); }
     /* Apophis : fins de tour */
     fresh(); S.turn = 3; { const id = put("e", 0, "idunn"), ev = put("e", 0, plain[1], 1), ap = put("p", 0, "apophis"), mine = put("p", 0, plain[0], 1); await resolveTurn([], [], false);
       T("Apophis : l'Idunn adverse ici se déclenche pour Apophis (+1 à la plus faible de SON camp, rien chez l'adversaire)", mine.pow === 2 && ev.pow === 1, `${mine.pow} ${ev.pow}`); }
@@ -1227,7 +1228,7 @@ async function inPage() {
     fresh(); S.turn = 3; { const h = put("p", 0, "helios"), n = put("p", 0, "nageuse_lac"); for (let i = 0; i < 4; i++) put("p", 1, plain[i], 1); await resolveTurn([], [], false);
       T("Hélios : destination pleine, aucun déplacement ni bonus", S.board.p[0].includes(h) && n.pow === CARDS.nageuse_lac.pow, ""); }
     fresh(); S.turn = 1; S.locs[1].rev = false; { const h = put("p", 0, "helios"); await resolveTurn([], [], false); T("Hélios : jamais vers un lieu pas encore révélé", S.board.p[0].includes(h), ""); }
-    fresh(); S.turn = 3; { const h = put("p", 0, "helios"), es = put("p", 2, "eshu"); await resolveTurn([], [], false); T("Hélios : son déplacement déclenche les effets de déplacement (Èṣù : +2)", h.pow === 4 + 2, h.pow); }
+    fresh(); S.turn = 3; { const h = put("p", 0, "helios"), es = put("p", 2, "eshu"); await resolveTurn([], [], false); T("Hélios : son déplacement déclenche les effets de déplacement (Èṣù gagne +2)", h.pow === 4 && es.pow === 3 + 2, `${h.pow} ${es.pow}`); }
     /* Apophis, Œuf de Malheur + Œuf maudit */
     fresh(); S.turn = 3; { const a = card("apophis_p"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); const egg = S.board.e[0].find(x => x.id === "oeuf_maudit");
       T("Apophis, Œuf de Malheur : crée un Œuf maudit du côté adverse ici", !!egg && !S.board.p[0].some(x => x.id === "oeuf_maudit"), ""); }

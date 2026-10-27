@@ -221,7 +221,7 @@ Affichage : `frameOn(id)` (jamais en partie ni au tutoriel) ; `fullCard()` ajout
 ## Apophis, Èṣù, Hélios (27 octobre 2026)
 
 - **Fins de tour : passer par `eot(id,first)`** (`js/moteur.js`) : il liste les déclenchements `{s0,c0,s,c,li}` ; `c0`/`s0` = carte d'origine (conditions, compteurs), `c`/`s` = source de l'effet (Apophis si un Apophis adverse est dans le lieu, sinon la carte). Tout nouvel effet de fin de tour doit boucler sur `eot("<id>")` et utiliser `c0` pour ses conditions, sinon Apophis ne le détournera pas. Fin de partie : le test d'Ananké dans `cardPow` (`apoOf`).
-- **Èṣù** : dans `flonHook` (donc tout déplacement doit l'appeler), compteur `t.esT` (tour). **Œuf maudit** : `cardPow`, comme Hathor mais sur son propre camp.
+- **Èṣù** : dans `flonHook` (donc tout déplacement doit l'appeler), compteur `t.esT` (tour) sur la carte qui se déplace ; c'est Èṣù qui reçoit le +2. **Œuf maudit** : `cardPow`, comme Hathor mais sur son propre camp.
 - **Hélios** : boucle `eot("helios")` en fin de tour, avant le Serment ; bonus pour les cartes de `SELFMOVE`.
 
 ## Filtres multiples et carte du jour (25 octobre 2026)
