@@ -108,7 +108,7 @@ function musicKey(){
     if(playFor!==S){ playFor=S; playPick=nextPlay||(Math.random()<.5?"play":"play2"); nextPlay=null; } /* nextPlay : morceau déjà préchargé avant la partie */
     if(S.over) return endKey||playPick; /* écran de fin : le morceau de la partie reprend après le jingle */
     return S.turn>=5?"tension":playPick; }
-  const se=season(); return se?"home_"+se:"home"; }
+  const se=season(); return se&&MUSIC["home_"+se]?"home_"+se:"home"; }   /* saison sans musique d'accueil (Pâques) : la musique ordinaire */
 function music(){
   if(!P.music||!bgmArmed||document.hidden){ if(bgm) mPause(bgm); if(jingle){ mStop(jingle,.05); jingle=null; } return; }
   if(jingle) return;

@@ -384,6 +384,8 @@ html[data-season="halloween"] body::before{background:linear-gradient(180deg,rgb
 html[data-season="noel"] body::before{background:linear-gradient(180deg,rgba(8,14,24,.4),rgba(8,12,20,.8)),url("images/fond_noel.webp") center/cover no-repeat,var(--ink)}
 html[data-season="valentin"]{--warm:#e8a3b4;--me:#f0a8c0}
 html[data-season="valentin"] body::before{background:linear-gradient(180deg,rgba(20,8,16,.45),rgba(14,8,14,.82)),url("images/fond_valentin.webp") center/cover no-repeat,var(--ink)}
+html[data-season="paques"]{--warm:#c9dcae;--me:#9fd2b4}
+html[data-season="paques"] body::before{background:linear-gradient(180deg,rgba(8,16,14,.4),rgba(8,14,12,.82)),url("images/fond_paques.webp") center/cover no-repeat,var(--ink)}
 html[data-season="nouvelan"] body::before{background:linear-gradient(180deg,rgba(8,14,24,.4),rgba(8,12,20,.8)),url("images/fond_nouvelan.webp") center/cover no-repeat,var(--ink)}
 html[data-season] body::after{content:"";position:fixed;left:0;right:0;z-index:-1;pointer-events:none;opacity:.55;will-change:transform;backface-visibility:hidden}
 html[data-season="halloween"] body::after{background-image:radial-gradient(2px 2px at 12% 80%,#ff9b4a 60%,transparent),radial-gradient(1.5px 1.5px at 37% 60%,#ffb36b 60%,transparent),radial-gradient(2px 2px at 64% 90%,#ff8a3a 60%,transparent),radial-gradient(1.5px 1.5px at 85% 70%,#c98bff 60%,transparent),radial-gradient(2px 2px at 52% 40%,#ff9b4a 60%,transparent);background-size:340px 420px;top:0;left:-40px;height:calc(100% + 840px);animation:embers 18s linear infinite}
@@ -393,6 +395,7 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 @media (prefers-reduced-motion: reduce){ html[data-season] body::after{animation:none} }
 .seasonbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-radius:14px;padding:12px 14px;margin-bottom:12px;border:1px solid rgba(236,138,60,.5);background:linear-gradient(135deg,rgba(236,138,60,.2),rgba(24,12,30,.85) 65%)}
 .seasonbar.valentin{border-color:rgba(240,168,192,.5);background:linear-gradient(135deg,rgba(200,60,90,.2),rgba(24,10,18,.85) 65%)}
+.seasonbar.paques{border-color:rgba(170,205,170,.5);background:linear-gradient(135deg,rgba(150,190,150,.2),rgba(10,20,16,.85) 65%)}
 .seasonbar.noel{border-color:rgba(190,225,255,.5);background:linear-gradient(135deg,rgba(190,225,255,.18),rgba(10,18,32,.85) 65%)}
 .seasonbar b{font-family:var(--display);font-size:18px;font-weight:400;display:block;margin:2px 0}
 .seasonbar .eyebrow{color:var(--warm)}

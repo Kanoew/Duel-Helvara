@@ -515,17 +515,20 @@
         halloween:{name:"Pumpkin Fold",desc:"Halloween edition. More epics and legendaries than anywhere else."},
         nouvelan:{name:"Twelfth Stroke Fold",desc:"New Year edition. More epics and legendaries than anywhere else."},
         noel:{name:"Star Fold",desc:"Christmas edition. More epics and legendaries than anywhere else."},
+        paques:{name:"The Fold of Hatching",desc:"Easter edition. More epics and legendaries than anywhere else."},
         valentin:{name:"The Fold of Love",desc:"Valentine's Day edition. More epics and legendaries than anywhere else."}
       },
       SEASON:{
         halloween:{sub:"Pumpkin Night",who:"Player of Helvara · Halloween night",eyebrow:"Pumpkin Night · until November 2",title:"The veil is thin in Helvara",hint:"Pumpkins burn along the quays. The Pumpkin Fold hides Lady Joanna, and Morrigan, Nyx, Izzy, Yarden, Ares, Nergal and Medea in their Halloween versions.",btn:"Open the Pumpkin Fold",win:"Victory under the russet moon",lose:"The dead won tonight"},
         noel:{sub:"Star Vigil",who:"Player of Helvara · Christmas Eve",eyebrow:"Star Vigil · until January 2",title:"Snow falls on Helvara",hint:"The vineyards are white and the lake holds its breath. The Star Fold hides Aphrodite, Sekhmet, Calypso, Apsu, Ereshkigal and Circe in their Christmas versions.",btn:"Open the Star Fold",win:"Victory under the Star",lose:"The winter night prevails"},
+        paques:{sub:"Vigil of Hatching",who:"Player of Helvara · Easter",eyebrow:"Vigil of Hatching · until April 4",title:"The eggs open over Helvara",hint:"Blossoming branches hang over the lake. The Fold of Hatching hides Apophis, Egg of Misfortune.",btn:"Open the Fold of Hatching",win:"Victory at the hatching",lose:"The egg has broken"},
         valentin:{sub:"Night of Hearts",who:"Player of Helvara · Valentine's Day",eyebrow:"Night of Hearts · until February 28",title:"The roses have thorns in Helvara",hint:"Lanterns glow red over the lake. The Fold of Love hides Qetesh, Circe, Ereshkigal, Hel, Eos, Calypso and Kitsune in their Valentine's Day versions, and two fusions with Jordan.",btn:"Open the Fold of Love",win:"Victory beneath the roses",lose:"The heart breaks"},
         nouvelan:{sub:"Twelfth Stroke Night",who:"Player of Helvara · New Year's Eve",eyebrow:"Twelfth Stroke Night · until January 18",title:"Midnight strikes over Helvara",hint:"The cathedral counts the strokes and the dead are listening. The Twelfth Stroke Fold hides Hel, Eos, Pele, Qetesh, Aphrodite and Ares in their New Year's Eve versions.",btn:"Open the Twelfth Stroke Fold",win:"Victory on the last stroke",lose:"The year left without you"}
       },
       DROPS:{
         nov15:"Prometheus keeps the fire, Pandora opens the box, Athena guides your hand, and Styx watches over her daughters: Bia, and Nike, the first faction ultra-legendary. Ma'at, Apollo and Vesta prepare her way. She is earned by playing 50 games with 8 Judgement cards: the Faction journal is already counting.",
         dec14:"The Star Fold opens for Christmas.",
+        mar15:"Apophis hijacks the enemy end-of-turn effects, Èṣù opens the crossroads and Helios heads right.",
         mar1:"The Flon sings, La Palud plays, the Seamstress protects, the Strategist moves, Gaia spreads, Kali destroys, Hypnos lulls, Sun Wukong leaves a Clone, Medusa freezes, Osiris calls back his dead… and twenty cards in all.",
         feb1:"Nephtys sacrifices her neighbour, Pakhet hunts the small cards, Hera grows jealous, Frigg draws to herself, Xi Wangmu offers the Peach of Immortality, Bari Gongju opens the way of the discarded, Isis and Rati call back the fallen, Loki makes them discard and Anahita copies… and The Source, the new Helvara ultra-legendary.",
         jan15:"Kama always comes back, Tezcatlipoca absorbs everything played at his feet, Eros aims true, Horus keeps watch, Heracles switches sides, Lugh hurls his spear and Marduk is never really discarded… and Hedone draws in the opponent's cards.",
