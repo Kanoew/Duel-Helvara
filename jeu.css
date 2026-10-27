@@ -932,3 +932,4 @@ body:has(.sandbar) #app{padding-top:62px}
 .hc-card>.cadre{z-index:7}
 
 .toggle.on{border-color:var(--me);color:var(--me)}
+.toggle.off{opacity:.55;cursor:default}

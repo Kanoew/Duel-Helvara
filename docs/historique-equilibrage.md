@@ -351,3 +351,7 @@ On **oublie la fusion par collection** : une fusion ne se gagne plus en réuniss
 
 `BUILD` : `alpha-0.32`. Bug trouvé par Jordan sur son téléphone : une copie d'Anahita (coût 3) qui copie Le Musicien ne recevait pas le +2 du vrai Musicien, car `cardPow` excluait toute carte d'identité `musicien` (`eid`) au lieu de seulement la carte elle-même. L'exclusion est supprimée (`o!==c` suffit) : le Musicien et sa copie se donnent +2 l'un à l'autre, jamais à eux-mêmes.
 
+### 27e série (27 octobre 2026) : La Nageuse du Lac « une fois par tour »
+
+`BUILD` : `alpha-0.33`. Retour de Jordan après essai : une traversée par partie rend la carte trop faible, et il ne voyait pas pourquoi le bouton manquait (ses trois lieux étaient pleins). Décisions : **une fois par tour** (compteur `c.swimT`, plus de `c.swum`), **jamais vers un lieu où l'on mène déjà** (`swimOk`), toujours disponible seulement à partir du tour suivant son arrivée, et le bouton « 🏊 Nageuse » reste affiché quand elle est en jeu, **grisé avec la raison** (`swimWhy()` : « dès le prochain tour », « déjà traversée ce tour », « aucun lieu possible »). Texte FR et EN mis à jour. Èṣù : en attente d'une décision de Jordan (voir plus bas).
+

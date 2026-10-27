@@ -1161,9 +1161,10 @@ async function inPage() {
     /* La Nageuse du Lac */
     fresh(); S.turn = 3; { const n = put("p", 0, "nageuse_lac"); n.arr = 2; T("Nageuse : disponible dès le tour suivant son arrivée", !!swimmer() && swimOk(1) && !swimOk(0), "");
       swimTo(2); const stub = S.swimP; const mine = []; mine.swim = stub; await resolveTurn(mine, [], false);
-      T("Nageuse : le déplacement annoncé se fait avant la pose, une seule fois par partie", S.board.p[2].includes(n) && n.swum === true && !swimmer(), ""); }
+      T("Nageuse : le déplacement annoncé se fait avant la pose ; elle est de nouveau disponible au tour suivant (une fois par tour)", S.board.p[2].includes(n) && n.swimT === 3 && S.turn === 4 && !!swimmer(), `${n.swimT} ${S.turn}`); S.swimP = null; swimTo(0); const m2 = []; m2.swim = S.swimP; S.turn = 4; await resolveTurn(m2, [], false); T("Nageuse : une seule traversée par tour", n.swimT === 4 && !(S.turn === 4 && swimmer()), ""); }
     fresh(); S.turn = 3; { const n = put("p", 0, "nageuse_lac"); n.arr = 3; T("Nageuse : pas disponible le tour de son arrivée", !swimmer(), ""); }
     fresh(); S.turn = 3; { const n = put("p", 0, "nageuse_lac"); n.arr = 1; for (let i = 0; i < 4; i++) put("p", 1, plain[i], 1); T("Nageuse : jamais vers un lieu où ton côté est plein", !swimOk(1) && swimOk(2), ""); }
+    fresh(); S.turn = 3; { const n = put("p", 0, "nageuse_lac"); n.arr = 1; put("p", 1, plain[0], 9); T("Nageuse : jamais vers un lieu où tu mènes déjà", !swimOk(1) && swimOk(2), ""); T("Nageuse : le bouton dit pourquoi elle ne peut pas traverser", swimWhy() === "", swimWhy()); n.arr = 3; T("Nageuse : message « dès le prochain tour »", swimWhy() === "dès le prochain tour", swimWhy()); }
     /* La Barmaid aux Squelettes */
     fresh(); S.turn = 3; { put("p", 0, "voyante_barbare"); S.deck.p = [card(plain[0]), card(plain[1]), card(plain[2])]; S.hand.p = []; const xs = [put("p", 0, plain[3], 1), put("p", 0, plain[4], 1), put("p", 0, plain[5], 1)]; for (const x of xs) destroy("p", 0, x);
       T("La Barmaid : pioche quand une autre carte alliée est détruite ici, deux fois au maximum par partie", S.hand.p.length === 2, S.hand.p.length); }

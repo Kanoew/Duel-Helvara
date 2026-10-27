@@ -127,8 +127,12 @@ const stagedAt=li=>S.staged.filter(x=>x.li===li&&eid(x.c)!=="herakles").length+(
 /* Thémis : à partir du tour suivant son arrivée, chaque joueur ne peut jouer qu'une carte par tour dans son lieu (les deux camps) */
 const themisOn=li=>["p","e"].some(s=>S.board[s][li].some(x=>live(x)&&eid(x)==="themis"&&(x.arr||0)<S.turn));
 /* La Nageuse du Lac : une fois par partie, avant de jouer, elle passe dans un autre lieu révélé où il reste une place alliée (disponible dès le tour suivant son arrivée) */
-function swimmer(s="p"){ if(S.busy||S.over||S.swimP) return null; for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="nageuse_lac"&&(c.arr==null||c.arr<S.turn)&&!c.swum&&!fated(c)&&!c.captive) return {c,li}; return null; }
-function swimOk(li){ const w=swimmer(); return !!w&&li!==w.li&&S.locs[li].rev&&!S.locs[li].locked&&slotsUsed("p",li)+stagedAt(li)<capOf("p",li); }
+function swimmer(s="p"){ if(S.busy||S.over||S.swimP) return null; for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="nageuse_lac"&&(c.arr==null||c.arr<S.turn)&&c.swimT!==S.turn&&!fated(c)&&!c.captive) return {c,li}; return null; }
+function swimOk(li){ const w=swimmer(); return !!w&&li!==w.li&&S.locs[li].rev&&!S.locs[li].locked&&leader(li)!=="p"&&slotsUsed("p",li)+stagedAt(li)<capOf("p",li); }   /* jamais vers un lieu où tu mènes déjà */
+/* Pourquoi la Nageuse ne peut pas traverser (pour l'afficher dans le bouton), ou "" si elle le peut */
+function swimWhy(){ if(S.swimP||S.busy||S.over) return ""; const c=S.board.p.flat().find(x=>live(x)&&eid(x)==="nageuse_lac"); if(!c) return null;
+  if(c.arr!=null&&c.arr>=S.turn) return "dès le prochain tour"; if(c.swimT===S.turn) return "déjà traversée ce tour"; if(fated(c)||c.captive) return "immobilisée";
+  return [0,1,2].some(swimOk)?"":"aucun lieu possible"; }
 function swimTo(li){ const w=swimmer(); if(!w||!swimOk(li)) return false; S.swimP={c:w.c,li,from:w.li}; S.swimSel=false; return true; }
 const live=(c)=>c.rev&&!c.neg;
 /* Anahita : identité dont la carte copie l'effet (c.cp), sinon la sienne. Tous les effets Continu et Révélation lisent eid(c) */
@@ -933,8 +937,8 @@ async function resolveTurn(mine, theirs, animate){
   S.vesta=S.vesta||{p:0,e:0}; for(const [k,l] of [["p",mine],["e",theirs]]) if(l.some(x=>vestaT(x.c.id))) S.vesta[k]=0;
   /* La Nageuse du Lac : le déplacement annoncé se fait avant la pose des cartes (les deux camps) */
   for(const [side,list] of [["p",mine],["e",theirs]]){ const w=list.swim; if(!w) continue; const c=w.c, from=S.board[side].findIndex(col=>col.includes(c));
-    if(from<0||c.swum||!live(c)||fated(c)||w.li===from||!S.locs[w.li].rev||S.locs[w.li].locked||S.board[side][w.li].length>=capOf(side,w.li)) continue;
-    c.swum=true; S.board[side][from]=S.board[side][from].filter(x=>x!==c); S.board[side][w.li].push(c); flonHook(w.li,c); log(`La Nageuse du Lac traverse vers ${LOCS[S.locs[w.li].id].name} (${who(side)})`); sfx("buff"); }
+    if(from<0||c.swimT===S.turn||!live(c)||fated(c)||w.li===from||!S.locs[w.li].rev||S.locs[w.li].locked||S.board[side][w.li].length>=capOf(side,w.li)) continue;
+    c.swimT=S.turn; S.board[side][from]=S.board[side][from].filter(x=>x!==c); S.board[side][w.li].push(c); flonHook(w.li,c); log(`La Nageuse du Lac traverse vers ${LOCS[S.locs[w.li].id].name} (${who(side)})`); sfx("buff"); }
   const eatPlume=(s,li,c)=>{ const pl=S.board[s][li].find(x=>eid(x)==="plume"); if(pl){ S.board[s][li]=S.board[s][li].filter(x=>x!==pl); c.pow+=1; (c.mods=c.mods||[]).push({v:1,src:"Plume"}); } };
   const crossed=[];   /* Héraklès : posé après les autres cartes, il passe du côté de l'adversaire (s'il y reste de la place, sinon il retourne dans la main) */
   for(const x of mine){ if(!CARDS[x.c.id].token) (S.played=S.played||[]).push([x.c.id,S.locs[x.li].id]); if(x.c.id==="herakles"){ crossed.push(["p",x]); continue; } eatPlume("p",x.li,x.c); S.board.p[x.li].push(x.c); }
