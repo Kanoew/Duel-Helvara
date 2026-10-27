@@ -176,7 +176,7 @@ function cardPow(s,li,c){
   for(const o of S.board[s][li]) if(o!==c && live(o) && eid(o)==="ishara") p+=1;
   if(d.fac==="helvara") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c && live(o) && eid(o)==="doyenne") p+=1;
   for(const o of S.board[opp(s)][li]) if(live(o) && eid(o)==="meute") p+=2;   /* La Meute du M2 : les cartes adverses ici ont +2 */
-  if(d.cost===3&&!d.token&&eid(c)!=="musicien") for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c && live(o) && eid(o)==="musicien") p+=2;   /* Le Musicien : tes autres cartes de coût d'origine 3 */
+  if(d.cost===3&&!d.token) for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c && live(o) && eid(o)==="musicien") p+=2;   /* Le Musicien : tes autres cartes de coût d'origine 3 (une copie d'Anahita compte aussi, des deux côtés : seule la carte elle-même est exclue) */
   if(!c.neg){
     if(eid(c)==="gaia") for(let i=0;i<3;i++) if(i!==li&&slotsUsed(s,i)>=capOf(s,i)) p+=2;   /* Gaïa : +2 par autre lieu où ton côté est plein */
     if(eid(c)==="costumes" && inPlay("thot")) p+=4;

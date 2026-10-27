@@ -1197,6 +1197,11 @@ async function inPage() {
     fresh(); S.turn = 3; { const th = put("e", 0, "themis"); th.arr = 3; const a = card(byCost(1)), b = card(byCost(1)); S.hand.p = [a, b]; S.energy = 9; S.staged.push({ c: a, li: 0 }); T("Thémis : sans effet le tour de son arrivée", canStage(b, 0), ""); S.staged = []; }
   }
 
+  /* ===== Le Musicien et Anahita (27 octobre) : une copie d'Anahita de coût 3 reçoit le +2 du vrai Musicien ===== */
+  { fresh(); S.turn = 3; const mu = put("p", 0, "musicien"), an = put("p", 0, "anahita"); an.cp = "musicien";
+    T("Musicien : Anahita (coût 3) copiant Le Musicien reçoit +2 du vrai Musicien ; le Musicien reçoit +2 de la copie, jamais de lui-même", cardPow("p", 0, an) === an.pow + 2 && cardPow("p", 0, mu) === mu.pow + 2, `${cardPow("p", 0, an)} ${cardPow("p", 0, mu)}`);
+    fresh(); S.turn = 3; { const m2 = put("p", 0, "musicien"); T("Musicien seul : aucun bonus pour lui-même", cardPow("p", 0, m2) === m2.pow, cardPow("p", 0, m2)); } }
+
   /* ===== Èṣù, Apophis, Hélios, Apophis Œuf de Malheur, Œuf maudit (27 octobre) ===== */
   { T("Cartes d'avril : Èṣù (L Désir 3/3), Apophis (L Primordial 4/2, 15 mars), Hélios (L Jugement 4/4), Apophis Œuf de Malheur (E Primordial 4/3, variante `ex:paques`), jeton Œuf maudit", CARDS.eshu.r === "L" && CARDS.eshu.fac === "desir" && CARDS.apophis.cost === 4 && CARDS.apophis.pow === 2 && CARDS.apophis.rel === "2027-03-15" && CARDS.helios.fac === "jugement" && CARDS.apophis_p.base === "apophis" && CARDS.apophis_p.ex === "paques" && CARDS.oeuf_maudit.token === true, "");
     /* Èṣù */

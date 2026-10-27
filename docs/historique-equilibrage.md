@@ -347,3 +347,7 @@ On **oublie la fusion par collection** : une fusion ne se gagne plus en réuniss
 
 `BUILD` : `alpha-0.31`. **Pâques 2027 tombe le 28 mars.** Paquet **« Pli de l'Éclosion »** (`PACKS.paques`, 250 CHF, mêmes taux et 5 % de fusion que les autres éditions, fenêtre fixe **21 mars → 4 avril**, nom choisi par défaut : à changer si Jordan préfère), image `images/packs/paques.webp`, fond `images/fond_paques.webp` (images de Jordan), couleurs vert sauge, cadre de Pâques déjà branché sur `ex:"paques"`. **Pas de musique d'accueil** : `MUSIC.home_paques` n'existe pas, la musique ordinaire joue (`musicKey` retombe sur `home`). Seule exclusive pour l'instant : **Apophis, Œuf de Malheur** (`rel` 21 mars, annonce le 16). Dates de mars : **15 mars** pour Apophis, Èṣù et Hélios (bannière `mar15`). Pas de quête de saison ni de fusion de Pâques pour l'instant.
 
+### 26e série (27 octobre 2026) : correction du Musicien avec Anahita
+
+`BUILD` : `alpha-0.32`. Bug trouvé par Jordan sur son téléphone : une copie d'Anahita (coût 3) qui copie Le Musicien ne recevait pas le +2 du vrai Musicien, car `cardPow` excluait toute carte d'identité `musicien` (`eid`) au lieu de seulement la carte elle-même. L'exclusion est supprimée (`o!==c` suffit) : le Musicien et sa copie se donnent +2 l'un à l'autre, jamais à eux-mêmes.
+
