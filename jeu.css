@@ -1077,7 +1077,7 @@ button:focus-visible,label:focus-within,[data-act]:focus-visible{outline-color:v
 .oathsay{display:flex;align-items:center;gap:10px;margin:8px 0 -2px;font-size:13px;color:var(--mist)}
 .oathsay i{color:var(--frost)}
 .oathsay b{color:var(--foe)}
-.oathcer{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top));transform:translateX(-50%);z-index:6;width:min(92vw,420px);box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;pointer-events:none;
+.oathcer{position:fixed;left:50%;top:40vh;transform:translateX(-50%);z-index:6;width:min(92vw,420px);box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;pointer-events:none;
   background:linear-gradient(135deg,rgba(40,24,30,.96),rgba(14,20,34,.97) 70%);border:1px solid rgba(240,160,160,.6);box-shadow:0 8px 28px rgba(0,0,0,.6),0 0 18px rgba(240,160,160,.3);animation:oathcer 4.5s ease both}
 .oathcer.me{border-color:rgba(219,168,98,.7);background:linear-gradient(135deg,rgba(48,36,16,.96),rgba(14,20,34,.97) 70%);box-shadow:0 8px 28px rgba(0,0,0,.6),0 0 18px rgba(219,168,98,.35)}
 .oathcer .ocn{font-family:var(--sc);font-size:16px;color:var(--warm)}

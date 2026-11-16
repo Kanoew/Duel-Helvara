@@ -297,7 +297,7 @@
     "Égalité : rang inchangé":"Draw: rank unchanged", "(Morrigan)":"(Morrigan)", "(Nemesis)":"(Nemesis)", "Aucune partie en cours.":"No game in progress.",
     "Main changée":"Hand redrawn",
     "⚖ L'adversaire jure sur":"⚖ The opponent swears on",
-    "jure sur":"swears on", "Contre":"Against",
+    "jure sur":"swears on", "Contre":"Against","Carte puis lieu pour poser ·":"Card, then location to play ·","appui long":"long press","pour voir en grand.":"to view it larger.",
     "« Tu crois vraiment que ça va s’arrêter là ? »":"“You really think this stops here?”",
     "« Merde, je te jure que tu vas regretter d’avoir mis les pieds ici. »":"“Damn it, I swear you'll regret ever setting foot here.”",
     "« Bordel, tu m’as forcé la main. Maintenant assume. »":"“Dammit, you forced my hand. Now live with it.”",
