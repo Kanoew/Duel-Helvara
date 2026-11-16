@@ -933,3 +933,56 @@ body:has(.sandbar) #app{padding-top:62px}
 
 .toggle.on{border-color:var(--me);color:var(--me)}
 .toggle.off{opacity:.55;cursor:default}
+
+/* ===== Vague 1 : interface ===== */
+/* Panneau de résultat : ne dépasse jamais l'écran (il défile en dernier recours), scores par camp, bilan */
+.result{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain}
+.result .rows.sc3{gap:0}
+.result .sc3 .row{display:grid;grid-template-columns:minmax(0,1fr) 3.4em 3.4em;gap:6px;align-items:center;padding-block:5px}
+.result .sc3 .row span:last-child{font-family:inherit}
+.result .sc3 .c{text-align:center;font-family:var(--display);font-size:16px;border-radius:8px;padding:1px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result .sc3 .c.me{color:var(--me)}.result .sc3 .c.foe{color:var(--foe)}
+.result .sc3 .c.w{font-weight:700;background:rgba(226,234,245,.1);box-shadow:inset 0 0 0 1px currentColor}
+.result .sc3 .c.w::before{content:"✓ ";font-size:11px}
+.result .sc3 .rh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mist);padding-block:2px}
+.result .sc3 .rh .c{font-family:inherit;font-size:11px;font-weight:600}
+.bilan{display:flex;flex-direction:column;gap:5px;text-align:left;font-size:13px;line-height:1.35;color:var(--frost);background:rgba(111,184,222,.07);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.bilan .bl b{color:var(--warm);font-weight:600}
+.bilan .tip{color:var(--mist);font-size:12.5px}
+.bilan .tip b{color:var(--me)}
+/* écrans courts : le panneau de résultat se resserre pour que « Rejouer » reste visible (360 × 740) */
+@media (max-height:800px){
+  .result{padding:14px 16px;gap:8px}
+  .result h2{font-size:25px}
+  .result .reward{font-size:18px}
+  .result .rankline .rkicon.md{width:40px;height:40px}
+  .result .rankline{line-height:1.35}
+  .result .sc3 .row{padding-block:3px}
+  .result .sc3 .c{font-size:15px}
+  .bilan{padding:7px 10px;gap:4px;font-size:12.5px}
+  .bilan .tip{font-size:12px}
+  .result .primary{padding:10px 18px}
+  .result .ghost{padding:8px 10px}
+}
+/* Règle d'un lieu : 3 lignes sur téléphone ; la règle complète est un toucher plus loin (bouton « i », ou appui long) */
+.loc .locinfo{position:absolute;top:3px;right:3px;width:22px;height:22px;padding:0;border-radius:50%;border:1px solid rgba(226,234,245,.55);background:rgba(10,14,22,.72);color:var(--frost);font:italic 700 13px/1 var(--display);cursor:pointer;display:grid;place-items:center;z-index:1}
+.loc .locinfo::after{content:"";position:absolute;inset:-7px}
+.loc .locinfo:focus-visible{outline:2px solid var(--me);outline-offset:1px}
+@media (max-width:420px){ .loc{min-height:114px} .loc .fx{font-size:10px;line-height:1.25;-webkit-line-clamp:3} .loc .inner{padding-inline:2px} }
+/* Journal de partie rangé derrière un bouton (dernière ligne visible, pastille s'il y a du nouveau) */
+.logwrap{display:flex;flex-direction:column;gap:6px}
+.logbar{display:flex;align-items:center;gap:10px;border-left:2px solid var(--line);padding-left:10px;min-height:38px}
+.logline{flex:1 1 auto;min-width:0;font-size:12px;color:var(--frost);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logbtn{position:relative;flex:none;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--mist);font-size:13px;cursor:pointer}
+.logbtn.on{border-color:var(--me);color:var(--me)}
+.logbtn:focus-visible,.log:focus-visible{outline:2px solid var(--me);outline-offset:2px}
+.logdot{position:absolute;top:3px;right:4px;width:9px;height:9px;border-radius:50%;background:var(--warm);box-shadow:0 0 0 2px var(--ink)}
+.logwrap .log{max-height:min(34vh,220px)}
+/* Accueil : un seul bandeau de notes à la fois (file), compact */
+.noticeq{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;font-size:12.5px;line-height:1.35}
+.noticeq .ntxt{flex:1 1 auto;min-width:0}
+.noticeq .nctl{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px}
+.noticeq .ncount{font-size:11px;color:var(--mist);font-variant-numeric:tabular-nums}
+.noticeq .nbtn{min-height:34px;min-width:60px;padding:0 12px;border-radius:999px;border:1px solid rgba(219,168,98,.55);background:rgba(219,168,98,.12);color:var(--warm);font-size:13px;font-weight:600;cursor:pointer}
+.noticeq .nbtn:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+.result .sc3 .rh{text-transform:none;letter-spacing:.02em}

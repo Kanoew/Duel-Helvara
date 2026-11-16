@@ -284,12 +284,20 @@ function cardDayHTML(){
 }
 async function rpAuto(){ while(S&&S.rp&&S.rp.auto&&!S.rp.done){ if(!S.busy) await rpStep(); await sleep(900); } }
 let vIdx=0;
+/* Accueil (vague 1) : les notes (nouvelle saison, connexion du jour, remboursement) forment une file, un seul bandeau compact à la fois ; « Suivant » / « OK » passe à la suivante */
+let notesGone=new Set();
+function noticeHTML(){
+  const all=[seasonNote,dailyNote,migratedNote].filter(Boolean);
+  if(!all.length){ notesGone.clear(); return ""; }
+  const left=all.filter(t=>!notesGone.has(t)); if(!left.length) return "";
+  const i=all.indexOf(left[0])+1, more=left.length>1;
+  return `<div class="notice noticeq" role="status"><span class="ntxt">${left[0]}</span><span class="nctl">${all.length>1?`<span class="ncount" aria-label="Note ${i} sur ${all.length}">${i}/${all.length}</span>`:""}<button class="nbtn" data-act="notedismiss" data-t="${i-1}" aria-label="${more?"Note suivante":"Fermer la note"}">${more?"Suivant":"OK"}</button></span></div>`;
+}
 function homeHTML(){
   const inGame=S && !S.over && !S.blitz && !S.rp;
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
   return `
-  ${seasonNote?`<div class="notice">${seasonNote}</div>`:""}${dailyNote?`<div class="notice">${dailyNote}</div>`:""}
-  ${migratedNote?`<div class="notice">${migratedNote}</div>`:""}
+  ${noticeHTML()}
   ${vitrineHTML()}
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
   <button class="play" data-act="${inGame?"resume":"play"}" ${deckReady()||inGame?"":"disabled"}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>
@@ -672,7 +680,7 @@ function locHTML(li){
   const cross=S.oath===li&&S.aiOath===li;
   const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
   return `<div class="loc${can?" can":""}${L.locked?" locked":""}${cross?" cross":S.oath===li?" oath":S.aiOath===li?" aioath":""}" style="background-image:${VEIL},url('${img}')" data-act="stage" data-li="${li}" data-lp="l${li}" tabindex="0">
-    <span class="tot f${w==="e"?" lead":""}">${b}</span>
+    <span class="tot f${w==="e"?" lead":""}">${b}</span>${L.rev?`<button class="locinfo" data-act="locinfo" data-li="${li}" aria-label="Lire la règle : ${esc(d.name)}">i</button>`:""}
     <div class="inner"><div class="nm">${L.rev?d.name:"Lieu inconnu"}</div><div class="fx">${tags.length?`<b>${tags.join(" · ")}</b>`:(L.rev?d.fx:`Révélé au tour ${li+1}`)}</div></div>
     <span class="tot m${w==="p"?" lead":""}">${a}</span></div>`;
 }
@@ -721,6 +729,40 @@ function fbSend(kind,card){
   const mode=S.mp?"duel":S.blitz?"blitz":"ia"; S.over.fb="sent"; sfx("click"); render();
   lbDb.feedback(kind,card||null,mode,BUILD).catch(()=>{});
 }
+/* Bilan de fin de partie (vague 1, interface) : tout est calculé ici à partir de l'état S au moment de la fin, avec des règles fixes (aucun hasard).
+   tlog : pour chaque tour, l'énergie restée inutilisée alors qu'une carte de la main était jouable (noté au toucher de « Fin du tour »). */
+let tlogFor=null, tlog=[];
+function tlogNote(){
+  if(!S||S.over||S.busy||S.rp||S.tut) return;
+  if(tlogFor!==S){ tlogFor=S; tlog=[]; }
+  try{ const left=S.energy-used(), playable=S.hand.p.some(c=>[0,1,2].some(li=>canStage(c,li)));
+    tlog=tlog.filter(t=>t.turn!==S.turn); tlog.push({turn:S.turn,avoid:playable?Math.max(0,left):0}); }catch(e){}
+}
+function bilanOf(o){
+  if(!S||S.over!==o||o.tut) return null;
+  try{
+    const near=side=>o.rows.filter(r=>r.w===side).reduce((b,r)=>!b||Math.abs(r.a-r.b)<Math.abs(b.a-b.b)?r:b,null);
+    const lostR=near("e"), wonR=near("p"), line=o.res==="win"?(wonR&&{r:wonR,k:"win"}):(lostR?{r:lostR,k:"lose"}:wonR&&{r:wonR,k:"win"});
+    let best=null;
+    for(const s of ["p","e"]) S.board[s].forEach((col,li)=>col.forEach(c=>{ if(!c.rev||!CARDS[c.id]||(charmOf(c)||s)!=="e") return; const pw=cardPow(s,li,c); if(!best||pw>best.pw) best={n:CARDS[c.id].name,pw}; }));
+    /* conseil : premier cas qui s'applique, dans cet ordre */
+    const known=tlog.length>=3&&tlogFor===S, waste=known?tlog.filter(t=>t.avoid>0):[], wsum=waste.reduce((a,t)=>a+t.avoid,0);
+    const mine=S.board.p.map(col=>col.filter(c=>CARDS[c.id]&&!CARDS[c.id].token).length), nm=mine.reduce((a,b)=>a+b,0);
+    const emptyLost=o.rows.find((r,i)=>mine[i]===0&&r.w!=="p");
+    let tip="";
+    if(o.res!=="win"&&emptyLost) tip=`Aucune de tes cartes à « ${emptyLost.n} ». Même une petite y change tout : pense à présenter quelque chose partout.`;
+    else if(waste.length>=2&&wsum>=3) tip=`Tu as laissé de l'énergie inutilisée alors que tu pouvais jouer (${wsum} au total, sur ${waste.length} tours). Elle ne se cumule pas : autant l'utiliser.`;
+    else if(o.res!=="win"&&nm>=4&&Math.max(...mine)/nm>=.75) tip="Presque toutes tes cartes étaient au même lieu. Il suffit d'en gagner 2 sur 3 : répartis-les.";
+    else if(o.res!=="win"&&lostR&&Math.abs(lostR.a-lostR.b)<=2) tip="Défaite de justesse : quelques points ont tout changé. Chaque carte compte, même la plus petite.";
+    else if(o.res!=="win") tip="Appui long sur une carte adverse pour lire son effet : mieux la connaître aide à la contrer.";
+    return {line,best,tip};
+  }catch(e){ return null; }
+}
+function bilanHTML(o){
+  const b=bilanOf(o); if(!b||(!b.line&&!b.best&&!b.tip)) return "";
+  const m=b.line&&Math.abs(b.line.r.a-b.line.r.b);
+  return `<div class="bilan" role="group" aria-label="Bilan de la partie">${b.line?`<div class="bl"><b>${esc(b.line.r.n)}</b> : lieu ${b.line.k==="win"?"gagné":"perdu"} ${m>0?`de ${m}`:"à égalité"}</div>`:""}${b.best?`<div class="bl">Carte adverse la plus forte : <b>${esc(b.best.n)}</b> (${b.best.pw})</div>`:""}${b.tip?`<div class="bl tip"><b>Conseil :</b> ${esc(b.tip)}</div>`:""}</div>`;
+}
 function resultHTML(){
   const o=S.over; if(!o||o.closed||o.hold) return "";
   if(o.tut) return `<div class="veil"><div class="result" role="dialog" aria-label="Tutoriel terminé">
@@ -736,12 +778,24 @@ function resultHTML(){
     ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
     ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
-    <div class="rows">${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span><span style="color:var(--me)">${r.a}</span> · <span style="color:var(--foe)">${r.b}</span></span></div>`).join("")}</div>
+    <div class="rows sc3"><div class="row rh" aria-hidden="true"><span>Lieu</span><span class="c me">Toi</span><span class="c foe"${o.mp?` title="${esc(S.mp.oppNick)}"`:""}>${o.mp?esc(S.mp.oppNick):"IA"}</span></div>${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span class="c me${r.w==="p"?" w":""}">${r.a}</span><span class="c foe${r.w==="e"?" w":""}">${r.b}</span></div>`).join("")}</div>
+    ${bilanHTML(o)}
     ${fbHTML(o)}
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
     <div class="row2"><button class="ghost" data-act="mpquit">Quitter le salon</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.blitz?`<button class="primary" data-act="go" data-to="blitz">${o.ended?"Voir le bilan":"Continuer le Blitz"}</button><div class="row2"><button class="ghost" data-act="close">Voir le plateau</button></div>`:`<button class="primary" data-act="play">Rejouer</button>
     <div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`}
   </div></div>`;
+}
+/* Journal de partie (vague 1) : rangé derrière un bouton ; la dernière ligne reste visible ; pastille quand il y a du nouveau depuis la dernière ouverture */
+let logFor=null, logOpen=false, logSeen="";
+const logSig=()=>S.log.length+"|"+(S.log[0]||"");
+function logHTML(){
+  if(logFor!==S){ logFor=S; logOpen=false; logSeen=logSig(); }
+  if(logOpen) logSeen=logSig();
+  const fresh=!logOpen&&logSig()!==logSeen, last=S.log[0];
+  return `<div class="logwrap"><div class="logbar"><span class="logline" aria-live="polite">${last?esc(last):"Aucun événement pour l'instant."}</span>
+    <button class="logbtn${logOpen?" on":""}" data-act="logtoggle" aria-expanded="${logOpen}" aria-controls="logpanel" aria-label="${logOpen?"Fermer le journal de partie":fresh?"Ouvrir le journal de partie : du nouveau":"Ouvrir le journal de partie"}">Journal${fresh?`<i class="logdot" aria-hidden="true"></i>`:""}</button></div>
+    ${logOpen?`<div class="log" id="logpanel" role="log" tabindex="0" aria-label="Journal de partie">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>`:""}</div>`;
 }
 function replayHTML(){
   const rp=S.rp, left=S.energy-used();
@@ -751,7 +805,7 @@ function replayHTML(){
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   <div class="rpbar">${rp.done?`<div class="rpnote">${rp.ok===false?"Le replay diffère de la partie d'origine.":"Fin du replay."}</div><button class="primary" data-act="rpquit">Retour à l'historique</button>`
     :`<button class="primary" data-act="rpnext" ${S.busy?"disabled":""}>${S.turn>=6?"Dernier tour ▶":`Tour ${S.turn} ▶`}</button><button class="toggle" data-act="rpauto" aria-pressed="${!!rp.auto}">${rp.auto?"Auto : activé":"Lecture auto"}</button>`}</div>
-  <div class="log" aria-live="polite">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>
+  ${logHTML()}
   ${gzHTML()}`;
 }
 function gameHTML(){
@@ -771,9 +825,9 @@ function gameHTML(){
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
+  ${logHTML()}
   <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&S.oath==null?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
   <div class="handwrap"><div class="hand">${handHTML()}</div></div></div>
-  <div class="log" aria-live="polite">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>
   ${resultHTML()}${gzHTML()}`;
 }
 const oathOK=()=>S&&!S.mp&&!S.tut&&!S.blitz&&!S.over&&S.turn<=5;
@@ -788,7 +842,7 @@ function gzHTML(){
   if(gz[0]==="l"){ const li=+gz.slice(1), L=S.locs[li], d=LOCS[L.id];
     return `<div class="veil" data-act="gzclose"><div class="gzloc"><div class="gzimg" style="background-image:url('${L.rev?d.img:"images/lieux/inconnu.webp"}')"></div>
       <div class="zoominfo"><div class="t">${L.rev?d.name:"Lieu inconnu"}</div><p>${L.rev?d.fx:`Il sera révélé au début du tour ${li+1}.`}${L.stopped?" <b>Effet arrêté par Perséphone.</b>":""}${L.locked?" <b>Verrouillé par Vritra : plus personne ne peut y jouer.</b>":""}</p>
-      <div class="m">Puissance : <span style="color:var(--me)">toi ${total("p",li)}</span> · <span style="color:var(--foe)">adversaire ${total("e",li)}</span></div></div></div></div>`; }
+      <div class="m">Puissance : <span style="color:var(--me)">toi ${total("p",li)}</span> · <span style="color:var(--foe)">adversaire ${total("e",li)}</span></div><button class="ghost" data-act="gzclose">Fermer</button></div></div></div>`; }
   const uid=+gz.slice(1), f=findAny(uid); if(!f){ return ""; } const c=f.c, d=CARDS[c.id];
   const onBoard=f.li!=null&&c.rev, cur=onBoard?cardPow(f.s,f.li,c):c.pow, cont=onBoard?cur-c.pow:0;
   const mods=(c.mods||[]);
@@ -995,6 +1049,9 @@ document.addEventListener("click", e=>{
     case "sheet": sheet=sheet===el.dataset.s?null:el.dataset.s; sfx("click"); render(); return;
     case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; sheet=null; render(); return;
     case "sheetin": case "holoin": return;
+    case "notedismiss": { const t=[seasonNote,dailyNote,migratedNote].filter(Boolean)[+el.dataset.t]; if(t) notesGone.add(t); sfx("click"); render(); return; }
+    case "logtoggle": if(S){ logOpen=!logOpen; sfx("click"); render(); } return;
+    case "locinfo": if(S&&screen==="play"){ gz="l"+el.dataset.li; sfx("select"); render(); } return;
     case "go": { const to=el.dataset.to; packFocus=null; if(to==="board"||to==="home") lbRefresh(); sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
     case "rpstart": { const ok=rpStart(+el.dataset.t); if(!ok){ sfx("debuff"); seasonNote="Termine ou quitte ta partie en cours avant de revoir une partie."; screen="home"; } else sfx("click"); render(); window.scrollTo(0,0); return; }
     case "rpnext": if(S&&S.rp&&!S.busy) rpStep().then(()=>{ render(); }); return;
@@ -1089,7 +1146,7 @@ document.addEventListener("click", e=>{
   if(act==="gzclose"&&gz&&gz[0]==="p"&&e.target.closest(".pilepanel")&&!e.target.closest("button")) return; /* un toucher dans le panneau ne le ferme pas */
   if(act==="gzclose"){ gz=null; render(); return; }
   if(!S||S.busy) return;
-  if(act==="end"){ sfx("click"); endTurn(); return; }
+  if(act==="end"){ sfx("click"); tlogNote(); endTurn(); return; }
   if(S.mp&&S.mp.locked&&act!=="inspect") return;
   if(act==="oathmode"){ S.oathMode=!S.oathMode; S.oathPick=null; sfx("click"); render(); return; }
   if(act==="oathclose"){ S.oathMode=false; S.oathPick=null; render(); return; }
