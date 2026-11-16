@@ -6,6 +6,31 @@ let RNG=Math.random; const rnd=()=>RNG();
 /* Serment hors partie classée : enjeux en CHF. VALEURS PROVISOIRES (à valider par Jordan). Tenu = lieu ET partie gagnés ; rompu = lieu perdu (ou égalité sans Morrigan). Le solde de CHF ne passe jamais sous 0.
    Duel : appliqué au solde. Blitz : ajouté au gain du Blitz en cours (jamais sous 0). Le Serment croisé vaut le double. */
 const OATH_CHF={ duel:{kept:30,broken:15,crossKept:60,crossBroken:30}, blitz:{kept:50,broken:50,crossKept:100,crossBroken:100} };
+/* Rivaux nommés (axe 2 du plan d'action) : l'adversaire de la partie contre l'IA. Chaque rival a un tempérament SIGNATURE ; à chaque partie, le tempérament réel est tiré
+   (RIVAL_MOOD_SIG de chances d'avoir le signature, le reste réparti à parts égales sur les trois autres) et reste CACHÉ : seule la phrase du serment le trahit.
+   Tempéraments : allin = jure tôt et fort ; bluff = jure pour tromper ; prudent = ne jure que s'il mène nettement et tard ; zele = jure presque à chaque partie.
+   fac = faction du deck (provisoire sauf Exodus). av = id d'une carte déjà sortie dont le portrait sert d'avatar : PROVISOIRE, Jordan fournira les vrais portraits, un seul champ à changer ici. */
+const RIVAL_MOOD_SIG=0.55;
+const RIVALS=[
+  {id:"exodus",  n:"Exodus",   mood:"allin",   fac:"primordial", av:"set"},
+  {id:"clara",   n:"Clara",    mood:"bluff",   fac:"desir",      av:"lilith"},
+  {id:"timothee",n:"Timothée", mood:"prudent", fac:"jugement",   av:"anubis"},
+  {id:"mira",    n:"Mira",     mood:"zele",    fac:"helvara",    av:"joanna"}];
+const RIVAL_MOODS=["allin","bluff","prudent","zele"];
+/* Phrases du serment, par tempérament TIRÉ (une liste par tempérament : en ajouter librement ; chaque phrase doit aussi être traduite dans interface-en.js, exact) */
+const RIVAL_QUOTES={
+  bluff:["« Tu crois vraiment que ça va s’arrêter là ? »"],
+  zele:["« Merde, je te jure que tu vas regretter d’avoir mis les pieds ici. »"],
+  allin:["« Bordel, tu m’as forcé la main. Maintenant assume. »"],
+  prudent:["« Foutu hasard… tu viens de te choisir le pire ennemi possible. »"]};
+const rivalOf=id=>RIVALS.find(r=>r.id===id)||null;
+/* Tirage du rival et de son tempérament : Math.random, comme l'ancien aiOath (jamais RNG : aucun effet sur le tirage partagé de la partie ni sur les replays) */
+function drawRival(){
+  const r=RIVALS[Math.floor(Math.random()*RIVALS.length)];
+  const others=RIVAL_MOODS.filter(m=>m!==r.mood);
+  const mood=Math.random()<RIVAL_MOOD_SIG?r.mood:others[Math.floor(Math.random()*others.length)];
+  return {id:r.id,mood};
+}
 function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 const gShuffle=a=>{ for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 const gPick=a=>a[Math.floor(rnd()*a.length)];
@@ -16,12 +41,12 @@ function diffPow(m,src){ for(const s of ["p","e"]) for(const col of S.board[s]) 
 const opp=s=>s==="p"?"e":"p";
 const deckReady=()=>P.deck.length===ECO.deckSize;
 
-function aiDeck(t,full,noUL){   /* noUL : le Blitz n'a aucune ultra-légendaire, ni pour le joueur ni pour l'IA */
+function aiDeck(t,full,noUL,wantFac){   /* noUL : le Blitz n'a aucune ultra-légendaire, ni pour le joueur ni pour l'IA */
   const own=full?4:Math.max(2,...P.owned.map(id=>RVAL[CARDS[id].r]));
   const cap=Math.min([1,2,3,3,4,4,4][t],own);
   const pool=PACK().filter(id=>RVAL[CARDS[id].r]<=cap&&id!=="reflet_noir");   /* injouable depuis la main : jamais dans le deck de l'IA */
   const facs=Object.keys(FAC).filter(f=>pool.filter(id=>CARDS[id].fac===f).length>=3);
-  const fac=pickRand(facs.length?facs:Object.keys(FAC));
+  const fac=wantFac&&facs.includes(wantFac)?wantFac:pickRand(facs.length?facs:Object.keys(FAC));   /* wantFac : faction du rival */
   const sc={}; pool.forEach(id=>sc[id]=(CARDS[id].fac===fac?5:0)+RVAL[CARDS[id].r]*t*0.35+Math.random()*2.5);
   const by=pool.slice().sort((a,b)=>sc[b]-sc[a]); const deck=[];
   for(const [c,n] of [[1,2],[2,3],[3,3],[4,2],[5,1],[6,1]]) by.filter(id=>CARDS[id].cost===c&&!deck.includes(id)).slice(0,n).forEach(id=>deck.push(id));
@@ -56,11 +81,11 @@ function newGame(){
     staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
     log:[], sel:null, info:null, busy:false, over:null};
   S.feat=!firstEver&&locIds.includes(featureLoc())?featureLoc():null; /* lieu à l'honneur présent dans cette partie */
-  const ai=aiDeck(S.aiTier); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac; if(typeof preloadFoe==="function") preloadFoe(); /* range les illustrations du deck adverse pour jouer hors ligne */
+  S.rival=drawRival(); const ai=aiDeck(S.aiTier,false,false,rivalOf(S.rival.id).fac); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac; if(typeof preloadFoe==="function") preloadFoe(); /* range les illustrations du deck adverse pour jouer hors ligne */
   /* Replay (25 octobre) : graine du hasard de la partie et ordre exact des decks ; les coups de chaque tour sont ajoutés par resolveTurn */
   { const seed=(Math.random()*2147483647)|0; RNG=mulberry(seed); S.rec={v:BUILD,seed,locs:locIds.slice(),feat:S.feat||null,dp:S.deck.p.map(c=>c.id),de:S.deck.e.map(c=>c.id),fac:S.aiFac,tier:S.aiTier,turns:[]}; }
   for(let i=0;i<3;i++){draw("p");draw("e");}
-  log(`Adversaire : deck ${FAC[ai.fac].n} · niveau ${TIERS[S.aiTier]}`);
+  log(`Adversaire : deck ${FAC[ai.fac].n} · niveau ${TIERS[S.aiTier]}`);   /* ni nom ni tempérament du rival dans le journal : le tempérament tiré reste caché */
   screen="play"; startTurn();
 }
 function log(t){ S.log.unshift(t); S.log=S.log.slice(0,40); }
@@ -69,22 +94,38 @@ function draw(s){ if(!S.deck[s].length||S.hand[s].length>=7) return; const c=S.d
   if(eid(c)==="lance_lugh"){ const l=S.board[s].flat().find(x=>eid(x)==="lugh"&&x.rev); if(l){ l.pow+=4; (l.mods=l.mods||[]).push({v:4,src:"Lance de Lugh"}); log(`La Lance de Lugh disparaît : Lugh +4 (${who(s)})`); sfx("buff"); } return; }
   S.hand[s].push(c); }
 /* Prêter un Serment (côté "p" ou "e"). Même fonction pour la partie classée, le Blitz, la partie guidée et les duels (où elle est appelée en fin de tour, pour les deux joueurs, dans le même ordre : lockstep). */
+const OATH_CER_MS=4500;
+const gQuote=m=>{ const q=RIVAL_QUOTES[m]||[]; return q.length?q[Math.floor(Math.random()*q.length)]:null; };
 function swearOath(side,li){
   const k=side==="p"?"oath":"aiOath", o=side==="p"?S.aiOath:S.oath;
   if(!S||S[k]!=null||S.turn>5||!(li>=0&&li<3)||!S.locs[li]||!S.locs[li].rev) return false;
   S[k]=li; S.oathNew={li,at:Date.now()};
+  /* Cérémonie : portrait + nom (+ phrase du rival, selon son tempérament tiré), affichée OATH_CER_MS ; la phrase reste ensuite dans la barre du serment adverse */
+  if(side==="p"||S.rival){ const say=side==="e"?gQuote(S.rival.mood):null; if(side==="e") S.aiOathSay=say; const cer=S.oathCer={side,li,at:Date.now(),say}, sRef=S;
+    setTimeout(()=>{ if(S===sRef&&S.oathCer===cer&&typeof render==="function"&&screen==="play") render(); },OATH_CER_MS+150); }
   const n=LOCS[S.locs[li].id].name;
   log(o===li?`Serment croisé sur ${n}`:side==="p"?`Serment prêté sur ${n}`:`L'adversaire jure sur ${n}`); sfx("legend"); return true;
 }
-/* Serment adverse : l'IA jure sur le lieu où elle mène le plus. Plus elle est forte, plus elle ose (et bluffe un peu). */
+/* Serment adverse. Sans rival (S.rival absent : outils, tests anciens) : comportement d'avant, l'IA jure là où elle mène le plus (tours 2 à 4).
+   Avec un rival : le TEMPÉRAMENT TIRÉ pour la partie (S.rival.mood) décide du moment et du lieu (voir RIVALS). Les probabilités par tour sont modulées par le palier (k : 0,9 au palier 0, 1,14 au palier 6).
+   Math.random comme avant : jamais RNG (les replays et les duels n'appellent jamais cette fonction). */
 function aiOath(){
   if(!oathOK()||S.aiOath!=null||S.mp||S.tut) return;
-  const t=S.aiTier||0; let best=null;
-  for(let li=0;li<3;li++) if(S.locs[li].rev){ const m=total("e",li)-total("p",li); if(!best||m>best.m) best={li,m}; }
+  const t=S.aiTier||0; let best=null; const ms=[];
+  for(let li=0;li<3;li++) if(S.locs[li].rev){ const m=total("e",li)-total("p",li); ms[li]=m; if(!best||m>best.m) best={li,m}; }
   if(!best) return;
+  const T=S.turn, k=0.9+0.04*t, roll=p=>Math.random()<Math.min(0.97,p*k), mood=S.rival&&S.rival.mood;
   let li=null;
-  if(best.m>=(S.turn>=4?2:4)&&Math.random()<0.3+0.08*t) li=best.li;
-  else if(S.turn>=3&&Math.random()<0.04+0.02*t){ const c=[0,1,2].filter(i=>S.locs[i].rev&&total("e",i)-total("p",i)>=-3); if(c.length) li=c[Math.floor(Math.random()*c.length)]; }
+  if(!mood){
+    if(T<2||T>4) return;
+    if(best.m>=(T>=4?2:4)&&Math.random()<0.3+0.08*t) li=best.li;
+    else if(T>=3&&Math.random()<0.04+0.02*t){ const c=[0,1,2].filter(i=>S.locs[i].rev&&total("e",i)-total("p",i)>=-3); if(c.length) li=c[Math.floor(Math.random()*c.length)]; }
+  }
+  else if(mood==="allin"){ if(T<=3&&roll([.5,.6,.8][T-1])) li=best.li; }                       /* il mise tout : tours 1 à 3, meilleur lieu révélé, même sans avance */
+  else if(mood==="zele"){ if((T===3&&roll(.5))||(T===4&&roll(.8))) li=best.li; }               /* environ 90 % des parties, tours 3 et 4, meilleur lieu */
+  else if(mood==="prudent"){ if(T>=4&&T<=5&&best.m>=3&&roll(.7)) li=best.li; }                 /* ne jure que s'il mène d'au moins 3, et tard */
+  else if(mood==="bluff"){ if(T>=2&&T<=4&&roll(.35)){                                         /* jure là où il ne mène pas / pas son meilleur lieu, sans se suicider (écart ≥ −3) */
+      const c=[0,1,2].filter(i=>S.locs[i].rev&&(i!==best.li||best.m<=0)&&ms[i]>=-3); if(c.length) li=c[Math.floor(Math.random()*c.length)]; } }
   if(li==null) return;
   swearOath("e",li);
 }
@@ -112,13 +153,28 @@ function pileHTML(){
     <p class="hint">${grave?"Les cartes détruites.":"Les cartes défaussées depuis la main."} Touche une carte pour la lire.</p>
     ${side("p","Toi","var(--me)")}${side("e","Adversaire","var(--foe)")}
     <button class="ghost" data-act="gzclose">Fermer</button></div></div>`; }
+/* Nom affiché de l'adversaire IA : le rival (ex. « Exodus · Héraut ») ; sans rival, l'ancien libellé « IA <faction> · <palier> » */
+const foeName=()=>{ const r=S&&S.rival&&rivalOf(S.rival.id); return r?r.n:"IA"; };
+const foeLabel=()=>S.rival&&rivalOf(S.rival.id)?`${foeName()} · ${TIERS[S.aiTier]}`:`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`;
+/* Portrait rond du rival (id de carte de la table RIVALS ; filtré par POOL comme tout avatar) */
+const rivalAv=(r,cls)=>POOL.includes(r.av)?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${r.av}.webp?v=7')"></span>`:`<span class="avatar ${cls}">${esc(r.n.charAt(0))}</span>`;
+/* Phrase du rival, gardée sous le serment adverse (c'est le seul indice sur son tempérament tiré) */
+function rivalSayHTML(){ const r=S.rival&&rivalOf(S.rival.id); if(!r||!S.aiOathSay) return "";
+  return `<div class="oathsay">${rivalAv(r,"sm")}<span><b>${esc(r.n)}</b> : <i>${esc(S.aiOathSay)}</i></span></div>`; }
+/* Cérémonie du serment : bandeau flottant (portrait + nom + phrase), repris à chaque rendu par un délai négatif tant qu'il dure */
+function oathCerHTML(){
+  const c=S.oathCer; if(!c||S.over) return ""; const age=Date.now()-c.at; if(age>=OATH_CER_MS) return "";
+  const foe=c.side==="e", r=foe&&S.rival&&rivalOf(S.rival.id); if(foe&&!r) return "";
+  const n=LOCS[S.locs[c.li].id].name;
+  return `<div class="oathcer ${foe?"foe":"me"}" style="animation-delay:-${age}ms" role="status">${foe?rivalAv(r,"md"):avatarHTML("md")}
+    <div class="oc"><div class="ocn">${foe?esc(r.n):esc(P.name)}</div><div class="ocl">jure sur <b>${esc(n)}</b></div>${foe&&c.say?`<div class="ocq">${esc(c.say)}</div>`:""}</div></div>`; }
 function aiOathBar(){
   if(S.aiOath==null||S.over) return "";
   const n=LOCS[S.locs[S.aiOath].id].name;
   if(S.oath===S.aiOath){ const t=S.mp?OATH_CHF.duel:S.blitz?OATH_CHF.blitz:null;
-    return `<div class="oathbar sworn">⚖ Serment croisé sur <b>${n}</b>${t?` : tout se joue sur ce lieu. Gagne-le avec la partie : +${t.crossKept} CHF. Perds-le : −${t.crossBroken} CHF.`:" : tout se joue sur ce lieu. Gagne-le avec la partie : +4 étoiles. Perds-le avec la partie : −4."}</div>`; }
-  if(S.oath==null&&S.oathStage==null&&oathOK()&&!S.aiOathSkip&&!(S.mp&&S.mp.locked)) return `<div class="oathbar"><span>⚖ L'adversaire jure sur <b>${n}</b>. Relever le défi ?</span><span class="oathbtns" style="margin:0"><button class="primary small" data-act="oathcross">Relever</button><button class="ghost small" data-act="oathskip">Ignorer</button></span></div>`;
-  return `<div class="oathbar sworn" style="color:var(--mist)">⚖ L'adversaire a juré sur <b>${n}</b>.</div>`;
+    return rivalSayHTML()+`<div class="oathbar sworn">⚖ Serment croisé sur <b>${n}</b>${t?` : tout se joue sur ce lieu. Gagne-le avec la partie : +${t.crossKept} CHF. Perds-le : −${t.crossBroken} CHF.`:" : tout se joue sur ce lieu. Gagne-le avec la partie : +4 étoiles. Perds-le avec la partie : −4."}</div>`; }
+  if(S.oath==null&&S.oathStage==null&&oathOK()&&!S.aiOathSkip&&!(S.mp&&S.mp.locked)) return rivalSayHTML()+`<div class="oathbar"><span>⚖ L'adversaire jure sur <b>${n}</b>. Relever le défi ?</span><span class="oathbtns" style="margin:0"><button class="primary small" data-act="oathcross">Relever</button><button class="ghost small" data-act="oathskip">Ignorer</button></span></div>`;
+  return rivalSayHTML()+`<div class="oathbar sworn" style="color:var(--mist)">⚖ L'adversaire a juré sur <b>${n}</b>.</div>`;
 }
 function startTurn(){
   S.turn++; S.costNow=S.costNext||{p:0,e:0}; S.costNext={p:0,e:0};   /* Patronne, Typhon : coûts de ce tour */
@@ -913,9 +969,10 @@ function aiPlan(me="e",tierOv){
     const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,jf:true,plays:[],pend:[0,0,0],nike:cs.some(x=>isNike(x.id))}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
     for(const c of cs){ let bp=null;
       /* chaque carte va là où elle fait le plus monter la probabilité de victoire */
-      for(let li=0;li<3;li++){ const r=place(c,li,ctx); if(!r) continue; add[li]+=r.pow; hit[li]+=r.hit; const v=winP(add,hit)*100+r.adj; add[li]-=r.pow; hit[li]-=r.hit; if(!bp||v>bp.v) bp={...r,li,v}; }
+      for(let li=0;li<3;li++){ const r=place(c,li,ctx); if(!r) continue; add[li]+=r.pow; hit[li]+=r.hit; const ob=me==="e"&&S.aiOath===li?1.5:0;   /* défendre son serment : léger penchant pour le lieu juré */
+        const v=winP(add,hit)*100+r.adj+ob; add[li]-=r.pow; hit[li]-=r.hit; if(!bp||v>bp.v) bp={...r,li,v,ob}; }
       if(!bp){ ok=false; break; }
-      ctx.plays.push({c,li:bp.li}); ctx.en-=bp.cost; if(c.id!=="herakles") ctx.pend[bp.li]++; ctx.first=false; if(vestaT(c.id)) ctx.jf=false; add[bp.li]+=bp.pow; hit[bp.li]+=bp.hit; adj+=bp.adj; }
+      ctx.plays.push({c,li:bp.li}); ctx.en-=bp.cost; if(c.id!=="herakles") ctx.pend[bp.li]++; ctx.first=false; if(vestaT(c.id)) ctx.jf=false; add[bp.li]+=bp.pow; hit[bp.li]+=bp.hit; adj+=bp.adj+(bp.ob||0); }
     if(!ok) continue;
     let bonus=adj;
     /* garder une carte pour plus tard : bonus aux tours 2 à 5 si elle attend sa préparation ou le tour 6 */
@@ -1056,7 +1113,7 @@ async function resolveTurn(mine, theirs, animate){
     if(to>2||!S.board[s][li].includes(c)||fated(c)||(c.captive&&captorLive(c.captive))||!S.locs[to].rev||S.locs[to].locked||S.board[s][to].length>=capOf(s,to)) continue;
     S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.board[s][to].push(c); flonHook(to,c); log(`Hélios passe vers ${LOCS[S.locs[to].id].name} (${who(s)})`); sfx("legend");
     for(const x of S.board[s][li]) if(x!==c&&live(x)&&SELFMOVE.has(eid(x))){ x.pow+=2; (x.mods=x.mods||[]).push({v:2,src:"Hélios"}); log(`Hélios · +2 à ${nm(x)} (${who(s)})`); } }
-  if(S.turn>=2&&S.turn<=4&&!S.rp&&!S.mp&&!S.tut) aiOath();
+  if(S.turn>=1&&S.turn<=5&&!S.rp&&!S.mp&&!S.tut) aiOath();   /* la fenêtre de chaque tempérament est dans aiOath */
   if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
   /* L'Enfant sans École : à la fin de chaque tour sauf le sixième, elle retourne dans ta main et gagne +1 définitivement (main pleine : pas de retour, donc pas de gain : Jordan, 22 octobre) */
   if(S.turn<6) for(const {s,li,c,c0} of eot("enfant")) if(!(c0.captive&&captorLive(c0.captive))&&S.board[s][li].includes(c)){
@@ -1099,7 +1156,7 @@ function finish(){
     /* Serment au Blitz : ajouté (ou retiré) au gain du Blitz en cours ; une égalité se rejoue : le Serment n'est alors pas compté */
     const oth=res==="draw"?null:oathSettle(), od=oathStake("blitz",oth,res); if(r&&!r.over&&od) r.oath=(r.oath||0)+od;
     if(r&&!r.over){ if(res==="win"){ r.wins++; if(r.wins>=3) bzEndRun(); } else if(res==="lose") bzEndRun(); }
-    pushHist("Blitz",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew);
+    pushHist("Blitz",res,foeLabel(),pw,ew);
     save(); S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain:r&&r.over?r.gain:0,blitz:true,wins:r?r.wins:0,ended:!r||r.over,oath:oth?{kept:oth.kept,cross:oth.cross,d:od}:null};
     endCine(S.over); endMusic(res); render(); return; }
   S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); pt+=a; et+=b; if(w==="p") pw++; else if(w==="e") ew++; rows.push({n:LOCS[L.id].name,a,b,w,inv:nemInv(li)}); });
@@ -1125,7 +1182,7 @@ function finish(){
   const rk=applyRank(res,oath,S.oath!=null&&S.oath===S.aiOath);
   /* lieu à l'honneur : +25 CHF à la fin de la première partie du jour contre l'IA (victoire ou non) */
   let feat=0; if(S.feat&&qLive()&&P.ld!==today()){ P.ld=today(); feat=FEATURE_CHF; }
-  P.chf+=gain+feat; pushHist("IA",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew,{gain,lv:P.lv});
+  P.chf+=gain+feat; pushHist("IA",res,foeLabel(),pw,ew,{gain,lv:P.lv});
   if(S.rec&&S.rec.turns.length===6&&P.hist&&P.hist[0]){ S.rec.t=P.hist[0].t; S.rec.fin=S.locs.map((L,li)=>[total("p",li),total("e",li)]); P.rps=[S.rec,...(P.rps||[])].slice(0,RPS_MAX); }   /* les 3 dernières parties contre l'IA sont rejouables */
   save(); lbPublish();
   S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,rk,qDone,feat};

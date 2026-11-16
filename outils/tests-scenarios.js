@@ -1359,6 +1359,70 @@ async function inPage() {
     zoomId = "morrigan_h"; T("Cadres : le zoom d'une carte de saison contient son cadre", /halloween\.webp/.test(zoomHTML()), ""); zoomId = "maui"; T("Cadres : zoom d'une carte ordinaire sans cadre", !/class="cadre"/.test(zoomHTML()), ""); zoomId = null;
     P.cadres = false; screen = keepScr; zoomId = keepZ; }
 
+  /* ===== Rivaux nommés : tempérament tiré, serment adverse, affichage ===== */
+  { fresh();
+    T("Rivaux : une partie contre l'IA a un rival (nom connu) et le deck de sa faction", !!S.rival && !!rivalOf(S.rival.id) && RIVAL_MOODS.includes(S.rival.mood) && S.aiFac === rivalOf(S.rival.id).fac, JSON.stringify(S.rival) + " " + S.aiFac);
+    T("Rivaux : les avatars provisoires sont des cartes sorties dont le portrait existe", RIVALS.every(r => POOL.includes(r.av) && REL(r.av)), RIVALS.map(r => r.av).join(","));
+    T("Rivaux : table (Exodus allin/primordial, Clara bluff, Timothée prudent, Mira zele)", RIVALS.map(r => r.n + ":" + r.mood).join() === "Exodus:allin,Clara:bluff,Timothée:prudent,Mira:zele" && rivalOf("exodus").fac === "primordial", "");
+    const rr = RIVALS.map(r => r.id); const cnt = {}; let sig = 0; const N = 6000, oth = {};
+    for (let i = 0; i < N; i++) { const d = drawRival(); cnt[d.id] = (cnt[d.id] || 0) + 1; if (d.mood === rivalOf(d.id).mood) sig++; else oth[d.mood] = (oth[d.mood] || 0) + 1; }
+    T("Rivaux : les quatre rivaux sortent à peu près à parts égales", rr.every(id => cnt[id] > N * 0.21 && cnt[id] < N * 0.29), JSON.stringify(cnt));
+    T("Rivaux : tempérament signature ≈ 55 % (RIVAL_MOOD_SIG)", Math.abs(sig / N - RIVAL_MOOD_SIG) < 0.03, sig / N);
+    T("Rivaux : chacun des trois autres tempéraments ≈ 15 %", Math.abs((N - sig) / N - 0.45) < 0.03, (N - sig) / N);
+    T("Rivaux : le tirage n'utilise pas RNG (le hasard de la partie n'est pas consommé)", (() => { RNG = mulberry(5); const a = rnd(); RNG = mulberry(5); for (let i = 0; i < 50; i++) drawRival(); return rnd() === a; })(), "");
+    T("Rivaux : libellé « Exodus · palier » pour l'historique et la fin de partie", (() => { S.rival = { id: "exodus", mood: "allin" }; S.aiTier = 4; const a = foeLabel() === "Exodus · Héraut" && foeName() === "Exodus"; S.rival = null; const b = foeName() === "IA" && /^IA /.test(foeLabel()); return a && b; })(), foeLabel());
+    /* un essai = tour T, marges données par lieu (puissance adverse − la tienne), serment remis à zéro */
+    const trial = (mood, turn, margins, tier = 3) => { S.rival = { id: "exodus", mood }; S.aiTier = tier; S.turn = turn; S.oath = null; S.aiOath = null; S.oathStage = null; S.over = null; S.tut = false; S.mp = null; S.rp = null;
+      for (let li = 0; li < 3; li++) { S.locs[li].rev = true; S.board.p[li] = []; S.board.e[li] = []; const m = margins[li]; const c = put(m >= 0 ? "e" : "p", li, plain[0], Math.abs(m)); c.pow = Math.abs(m); }
+      aiOath(); return S.aiOath; };
+    const rate = (mood, turn, margins, tier) => { let n = 0, k = 0; const where = {}; for (let i = 0; i < 400; i++) { const li = trial(mood, turn, margins, tier); if (li != null) { n++; where[li] = (where[li] || 0) + 1; } } return { p: n / 400, where }; };
+    const cum = (mood, turns, margins, tier) => { let n = 0; for (let i = 0; i < 400; i++) { S.oath = null; S.aiOath = null; S.rival = { id: "exodus", mood }; S.aiTier = tier == null ? 3 : tier;
+        for (const t of turns) { S.turn = t; for (let li = 0; li < 3; li++) { S.locs[li].rev = true; S.board.p[li] = []; S.board.e[li] = []; const m = margins[li]; put(m >= 0 ? "e" : "p", li, plain[0], Math.abs(m)); } aiOath(); } if (S.aiOath != null) n++; } S.aiOath = null; return n / 400; };
+    /* allin : mise tout aux tours 1 à 3, même sans avance, jamais après */
+    const lose = [-2, -3, 0];
+    { const a1 = rate("allin", 1, lose), a3 = rate("allin", 3, lose), a4 = rate("allin", 4, lose), a5 = rate("allin", 5, lose);
+      T("Rivaux · allin : jure dès le tour 1 même sans avance (forte probabilité)", a1.p > 0.35 && a1.p < 0.7, a1.p);
+      T("Rivaux · allin : jamais aux tours 4 et 5", a4.p === 0 && a5.p === 0, a4.p + "/" + a5.p);
+      T("Rivaux · allin : jure sur son meilleur lieu révélé (celui à 0 ici)", Object.keys(a3.where).join() === "2" && a3.p > 0.6, JSON.stringify(a3));
+      const c = cum("allin", [1, 2, 3], lose); T("Rivaux · allin : au moins 90 % des parties avant le tour 4", c >= 0.9, c); }
+    /* zele : ~90 % des parties, tours 3 et 4, meilleur lieu */
+    { const z1 = rate("zele", 1, [3, 0, -1]).p, z2 = rate("zele", 2, [3, 0, -1]).p, z5 = rate("zele", 5, [3, 0, -1]).p, z3 = rate("zele", 3, [3, 0, -1]);
+      T("Rivaux · zele : ne jure pas aux tours 1, 2 et 5", z1 === 0 && z2 === 0 && z5 === 0, [z1, z2, z5].join("/"));
+      T("Rivaux · zele : jure sur son meilleur lieu", Object.keys(z3.where).join() === "0" && z3.p > 0.3, JSON.stringify(z3));
+      const c = cum("zele", [3, 4], [3, 0, -1]); T("Rivaux · zele : environ 90 % des parties (aux tours 3 et 4)", c > 0.84 && c < 0.97, c); }
+    /* prudent : seulement s'il mène d'au moins 3, aux tours 4 et 5 */
+    { const p3 = rate("prudent", 3, [6, 0, 0]).p, p4low = rate("prudent", 4, [2, 1, 0]).p, p4 = rate("prudent", 4, [5, 1, 0]), p5 = rate("prudent", 5, [3, -1, 0]), p5lose = rate("prudent", 5, [-4, -1, 0]).p;
+      T("Rivaux · prudent : jamais avant le tour 4 (même en menant)", p3 === 0, p3);
+      T("Rivaux · prudent : jamais sans une avance d'au moins 3", p4low === 0 && p5lose === 0, p4low + "/" + p5lose);
+      T("Rivaux · prudent : jure tard sur le lieu où il mène (tours 4 et 5)", p4.p > 0.3 && Object.keys(p4.where).join() === "0" && p5.p > 0.3 && Object.keys(p5.where).join() === "0", JSON.stringify([p4, p5])); }
+    /* bluff : jure ailleurs que sur son meilleur lieu, jamais à plus de 3 de retard */
+    { const b1 = rate("bluff", 1, [0, -1, -1]).p, b5 = rate("bluff", 5, [0, -1, -1]).p, b3 = rate("bluff", 3, [5, -2, -3]), bsu = rate("bluff", 3, [5, -4, -6]), bnone = rate("bluff", 3, [-1, -4, -5]);
+      T("Rivaux · bluff : ne jure pas aux tours 1 et 5", b1 === 0 && b5 === 0, b1 + "/" + b5);
+      T("Rivaux · bluff : jure sur un lieu où il ne mène pas, jamais sur son meilleur", b3.p > 0.1 && !b3.where[0] && (b3.where[1] || b3.where[2]), JSON.stringify(b3));
+      T("Rivaux · bluff : pas de suicide (jamais à plus de 3 de retard)", bsu.p === 0 && !bnone.where[1] && !bnone.where[2], JSON.stringify([bsu, bnone]));
+      const lead = rate("bluff", 3, [4, 1, 2]); T("Rivaux · bluff : s'il mène partout, il bluffe quand même sur un lieu qui n'est pas son meilleur", !lead.where[0] && lead.p > 0.1, JSON.stringify(lead)); }
+    /* garde-fous : duel, partie guidée, replay, serment déjà prêté */
+    { S.mp = { g: 1, meHost: true, oppNick: "Ami", locked: false, gone: false, replaying: false }; S.rival = { id: "exodus", mood: "allin" }; S.turn = 2; S.aiOath = null; S.oath = null; aiOath(); const a = S.aiOath; S.mp = null;
+      S.tut = true; aiOath(); const b = S.aiOath; S.tut = false; S.rp = {}; aiOath(); const c = S.aiOath; S.rp = null;
+      T("Rivaux : jamais de serment adverse en duel, en partie guidée ni en replay", a == null && b == null && c == null, [a, b, c].join());
+      S.aiOath = 1; aiOath(); T("Rivaux : un serment déjà prêté n'est pas changé", S.aiOath === 1, S.aiOath); S.aiOath = null; }
+    /* sans rival : l'ancien comportement (tours 2 à 4 seulement) */
+    { S.rival = null; S.turn = 1; let n = 0; for (let i = 0; i < 300; i++) { S.aiOath = null; for (let li = 0; li < 3; li++) { S.locs[li].rev = true; S.board.e[li] = [put("e", li, plain[0], 9)]; S.board.p[li] = []; } aiOath(); if (S.aiOath != null) n++; }
+      T("Rivaux : sans rival, aucun serment au tour 1 (comportement d'avant)", n === 0, n); S.aiOath = null; }
+    /* la phrase et la cérémonie suivent le tempérament TIRÉ, pas le signature */
+    { for (const m of RIVAL_MOODS) { fresh(); S.turn = 3; S.locs.forEach(L => L.rev = true); S.rival = { id: "exodus", mood: m }; S.aiOath = null; swearOath("e", 1);
+        T(`Rivaux · phrase du tempérament ${m} (même si le rival est Exodus)`, RIVAL_QUOTES[m].includes(S.aiOathSay) && S.oathCer && S.oathCer.side === "e" && S.oathCer.say === S.aiOathSay, S.aiOathSay); }
+      const q = RIVAL_QUOTES; T("Rivaux : les quatre phrases demandées", q.bluff[0] === "« Tu crois vraiment que ça va s’arrêter là ? »" && q.zele[0].startsWith("« Merde, je te jure") && q.allin[0].startsWith("« Bordel, tu m’as forcé la main.") && q.prudent[0].startsWith("« Foutu hasard…"), "");
+      fresh(); S.turn = 3; S.locs.forEach(L => L.rev = true); S.rival = { id: "clara", mood: "bluff" }; swearOath("e", 0); screen = "play"; const h = aiOathBar() + oathCerHTML(); screen = "play";
+      T("Rivaux : barre du serment adverse et cérémonie montrent le nom, le portrait et la phrase", /Clara/.test(h) && /images\/avatars\/lilith\.webp/.test(h) && /s’arrêter là/.test(h) && /class="oathcer foe"/.test(h), h.slice(0, 120));
+      const my = (swearOath("p", 2), oathCerHTML()); T("Rivaux : quand le joueur jure, la cérémonie montre son propre nom et avatar", /class="oathcer me"/.test(my) && my.includes(esc(P.name)), my.slice(0, 120));
+      S.oathCer.at -= OATH_CER_MS + 10; T("Rivaux : la cérémonie disparaît après son délai, la phrase reste dans la barre", oathCerHTML() === "" && /s’arrêter là/.test(aiOathBar()), "");
+      const lg = LANG; LANG = "en"; T("Rivaux : phrases traduites en anglais", RIVAL_MOODS.every(m => RIVAL_QUOTES[m].every(x => { const t = trUI(x); return t !== x && !/[éèàç]/.test(t); })), RIVAL_MOODS.map(m => trUI(RIVAL_QUOTES[m][0])).join(" | ")); LANG = lg; }
+    /* l'IA défend son serment : léger bonus pour jouer sur le lieu juré */
+    { fresh(); S.turn = 2; S.locs.forEach(L => L.rev = true); S.energyE = 2; const a = card(plain[0], 2), b = card(plain[1], 2); S.hand.e = [a, b]; S.aiOath = null; const pl0 = aiPlan("e", 6).map(x => x.li);
+      S.aiOath = 2; const pl1 = aiPlan("e", 6).map(x => x.li); T("Rivaux : l'IA tient compte de son lieu juré (bonus de placement)", pl1.every(l => l === 2) || pl1.filter(l => l === 2).length >= pl0.filter(l => l === 2).length, pl0 + " / " + pl1); S.aiOath = null; }
+    S = null; }
+
   return res;
 }
 

@@ -971,7 +971,7 @@ body:has(.sandbar) #app{padding-top:62px}
 /* Panneau de résultat : ne dépasse jamais l'écran (il défile en dernier recours), scores par camp, bilan */
 .result{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain}
 .result .rows.sc3{gap:0}
-.result .sc3 .row{display:grid;grid-template-columns:minmax(0,1fr) 3.4em 3.4em;gap:6px;align-items:center;padding-block:5px}
+.result .sc3 .row{display:grid;grid-template-columns:minmax(0,1fr) 52px 78px;gap:6px;align-items:center;padding-block:5px}
 .result .sc3 .row span:last-child{font-family:inherit}
 .result .sc3 .c{text-align:center;font-family:var(--display);font-size:16px;border-radius:8px;padding:1px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .result .sc3 .c.me{color:var(--me)}.result .sc3 .c.foe{color:var(--foe)}
@@ -1042,3 +1042,17 @@ button:focus-visible,label:focus-within,[data-act]:focus-visible{outline-color:v
 .accb{padding:12px 14px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0}
 .accb p{margin:0;color:var(--mist);max-width:62ch}
 .accb .rules{align-self:stretch;overflow-wrap:anywhere}
+/* Rivaux nommés : bandeau « Contre … », phrase du serment adverse, cérémonie du serment (portrait + nom + phrase) */
+.mpbar.foebar{background:rgba(154,140,208,.08);padding:4px 10px}
+.oathsay{display:flex;align-items:center;gap:10px;margin:8px 0 -2px;font-size:13px;color:var(--mist)}
+.oathsay i{color:var(--frost)}
+.oathsay b{color:var(--foe)}
+.oathcer{position:fixed;left:50%;top:calc(58px + env(safe-area-inset-top));transform:translateX(-50%);z-index:6;width:min(92vw,420px);box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(40,24,30,.96),rgba(14,20,34,.97) 70%);border:1px solid rgba(240,160,160,.6);box-shadow:0 8px 28px rgba(0,0,0,.6),0 0 18px rgba(240,160,160,.3);animation:oathcer 4.5s ease both}
+.oathcer.me{border-color:rgba(219,168,98,.7);background:linear-gradient(135deg,rgba(48,36,16,.96),rgba(14,20,34,.97) 70%);box-shadow:0 8px 28px rgba(0,0,0,.6),0 0 18px rgba(219,168,98,.35)}
+.oathcer .ocn{font-family:var(--sc);font-size:16px;color:var(--warm)}
+.oathcer.foe .ocn{color:#f0a8a8}
+.oathcer .ocl{font-size:12px;color:var(--mist)}
+.oathcer .ocq{margin-top:4px;font-size:14px;line-height:1.3;font-style:italic;color:#f1ece0}
+@keyframes oathcer{0%{opacity:0;transform:translate(-50%,-14px)}7%{opacity:1;transform:translate(-50%,0)}88%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-6px)}}
+@media (prefers-reduced-motion:reduce){ .oathcer{animation:none} }

@@ -113,7 +113,7 @@ function bzGame(){ const r=P.bz.run; if(!r||r.over||r.deck.length<12) return;
     deck:{p:shuffle(r.deck.map(mk)), e:[]}, aiTier:t, aiFac:null,
     staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
     log:[], sel:null, info:null, busy:false, over:null, blitz:true};
-  const ai=aiDeck(t,true,true); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac;   /* Blitz : pas d'ultra-légendaire, adversaire compris */
+  S.rival=drawRival(); const ai=aiDeck(t,true,true,rivalOf(S.rival.id).fac); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac;   /* Blitz : pas d'ultra-légendaire, adversaire compris */
   for(let i=0;i<3;i++){draw("p");draw("e");}
   log(`Blitz · match ${r.wins+1}/3 · adversaire ${FAC[ai.fac].n}, niveau ${TIERS[t]}`);
   screen="play"; startTurn(); }
@@ -145,7 +145,7 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.35", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.36", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Jetons et codes de salon : crypto.getRandomValues (pas Math.random). Code = LIEU- + 6 caractères sans I, L, O ni 0/1 (31 symboles, tirage sans biais). */
