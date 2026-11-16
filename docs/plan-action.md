@@ -40,7 +40,7 @@ Tests après fusion : 633 scénarios sur 633, bac à sable 15 sur 15, deux parti
 - [x] Corriger : la Cathédrale d'Helvara dépasse des autres lieux quand son nom tient sur deux lignes
 - [ ] Raccourcir les textes de lieux les plus longs (plume de Jordan)
 - [x] `tests-holo.js` : 68 sur 68. La collection affiche et précharge volontairement les cartes holo (confirmé par Jordan) ; le test comptait mal. Test mis à jour.
-- [ ] `tests-pwa.js` : 1 échec, **cause trouvée, pas un lien avec le holo**. Le plateau affiche l'illustration pleine (`images/<id>.webp`, via `art(c.id)` sans `light`), qui n'est préchargée que pour ton deck. Hors ligne, une carte adverse jamais vue s'affiche donc vide. Le `CLAUDE.md` dit pourtant que l'avatar sert de miniature au plateau. Échec présent avant la vague 1. **À décider par Jordan** : plateau en avatars (léger, préchargés) ou illustrations pleines.
+- [x] `tests-pwa.js` : 0 échec. Cause : le plateau affiche les illustrations pleines, préchargées seulement pour ton deck. Décision de Jordan (16 novembre) : on garde les illustrations pleines. Correction : `preloadFoe()` (js/interface.js) range au lancement d'une partie les illustrations du deck adverse de l'IA ; le test vérifie maintenant cela. **Reste non couvert** : en duel en ligne, le deck adverse n'est pas connu au départ, donc ses cartes ne sont rangées que si elles ont déjà été vues.
 - [ ] Après publication : vérifier l'aperçu réel du lien sur Discord (ajouter `?x=1` au lien si l'ancien aperçu reste)
 
 ### Chiffres provisoires à valider

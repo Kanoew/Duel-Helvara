@@ -17,6 +17,11 @@ function preRun(){
   if(preQ.length) preSched();
 }
 function preSched(){ if(preTimer) return; preTimer=(window.requestIdleCallback?requestIdleCallback(preRun,{timeout:2500}):setTimeout(preRun,200)); }
+function preloadFoe(){   /* illustrations pleines du deck adverse (le plateau les affiche) : elles entrent ainsi dans le cache hors ligne */
+  if(preSlow()||!S||!S.deck||!S.deck.e) return;
+  for(const c of S.deck.e){ const d=CARDS[c.id]; if(d&&d.img) preAdd(d.img); }
+  preSched();
+}
 function preloadDeck(){
   if(preSlow()||!P||!Array.isArray(P.deck)) return;
   for(const id of P.deck){ const d=CARDS[id]; if(!d||!d.img) continue; preAdd(d.img); preAdd(`images/avatars/${id}.webp?v=7`); }
