@@ -268,6 +268,14 @@
     "C'est définitif. Gagne ce lieu avec la partie : +2 étoiles. Perds-le : −1 étoile.":"This is final. Win this location and the game: +2 stars. Lose it: −1 star.",
     "Je le jure":"I swear it", "Une fois par partie, jusqu'au tour 5. Choisis un lieu révélé.":"Once per game, up to turn 5. Choose a revealed location.",
     "Victoire !":"Victory!", "Partie terminée":"Game over", "Rejouer":"Play again", "Voir le plateau":"View the board",
+    /* bilan de fin de partie (vague 1) */
+    "Journal":"Log", "Journal de partie":"Game log", "Aucun événement pour l'instant.":"Nothing has happened yet.", "Ouvrir le journal de partie":"Open the game log",
+    "Ouvrir le journal de partie : du nouveau":"Open the game log: new entries", "Fermer le journal de partie":"Close the game log",
+    "Suivant":"Next", "Note suivante":"Next note", "Fermer la note":"Dismiss note",
+    "Toi":"You", "Lieu":"Location", "Bilan de la partie":"Game summary", "Conseil :":"Tip:", "Carte adverse la plus forte :":"Strongest enemy card:",
+    "Presque toutes tes cartes étaient au même lieu. Il suffit d'en gagner 2 sur 3 : répartis-les.":"Almost all your cards were in the same location. You only need to win 2 out of 3: spread them out.",
+    "Défaite de justesse : quelques points ont tout changé. Chaque carte compte, même la plus petite.":"A narrow defeat: a few points changed everything. Every card counts, even the smallest.",
+    "Appui long sur une carte adverse pour lire son effet : mieux la connaître aide à la contrer.":"Long-press an enemy card to read its effect: knowing it better helps you counter it.",
     "Serment tenu : +2 étoiles":"Oath kept: +2 stars", "Serment tenu, mais la partie est perdue":"Oath kept, but the game is lost", "Serment rompu : −1 étoile":"Oath broken: −1 star",
     "Promotion !":"Promotion!", "Rétrogradation":"Demotion", "+2 étoiles (série)":"+2 stars (streak)", "+1 étoile":"+1 star", "−1 étoile":"−1 star",
     "Passant et Initié : une défaite ne coûte rien":"Wanderer and Initiate: a loss costs nothing", "Plancher du palier : rien de perdu":"Tier floor: nothing lost",
@@ -293,6 +301,12 @@
   };
 
   const rules=[
+    [/^Note (\d+) sur (\d+)$/, (m,a,b)=>`Note ${a} of ${b}`],
+    [/^Lire la règle : (.+)$/, (m,a)=>`Read the rule: ${a}`],
+    [/^: lieu (perdu|gagné) de (\d+)$/, (m,k,n)=>`: location ${k==="perdu"?"lost":"won"} by ${n}`],
+    [/^: lieu (perdu|gagné) à égalité$/, (m,k)=>`: location ${k==="perdu"?"lost":"won"} on a tie`],
+    [/^Aucune de tes cartes à « (.+) »\. Même une petite y change tout : pense à présenter quelque chose partout\.$/, (m,a)=>`None of your cards at “${a}”. Even a small one changes everything there: try to show something everywhere.`],
+    [/^Tu as laissé de l'énergie inutilisée alors que tu pouvais jouer \((\d+) au total, sur (\d+) tours\)\. Elle ne se cumule pas : autant l'utiliser\.$/, (m,e,t)=>`You left energy unused while you could have played (${e} in total, over ${t} turns). It doesn't carry over: you may as well use it.`],
     [/^Lieu à l'honneur : \+(\d+) CHF pour ta première partie du jour\.$/, (m,n)=>`Featured place: +${n} CHF for your first game of the day.`],
     /* accueil, profil */
     [/^Le Sang de Tiamat · (.+)$/, (m,a)=>`The Blood of Tiamat · ${a}`],
