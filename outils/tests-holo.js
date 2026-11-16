@@ -51,7 +51,7 @@ srv.listen(0, async () => {
     p = await page("/index.html?holo=test"); await zoom(p, "amaterasu"); await p.waitForTimeout(500);
     check("carte sans entrée : affichage inchangé", await n(p, "#holoslot") === 0 && await n(p, "#holoslot .hc-card") === 0); await p.ctx.close();
     p = await page("/index.html"); const req = []; p.on("request", r => req.push(r.url())); await zoom(p, "amaterasu"); await p.waitForTimeout(500);
-    check("production : une carte sans entrée ne télécharge rien de holo", await n(p, "#holoslot") === 0 && !req.some(u => /holo/.test(u))); 
+    check("production : une carte sans entrée ne télécharge rien de holo", await n(p, "#holoslot") === 0 && !req.some(u => /holo\/amaterasu/.test(u))); /* la collection précharge les cartes holo sorties (voulu) : on vérifie seulement que la carte sans entrée n'en demande aucune */
     await zoom(p, "nike"); await p.waitForTimeout(2200);
     check("production : Nike (entrée de la table HOLO) affiche l'effet, sans ?holo=test", await n(p, "#holoslot .hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs);
     await zoom(p, "source"); await p.waitForTimeout(2200);
@@ -74,7 +74,7 @@ srv.listen(0, async () => {
     check("vitrine : glisser fait toujours tourner, Nike passe sur le côté et y garde son effet (sans l'ancien reflet)", await p.evaluate(() => P.fan[0] !== "nike") && await p.evaluate(() => !document.querySelector('.fcard[data-id="nike"] .full').classList.contains("holo")) && await p.waitForFunction(() => document.querySelectorAll('.fcard[data-id="nike"] .holotile .hc-ready').length === 1, null, { timeout: 8000 }).then(() => true, () => false));
     await p.evaluate(`P.fan=["nike","yarden","amaterasu"];render();`); await p.waitForTimeout(1200);
     await p.evaluate(`screen="deck";render();`); await p.waitForTimeout(200);
-    check("vitrine : l'effet est détruit en quittant l'accueil", await n(p, ".hc-card") === 0 && await p.evaluate(() => ![...HOLO_TILES.keys()].some(k => k[0] === "f")));
+    check("vitrine : l'effet est détruit en quittant l'accueil", await n(p, ".fcard .hc-card") === 0 && await p.evaluate(() => ![...HOLO_TILES.keys()].some(k => k[0] === "f")));
     check("vitrine : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
     /* chargement lent : l'image fixe garde sa taille pendant que l'effet se charge (elle rétrécissait à côté du conteneur de l'effet) */
     p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/nike/manifest.json", async r => { await new Promise(k => setTimeout(k, 1500)); r.continue(); }) });
