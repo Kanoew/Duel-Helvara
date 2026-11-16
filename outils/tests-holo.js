@@ -28,15 +28,15 @@ srv.listen(0, async () => {
     await p.waitForSelector(".hc-card.hc-ready"); await p.waitForTimeout(100);
     check("zoom : l'effet prend la place dès qu'il est prêt, sans fondu", await p.evaluate(() => document.getElementById("holoslot").classList.contains("holo-on") && getComputedStyle(document.querySelector(".hc-card")).transitionDuration === "0s"));
     check("collection : les cartes holo sorties sont préchargées", await p.evaluate(() => { screen = "deck"; render(); return Object.keys(HOLO_PRE).length > 0; }));
-    check("zoom : l'effet est prêt et l'image fixe est cachée ensuite", await n(p, ".hc-card.hc-ready") === 1 && await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display === "none"));
+    check("zoom : l'effet est prêt et l'image fixe est cachée ensuite", await n(p, "#holoslot .hc-card.hc-ready") === 1 && await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot>.full")).display === "none"));
     await p.evaluate("render();render();"); await p.waitForTimeout(300);
-    check("zoom : des redessins n'empilent pas d'instances", await n(p, ".hc-card") === 1);
-    const bb = await p.locator(".hc-card").boundingBox();
+    check("zoom : des redessins n'empilent pas d'instances", await n(p, "#holoslot .hc-card") === 1);
+    const bb = await p.locator("#holoslot .hc-card").boundingBox();
     await p.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2); await p.mouse.down(); await p.mouse.move(bb.x + bb.width * .8, bb.y + bb.height * .3, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(200);
     check("zoom : glisser sur la carte ne ferme pas la vue", await p.evaluate(() => !!zoomId));
-    check("zoom : la carte capte le glissement, l'encadré d'info reste défilable", await p.evaluate(() => getComputedStyle(document.querySelector(".hc-card")).touchAction === "none" && getComputedStyle(document.querySelector(".zoominfo")).touchAction !== "none" && getComputedStyle(document.querySelector(".zoomwrap")).overflowY === "auto"));
+    check("zoom : la carte capte le glissement, l'encadré d'info reste défilable", await p.evaluate(() => getComputedStyle(document.querySelector("#holoslot .hc-card")).touchAction === "none" && getComputedStyle(document.querySelector(".zoominfo")).touchAction !== "none" && getComputedStyle(document.querySelector(".zoomwrap")).overflowY === "auto"));
     await p.evaluate("zoomId=null;render();"); await p.waitForTimeout(300);
-    check("zoom : destroy() à la fermeture (plus de carte, plus de jeton)", await n(p, ".hc-card") === 0 && await p.evaluate(() => zoomHolo === null));
+    check("zoom : destroy() à la fermeture (plus de carte, plus de jeton)", await n(p, "#holoslot .hc-card") === 0 && await p.evaluate(() => zoomHolo === null));
     check("zoom : aucune erreur", p.errs.length === 0, p.errs); await p.ctx.close();
     /* panneau de test : zoom et faux paquet sans posséder les cartes, rien de sauvegardé */
     p = await page("/index.html?holo=test"); const avant = await p.evaluate(() => JSON.stringify(dataOf()));
@@ -49,16 +49,16 @@ srv.listen(0, async () => {
     p = await page("/index.html"); check("production : pas de panneau de test", await n(p, ".holotest") === 0); await p.ctx.close();
     /* carte sans holo et production */
     p = await page("/index.html?holo=test"); await zoom(p, "amaterasu"); await p.waitForTimeout(500);
-    check("carte sans entrée : affichage inchangé", await n(p, "#holoslot") === 0 && await n(p, ".hc-card") === 0); await p.ctx.close();
+    check("carte sans entrée : affichage inchangé", await n(p, "#holoslot") === 0 && await n(p, "#holoslot .hc-card") === 0); await p.ctx.close();
     p = await page("/index.html"); const req = []; p.on("request", r => req.push(r.url())); await zoom(p, "amaterasu"); await p.waitForTimeout(500);
     check("production : une carte sans entrée ne télécharge rien de holo", await n(p, "#holoslot") === 0 && !req.some(u => /holo/.test(u))); 
     await zoom(p, "nike"); await p.waitForTimeout(2200);
-    check("production : Nike (entrée de la table HOLO) affiche l'effet, sans ?holo=test", await n(p, ".hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs);
+    check("production : Nike (entrée de la table HOLO) affiche l'effet, sans ?holo=test", await n(p, "#holoslot .hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs);
     await zoom(p, "source"); await p.waitForTimeout(2200);
-    check("production : La Source (Carla, foil électrique « volt ») affiche l'effet sans erreur", await n(p, ".hc-card.hc-ready") === 1 && await n(p, ".hc-volt") >= 1 && p.errs.length === 0, p.errs); await p.ctx.close();
+    check("production : La Source (Carla, foil électrique « volt ») affiche l'effet sans erreur", await n(p, "#holoslot .hc-card.hc-ready") === 1 && await n(p, ".hc-volt") >= 1 && p.errs.length === 0, p.errs); await p.ctx.close();
     p = await page("/index.html");
     for (const id of ["ananke_r", "ananke_v"]) { await p.evaluate(`P.owned=[...new Set([...P.owned,"${id}"])];tutoStep=-1;P.tuto=true;screen="deck";zoomId="${id}";render();`); await p.waitForTimeout(2200);
-      check("production : " + id + " (variante d'Ananké, dossier de Jordan) affiche l'effet sans erreur", await n(p, ".hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs); }
+      check("production : " + id + " (variante d'Ananké, dossier de Jordan) affiche l'effet sans erreur", await n(p, "#holoslot .hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs); }
     await p.ctx.close();
     /* vitrine de l'accueil (vidéo de Jordan, 15 octobre : l'ancien reflet d'ultra-légendaire y restait) */
     p = await page("/index.html");
@@ -88,7 +88,7 @@ srv.listen(0, async () => {
     p = await page("/index.html?holo=test", { route: async q => q.route("**/images/holo/nike/layer2.webp", r => r.fulfill({ status: 404, body: "" })) }); await zoom(p, "nike"); await p.waitForTimeout(1500);
     check("image de couche introuvable : repli sur l'image fixe, rien ne reste monté", await n(p, ".hc-card") === 0 && await n(p, ".holohost") === 0 && p.errs.length === 0, p.errs); await p.ctx.close();
     p = await page("/index.html?holo=test", { reduced: true }); await zoom(p, "hedone"); await p.waitForTimeout(1500);
-    check("mouvement réduit : l'effet s'affiche (le module coupe lui-même le mouvement)", await n(p, ".hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs); await p.ctx.close();
+    check("mouvement réduit : l'effet s'affiche (le module coupe lui-même le mouvement)", await n(p, "#holoslot .hc-card.hc-ready") === 1 && p.errs.length === 0, p.errs); await p.ctx.close();
     /* ouverture de paquet */
     p = await page("/index.html?holo=test");
     await p.evaluate(`tutoStep=-1;P.tuto=true;screen="shop";render();ouvrirTirage({res:[{id:"nike",isNew:true,v:0},{id:"yarden",isNew:true,v:0},{id:"hedone",isNew:true,v:0}],name:"Test",img:"images/pack.webp",pid:"x",price:100});`);
