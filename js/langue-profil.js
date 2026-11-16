@@ -290,9 +290,14 @@ function claimDaily(){
 const QMOVERS=["hermes","eris","susanoo","set","heimdall"], QDISC=["mendiant","melinoe","odin","lipdentelle","dionysos","morrigan_h"], QCHARS=["yarden","jordan","izzy","apsu"];
 const qFacs=()=>Object.keys(FAC).filter(f=>P.owned.filter(id=>CARDS[id]&&CARDS[id].fac===f).length>=6);
 const qChars=()=>QCHARS.filter(ch=>P.owned.some(id=>CARDS[id]&&charOf(id)===ch));
+/* Déblocage du Blitz (Jordan, 16 novembre) : après 10 parties terminées (partie classée + duels ; ni le tutoriel ni le Blitz ne comptent).
+   Aucun compteur ajouté au profil : on additionne ceux qui existent. Le bac à sable (?date=) a tout débloqué. */
+const BLITZ_UNLOCK=10;
+const gamesPlayed=()=>(P.w|0)+(P.l|0)+(P.d|0)+(P.dw|0)+(P.dl|0)+(P.dd|0);
+const blitzLeft=()=>window.__sandbox?0:Math.max(0,BLITZ_UNLOCK-gamesPlayed());
 const QOK={helv4:()=>P.owned.filter(id=>CARDS[id]&&CARDS[id].fac==="helvara").length>=4, move2:()=>P.owned.some(id=>CARDS[id]&&QMOVERS.includes(charOf(id))),
   disc3:()=>P.owned.some(id=>QDISC.includes(id)), six6:()=>P.owned.some(id=>CARDS[id]&&CARDS[id].cost>=6), fusion:()=>P.owned.some(id=>CARDS[id]&&CARDS[id].r==="U"),
-  blitz1:()=>!!P.starter, facwin:()=>qFacs().length>0, charwin:()=>qChars().length>0};
+  blitz1:()=>!!P.starter&&blitzLeft()===0, facwin:()=>qFacs().length>0, charwin:()=>qChars().length>0};
 const qOk=id=>!QOK[id]||QOK[id]();
 function mkQuest(id,seed){ const q={id,p:0,c:false};
   if(id==="facwin"){ const f=qFacs(); q.x=f[seed%f.length]; } if(id==="charwin"){ const ch=qChars(); q.x=ch[seed%ch.length]; } return q; }
@@ -343,7 +348,7 @@ let P = clean(lsRead());
 let packOpen=null, gz=null, lpTimer=null, lpFired=false;
 let storeReady=false, tutoStep=-1, hlStarter=false, packFocus=null, avPick=false, zoomId=null, fanPick=null;
 const rankIcon=(lv,cls="")=>`<img class="rkicon ${cls}" src="images/rangs/${tierOf(lv)}.webp?v=2" alt="${TIERS[tierOf(lv)]}">`;
-function avatarHTML(cls=""){ const a=P.avatar&&P.owned.includes(P.avatar)?P.avatar:null; return a?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${a}.webp?v=7')"></span>`:`<span class="avatar ${cls} empty">${esc(P.name.charAt(0).toUpperCase())}</span>`; }
+function avatarHTML(cls=""){ const a=P.avatar&&P.owned.includes(P.avatar)?P.avatar:null; return a?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${a}.webp?v=8')"></span>`:`<span class="avatar ${cls} empty">${esc(P.name.charAt(0).toUpperCase())}</span>`; }
 let dbDoc=null, store="local", writing=false, again=false, saveTimer=null, lastPack=null;
 /* P.at : heure de la dernière modification. Au chargement, la sauvegarde locale l'emporte sur celle du compte
    si elle est plus récente et appartient au même joueur (OWNER_KEY) : un envoi raté (réseau, téléphone en veille)
@@ -448,7 +453,7 @@ function boardHTML(){
   if(lbUid) map[lbUid]={...lbClean(lbMe()),id:lbUid};
   const k=LB_SEASON(); const all=Object.values(map).filter(r=>r&&r.nick&&(r.id===lbUid||r.lv||r.st||r.sw||r.sl||r.best));
   const cur=all.filter(r=>r.season===k).sort((a,b)=>b.lv-a.lv||b.st-a.st||b.sw-a.sw), old=all.filter(r=>r.season!==k);
-  const row=(r,i)=>`<div class="lbrow ${r.id===lbUid?"me":""}"><span class="lbn">${i+1}</span>${r.av?`<span class="avatar sm" style="background-image:url('images/avatars/${r.av}.webp?v=7')"></span>`:`<span class="avatar sm empty">${esc(r.nick.charAt(0).toUpperCase())}</span>`}<span class="lbmain"><b>${esc(r.nick)}${r.id===lbUid?" (toi)":""}</b>${act(r)?`<i class="lbon">actif</i>`:""}<small>${rankName(r.lv)} · ${r.sw} V · ${r.sl} D</small></span>${rankIcon(r.lv,"sm")}</div>`;
+  const row=(r,i)=>`<div class="lbrow ${r.id===lbUid?"me":""}"><span class="lbn">${i+1}</span>${r.av?`<span class="avatar sm" style="background-image:url('images/avatars/${r.av}.webp?v=8')"></span>`:`<span class="avatar sm empty">${esc(r.nick.charAt(0).toUpperCase())}</span>`}<span class="lbmain"><b>${esc(r.nick)}${r.id===lbUid?" (toi)":""}</b>${act(r)?`<i class="lbon">actif</i>`:""}<small>${rankName(r.lv)} · ${r.sw} V · ${r.sl} D</small></span>${rankIcon(r.lv,"sm")}</div>`;
   return `<section class="sec"><h2>Classement · ${seasonLabel()}</h2>
     <p class="hint">Les 100 meilleurs de la saison. « actif » signale les joueurs vus ces 10 dernières minutes.${store!=="cloud"?" Ta progression n'est pas sauvegardée sur ton compte : tu n'apparais pas dans le classement des autres.":""}</p>
     <div class="lb">${cur.map(row).join("")||`<p class="hint">Personne n'a encore joué cette saison.</p>`}</div></section>

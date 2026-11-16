@@ -24,7 +24,7 @@ function preloadFoe(){   /* illustrations pleines du deck adverse (le plateau le
 }
 function preloadDeck(){
   if(preSlow()||!P||!Array.isArray(P.deck)) return;
-  for(const id of P.deck){ const d=CARDS[id]; if(!d||!d.img) continue; preAdd(d.img); preAdd(`images/avatars/${id}.webp?v=7`); }
+  for(const id of P.deck){ const d=CARDS[id]; if(!d||!d.img) continue; preAdd(d.img); preAdd(`images/avatars/${id}.webp?v=8`); }
   if(!nextPlay) nextPlay=Math.random()<.5?"play":"play2"; preAdd(MUSIC[nextPlay],true);
   preSched();
 }
@@ -33,7 +33,7 @@ const gridArt=fn=>{ ART_MINI=true; try{ return fn(); } finally{ ART_MINI=false; 
 function art(id,light){
   const d=CARDS[id];
   if(ART_MINI&&!d.token&&d.img&&/^images\/[^/]+\.webp/.test(d.img)) return `<div class="art" style="background-image:url('${d.img.replace("images/","images/mini/")}')"></div>`;
-  if(light&&light!=="big"&&!d.token&&d.img) return `<div class="art" style="background-image:url('images/avatars/${id}.webp?v=7')"></div>`;
+  if(light&&light!=="big"&&!d.token&&d.img) return `<div class="art" style="background-image:url('images/avatars/${id}.webp?v=8')"></div>`;
   if(d.token&&d.img) return `<div class="art" style="background-image:url('${d.img}')"></div>`;
   if(d.token) return `<div class="art token-img" style="background-image:url('images/reflet.webp')${id==="illusion"?";filter:sepia(.7) saturate(2.2) hue-rotate(-12deg)":id==="cendreux"?";filter:grayscale(1) sepia(.5) brightness(.7)":id==="lanterne"?";filter:sepia(1) saturate(4) hue-rotate(-25deg) brightness(.8)":""}"></div>`;
   /* grand format : la miniature (déjà vue dans la grille) sert de fond le temps que la grande image arrive, au lieu d'une case sombre */
@@ -97,7 +97,8 @@ const ICO={
   board:'<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M8 20h8"/>',
   book:'<path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path d="M4 20a2 2 0 0 0 2 2h13v-4"/><path d="M9 7h6"/>',
   discord:'<path style="fill:currentColor;stroke:none" d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.3 18.3 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.89 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 5.99 3.03.08.08 0 0 0 .09-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03zM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42z"/>',
-  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'};
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'};
 const DISCORD="https://discord.gg/QgxFQGcjGT";
 const ico=k=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
 let sheet=null; /* "quests" ou "settings" : panneau ouvert depuis l'en-tête */
@@ -120,7 +121,7 @@ function dockHTML(){
 }
 function sheetHTML(){
   if(!sheet) return "";
-  const body=sheet==="quests"?questsHTML():`<section class="quests"><div class="qhead"><h2>Réglages</h2></div>
+  const body=sheet==="quests"?questsHTML():sheet==="play"?playSheetHTML():`<section class="quests"><div class="qhead"><h2>Réglages</h2></div>
     <div class="setrow"><span>Langue</span><button class="langbtn" data-act="lang" aria-label="${LANG==="fr"?"Switch to English":"Passer en français"}"><span class="${LANG==="fr"?"on":""}">FR</span><span class="${LANG==="en"?"on":""}">EN</span></button></div>
     <div class="setrow"><span>Son</span><span class="footbtns"><button class="toggle" data-act="music" aria-pressed="${P.music}">Musique : ${P.music?"activée":"coupée"}</button><button class="toggle" data-act="sfx" aria-pressed="${P.sfx}">Effets : ${P.sfx?"activés":"coupés"}</button></span></div>
     <div class="setrow"><span>Volume de la musique</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vm??35}" data-vol="vm" aria-label="Volume de la musique"><b data-volv="vm">${P.vm??35}</b></span></div>
@@ -298,6 +299,22 @@ function noticeHTML(){
   const i=all.indexOf(left[0])+1, more=left.length>1;
   return `<div class="notice noticeq" role="status"><span class="ntxt">${left[0]}</span><span class="nctl">${all.length>1?`<span class="ncount" aria-label="Note ${i} sur ${all.length}">${i}/${all.length}</span>`:""}<button class="nbtn" data-act="notedismiss" data-t="${i-1}" aria-label="${more?"Note suivante":"Fermer la note"}">${more?"Suivant":"OK"}</button></span></div>`;
 }
+/* Un seul bouton « Jouer » : il ouvre ce panneau (même mécanique que les Quêtes et les Réglages : `sheet`). Rien n'est retiré, tout est rangé ici. */
+const duelLive=()=>!!(S&&S.mp&&!S.over);
+function homeNotes(){
+  const n=[]; if(duelLive()) n.push(`Duel en cours contre ${esc(S.mp.oppNick)}`); else if(mpSession()) n.push("Un duel peut être repris");
+  if(blitzRun()) n.push(`Blitz en cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`);
+  return n.length?`<div class="hint playhint modenotes" role="status">${n.map(t=>`<span>${t}</span>`).join("")}</div>`:"";
+}
+function playSheetHTML(){
+  const ready=deckReady(), inG=!!(S&&!S.over&&!S.blitz&&!S.rp&&!S.mp), rec=P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:"";
+  const rival=`<button class="qcard duelcard modemain" data-act="${inG?"resume":"play"}" ${ready||inG?"":"disabled"}><span class="t">Contre un rival</span><span class="m">${inG?"Partie en cours : la reprendre":ready?"Partie classée contre l'IA":"Il te faut un deck de 12 cartes"}</span></button>`;
+  const friend=`<button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Défier un ami</span><span class="m">${duelLive()?`En cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon"}${rec}</span></button>`;
+  const bz=blitzOpen()
+    ?`<button class="qcard duelcard bzcard" data-act="go" data-to="blitz"><span class="t">Blitz</span><span class="m">${blitzRun()?`En cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`:bzFree()?"Partie gratuite du jour":`Gratuit dans ${hoursToReset()} h`}</span></button>`
+    :`<div class="qcard duelcard bzcard modelock" role="group" aria-disabled="true"><span class="t">${ico("lock")} Blitz</span><span class="m">${blitzLockText()}</span></div>`;
+  return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div>${rival}${friend}${bz}</section>`;
+}
 function homeHTML(){
   const inGame=S && !S.over && !S.blitz && !S.rp;
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
@@ -305,11 +322,9 @@ function homeHTML(){
   ${noticeHTML()}
   ${vitrineHTML()}
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
-  <button class="play" data-act="${inGame?"resume":"play"}" ${deckReady()||inGame?"":"disabled"}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>
-  <div class="modes">
-    <button class="qcard duelcard bzcard" data-act="go" data-to="blitz"><span class="t">Blitz</span><span class="m">${P.bz.run&&!P.bz.run.over?`En cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`:bzFree()?"Partie gratuite du jour":`Gratuit dans ${hoursToReset()} h`}</span></button>
-    <button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Duel entre amis</span><span class="m">${S&&S.mp&&!S.over?`En cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon"}${P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:""}</span></button>
-  </div>
+  <button class="play" data-act="${inGame?"resume":"sheet"}" ${inGame?"":'data-s="play" aria-haspopup="dialog"'}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>
+  ${inGame?`<button class="ghost small modemore" data-act="sheet" data-s="play" aria-haspopup="dialog">Autres façons de jouer</button>`:""}
+  ${homeNotes()}
   ${seasonBarHTML()}
   ${featureHTML()}
   ${cardDayHTML()}
@@ -318,11 +333,25 @@ function homeHTML(){
 }
 
 /* --- profil --- */
+/* But d'une ultra-légendaire de faction (Journal des factions, collection), affichage seulement : aucune règle d'obtention ici.
+   Nommée seulement à partir de sa date d'annonce (SHOWN) ; avant, l'appelant garde le texte générique. Pas encore sortie : date de sortie + parties qui restent. */
+const gamesLeft=u=>Math.max(0,u.quest.n-fjGet(u.quest.k));
+function ulGoal(u){
+  const c=CARDS[u.id], left=gamesLeft(u), n=`${left} partie${left>1?"s":""}`;
+  if(P.owned.includes(u.id)) return `${c.name} · obtenue`;
+  if(!REL(u.id)) return `${c.name} : disponible le ${frDate(c.rel.slice(5))} · ${left?`encore ${n}`:"objectif atteint"}`;
+  return left?`${c.name} : encore ${n}`:`${c.name} : objectif atteint`;
+}
+/* Case d'une ultra-légendaire de faction non obtenue dans la collection (le nom reste caché tant que la carte n'est pas sortie) */
+function ulLockLine(id){
+  const u=ULof(id), left=gamesLeft(u), n=left?`encore ${left} partie${left>1?"s":""}`:"objectif atteint";
+  return REL(id)?`Journal des factions : ${n}`:`Disponible le ${frDate(CARDS[id].rel.slice(5))} · ${n}`;
+}
 function journalHTML(){
   /* une ligne par ultra-légendaire de faction, dans l'ordre des seuils (50, puis 150) ; la seconde n'apparaît qu'à sa date d'annonce */
   const rows=Object.entries(FAC).flatMap(([k,F])=>{ const us=ULS.filter(x=>x.quest&&x.quest.k===k).sort((a,b)=>a.quest.n-b.quest.n), out=[];
     const first=us[0], rowOf=(u,label)=>{ const n=u?u.quest.n:50, v=Math.min(fjGet(k),n), known=!!u&&SHOWN(u.id);
-      const goal=known?(P.owned.includes(u.id)?`${CARDS[u.id].name} · obtenue`:`Récompense : ${CARDS[u.id].name}`):"Récompense : une ultra-légendaire, bientôt";
+      const goal=known?ulGoal(u):"Récompense : une ultra-légendaire, bientôt";
       return `<div class="fjrow"><div class="fjtop"><b style="color:${F.c}">${label}</b><span>${known?`${v}/${n}`:`${fjGet(k)} partie${fjGet(k)>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${Math.round(v/n*100)}%;background:${F.c}"></i></div><small>${goal}</small></div>`; };
     out.push(rowOf(first,F.n));
     for(const u of us.slice(1)) if(SHOWN(u.id)) out.push(rowOf(u,`${F.n} · seconde ultra-légendaire`));
@@ -332,7 +361,7 @@ function journalHTML(){
   for(const q of [{u:"ananke_r",k:"anankenoel",w:NOEL_Q,label:"Noël · avec Ananké",col:"#9fb4ff"},{u:"nike_v",k:"nikev",w:VALENTIN,label:"Saint-Valentin · avec Nike",col:"#f2a7c8"},{u:"ananke_v",k:"anankev",w:VALENTIN,label:"Saint-Valentin · avec Ananké",col:"#f2a7c8"}]){
     const nv=ULof(q.u), nvKnown=!!nv&&SHOWN(nv.id);
     if(nv&&(nvKnown||inWin(q.w))){ const v=Math.min(fjGet(q.k),nv.quest.n), g=fjGet(q.k);
-      rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:${q.col}">${q.label}</b><span>${nvKnown?`${v}/${nv.quest.n}`:`${g} partie${g>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${nvKnown?Math.round(v/nv.quest.n*100):0}%;background:${q.col}"></i></div><small>${nvKnown?(P.owned.includes(nv.id)?`${CARDS[nv.id].name} · obtenue`:`Récompense : ${CARDS[nv.id].name}`):"Récompense : une ultra-légendaire, bientôt"}</small></div>`); } }
+      rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:${q.col}">${q.label}</b><span>${nvKnown?`${v}/${nv.quest.n}`:`${g} partie${g>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${nvKnown?Math.round(v/nv.quest.n*100):0}%;background:${q.col}"></i></div><small>${nvKnown?ulGoal(nv):"Récompense : une ultra-légendaire, bientôt"}</small></div>`); } }
   return `<section class="sec journal"><h2>Journal des factions</h2><p class="hint">Une partie compte quand ton deck contient au moins 8 cartes d'une faction (IA, Blitz et duels).</p>${rows.join("")}</section>`;
 }
 function profileHTML(){
@@ -365,6 +394,49 @@ function profileHTML(){
       <div class="hint">Ces chiffres comptent les parties classées de la saison.<br>Depuis le début : ${played?`${P.w} V · ${P.l} D · ${P.d} É`:"aucune partie"} · Duels entre amis : ${P.dw} V · ${P.dl} D · ${P.dd} É · Collection : ${P.owned.length}/${avail().length} cartes.</div>
     </section>
     ${journalHTML()}<section class="sec"><button class="toggle" data-act="go" data-to="hist">Historique complet des matchs →</button></section>`;
+}
+
+/* --- Decks prêts : archétypes préconstruits (PRECONS, js/cartes.js) --- */
+let precOpen=false, precPick=null;
+const precOwned=id=>!!CARDS[id]&&REL(id)&&P.owned.includes(id);
+const precClash=(deck,id)=>deck.some(x=>x!==id&&charOf(x)===charOf(id)&&!(["yarden","yarden_d"].includes(x)&&["yarden","yarden_d"].includes(id)));
+const precCount=pc=>pc.cards.filter(precOwned).length;
+/* Construit le deck d'un archétype avec ce que le joueur possède : une carte absente est remplacée par la carte possédée la plus proche
+   (même faction d'abord, puis coût et puissance les plus proches), sans jamais casser une règle de deck (une version par personnage, aucune ultra-légendaire). */
+function precBuild(pc){
+  const deck=[], miss=[], rep=[];
+  for(const id of pc.cards){ if(precOwned(id)&&!precClash(deck,id)) deck.push(id); else miss.push(id); }
+  for(const id of miss){
+    const d=CARDS[id];
+    const cand=P.owned.filter(x=>CARDS[x]&&REL(x)&&!CARDS[x].token&&!ULof(x)&&!deck.includes(x)&&!precClash(deck,x))
+      .sort((a,b)=>((CARDS[a].fac===d.fac?0:1)-(CARDS[b].fac===d.fac?0:1))||Math.abs(CARDS[a].cost-d.cost)-Math.abs(CARDS[b].cost-d.cost)||Math.abs(CARDS[a].pow-d.pow)-Math.abs(CARDS[b].pow-d.pow)||(a<b?-1:1));
+    if(cand.length){ deck.push(cand[0]); rep.push([id,cand[0]]); }
+  }
+  return {deck:deck.slice(0,ECO.deckSize), rep, short:Math.max(0,ECO.deckSize-deck.length)};
+}
+function precLoad(id){
+  const pc=PRECONS.find(p=>p.id===id); if(!pc) return;
+  const r=precBuild(pc); P.deck=r.deck; deckRename=false;
+  deckMsg=`Deck « ${pc.name} » chargé`+(r.rep.length?` : ${r.rep.length} carte${r.rep.length>1?"s":""} remplacée${r.rep.length>1?"s":""} par ${r.rep.length>1?"des cartes que tu possèdes":"une carte que tu possèdes"}.`:" : toutes les cartes sont à toi.")+(r.short?` Il manque encore ${r.short} carte${r.short>1?"s":""}.`:"");
+  precOpen=false; precPick=null; save(); sfx("legend"); render(); if(P.deck.length>=ECO.deckSize) preloadDeck();
+}
+function precHTML(){
+  if(screen!=="deck"){ precOpen=false; precPick=null; }
+  if(!precOpen) return "";
+  const pk=precPick&&PRECONS.find(p=>p.id===precPick);
+  if(pk) return `<div class="veil" data-act="precclose"><div class="result precpanel" role="alertdialog" aria-label="Remplacer ton deck ?">
+    <h2>Remplacer ton deck ?</h2>
+    <p>Ton deck « ${esc(P.decks[P.di].name)} » (${P.deck.length} / ${ECO.deckSize}) sera remplacé par « ${esc(pk.name)} ».</p>
+    <div class="row2"><button class="ghost" data-act="precback">Annuler</button><button class="primary" data-act="precgo" data-id="${pk.id}">Charger</button></div></div></div>`;
+  return `<div class="veil" data-act="precclose"><div class="result precpanel" role="dialog" aria-label="Decks prêts">
+    <h2>Decks prêts</h2><p class="hint">Choisis un style de jeu : ton deck se remplit d'un geste. Les cartes qui te manquent sont remplacées par les plus proches de ta collection.</p>
+    <div class="preclist">${PRECONS.map(p=>{ const n=precCount(p);
+      return `<button class="precrow" data-act="precpick" data-id="${p.id}" style="--cc:${FAC[p.fac].c}" aria-label="${esc(p.name)}">
+        <span class="prectop"><span class="precfac">${FAC[p.fac].n}</span><b>${esc(p.name)}</b></span>
+        <span class="precfx">${esc(p.how)}</span>
+        <span class="precav">${p.cards.map(c=>`<span class="pm ${precOwned(c)?"":"miss"}">${art(c,true)}</span>`).join("")}</span>
+        <span class="precown ${n===p.cards.length?"all":""}">Tu possèdes ${n} / ${p.cards.length} cartes</span></button>`; }).join("")}</div>
+    <button class="ghost" data-act="precclose">Fermer</button></div></div>`;
 }
 
 /* --- deck --- */
@@ -430,17 +502,19 @@ function deckHTML(){
   const avg=P.deck.length?(P.deck.reduce((a,id)=>a+CARDS[id].cost,0)/P.deck.length).toFixed(1):"–";
   const full=P.deck.length>=ECO.deckSize;
   const facCount=Object.keys(FAC).map(k=>[k,P.deck.filter(id=>CARDS[id].fac===k).length]).filter(x=>x[1]);
-  const D=P.decks[P.di];
+  const D=P.decks[P.di]; const precMsg=deckMsg.startsWith("Deck « ");
   return `
   <section class="sec decksec">
     <div class="decktabs">${P.decks.map((d,i)=>`<button class="decktab ${i===P.di?"on":""}" data-act="deckpick" data-i="${i}" style="background-image:linear-gradient(180deg,rgba(8,12,20,.05),rgba(8,12,20,.9) 75%),url('images/decks/${d.cover}.webp');${d.cover==="primordial"?"background-size:130% auto;background-position:center 85%":""}" aria-pressed="${i===P.di}"><span class="dn">${esc(d.name)}</span><span class="dc">${(i===P.di?P.deck:d.cards).length}/12${i===P.di?" · actif":""}</span></button>`).join("")}</div>
     <div class="deckedit">${deckRename?`<form class="namerow" id="deckform"><input id="deck-input" maxlength="20" value="${esc(D.name)}" aria-label="Nom du deck" autocomplete="off"><button class="primary small" type="submit">OK</button></form>`:`<button class="ghost small" data-act="deckrename">Renommer</button>`}<button class="ghost small" data-act="deckcover">Changer l'illustration</button></div>
+    <button class="ghost precbtn" data-act="precopen" aria-haspopup="dialog"><span class="pbt"><span aria-hidden="true">✦ </span>Decks prêts</span><small>Charge un style de jeu d'un seul geste</small></button>
+    ${precMsg?`<p class="precnote" role="status">${deckMsg}</p>`:""}
   </section>
   <section class="sec">
     <div class="deckhead"><h2>${esc(D.name)}</h2><span class="count ${full?"ok":""}">${P.deck.length} / 12</span></div>
     <p>Touche une carte pour la lire en grand, puis ajoute-la ou retire-la. Une seule copie par carte. Coût moyen : ${avg}${facCount.length?` · ${facCount.map(([k,n])=>`<span style="color:${FAC[k].c}">${FAC[k].n} ${n}</span>`).join(" · ")}`:""}.</p>
     <div class="strip">${slots.join("")}</div>
-    ${deckMsg?`<p style="color:var(--warm);margin-top:8px">${deckMsg}</p>`:""}
+    ${deckMsg&&!precMsg?`<p style="color:var(--warm);margin-top:8px">${deckMsg}</p>`:""}
   </section>
   <section class="sec">
     <h2>Toutes les cartes · ${P.owned.length}/${avail().length}</h2>
@@ -500,12 +574,15 @@ function fanGridHTML(){
 function fanPickHTML(){
   if(!fanPick) return "";
   const chip=(k,n,col)=>`<button class="chipbtn" aria-pressed="${fanFac===k}" data-act="fanfac" data-f="${k}" ${col?`style="--cc:${col}"`:""}>${n}</button>`;
-  return `<div class="veil"><div class="result avpanel" role="dialog" aria-label="Cartes affichées">
+  /* le pied (compteur et boutons) reste toujours visible : seul le corps défile */
+  return `<div class="veil"><div class="result avpanel fanpanel" role="dialog" aria-label="Cartes affichées">
+    <div class="fanbody">
     <h2>Ta vitrine</h2><p class="hint">Choisis les 3 cartes affichées sur l'accueil · ${fanPick.length}/3. La première choisie passe au centre.</p>
     <div class="fanbar"><input id="fan-search" type="search" value="${esc(fanQ)}" placeholder="Rechercher : nom, effet, mot-clé…" aria-label="Rechercher une carte" autocomplete="off" enterkeyhint="search">
       <div class="chips">${chip("all","Toutes")}${Object.entries(FAC).map(([k,v])=>chip(k,v.n,v.c)).join("")}</div></div>
     <div class="fangrid" id="fangrid">${fanGridHTML()}</div>
-    <div class="row2"><button class="ghost" data-act="fanclose">Annuler</button><button class="primary" data-act="fansave" ${fanPick.length===3?"":"disabled"}>Valider</button></div>
+    </div>
+    <div class="fanfoot"><span class="fancount" aria-live="polite">${fanPick.length}/3</span><button class="ghost" data-act="fanclose">Annuler</button><button class="primary" data-act="fansave" ${fanPick.length===3?"":"disabled"}>Valider</button></div>
   </div></div>`;
 }
 
@@ -520,14 +597,23 @@ function zoomHTML(){
 }
 
 /* --- avatars --- */
+/* Recherche d'avatar : le nom de la carte (sans accents ni majuscules, dans la langue affichée). Les portraits verrouillés ont un nom caché (« ? »), donc on ne cherche que dans les cartes possédées : une recherche ne révèle pas les noms cachés. */
+let avQ="", avTimer=null;
+function avGridHTML(){
+  const all=avail().sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].name.localeCompare(CARDS[b].name));
+  const w=normQ(avQ).split(/\s+/).filter(Boolean);
+  const ids=w.length? all.filter(id=>P.owned.includes(id)&&w.every(x=>normQ(CARDS[id].name).includes(x))) : all;
+  if(!ids.length) return `<p class="hint avnone">Aucun résultat</p>`;
+  return ids.map(id=>{ const own=P.owned.includes(id);
+      return `<button class="avopt ${P.avatar===id?"on":""}" ${own?`data-act="avset" data-id="${id}"`:"disabled"} aria-label="${CARDS[id].name}${own?"":" (verrouillé)"}">
+        <span class="avatar md ${own?"":"locked"}" style="background-image:url('images/avatars/${id}.webp?v=8')"></span><span class="avn">${own?CARDS[id].name:"?"}</span></button>`; }).join("");
+}
 function avPickHTML(){
   if(!avPick) return "";
-  const ids=avail().sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].name.localeCompare(CARDS[b].name));
   return `<div class="veil" data-act="avclose"><div class="result avpanel" role="dialog" aria-label="Choisir un avatar">
     <h2>Avatar</h2><p class="hint">Chaque carte de ta collection débloque son portrait · ${P.owned.length}/${avail().length}</p>
-    <div class="avgrid">${ids.map(id=>{ const own=P.owned.includes(id);
-      return `<button class="avopt ${P.avatar===id?"on":""}" ${own?`data-act="avset" data-id="${id}"`:"disabled"} aria-label="${CARDS[id].name}${own?"":" (verrouillé)"}">
-        <span class="avatar md ${own?"":"locked"}" style="background-image:url('images/avatars/${id}.webp?v=7')"></span><span class="avn">${own?CARDS[id].name:"?"}</span></button>`; }).join("")}</div>
+    <div class="fanbar avbar"><input id="av-search" type="search" value="${esc(avQ)}" placeholder="Rechercher un nom de carte…" aria-label="Rechercher un avatar" autocomplete="off" enterkeyhint="search"></div>
+    <div class="avgrid" id="avgrid">${avGridHTML()}</div>
     <button class="ghost" data-act="avclose">Fermer</button></div></div>`;
 }
 
@@ -588,7 +674,7 @@ function finishTuto(){
 }
 
 /* --- collection --- */
-function lockedCard(id){ return `<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?(ULof(id).quest?`Journal des factions : ${Math.min(fjGet(ULof(id).quest.k),ULof(id).quest.n)}/${ULof(id).quest.n} parties`:`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`; }
+function lockedCard(id){ return `<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?(ULof(id)&&ULof(id).quest?ulLockLine(id):`Disponible le ${frDate(CARDS[id].rel.slice(5))}`):CARDS[id].r==="U"?(ULof(id).quest?ulLockLine(id):`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`; }
 function locsHTML(){ return `<section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
     <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
@@ -599,60 +685,61 @@ function codexHTML(){
     const have=ids.filter(id=>P.owned.includes(id)).length;
     return `<section class="sec"><h2 style="color:${F.c}">${F.n} · ${have}/${ids.length}</h2>
       <p class="hint">Touche une carte pour l'agrandir.</p>
-      <div class="grid">${gridArt(()=>ids.map(id=>P.owned.includes(id)?`<button class="zoombtn" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button>`:`<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?(ULof(id).quest?`Journal des factions : ${Math.min(fjGet(ULof(id).quest.k),ULof(id).quest.n)}/${ULof(id).quest.n} parties`:`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`).join(""))}</div></section>`; }).join("")}
+      <div class="grid">${gridArt(()=>ids.map(id=>P.owned.includes(id)?`<button class="zoombtn" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button>`:`<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?(ULof(id)&&ULof(id).quest?ulLockLine(id):`Disponible le ${frDate(CARDS[id].rel.slice(5))}`):CARDS[id].r==="U"?(ULof(id).quest?ulLockLine(id):`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`).join(""))}</div></section>`; }).join("")}
   <section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
     <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
   </section>`;
 }
+/* Aide (écran « ? ») : rubriques repliables, une seule ouverte à la fois (<details name="aide"> : exclusivité native, sans script). La rubrique ouverte survit aux redessins (aideOpen, mis à jour par l'événement « toggle »). */
+let aideOpen="bases";
+document.addEventListener("toggle",e=>{ const d=e.target; if(d&&d.classList&&d.classList.contains("acc")&&d.dataset.k){ if(d.open) aideOpen=d.dataset.k; else if(aideOpen===d.dataset.k) aideOpen=""; } },true);
 function rulesHTML(){
+  const acc=(k,t,body)=>`<details class="acc" name="aide" data-k="${k}"${aideOpen===k?" open":""}><summary>${t}</summary><div class="accb">${body}</div></details>`;
   return `
-  <section class="sec"><h2>Comment jouer</h2>
-    <p>Le tutoriel complet est disponible à tout moment.</p>
+  <p class="provis"><b>Design provisoire</b> : les illustrations et le design des cartes sont provisoires et ne représentent pas le rendu final du jeu.</p>
+  <div class="accs">
+  ${acc("bases","Les bases",`<p>Le tutoriel complet est disponible à tout moment.</p>
     <button class="ghost" data-act="tuto">Revoir le tutoriel</button>
-  </section>
-  <section class="sec"><h2>Règles</h2>
     <ol class="rules">
-      <li>6 tours. Au tour N, tu as N énergie, qui ne se cumule pas d'un tour à l'autre (sauf effet de carte). Tu pioches 1 carte par tour (main de 7 maximum).</li>
-      <li>Tu poses tes cartes, l'adversaire pose les siennes face cachée. Tout est révélé en fin de tour, lieu par lieu : dans chaque lieu, le joueur qui mène révèle ses cartes en premier. En cas d'égalité, tes cartes d'abord (en duel, celles de l'hôte).</li>
-      <li>4 cartes maximum par joueur et par lieu.</li>
-      <li>Au tour 1, avant de poser une carte, tu peux <b>changer ta main</b> une fois : tes cartes repartent dans le deck, qui est mélangé, et tu en pioches autant. Pas en duel entre amis.</li>
-      <li>« Révélation » se déclenche une fois quand la carte se retourne. « Continu » agit tant que la carte est en jeu et n'a pas perdu ses effets. Une carte qui perd ses effets garde ce que sa Révélation lui a déjà donné.</li>
-      <li>« En jeu » veut dire révélée sur le plateau, de n'importe quel côté.</li>
-            <li>À la fin du tour 6, remporte 2 lieux sur 3. En cas d'égalité, la puissance totale départage.</li>
-    </ol>
-  </section>
-  <section class="sec"><h2>Vocabulaire</h2>
-    <ol class="rules">
-      <li><b>Détruire</b> : la carte quitte le plateau. Eir et Ame-no-Uzume l'empêchent, sauf si l'effet dit « rien ne la protège » : là, aucune protection ne tient.</li>
-      <li><b>Défausser</b> : la carte quitte ta main sans être jouée.</li>
-      <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
-      <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
-      <li><b>Perdre ses effets</b> : la carte garde sa puissance et les bonus déjà gagnés, mais ses effets Continu et de fin de tour ne s'appliquent plus.</li>
-      <li><b>Les fusions sortent des paquets.</b> 1 % par paquet à 100 CHF, 2 % à 200 CHF, 4 % à 300 CHF (garantie à la 10e ouverture), 5 % pour les paquets d'édition. Aucune fusion ne se gagne plus en réunissant ses cartes.</li>
-      <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, se gagne dans le Journal des factions (50 parties jouées avec 8 cartes de sa faction) et exige 8 cartes de sa faction dans le deck.</li>
-      <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
-      <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
-      <li><b>Ressusciter</b> : une carte défaussée ou détruite revient sur le plateau, révélée, à sa puissance de base, sans déclencher sa Révélation (sauf mention contraire).</li>
-      <li><b>Charmer</b> : la carte reste du côté adverse, mais sa puissance compte pour toi.</li>
-      <li><b>De ton côté</b> : uniquement tes cartes révélées. <b>En jeu</b> : n'importe quelle carte révélée, des deux côtés.</li>
-      <li>Sur le plateau, le petit chiffre vert ou rouge indique l'écart avec la puissance de base. Appui long pour voir le détail.</li>
-    </ol>
-  </section>
-  <section class="sec"><h2>Rangs et saisons</h2>
-    <ol class="rules">
-      <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I), sauf Héraut et Avatar qui en ont cinq (V à I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(START[i],"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
-      <li>Victoire : +1 étoile, +2 à partir de 2 victoires d'affilée (jusqu'à Héraut). Défaite : −1 étoile, sauf en Passant et Initié où elle ne coûte rien. Égalité : rien ne bouge.</li>
-      <li><b>Le Serment</b> : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé (partie classée, Blitz, duel entre amis ; sans enjeu dans la partie guidée). En partie classée, si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
-      <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.</li>
-      <li><b>Serment en duel et au Blitz</b> : pas d'étoiles, des CHF (valeurs provisoires). Lieu et partie gagnés : +${OATH_CHF.duel.kept} CHF en duel, +${OATH_CHF.blitz.kept} CHF sur ton gain au Blitz. Lieu perdu : −${OATH_CHF.duel.broken} CHF en duel, −${OATH_CHF.blitz.broken} CHF au Blitz, jamais sous 0. Serment croisé : ${OATH_CHF.duel.crossKept} CHF en duel, ${OATH_CHF.blitz.crossKept} CHF au Blitz (perdu : −${OATH_CHF.duel.crossBroken} et −${OATH_CHF.blitz.crossBroken}). En duel, ton Serment reste caché à l'adversaire pendant le tour : il est révélé à la fin du tour, en même temps que les cartes, et tu peux relever le sien au tour suivant.</li>
-      <li>Le début de chaque palier est un plancher : on ne redescend jamais sous un palier atteint pendant la saison.</li>
-      <li>Plus ton rang est haut, plus l'adversaire construit un deck solide et joue bien. Il n'utilise jamais une rareté que tu n'as pas encore trouvée.</li>
-      <li>Chaque mois, nouvelle saison : tu redescends de 3 paliers (une Divinité repart en Élu) et tu reçois 25 CHF par palier atteint (175 CHF pour la Divinité).</li>
-    </ol>
-  </section>`;
+        <li>6 tours. Au tour N, tu as N énergie, qui ne se cumule pas d'un tour à l'autre (sauf effet de carte). Tu pioches 1 carte par tour (main de 7 maximum).</li>
+        <li>Tu poses tes cartes, l'adversaire pose les siennes face cachée. Tout est révélé en fin de tour, lieu par lieu : dans chaque lieu, le joueur qui mène révèle ses cartes en premier. En cas d'égalité, tes cartes d'abord (en duel, celles de l'hôte).</li>
+        <li>4 cartes maximum par joueur et par lieu.</li>
+        <li>Au tour 1, avant de poser une carte, tu peux <b>changer ta main</b> une fois : tes cartes repartent dans le deck, qui est mélangé, et tu en pioches autant. Pas en duel entre amis.</li>
+        <li>À la fin du tour 6, remporte 2 lieux sur 3. En cas d'égalité, la puissance totale départage.</li>
+        <li>Sur le plateau, le petit chiffre vert ou rouge indique l'écart avec la puissance de base. Appui long pour voir le détail.</li>
+      </ol>`)}
+  ${acc("effets","Les effets et le vocabulaire",`<ol class="rules">
+        <li>« Révélation » se déclenche une fois quand la carte se retourne. « Continu » agit tant que la carte est en jeu et n'a pas perdu ses effets. Une carte qui perd ses effets garde ce que sa Révélation lui a déjà donné.</li>
+        <li><b>De ton côté</b> : uniquement tes cartes révélées. <b>En jeu</b> : n'importe quelle carte révélée, des deux côtés.</li>
+        <li><b>Détruire</b> : la carte quitte le plateau. Eir et Ame-no-Uzume l'empêchent, sauf si l'effet dit « rien ne la protège » : là, aucune protection ne tient.</li>
+        <li><b>Défausser</b> : la carte quitte ta main sans être jouée.</li>
+        <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
+        <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
+        <li><b>Perdre ses effets</b> : la carte garde sa puissance et les bonus déjà gagnés, mais ses effets Continu et de fin de tour ne s'appliquent plus.</li>
+        <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
+        <li><b>Ressusciter</b> : une carte défaussée ou détruite revient sur le plateau, révélée, à sa puissance de base, sans déclencher sa Révélation (sauf mention contraire).</li>
+        <li><b>Charmer</b> : la carte reste du côté adverse, mais sa puissance compte pour toi.</li>
+      </ol>`)}
+  ${acc("serment","Le Serment",`<ol class="rules">
+        <li><b>Le Serment</b> : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé (partie classée, Blitz, duel entre amis ; sans enjeu dans la partie guidée). En partie classée, si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
+        <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.</li>
+        <li><b>Serment en duel et au Blitz</b> : pas d'étoiles, des CHF (valeurs provisoires). Lieu et partie gagnés : +${OATH_CHF.duel.kept} CHF en duel, +${OATH_CHF.blitz.kept} CHF sur ton gain au Blitz. Lieu perdu : −${OATH_CHF.duel.broken} CHF en duel, −${OATH_CHF.blitz.broken} CHF au Blitz, jamais sous 0. Serment croisé : ${OATH_CHF.duel.crossKept} CHF en duel, ${OATH_CHF.blitz.crossKept} CHF au Blitz (perdu : −${OATH_CHF.duel.crossBroken} et −${OATH_CHF.blitz.crossBroken}). En duel, ton Serment reste caché à l'adversaire pendant le tour : il est révélé à la fin du tour, en même temps que les cartes, et tu peux relever le sien au tour suivant.</li>
+      </ol>`)}
+  ${acc("decks","Decks, ultra-légendaires et fusions",`<ol class="rules">
+        <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
+        <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, se gagne dans le Journal des factions (50 parties jouées avec 8 cartes de sa faction) et exige 8 cartes de sa faction dans le deck.</li>
+        <li><b>Les fusions sortent des paquets.</b> 1 % par paquet à 100 CHF, 2 % à 200 CHF, 4 % à 300 CHF (garantie à la 10e ouverture), 5 % pour les paquets d'édition. Aucune fusion ne se gagne plus en réunissant ses cartes.</li>
+      </ol>`)}
+  ${acc("rangs","Rangs et saisons",`<ol class="rules">
+        <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I), sauf Héraut et Avatar qui en ont cinq (V à I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(START[i],"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
+        <li>Victoire : +1 étoile, +2 à partir de 2 victoires d'affilée (jusqu'à Héraut). Défaite : −1 étoile, sauf en Passant et Initié où elle ne coûte rien. Égalité : rien ne bouge.</li>
+        <li>Le début de chaque palier est un plancher : on ne redescend jamais sous un palier atteint pendant la saison.</li>
+        <li>Plus ton rang est haut, plus l'adversaire construit un deck solide et joue bien. Il n'utilise jamais une rareté que tu n'as pas encore trouvée.</li>
+        <li>Chaque mois, nouvelle saison : tu redescends de 3 paliers (une Divinité repart en Élu) et tu reçois 25 CHF par palier atteint (175 CHF pour la Divinité).</li>
+      </ol>`)}
+  </div>`;
 }
-
 /* --- partie --- */
 function deltaBadge(v){ return v?`<span class="dlt ${v>0?"up":"down"}">${v>0?"+":"−"}${Math.abs(v)}</span>`:""; }
 function mini(s,li,c,staged){
@@ -803,7 +890,7 @@ function resultHTML(){
     ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
     ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
-    <div class="rows sc3"><div class="row rh" aria-hidden="true"><span>Lieu</span><span class="c me">Toi</span><span class="c foe"${o.mp?` title="${esc(S.mp.oppNick)}"`:""}>${o.mp?esc(S.mp.oppNick):"IA"}</span></div>${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span class="c me${r.w==="p"?" w":""}">${r.a}</span><span class="c foe${r.w==="e"?" w":""}">${r.b}</span></div>`).join("")}</div>
+    <div class="rows sc3"><div class="row rh" aria-hidden="true"><span>Lieu</span><span class="c me">Toi</span><span class="c foe"${o.mp?` title="${esc(S.mp.oppNick)}"`:""}>${o.mp?esc(S.mp.oppNick):esc(foeName())}</span></div>${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span class="c me${r.w==="p"?" w":""}">${r.a}</span><span class="c foe${r.w==="e"?" w":""}">${r.b}</span></div>`).join("")}</div>
     ${bilanHTML(o)}
     ${fbHTML(o)}
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
@@ -846,8 +933,9 @@ function gameHTML(){
   </div>
   ${S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
   <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${swimBtn()}${pilesHTML()}</div>
-  ${aiOathBar()}${myOathBar()}
-  ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
+  ${S.rival&&!S.aiOathSay&&!S.mp&&!S.tut&&!S.rp&&rivalOf(S.rival.id)?`<div class="mpbar foebar">${rivalAv(rivalOf(S.rival.id),"sm")}<span>Contre <b>${esc(foeName())}</b> · <span>${esc(TIERS[S.aiTier])}</span></span></div>`:""}
+  ${aiOathBar()}${myOathBar()}${oathCerHTML()}
+  ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
   ${logHTML()}
@@ -910,7 +998,7 @@ function render(){
   /* effet holo du zoom : détaché pendant le redessin puis remis dans le nouveau conteneur ; détruit si le zoom est fermé ou change de carte */
   const bigId=bigCardId(), holoKeep=zoomHolo&&zoomHolo.id===bigId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
   holoTilesDetach();
-  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
+  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+precHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
   holoTilesAttach(app);
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
   else if(screen==="home") holoPrefetch(fanIds()); /* accueil : les cartes holo de la vitrine (celle du centre et celles qui viennent de tourner) */
@@ -942,6 +1030,9 @@ document.addEventListener("pointerdown", ()=>{ if(!bgmArmed){ bgmArmed=true; mus
 let searchTimer=0;
 document.addEventListener("input", e=>{ const t=e.target; if(!t||t.id!=="fan-search") return; fanQ=t.value; clearTimeout(fanTimer);
   fanTimer=setTimeout(()=>{ const g=document.getElementById("fangrid"); if(g){ g.innerHTML=fanGridHTML(); translateDOM(g); } },140); });
+/* Recherche d'avatar : seule la grille est redessinée (le champ garde le focus et le curseur) */
+document.addEventListener("input", e=>{ const t=e.target; if(!t||t.id!=="av-search") return; avQ=t.value; clearTimeout(avTimer);
+  avTimer=setTimeout(()=>{ const g=document.getElementById("avgrid"); if(g){ g.innerHTML=avGridHTML(); translateDOM(g); } },140); });
 document.addEventListener("input", e=>{ const t=e.target; if(!t||t.id!=="coll-search") return; searchQ=t.value; clearTimeout(searchTimer);
   searchTimer=setTimeout(()=>{ const g=document.getElementById("collgrid"), i=document.getElementById("collinfo"); if(g){ g.innerHTML=collGridHTML(); translateDOM(g); } if(i){ i.innerHTML=collInfoHTML(); translateDOM(i); } },140); });
 document.addEventListener("input", e=>{ const k=e.target&&e.target.dataset&&e.target.dataset.vol; if(!k) return; P[k]=Math.max(0,Math.min(100,+e.target.value||0));
@@ -1098,8 +1189,8 @@ document.addEventListener("click", e=>{
     case "rpnext": if(S&&S.rp&&!S.busy) rpStep().then(()=>{ render(); }); return;
     case "rpauto": if(S&&S.rp){ S.rp.auto=!S.rp.auto; sfx("click"); render(); if(S.rp.auto) rpAuto(); } return;
     case "rpquit": S=null; screen="hist"; sfx("click"); render(); window.scrollTo(0,0); return;
-    case "play": sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
-    case "resume": screen="play"; sfx("click"); render(); return;
+    case "play": sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
+    case "resume": sheet=null; screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
     case "cancelname": editName=false; render(); return;
     case "music": P.music=!P.music; save(); render(); return;
@@ -1125,7 +1216,7 @@ document.addEventListener("click", e=>{
     case "zoom": zoomId=el.dataset.id; sfx("select"); render(); return;
     case "fantap": { const pos=+el.dataset.pos; if(pos===0){ zoomId=el.dataset.id; sfx("select"); render(); } else fanSlide(pos); return; }
     case "unzoom": if(el.classList.contains("veil")&&e.target.closest(".zoominfo")) return; zoomId=null; render(); return;
-    case "avpick": avPick=true; sfx("click"); render(); return;
+    case "avpick": avPick=true; avQ=""; sfx("click"); render(); return;
     case "avclose": if(el.classList.contains("veil")&&e.target.closest(".avpanel")) return; avPick=false; render(); return;
     case "avset": P.avatar=el.dataset.id; avPick=false; zoomId=null; save(); lbPublish(); sfx("buff"); render(); return;
     case "stallbuy": stallBuy(el.dataset.id); return;
@@ -1170,6 +1261,11 @@ document.addEventListener("click", e=>{
     case "frar": rarFilter=el.dataset.f==="all"?[]:togg(rarFilter,el.dataset.f); sfx("click"); render(); return;
     case "fown": ownFilter=el.dataset.f; sfx("click"); render(); return;
     case "freset": deckFilter=[]; costFilter=[]; rarFilter=[]; ownFilter="all"; searchQ=""; sfx("click"); render(); return;
+    case "precopen": precOpen=true; precPick=null; sfx("click"); render(); return;
+    case "precclose": if(el.classList.contains("veil")&&e.target.closest(".precpanel")) return; precOpen=false; precPick=null; sfx("click"); render(); return;
+    case "precpick": { const pc=PRECONS.find(p=>p.id===el.dataset.id); if(!pc) return; if(P.deck.length){ precPick=pc.id; sfx("click"); render(); } else precLoad(pc.id); return; }
+    case "precback": precPick=null; sfx("click"); render(); return;
+    case "precgo": precLoad(el.dataset.id); return;
     case "filtopen": filtOpen=true; sfx("click"); render(); return;
     case "filtclose": if(el.classList.contains("veil")&&e.target.closest(".filtpanel")) return; filtOpen=false; sfx("click"); render(); return;
     case "toggle": { const id=el.dataset.id;

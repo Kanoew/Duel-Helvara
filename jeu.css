@@ -14,6 +14,8 @@
   --primordial:#8f74dc;
   --desir:#d6ab5e;
   --jugement:#b9c3d2;
+  --sakura:#f4a7c0;   /* touche Yarden : rose Sakura (décor seulement, aucun sens de jeu) */
+  --tiamat:#7b4bd6;   /* touche Tiamat : violet profond, une teinte et non une figure (décor seulement) */
   --display:"Marcellus", "Cormorant Garamond", Georgia, serif;
   --sc:"Marcellus SC", "Marcellus", Georgia, serif;
   --body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -32,6 +34,7 @@ body{
 }
 button{font:inherit;color:inherit}
 button:focus-visible,label:focus-within,[data-act]:focus-visible{outline:2px solid var(--me);outline-offset:2px}
+summary:focus-visible{outline:2px solid var(--tiamat);outline-offset:2px}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(10,14,22,.55),rgba(10,14,22,.8)),url("images/fond.webp") center/cover no-repeat,var(--ink)}
 .wrap{position:relative;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 
@@ -435,6 +438,13 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .fanbar input{width:100%;box-sizing:border-box;background:rgba(17,24,39,.9);border:1px solid var(--line);border-radius:999px;padding:9px 14px;color:var(--frost);font:inherit;font-size:14px}
 .fanbar input:focus{outline:2px solid var(--warm);outline-offset:1px}
 .fangrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
+/* vitrine : le corps défile, le pied (compteur + Annuler / Valider) reste visible en bas du panneau */
+.result.fanpanel{padding:0;gap:0;overflow:hidden}
+.fanbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:22px;display:flex;flex-direction:column;gap:14px}
+.fanfoot{flex:none;display:flex;align-items:center;gap:8px;padding:12px 22px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--deep)}
+.fanfoot .ghost,.fanfoot .primary{flex:1 1 0;min-width:0}
+.fancount{font-family:var(--display);font-size:15px;color:var(--mist);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:2.6em;text-align:center}
+@media (max-width:420px){ .fanfoot{padding-inline:16px} }
 .fanopt{position:relative;background:none;border:0;padding:0;cursor:pointer;border-radius:8px}
 .fanopt .thumb{pointer-events:none}
 .fanopt.on .thumb{box-shadow:0 0 0 2px var(--warm)}
@@ -554,6 +564,25 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .decktab .dc{font-size:10.5px;color:var(--mist);letter-spacing:.04em}
 .deckedit{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
 .deckedit .namerow{flex:1 1 200px}
+/* Decks prêts : bouton du constructeur et panneau des archétypes */
+.precbtn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;margin-top:10px;padding:12px 14px;min-height:48px;text-align:left;border-color:var(--warm);color:var(--warm);font-weight:700}
+.precbtn small{font-size:12px;font-weight:400;color:var(--mist)}
+.precnote{margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(159,224,176,.1);border:1px solid rgba(159,224,176,.35);color:#9fe0b0;font-size:13.5px}
+.precpanel{max-height:calc(100dvh - 32px);overflow-y:auto;width:min(440px,100%);text-align:left}
+.precpanel h2,.precpanel>.hint,.precpanel>p{text-align:center}
+.preclist{display:flex;flex-direction:column;gap:10px}
+.precrow{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;background:var(--lake);border:1px solid var(--line);border-left:4px solid var(--cc,var(--line));border-radius:12px;padding:12px;color:var(--frost);cursor:pointer;font:inherit;min-height:48px}
+.precrow:active{transform:scale(.99)}
+.prectop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.prectop b{font-size:16px}
+.precfac{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--cc);border:1px solid var(--cc);border-radius:999px;padding:2px 8px}
+.precfx{font-size:13px;color:var(--mist);line-height:1.35}
+.precav{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px}
+.precav .pm{position:relative;aspect-ratio:1;border-radius:3px;overflow:hidden;display:block}
+.precav .pm .art{position:absolute;inset:0}
+.precav .pm.miss{opacity:.3;filter:grayscale(1)}
+.precown{font-size:12.5px;color:var(--mist)}
+.precown.all{color:#9fe0b0}
 .bzcard{border-color:rgba(236,138,60,.5)!important;background:linear-gradient(135deg,rgba(236,138,60,.16),rgba(17,24,39,.85) 60%)!important;margin-bottom:10px}
 .bzladder{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
 .bzstep{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:rgba(17,24,39,.78);display:flex;flex-direction:column;gap:2px}
@@ -563,6 +592,17 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .bzopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (min-width:700px){ .bzopts{grid-template-columns:repeat(4,minmax(0,1fr))} }
 .duelcard{width:100%;border-color:rgba(111,184,222,.45);background:linear-gradient(135deg,rgba(111,184,222,.14),rgba(17,24,39,.85) 60%)}
+/* Panneau « Jouer » (accueil) : Contre un rival mis en avant, Blitz verrouillé tant que le joueur n'a pas 10 parties */
+.modesheet{display:flex;flex-direction:column;gap:10px}
+.modesheet .qcard{padding:14px 16px}
+.modesheet .qcard .t{display:flex;align-items:center;gap:8px}
+.modesheet .qcard .m{font-size:13px}
+.modesheet .modemain{border-color:var(--warm);background:linear-gradient(135deg,rgba(219,168,98,.22),rgba(17,24,39,.85) 65%);box-shadow:0 0 0 1px rgba(219,168,98,.25)}
+.modesheet .modemain:disabled{opacity:.55;cursor:default}
+.modesheet .modelock{cursor:default;opacity:.7;border-style:dashed}
+.modesheet .modelock .ico{width:18px;height:18px;color:var(--warm)}
+.modemore{display:block;margin:8px auto 0}
+.modenotes{display:flex;flex-direction:column;gap:2px;margin:8px 0 10px}
 .mpbox{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 .mpcode{font-family:var(--display);font-size:34px;letter-spacing:.14em;color:var(--warm)}
 .mpjoin{display:flex;gap:8px;width:100%;flex-wrap:wrap}
@@ -585,6 +625,8 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .avbtn{position:relative;background:none;border:0;padding:0;cursor:pointer;border-radius:50%}
 .avedit{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);background:var(--deep);border:1px solid var(--line);border-radius:999px;font-size:10px;padding:1px 7px;color:var(--mist);white-space:nowrap}
 .avpanel{max-width:520px;max-height:88vh;overflow:auto}
+.avbar{position:static}
+.avnone{grid-column:1/-1;margin:12px 0}
 .avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:10px}
 .avopt{background:none;border:0;padding:4px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border-radius:10px;color:var(--frost)}
 .avopt:disabled{cursor:default}
@@ -959,7 +1001,7 @@ body:has(.sandbar) #app{padding-top:62px}
 /* Panneau de résultat : ne dépasse jamais l'écran (il défile en dernier recours), scores par camp, bilan */
 .result{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain}
 .result .rows.sc3{gap:0}
-.result .sc3 .row{display:grid;grid-template-columns:minmax(0,1fr) 3.4em 3.4em;gap:6px;align-items:center;padding-block:5px}
+.result .sc3 .row{display:grid;grid-template-columns:minmax(0,1fr) 52px 78px;gap:6px;align-items:center;padding-block:5px}
 .result .sc3 .row span:last-child{font-family:inherit}
 .result .sc3 .c{text-align:center;font-family:var(--display);font-size:16px;border-radius:8px;padding:1px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .result .sc3 .c.me{color:var(--me)}.result .sc3 .c.foe{color:var(--foe)}
@@ -1007,3 +1049,40 @@ body:has(.sandbar) #app{padding-top:62px}
 .noticeq .nbtn{min-height:34px;min-width:60px;padding:0 12px;border-radius:999px;border:1px solid rgba(219,168,98,.55);background:rgba(219,168,98,.12);color:var(--warm);font-size:13px;font-weight:600;cursor:pointer}
 .noticeq .nbtn:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
 .result .sc3 .rh{text-transform:none;letter-spacing:.02em}
+
+/* Touches Sakura (rose) et Tiamat (violet) : décor discret, hors couleurs de jeu (--me, --foe, factions, raretés). Aucune animation, aucun flou. */
+body:not(.inplay)::before{background:radial-gradient(90% 34% at 50% 0%,rgba(123,75,214,.17),transparent 72%),linear-gradient(180deg,rgba(10,14,22,.55),rgba(10,14,22,.8)),url("images/fond.webp") center/cover no-repeat,var(--ink)}
+body:not(.inplay) header.top{position:relative;padding-bottom:9px}
+body:not(.inplay) header.top::after{content:"";position:absolute;left:0;bottom:0;width:112px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--sakura),var(--tiamat) 72%,transparent)}
+.dock button[aria-current]{box-shadow:inset 0 2px 0 var(--sakura)}
+@media (min-width:900px){ .dock button[aria-current]{box-shadow:inset 3px 0 0 var(--sakura)} }
+button:focus-visible,label:focus-within,[data-act]:focus-visible{outline-color:var(--tiamat)}
+.loc.oath::before{background:radial-gradient(ellipse at 50% 108%,rgba(219,168,98,.42),transparent 70%),radial-gradient(ellipse at 50% -10%,rgba(123,75,214,.55),transparent 72%)}
+/* Aide : rubriques repliables */
+.provis{margin:0 0 10px;padding:9px 12px;border:1px solid rgba(123,75,214,.55);border-left-width:3px;border-radius:12px;background:linear-gradient(135deg,rgba(123,75,214,.16),rgba(17,24,39,.85) 70%);color:var(--frost);font-size:13px;max-width:62ch}
+.provis b{color:var(--sakura)}
+.accs{display:flex;flex-direction:column;gap:8px}
+.acc{border:1px solid var(--line);border-radius:14px;background:rgba(17,24,39,.78)}
+.acc>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:10px 14px;cursor:pointer;list-style:none;font-family:var(--sc);font-size:17px;letter-spacing:.05em;-webkit-tap-highlight-color:transparent}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--mist);border-bottom:2px solid var(--mist);transform:rotate(45deg) translateY(-2px)}
+.acc[open]{border-color:rgba(123,75,214,.6)}
+.acc[open]>summary{border-bottom:1px solid var(--line)}
+.acc[open]>summary::after{border-color:var(--sakura);transform:rotate(-135deg) translateY(-2px)}
+.accb{padding:12px 14px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0}
+.accb p{margin:0;color:var(--mist);max-width:62ch}
+.accb .rules{align-self:stretch;overflow-wrap:anywhere}
+/* Rivaux nommés : bandeau « Contre … », phrase du serment adverse, cérémonie du serment (portrait + nom + phrase) */
+.mpbar.foebar{background:rgba(154,140,208,.08);padding:4px 10px}
+.oathsay{display:flex;align-items:center;gap:10px;margin:8px 0 -2px;font-size:13px;color:var(--mist)}
+.oathsay i{color:var(--frost)}
+.oathsay b{color:var(--foe)}
+.oathcer{position:fixed;left:50%;top:40vh;transform:translateX(-50%);z-index:6;width:min(92vw,420px);box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(40,24,30,.96),rgba(14,20,34,.97) 70%);border:1px solid rgba(240,160,160,.6);box-shadow:0 8px 28px rgba(0,0,0,.6),0 0 18px rgba(240,160,160,.3);animation:oathcer 4.5s ease both}
+.oathcer.me{border-color:rgba(219,168,98,.7);background:linear-gradient(135deg,rgba(48,36,16,.96),rgba(14,20,34,.97) 70%);box-shadow:0 8px 28px rgba(0,0,0,.6),0 0 18px rgba(219,168,98,.35)}
+.oathcer .ocn{font-family:var(--sc);font-size:16px;color:var(--warm)}
+.oathcer.foe .ocn{color:#f0a8a8}
+.oathcer .ocl{font-size:12px;color:var(--mist)}
+.oathcer .ocq{margin-top:4px;font-size:14px;line-height:1.3;font-style:italic;color:#f1ece0}
+@keyframes oathcer{0%{opacity:0;transform:translate(-50%,-14px)}7%{opacity:1;transform:translate(-50%,0)}88%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-6px)}}
+@media (prefers-reduced-motion:reduce){ .oathcer{animation:none} }

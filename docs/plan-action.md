@@ -67,14 +67,14 @@ Les montants sont dans la constante `OATH_CHF`, en tête de `js/moteur.js`.
 
 ### Axe 2 : le solo et l'IA
 
-- [ ] Rivaux nommés à la place de « IA Jugement · Héraut » : portrait, deck signature, une phrase, une façon de jurer
+- [x] Rivaux nommés (Exodus, Clara, Timothée, Mira) : deck de faction, tempérament tiré à chaque partie (55 % le sien, 15 % chacun des autres), phrase et portrait à la cérémonie. **Portraits provisoires** (Set, Lilith, Anubis, Joanna) et probabilités de serment jamais mesurées en vraies parties
 - [ ] Un chemin à travers Lausanne : 10 à 15 duels à règles spéciales
 
-À fournir par Jordan : pour chaque rival, un nom, une faction, une phrase, et s'il jure vite ou s'il bluffe.
+À fournir par Jordan : les vrais portraits des quatre rivaux, d'autres phrases par tempérament, et son ressenti sur leur façon de jurer.
 
 ### Axe 3 : le multi sans joueurs
 
-- [ ] Abandonner la file d'attente en direct
+- [ ] Abandonner la file d'attente en direct (idée de Jordan du 16 novembre, reportée : 15 secondes de file si un joueur est détecté, sinon l'IA ; à revoir après un vrai duel sur le serveur)
 - [ ] Défi du jour : mêmes lieux, même adversaire, même tirage pour tous, comparaison entre amis (le replay repose déjà sur un tirage reproductible)
 - [ ] Decks fantômes : affronter le deck d'un ami piloté par l'IA, sans qu'il soit connecté
 - [ ] Une soirée de duels à heure fixe sur Discord
@@ -83,10 +83,14 @@ Attention : défi du jour et decks fantômes écrivent dans Supabase. Relecture 
 
 ### Axe 4 : la progression
 
+- [x] Decks prêts : sept archétypes chargeables d'un bouton dans le constructeur de deck (cartes manquantes remplacées par les plus proches)
 - [ ] Rattrapage : un deck de faction offert après 5 parties
 - [ ] Moins d'exclusives qui disparaissent en deux semaines, ou un retour garanti l'année suivante
+- [x] But des ultra-légendaires de faction visible (date de sortie et parties restantes, journal et collection)
 - [ ] Buts de collection visibles (« il te manque 3 cartes pour finir Jugement »)
-- [ ] Débloquer les modes petit à petit (noté depuis octobre, jamais fait)
+- [x] Blitz débloqué après 10 parties (cadenas et compte à rebours)
+- [x] Accueil : un seul bouton « Jouer » (rival, ami, Blitz)
+- [x] Aide « ? » rangée en rubriques, mention « design provisoire », touches Sakura et violette, bouton Valider fixe dans la vitrine, recherche d'avatar, 33 portraits recadrés
 
 ### Axe 5 : la gestion du projet
 
