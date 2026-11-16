@@ -367,6 +367,49 @@ function profileHTML(){
     ${journalHTML()}<section class="sec"><button class="toggle" data-act="go" data-to="hist">Historique complet des matchs →</button></section>`;
 }
 
+/* --- Decks prêts : archétypes préconstruits (PRECONS, js/cartes.js) --- */
+let precOpen=false, precPick=null;
+const precOwned=id=>!!CARDS[id]&&REL(id)&&P.owned.includes(id);
+const precClash=(deck,id)=>deck.some(x=>x!==id&&charOf(x)===charOf(id)&&!(["yarden","yarden_d"].includes(x)&&["yarden","yarden_d"].includes(id)));
+const precCount=pc=>pc.cards.filter(precOwned).length;
+/* Construit le deck d'un archétype avec ce que le joueur possède : une carte absente est remplacée par la carte possédée la plus proche
+   (même faction d'abord, puis coût et puissance les plus proches), sans jamais casser une règle de deck (une version par personnage, aucune ultra-légendaire). */
+function precBuild(pc){
+  const deck=[], miss=[], rep=[];
+  for(const id of pc.cards){ if(precOwned(id)&&!precClash(deck,id)) deck.push(id); else miss.push(id); }
+  for(const id of miss){
+    const d=CARDS[id];
+    const cand=P.owned.filter(x=>CARDS[x]&&REL(x)&&!CARDS[x].token&&!ULof(x)&&!deck.includes(x)&&!precClash(deck,x))
+      .sort((a,b)=>((CARDS[a].fac===d.fac?0:1)-(CARDS[b].fac===d.fac?0:1))||Math.abs(CARDS[a].cost-d.cost)-Math.abs(CARDS[b].cost-d.cost)||Math.abs(CARDS[a].pow-d.pow)-Math.abs(CARDS[b].pow-d.pow)||(a<b?-1:1));
+    if(cand.length){ deck.push(cand[0]); rep.push([id,cand[0]]); }
+  }
+  return {deck:deck.slice(0,ECO.deckSize), rep, short:Math.max(0,ECO.deckSize-deck.length)};
+}
+function precLoad(id){
+  const pc=PRECONS.find(p=>p.id===id); if(!pc) return;
+  const r=precBuild(pc); P.deck=r.deck; deckRename=false;
+  deckMsg=`Deck « ${pc.name} » chargé`+(r.rep.length?` : ${r.rep.length} carte${r.rep.length>1?"s":""} remplacée${r.rep.length>1?"s":""} par ${r.rep.length>1?"des cartes que tu possèdes":"une carte que tu possèdes"}.`:" : toutes les cartes sont à toi.")+(r.short?` Il manque encore ${r.short} carte${r.short>1?"s":""}.`:"");
+  precOpen=false; precPick=null; save(); sfx("legend"); render(); if(P.deck.length>=ECO.deckSize) preloadDeck();
+}
+function precHTML(){
+  if(screen!=="deck"){ precOpen=false; precPick=null; }
+  if(!precOpen) return "";
+  const pk=precPick&&PRECONS.find(p=>p.id===precPick);
+  if(pk) return `<div class="veil" data-act="precclose"><div class="result precpanel" role="alertdialog" aria-label="Remplacer ton deck ?">
+    <h2>Remplacer ton deck ?</h2>
+    <p>Ton deck « ${esc(P.decks[P.di].name)} » (${P.deck.length} / ${ECO.deckSize}) sera remplacé par « ${esc(pk.name)} ».</p>
+    <div class="row2"><button class="ghost" data-act="precback">Annuler</button><button class="primary" data-act="precgo" data-id="${pk.id}">Charger</button></div></div></div>`;
+  return `<div class="veil" data-act="precclose"><div class="result precpanel" role="dialog" aria-label="Decks prêts">
+    <h2>Decks prêts</h2><p class="hint">Choisis un style de jeu : ton deck se remplit d'un geste. Les cartes qui te manquent sont remplacées par les plus proches de ta collection.</p>
+    <div class="preclist">${PRECONS.map(p=>{ const n=precCount(p);
+      return `<button class="precrow" data-act="precpick" data-id="${p.id}" style="--cc:${FAC[p.fac].c}" aria-label="${esc(p.name)}">
+        <span class="prectop"><span class="precfac">${FAC[p.fac].n}</span><b>${esc(p.name)}</b></span>
+        <span class="precfx">${esc(p.how)}</span>
+        <span class="precav">${p.cards.map(c=>`<span class="pm ${precOwned(c)?"":"miss"}">${art(c,true)}</span>`).join("")}</span>
+        <span class="precown ${n===p.cards.length?"all":""}">Tu possèdes ${n} / ${p.cards.length} cartes</span></button>`; }).join("")}</div>
+    <button class="ghost" data-act="precclose">Fermer</button></div></div>`;
+}
+
 /* --- deck --- */
 /* Filtres de la collection : faction, coût, rareté et possession se combinent */
 const COST_KEYS=["0","1","2","3","4","5","6"], RAR_KEYS=["C","R","E","L","U"];
@@ -430,17 +473,19 @@ function deckHTML(){
   const avg=P.deck.length?(P.deck.reduce((a,id)=>a+CARDS[id].cost,0)/P.deck.length).toFixed(1):"–";
   const full=P.deck.length>=ECO.deckSize;
   const facCount=Object.keys(FAC).map(k=>[k,P.deck.filter(id=>CARDS[id].fac===k).length]).filter(x=>x[1]);
-  const D=P.decks[P.di];
+  const D=P.decks[P.di]; const precMsg=deckMsg.startsWith("Deck « ");
   return `
   <section class="sec decksec">
     <div class="decktabs">${P.decks.map((d,i)=>`<button class="decktab ${i===P.di?"on":""}" data-act="deckpick" data-i="${i}" style="background-image:linear-gradient(180deg,rgba(8,12,20,.05),rgba(8,12,20,.9) 75%),url('images/decks/${d.cover}.webp');${d.cover==="primordial"?"background-size:130% auto;background-position:center 85%":""}" aria-pressed="${i===P.di}"><span class="dn">${esc(d.name)}</span><span class="dc">${(i===P.di?P.deck:d.cards).length}/12${i===P.di?" · actif":""}</span></button>`).join("")}</div>
     <div class="deckedit">${deckRename?`<form class="namerow" id="deckform"><input id="deck-input" maxlength="20" value="${esc(D.name)}" aria-label="Nom du deck" autocomplete="off"><button class="primary small" type="submit">OK</button></form>`:`<button class="ghost small" data-act="deckrename">Renommer</button>`}<button class="ghost small" data-act="deckcover">Changer l'illustration</button></div>
+    <button class="ghost precbtn" data-act="precopen" aria-haspopup="dialog"><span class="pbt"><span aria-hidden="true">✦ </span>Decks prêts</span><small>Charge un style de jeu d'un seul geste</small></button>
+    ${precMsg?`<p class="precnote" role="status">${deckMsg}</p>`:""}
   </section>
   <section class="sec">
     <div class="deckhead"><h2>${esc(D.name)}</h2><span class="count ${full?"ok":""}">${P.deck.length} / 12</span></div>
     <p>Touche une carte pour la lire en grand, puis ajoute-la ou retire-la. Une seule copie par carte. Coût moyen : ${avg}${facCount.length?` · ${facCount.map(([k,n])=>`<span style="color:${FAC[k].c}">${FAC[k].n} ${n}</span>`).join(" · ")}`:""}.</p>
     <div class="strip">${slots.join("")}</div>
-    ${deckMsg?`<p style="color:var(--warm);margin-top:8px">${deckMsg}</p>`:""}
+    ${deckMsg&&!precMsg?`<p style="color:var(--warm);margin-top:8px">${deckMsg}</p>`:""}
   </section>
   <section class="sec">
     <h2>Toutes les cartes · ${P.owned.length}/${avail().length}</h2>
@@ -910,7 +955,7 @@ function render(){
   /* effet holo du zoom : détaché pendant le redessin puis remis dans le nouveau conteneur ; détruit si le zoom est fermé ou change de carte */
   const bigId=bigCardId(), holoKeep=zoomHolo&&zoomHolo.id===bigId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
   holoTilesDetach();
-  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
+  app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+precHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
   holoTilesAttach(app);
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
   else if(screen==="home") holoPrefetch(fanIds()); /* accueil : les cartes holo de la vitrine (celle du centre et celles qui viennent de tourner) */
@@ -1170,6 +1215,11 @@ document.addEventListener("click", e=>{
     case "frar": rarFilter=el.dataset.f==="all"?[]:togg(rarFilter,el.dataset.f); sfx("click"); render(); return;
     case "fown": ownFilter=el.dataset.f; sfx("click"); render(); return;
     case "freset": deckFilter=[]; costFilter=[]; rarFilter=[]; ownFilter="all"; searchQ=""; sfx("click"); render(); return;
+    case "precopen": precOpen=true; precPick=null; sfx("click"); render(); return;
+    case "precclose": if(el.classList.contains("veil")&&e.target.closest(".precpanel")) return; precOpen=false; precPick=null; sfx("click"); render(); return;
+    case "precpick": { const pc=PRECONS.find(p=>p.id===el.dataset.id); if(!pc) return; if(P.deck.length){ precPick=pc.id; sfx("click"); render(); } else precLoad(pc.id); return; }
+    case "precback": precPick=null; sfx("click"); render(); return;
+    case "precgo": precLoad(el.dataset.id); return;
     case "filtopen": filtOpen=true; sfx("click"); render(); return;
     case "filtclose": if(el.classList.contains("veil")&&e.target.closest(".filtpanel")) return; filtOpen=false; sfx("click"); render(); return;
     case "toggle": { const id=el.dataset.id;
