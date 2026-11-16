@@ -500,12 +500,15 @@ function fanGridHTML(){
 function fanPickHTML(){
   if(!fanPick) return "";
   const chip=(k,n,col)=>`<button class="chipbtn" aria-pressed="${fanFac===k}" data-act="fanfac" data-f="${k}" ${col?`style="--cc:${col}"`:""}>${n}</button>`;
-  return `<div class="veil"><div class="result avpanel" role="dialog" aria-label="Cartes affichées">
+  /* le pied (compteur et boutons) reste toujours visible : seul le corps défile */
+  return `<div class="veil"><div class="result avpanel fanpanel" role="dialog" aria-label="Cartes affichées">
+    <div class="fanbody">
     <h2>Ta vitrine</h2><p class="hint">Choisis les 3 cartes affichées sur l'accueil · ${fanPick.length}/3. La première choisie passe au centre.</p>
     <div class="fanbar"><input id="fan-search" type="search" value="${esc(fanQ)}" placeholder="Rechercher : nom, effet, mot-clé…" aria-label="Rechercher une carte" autocomplete="off" enterkeyhint="search">
       <div class="chips">${chip("all","Toutes")}${Object.entries(FAC).map(([k,v])=>chip(k,v.n,v.c)).join("")}</div></div>
     <div class="fangrid" id="fangrid">${fanGridHTML()}</div>
-    <div class="row2"><button class="ghost" data-act="fanclose">Annuler</button><button class="primary" data-act="fansave" ${fanPick.length===3?"":"disabled"}>Valider</button></div>
+    </div>
+    <div class="fanfoot"><span class="fancount" aria-live="polite">${fanPick.length}/3</span><button class="ghost" data-act="fanclose">Annuler</button><button class="primary" data-act="fansave" ${fanPick.length===3?"":"disabled"}>Valider</button></div>
   </div></div>`;
 }
 
@@ -520,14 +523,23 @@ function zoomHTML(){
 }
 
 /* --- avatars --- */
+/* Recherche d'avatar : le nom de la carte (sans accents ni majuscules, dans la langue affichée). Les portraits verrouillés ont un nom caché (« ? »), donc on ne cherche que dans les cartes possédées : une recherche ne révèle pas les noms cachés. */
+let avQ="", avTimer=null;
+function avGridHTML(){
+  const all=avail().sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].name.localeCompare(CARDS[b].name));
+  const w=normQ(avQ).split(/\s+/).filter(Boolean);
+  const ids=w.length? all.filter(id=>P.owned.includes(id)&&w.every(x=>normQ(CARDS[id].name).includes(x))) : all;
+  if(!ids.length) return `<p class="hint avnone">Aucun résultat</p>`;
+  return ids.map(id=>{ const own=P.owned.includes(id);
+      return `<button class="avopt ${P.avatar===id?"on":""}" ${own?`data-act="avset" data-id="${id}"`:"disabled"} aria-label="${CARDS[id].name}${own?"":" (verrouillé)"}">
+        <span class="avatar md ${own?"":"locked"}" style="background-image:url('images/avatars/${id}.webp?v=7')"></span><span class="avn">${own?CARDS[id].name:"?"}</span></button>`; }).join("");
+}
 function avPickHTML(){
   if(!avPick) return "";
-  const ids=avail().sort((a,b)=>(P.owned.includes(b)-P.owned.includes(a))||CARDS[a].name.localeCompare(CARDS[b].name));
   return `<div class="veil" data-act="avclose"><div class="result avpanel" role="dialog" aria-label="Choisir un avatar">
     <h2>Avatar</h2><p class="hint">Chaque carte de ta collection débloque son portrait · ${P.owned.length}/${avail().length}</p>
-    <div class="avgrid">${ids.map(id=>{ const own=P.owned.includes(id);
-      return `<button class="avopt ${P.avatar===id?"on":""}" ${own?`data-act="avset" data-id="${id}"`:"disabled"} aria-label="${CARDS[id].name}${own?"":" (verrouillé)"}">
-        <span class="avatar md ${own?"":"locked"}" style="background-image:url('images/avatars/${id}.webp?v=7')"></span><span class="avn">${own?CARDS[id].name:"?"}</span></button>`; }).join("")}</div>
+    <div class="fanbar avbar"><input id="av-search" type="search" value="${esc(avQ)}" placeholder="Rechercher un nom de carte…" aria-label="Rechercher un avatar" autocomplete="off" enterkeyhint="search"></div>
+    <div class="avgrid" id="avgrid">${avGridHTML()}</div>
     <button class="ghost" data-act="avclose">Fermer</button></div></div>`;
 }
 
@@ -942,6 +954,9 @@ document.addEventListener("pointerdown", ()=>{ if(!bgmArmed){ bgmArmed=true; mus
 let searchTimer=0;
 document.addEventListener("input", e=>{ const t=e.target; if(!t||t.id!=="fan-search") return; fanQ=t.value; clearTimeout(fanTimer);
   fanTimer=setTimeout(()=>{ const g=document.getElementById("fangrid"); if(g){ g.innerHTML=fanGridHTML(); translateDOM(g); } },140); });
+/* Recherche d'avatar : seule la grille est redessinée (le champ garde le focus et le curseur) */
+document.addEventListener("input", e=>{ const t=e.target; if(!t||t.id!=="av-search") return; avQ=t.value; clearTimeout(avTimer);
+  avTimer=setTimeout(()=>{ const g=document.getElementById("avgrid"); if(g){ g.innerHTML=avGridHTML(); translateDOM(g); } },140); });
 document.addEventListener("input", e=>{ const t=e.target; if(!t||t.id!=="coll-search") return; searchQ=t.value; clearTimeout(searchTimer);
   searchTimer=setTimeout(()=>{ const g=document.getElementById("collgrid"), i=document.getElementById("collinfo"); if(g){ g.innerHTML=collGridHTML(); translateDOM(g); } if(i){ i.innerHTML=collInfoHTML(); translateDOM(i); } },140); });
 document.addEventListener("input", e=>{ const k=e.target&&e.target.dataset&&e.target.dataset.vol; if(!k) return; P[k]=Math.max(0,Math.min(100,+e.target.value||0));
@@ -1125,7 +1140,7 @@ document.addEventListener("click", e=>{
     case "zoom": zoomId=el.dataset.id; sfx("select"); render(); return;
     case "fantap": { const pos=+el.dataset.pos; if(pos===0){ zoomId=el.dataset.id; sfx("select"); render(); } else fanSlide(pos); return; }
     case "unzoom": if(el.classList.contains("veil")&&e.target.closest(".zoominfo")) return; zoomId=null; render(); return;
-    case "avpick": avPick=true; sfx("click"); render(); return;
+    case "avpick": avPick=true; avQ=""; sfx("click"); render(); return;
     case "avclose": if(el.classList.contains("veil")&&e.target.closest(".avpanel")) return; avPick=false; render(); return;
     case "avset": P.avatar=el.dataset.id; avPick=false; zoomId=null; save(); lbPublish(); sfx("buff"); render(); return;
     case "stallbuy": stallBuy(el.dataset.id); return;

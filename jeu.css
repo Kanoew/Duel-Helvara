@@ -435,6 +435,13 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .fanbar input{width:100%;box-sizing:border-box;background:rgba(17,24,39,.9);border:1px solid var(--line);border-radius:999px;padding:9px 14px;color:var(--frost);font:inherit;font-size:14px}
 .fanbar input:focus{outline:2px solid var(--warm);outline-offset:1px}
 .fangrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
+/* vitrine : le corps défile, le pied (compteur + Annuler / Valider) reste visible en bas du panneau */
+.result.fanpanel{padding:0;gap:0;overflow:hidden}
+.fanbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:22px;display:flex;flex-direction:column;gap:14px}
+.fanfoot{flex:none;display:flex;align-items:center;gap:8px;padding:12px 22px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--deep)}
+.fanfoot .ghost,.fanfoot .primary{flex:1 1 0;min-width:0}
+.fancount{font-family:var(--display);font-size:15px;color:var(--mist);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:2.6em;text-align:center}
+@media (max-width:420px){ .fanfoot{padding-inline:16px} }
 .fanopt{position:relative;background:none;border:0;padding:0;cursor:pointer;border-radius:8px}
 .fanopt .thumb{pointer-events:none}
 .fanopt.on .thumb{box-shadow:0 0 0 2px var(--warm)}
@@ -585,6 +592,8 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .avbtn{position:relative;background:none;border:0;padding:0;cursor:pointer;border-radius:50%}
 .avedit{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);background:var(--deep);border:1px solid var(--line);border-radius:999px;font-size:10px;padding:1px 7px;color:var(--mist);white-space:nowrap}
 .avpanel{max-width:520px;max-height:88vh;overflow:auto}
+.avbar{position:static}
+.avnone{grid-column:1/-1;margin:12px 0}
 .avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:10px}
 .avopt{background:none;border:0;padding:4px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border-radius:10px;color:var(--frost)}
 .avopt:disabled{cursor:default}
