@@ -184,7 +184,7 @@ const RETIRED = ["mouette","pickpocket","guetteuse","serveuse","contrebandier","
 /* ======= SAUVEGARDE ======= */
 const HIST_MAX=20;
 const SAVE_KEY = "duel-helvara-save-v1", OWNER_KEY = "duel-helvara-save-owner";
-function freshProfile(){ return {ld:"", name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, cd:{day:"",id:"",got:false}, rps:[], cadres:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}, maj:MAJ[0].id}; }
+function freshProfile(){ return {ld:"", name:"Voyageur "+(1000+Math.floor(Math.random()*9000)), rv:2, chf:0, w:0, l:0, d:0, owned:[], deck:[], sfx:true, music:true, vm:35, vs:100, cine:true, cd:{day:"",id:"",got:false}, rps:[], cadres:true, fan:[], avatar:null, tuto:false, starter:false, lv:0, st:0, streak:0, best:0, season:seasonKey(), sw:0, sl:0, sd:0, dw:0, dl:0, dd:0, oathK:0, oathB:0, oathS:0, oathMax:0, dis:[], bz:{day:"",used:false,run:null}, decks:defDecks(), di:0, hist:[], sb:{day:"",ids:[]}, maj:MAJ[0].id}; }
 let migratedNote="";
 const COVERS=["primordial","desir","jugement","helvara"];
 function defDecks(){ return COVERS.map((c,i)=>({name:`Deck ${i+1}`,cover:c,cards:[]})); }
@@ -230,7 +230,7 @@ function cleanHist(h){
 }
 function cleanBz(b){ if(!b||typeof b!=="object") return {day:"",used:false,run:null};
   const ok=a=>Array.isArray(a)?a.filter(id=>POOL.includes(id)&&CARDS[id].r!=="U"):[];
-  const r=b.run&&typeof b.run==="object"?{deck:ok(b.run.deck).slice(0,12),opts:ok(b.run.opts).slice(0,4),wins:Math.min(3,Math.max(0,b.run.wins|0)),over:!!b.run.over,gain:Math.max(0,b.run.gain|0)}:null;
+  const r=b.run&&typeof b.run==="object"?{deck:ok(b.run.deck).slice(0,12),opts:ok(b.run.opts).slice(0,4),wins:Math.min(3,Math.max(0,b.run.wins|0)),over:!!b.run.over,gain:Math.max(0,b.run.gain|0),oath:Math.max(-9999,Math.min(9999,b.run.oath|0))}:null;
   return {day:typeof b.day==="string"?b.day:"",used:!!b.used,run:r}; }
 function clean(p){
   const f=freshProfile(); if(!p||typeof p!=="object") return f;
@@ -242,7 +242,7 @@ function clean(p){
   const out={at:num(p.at,0), name:(typeof p.name==="string"&&p.name.trim()?p.name.trim().slice(0,24):f.name), chf:num(p.chf,f.chf)+retired*25, w:num(p.w,0), l:num(p.l,0), d:num(p.d,0), owned, deck, sfx:p.sfx!==false,
     lv:Math.min(MAXLV,p.rv===2?num(p.lv,0):migrateLv(num(p.lv,0))), st:num(p.st,0), streak:num(p.streak,0), best:Math.min(MAXLV,p.rv===2?num(p.best,0):migrateLv(num(p.best,0))), rv:2,
     season:(typeof p.season==="string"&&/^\d{4}-\d{2}$/.test(p.season))?p.season:seasonKey(), sw:num(p.sw,0), sl:num(p.sl,0), sd:num(p.sd,0),
-    tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, vm:Math.min(100,num(p.vm,35)), vs:Math.min(100,num(p.vs,100)), cine:p.cine!==false, cadres:p.cadres!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
+    tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, vm:Math.min(100,num(p.vm,35)), vs:Math.min(100,num(p.vs,100)), cine:p.cine!==false, cadres:p.cadres!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), oathK:Math.min(99999,num(p.oathK,0)), oathB:Math.min(99999,num(p.oathB,0)), oathS:Math.min(99999,num(p.oathS,0)), oathMax:Math.min(99999,num(p.oathMax,0)), fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
     ld:(typeof p.ld==="string"?p.ld.slice(0,10):""), bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,HIST_MAX).map(cleanHist):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
     rps:cleanRps(p.rps),
     cd:(p.cd&&typeof p.cd.day==="string"&&typeof p.cd.id==="string"&&CARDS[p.cd.id])?{day:p.cd.day.slice(0,10),id:p.cd.id,got:!!p.cd.got}:{day:"",id:"",got:false},
