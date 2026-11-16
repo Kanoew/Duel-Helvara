@@ -3,6 +3,9 @@
 const shuffle=a=>{ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 const pickRand=a=>a[Math.floor(Math.random()*a.length)];
 let RNG=Math.random; const rnd=()=>RNG();
+/* Serment hors partie classée : enjeux en CHF. VALEURS PROVISOIRES (à valider par Jordan). Tenu = lieu ET partie gagnés ; rompu = lieu perdu (ou égalité sans Morrigan). Le solde de CHF ne passe jamais sous 0.
+   Duel : appliqué au solde. Blitz : ajouté au gain du Blitz en cours (jamais sous 0). Le Serment croisé vaut le double. */
+const OATH_CHF={ duel:{kept:30,broken:15,crossKept:60,crossBroken:30}, blitz:{kept:50,broken:50,crossKept:100,crossBroken:100} };
 function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 const gShuffle=a=>{ for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 const gPick=a=>a[Math.floor(rnd()*a.length)];
@@ -65,9 +68,17 @@ function draw(s){ if(!S.deck[s].length||S.hand[s].length>=7) return; const c=S.d
   /* Lance de Lugh : piochée, elle disparaît (la pioche est consommée) et Lugh, s'il est en jeu, gagne +4 ; sinon elle disparaît sans effet */
   if(eid(c)==="lance_lugh"){ const l=S.board[s].flat().find(x=>eid(x)==="lugh"&&x.rev); if(l){ l.pow+=4; (l.mods=l.mods||[]).push({v:4,src:"Lance de Lugh"}); log(`La Lance de Lugh disparaît : Lugh +4 (${who(s)})`); sfx("buff"); } return; }
   S.hand[s].push(c); }
+/* Prêter un Serment (côté "p" ou "e"). Même fonction pour la partie classée, le Blitz, la partie guidée et les duels (où elle est appelée en fin de tour, pour les deux joueurs, dans le même ordre : lockstep). */
+function swearOath(side,li){
+  const k=side==="p"?"oath":"aiOath", o=side==="p"?S.aiOath:S.oath;
+  if(!S||S[k]!=null||S.turn>5||!(li>=0&&li<3)||!S.locs[li]||!S.locs[li].rev) return false;
+  S[k]=li; S.oathNew={li,at:Date.now()};
+  const n=LOCS[S.locs[li].id].name;
+  log(o===li?`Serment croisé sur ${n}`:side==="p"?`Serment prêté sur ${n}`:`L'adversaire jure sur ${n}`); sfx("legend"); return true;
+}
 /* Serment adverse : l'IA jure sur le lieu où elle mène le plus. Plus elle est forte, plus elle ose (et bluffe un peu). */
 function aiOath(){
-  if(!oathOK()||S.aiOath!=null) return;
+  if(!oathOK()||S.aiOath!=null||S.mp||S.tut) return;
   const t=S.aiTier||0; let best=null;
   for(let li=0;li<3;li++) if(S.locs[li].rev){ const m=total("e",li)-total("p",li); if(!best||m>best.m) best={li,m}; }
   if(!best) return;
@@ -75,7 +86,20 @@ function aiOath(){
   if(best.m>=(S.turn>=4?2:4)&&Math.random()<0.3+0.08*t) li=best.li;
   else if(S.turn>=3&&Math.random()<0.04+0.02*t){ const c=[0,1,2].filter(i=>S.locs[i].rev&&total("e",i)-total("p",i)>=-3); if(c.length) li=c[Math.floor(Math.random()*c.length)]; }
   if(li==null) return;
-  S.aiOath=li; log(`L'adversaire jure sur ${LOCS[S.locs[li].id].name}`); sfx("legend");
+  swearOath("e",li);
+}
+/* Fin de partie : Serment tenu ou rompu (compteurs du profil, quête). Renvoie null s'il n'y a pas de Serment. */
+function oathSettle(){
+  if(!S||S.oath==null||S.tut||S.rp) return null;
+  const kept=leader(S.oath)==="p", cross=S.aiOath===S.oath;
+  if(!window.__wiped){ if(kept){ P.oathK=(P.oathK||0)+1; P.oathS=(P.oathS||0)+1; P.oathMax=Math.max(P.oathMax||0,P.oathS); } else { P.oathB=(P.oathB||0)+1; P.oathS=0; } }
+  if(kept) qProg("oath");
+  return {kept,cross};
+}
+/* CHF du Serment hors classé (duel, Blitz) : positif si tenu et partie gagnée, négatif si rompu, 0 sinon */
+function oathStake(mode,o,res){
+  if(!o) return 0; const t=OATH_CHF[mode];
+  return o.kept?(res==="win"?(o.cross?t.crossKept:t.kept):0):-(o.cross?t.crossBroken:t.broken);
 }
 function pilesHTML(){ if(S.tut) return ""; piles(); const D=S.discardPile, G=S.graveyard;
   return `<div class="pilesbar"><span>Main adverse : <b>${S.hand.e.length}</b></span><button class="pilebtn" data-act="pileview" data-p="d"><span>Défausses :</span> <b style="color:var(--me)">${D.p.length}</b> · <b style="color:var(--foe)">${D.e.length}</b></button><button class="pilebtn" data-act="pileview" data-p="g"><span>Cimetières :</span> <b style="color:var(--me)">${G.p.length}</b> · <b style="color:var(--foe)">${G.e.length}</b></button></div>`; }
@@ -91,8 +115,9 @@ function pileHTML(){
 function aiOathBar(){
   if(S.aiOath==null||S.over) return "";
   const n=LOCS[S.locs[S.aiOath].id].name;
-  if(S.oath===S.aiOath) return `<div class="oathbar sworn">⚖ Serment croisé sur <b>${n}</b> : tout se joue sur ce lieu. Gagne-le avec la partie : +4 étoiles. Perds-le avec la partie : −4.</div>`;
-  if(S.oath==null&&oathOK()&&!S.aiOathSkip) return `<div class="oathbar"><span>⚖ L'adversaire jure sur <b>${n}</b>. Relever le défi ?</span><span class="oathbtns" style="margin:0"><button class="primary small" data-act="oathcross">Relever</button><button class="ghost small" data-act="oathskip">Ignorer</button></span></div>`;
+  if(S.oath===S.aiOath){ const t=S.mp?OATH_CHF.duel:S.blitz?OATH_CHF.blitz:null;
+    return `<div class="oathbar sworn">⚖ Serment croisé sur <b>${n}</b>${t?` : tout se joue sur ce lieu. Gagne-le avec la partie : +${t.crossKept} CHF. Perds-le : −${t.crossBroken} CHF.`:" : tout se joue sur ce lieu. Gagne-le avec la partie : +4 étoiles. Perds-le avec la partie : −4."}</div>`; }
+  if(S.oath==null&&S.oathStage==null&&oathOK()&&!S.aiOathSkip&&!(S.mp&&S.mp.locked)) return `<div class="oathbar"><span>⚖ L'adversaire jure sur <b>${n}</b>. Relever le défi ?</span><span class="oathbtns" style="margin:0"><button class="primary small" data-act="oathcross">Relever</button><button class="ghost small" data-act="oathskip">Ignorer</button></span></div>`;
   return `<div class="oathbar sworn" style="color:var(--mist)">⚖ L'adversaire a juré sur <b>${n}</b>.</div>`;
 }
 function startTurn(){
@@ -922,7 +947,7 @@ async function endTurn(){
 async function resolveTurn(mine, theirs, animate){
   const wait=ms=>animate?sleep(ms):Promise.resolve();
   if(S.rec&&S.rec.turns.length<S.turn) S.rec.turns.push({p:mine.map(x=>[x.c.id,x.li]),e:theirs.map(x=>[x.c.id,x.li]),sw:mine.swim?[mine.swim.from,mine.swim.li]:null});
-  S.busy=true; S.sel=null; S.info=null; S.staged=[]; S.swimP=null; S.swimSel=false; S.nudge=false; S.lastRev={p:null,e:null}; S.lastAny=null;
+  S.oathStage=null; S.busy=true; S.sel=null; S.info=null; S.staged=[]; S.swimP=null; S.swimSel=false; S.nudge=false; S.lastRev={p:null,e:null}; S.lastAny=null;
   /* Prométhée : énergie non dépensée ; Nike : ordre dans lequel chaque joueur a posé ses cartes (l'IA garde Nike pour la fin) */
   const spent=(s,list)=>list.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0,jugFirst(list,i))),0);
   const unspent=S.unspent={p:Math.max(0,S.energy-spent("p",mine)),e:Math.max(0,S.energyE-spent("e",theirs))}; S.biaBlock={p:false,e:false};
@@ -946,6 +971,8 @@ async function resolveTurn(mine, theirs, animate){
   for(const [side,x] of crossed){ const o=opp(side), c=x.c;
     if(!S.locs[x.li].locked&&slotsUsed(o,x.li)<capOf(o,x.li)){ makeRoom(o,x.li); c.rev=true; c.fresh=true; S.board[o][x.li].push(c); log(`Héraklès passe chez l'adversaire : ${LOCS[S.locs[x.li].id].name} (${who(side)})`); }
     else{ c.rev=false; S.hand[side].push(c); log(`Héraklès n'a plus de place chez l'adversaire : il retourne dans la main (${who(side)})`); } }
+  /* Duel : les Serments cachés pendant le tour sont révélés ici, avec les cartes (même ordre chez les deux joueurs : le mien est « p » chez moi, « e » chez l'autre, le résultat est identique) */
+  if(S.mp){ const o=[["p",mine.oath],["e",theirs.oath]]; if(!S.mp.meHost) o.reverse(); for(const [side,li] of o) if(li!=null) swearOath(side,li); }
   render();
   const dflt=(!S.mp||S.mp.meHost)?"p":"e", queue=[];
   for(let li=0;li<3;li++){ const f=leader(li)||dflt, g=opp(f);
@@ -1029,7 +1056,7 @@ async function resolveTurn(mine, theirs, animate){
     if(to>2||!S.board[s][li].includes(c)||fated(c)||(c.captive&&captorLive(c.captive))||!S.locs[to].rev||S.locs[to].locked||S.board[s][to].length>=capOf(s,to)) continue;
     S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.board[s][to].push(c); flonHook(to,c); log(`Hélios passe vers ${LOCS[S.locs[to].id].name} (${who(s)})`); sfx("legend");
     for(const x of S.board[s][li]) if(x!==c&&live(x)&&SELFMOVE.has(eid(x))){ x.pow+=2; (x.mods=x.mods||[]).push({v:2,src:"Hélios"}); log(`Hélios · +2 à ${nm(x)} (${who(s)})`); } }
-  if(S.turn>=2&&S.turn<=4&&!S.rp) aiOath();
+  if(S.turn>=2&&S.turn<=4&&!S.rp&&!S.mp&&!S.tut) aiOath();
   if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
   /* L'Enfant sans École : à la fin de chaque tour sauf le sixième, elle retourne dans ta main et gagne +1 définitivement (main pleine : pas de retour, donc pas de gain : Jordan, 22 octobre) */
   if(S.turn<6) for(const {s,li,c,c0} of eot("enfant")) if(!(c0.captive&&captorLive(c0.captive))&&S.board[s][li].includes(c)){
@@ -1069,9 +1096,11 @@ function finish(){
   if(S.blitz){ S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); pt+=a; et+=b; if(w==="p") pw++; else if(w==="e") ew++; rows.push({n:LOCS[L.id].name,a,b,w,inv:nemInv(li)}); });
     const res=pw>ew?"win":ew>pw?"lose":pt>et?"win":et>pt?"lose":"draw"; const r=P.bz.run;
     ensureQuests(); qProg("play3"); if(res==="win") qProg("win3"); qEnd(res,true);
+    /* Serment au Blitz : ajouté (ou retiré) au gain du Blitz en cours ; une égalité se rejoue : le Serment n'est alors pas compté */
+    const oth=res==="draw"?null:oathSettle(), od=oathStake("blitz",oth,res); if(r&&!r.over&&od) r.oath=(r.oath||0)+od;
     if(r&&!r.over){ if(res==="win"){ r.wins++; if(r.wins>=3) bzEndRun(); } else if(res==="lose") bzEndRun(); }
     pushHist("Blitz",res,`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`,pw,ew);
-    save(); S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain:r&&r.over?r.gain:0,blitz:true,wins:r?r.wins:0,ended:!r||r.over};
+    save(); S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain:r&&r.over?r.gain:0,blitz:true,wins:r?r.wins:0,ended:!r||r.over,oath:oth?{kept:oth.kept,cross:oth.cross,d:od}:null};
     endCine(S.over); endMusic(res); render(); return; }
   S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); pt+=a; et+=b; if(w==="p") pw++; else if(w==="e") ew++; rows.push({n:LOCS[L.id].name,a,b,w,inv:nemInv(li)}); });
   const res = pw>ew?"win":ew>pw?"lose":pt>et?"win":et>pt?"lose":"draw";
@@ -1081,12 +1110,13 @@ function finish(){
   qProg("play3"); if(res==="win") qProg("win3");
   if(rows.some(r=>r.w==="p"&&r.a>=15)) qProg("loc15");
   if(pw===3) qProg("sweep"); if(pt>=40) qProg("power40"); if(S.killE) qProg("kill4",S.killE);
-  qEnd(res,false); if(!S.mp&&S.oath!=null&&leader(S.oath)==="p") qProg("oath");
+  qEnd(res,false); const oth=oathSettle();
   const qDone=P.q.list.filter((q,i)=>!qBefore[i]&&q.p>=QDEF[q.id].n).map(q=>qText(q));
   if(S.mp){
     if(res==="win") P.dw++; else if(res==="lose") P.dl++; else P.dd++;
-    P.chf+=gain; pushHist("Duel",res,S.mp.oppNick,pw,ew,{gain}); save(); mpSaveSession(null);
-    S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,qDone,mp:true};
+    const chf0=P.chf; P.chf=Math.max(0,P.chf+gain+oathStake("duel",oth,res)); const od=P.chf-chf0-gain;   /* Serment : jamais sous 0 */
+    pushHist("Duel",res,S.mp.oppNick,pw,ew,{gain}); save(); mpSaveSession(null);
+    S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,qDone,mp:true,oath:oth?{kept:oth.kept,cross:oth.cross,d:od}:null};
     endCine(S.over); endMusic(res); setTimeout(()=>sfx("coin"),700);
     render(); return;
   }

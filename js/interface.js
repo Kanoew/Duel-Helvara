@@ -344,6 +344,11 @@ function profileHTML(){
         <div class="stat"><div class="v">${P.sl}</div><div class="k">Défaites</div></div>
         <div class="stat"><div class="v">${P.sd}</div><div class="k">Égalités</div></div>
       </div>
+      <div class="stats three oathstats">
+        <div class="stat"><div class="v">${P.oathK||0}</div><div class="k">Serments tenus</div></div>
+        <div class="stat"><div class="v">${P.oathB||0}</div><div class="k">Serments rompus</div></div>
+        <div class="stat"><div class="v">${P.oathMax||0}</div><div class="k">Plus longue série de parole tenue</div></div>
+      </div>
       <div class="hint">Ces chiffres comptent les parties classées de la saison.<br>Depuis le début : ${played?`${P.w} V · ${P.l} D · ${P.d} É`:"aucune partie"} · Duels entre amis : ${P.dw} V · ${P.dl} D · ${P.dd} É · Collection : ${P.owned.length}/${avail().length} cartes.</div>
     </section>
     ${journalHTML()}<section class="sec"><button class="toggle" data-act="go" data-to="hist">Historique complet des matchs →</button></section>`;
@@ -538,7 +543,7 @@ const TUT={
    2:{req:[["felix",1]],t:"Le <b>Lac Ouchy</b> vient d'apparaître. Chaque lieu a sa règle : ici, ta première carte laisse un Reflet de 2. Pose <b>Félix</b> au Lac Ouchy : ta prochaine carte coûtera 1 de moins. Tu as maintenant 2 énergie, même si tu n'avais pas tout dépensé au tour 1."},
    3:{req:[["celeste",2],["passante",0]],t:"Céleste coûte 3, mais Félix et le <b>Sous-gare</b> la font passer à 1. Pose <b>Céleste</b> au Sous-gare, puis la <b>Passante</b> à la Ruelle. Tu peux jouer plusieurs cartes tant que tu as de l'énergie."},
    4:{req:[["izzy",1]],t:"L'Agent de Thot adverse a <b>affaibli</b> Céleste : son chiffre est passé en rouge. Pose <b>Izzy</b> au Lac Ouchy : elle copie la puissance de la carte adverse la plus forte du lieu. Appui long sur une carte pour la voir en grand."},
-   5:{req:[["yarden",2]],t:"Tu as des cartes dans les 3 lieux : <b>Yarden Weiss</b> gagne +4 de puissance en arrivant. Pose-la au Sous-gare."},
+   5:{req:[["yarden",2]],oath:true,t:"Tu as des cartes dans les 3 lieux : <b>Yarden Weiss</b> gagne +4 de puissance en arrivant. Pose-la au Sous-gare.<br>Nouveau : le <b>Serment</b>. Touche <b>⚖ Serment</b>, choisis un lieu où tu mènes, puis <b>Je le jure</b>. En vraie partie, gagner ce lieu avec la partie rapporte, le perdre coûte. Ici, aucun enjeu."},
    6:{req:[["colosse",1]],t:"Dernier tour. Pose le <b>Colosse du Léman</b> au Lac Ouchy. À la fin, celui qui mène sur 2 lieux sur 3 gagne."}
   }
 };
@@ -554,11 +559,13 @@ function startTutorial(){
   log("Partie guidée"); screen="play"; startTurn(); window.scrollTo(0,0);
 }
 const tutReq=()=>S&&S.tut&&TUT.steps[S.turn]?TUT.steps[S.turn].req:[];
-const tutDone=()=>tutReq().every(([id,li])=>S.staged.some(x=>x.c.id===id&&x.li===li));
+const tutCards=()=>tutReq().every(([id,li])=>S.staged.some(x=>x.c.id===id&&x.li===li));
+const tutOath=()=>!(S&&S.tut&&TUT.steps[S.turn]&&TUT.steps[S.turn].oath)||S.oath!=null;
+const tutDone=()=>tutCards()&&tutOath();
 function tutBarHTML(){
   if(!S||!S.tut||S.over) return ""; const st=TUT.steps[S.turn]; if(!st) return "";
   const todo=tutReq().filter(([id,li])=>!S.staged.some(x=>x.c.id===id&&x.li===li)).map(([id,li])=>`<b>${CARDS[id].name}</b> (<i>${LOCS[S.locs[li].id].name}</i>`);
-  return `<div class="tutbar"><div class="eyebrow">Partie guidée · tour ${S.turn}/6</div><p>${st.t}</p>${tutDone()?`<p class="ok">C'est bon : touche <b>Fin du tour</b>.</p>`:S.nudge?`<p class="nudge">Pas encore : pose d'abord ${todo.join("), puis ")}), puis touche <b>Fin du tour</b>.</p>`:""}</div>`;
+  return `<div class="tutbar"><div class="eyebrow">Partie guidée · tour ${S.turn}/6</div><p>${st.t}</p>${tutDone()?`<p class="ok">C'est bon : touche <b>Fin du tour</b>.</p>`:tutCards()?`<p class="${S.nudge?"nudge":"ok"}">Prête maintenant ton <b>Serment</b> : touche <b>⚖ Serment</b>, choisis un lieu, puis <b>Je le jure</b>.</p>`:S.nudge?`<p class="nudge">Pas encore : pose d'abord ${todo.join("), puis ")}), puis touche <b>Fin du tour</b>.</p>`:""}</div>`;
 }
 function finishTuto(){
   const first=!P.tuto; tutoStep=-1; if(S&&S.tut){ S=null; }
@@ -623,8 +630,9 @@ function rulesHTML(){
     <ol class="rules">
       <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I), sauf Héraut et Avatar qui en ont cinq (V à I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(START[i],"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
       <li>Victoire : +1 étoile, +2 à partir de 2 victoires d'affilée (jusqu'à Héraut). Défaite : −1 étoile, sauf en Passant et Initié où elle ne coûte rien. Égalité : rien ne bouge.</li>
-      <li><b>Le Serment</b> (parties classées uniquement) : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé. Si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
+      <li><b>Le Serment</b> : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé (partie classée, Blitz, duel entre amis ; sans enjeu dans la partie guidée). En partie classée, si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
       <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.</li>
+      <li><b>Serment en duel et au Blitz</b> : pas d'étoiles, des CHF (valeurs provisoires). Lieu et partie gagnés : +${OATH_CHF.duel.kept} CHF en duel, +${OATH_CHF.blitz.kept} CHF sur ton gain au Blitz. Lieu perdu : −${OATH_CHF.duel.broken} CHF en duel, −${OATH_CHF.blitz.broken} CHF au Blitz, jamais sous 0. Serment croisé : ${OATH_CHF.duel.crossKept} CHF en duel, ${OATH_CHF.blitz.crossKept} CHF au Blitz (perdu : −${OATH_CHF.duel.crossBroken} et −${OATH_CHF.blitz.crossBroken}). En duel, ton Serment reste caché à l'adversaire pendant le tour : il est révélé à la fin du tour, en même temps que les cartes, et tu peux relever le sien au tour suivant.</li>
       <li>Le début de chaque palier est un plancher : on ne redescend jamais sous un palier atteint pendant la saison.</li>
       <li>Plus ton rang est haut, plus l'adversaire construit un deck solide et joue bien. Il n'utilise jamais une rareté que tu n'as pas encore trouvée.</li>
       <li>Chaque mois, nouvelle saison : tu redescends de 3 paliers (une Divinité repart en Élu) et tu reçois 25 CHF par palier atteint (175 CHF pour la Divinité).</li>
@@ -670,8 +678,12 @@ function locHTML(li){
   const can=!S.busy&&((S.sel&&canStage(findHand(S.sel),li))||(S.swimSel&&swimOk(li)));
   const img=L.rev?d.img:"images/lieux/inconnu.webp";
   const cross=S.oath===li&&S.aiOath===li;
-  const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
-  return `<div class="loc${can?" can":""}${L.locked?" locked":""}${cross?" cross":S.oath===li?" oath":S.aiOath===li?" aioath":""}" style="background-image:${VEIL},url('${img}')" data-act="stage" data-li="${li}" data-lp="l${li}" tabindex="0">
+  const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":S.oathStage===li?"⚖ Serment (caché)":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
+  /* Cérémonie du Serment : sceau ⚖ posé sur le lieu + lueur durable. Pendant ~1,8 s après le serment, l'animation reprend là où elle en était à chaque nouveau rendu (délai négatif). */
+  const nw=S.oathNew&&S.oathNew.li===li&&Date.now()-S.oathNew.at<1800?Date.now()-S.oathNew.at:-1;
+  const seal=k=>`<span class="oathseal ${k}${nw>=0?" new":""}" ${nw>=0?`style="animation-delay:-${nw}ms"`:""} aria-hidden="true">⚖</span>`;
+  const seals=(S.oath===li?seal("me"):"")+(S.aiOath===li?seal("foe"):"");
+  return `<div class="loc${can?" can":""}${L.locked?" locked":""}${cross?" cross":S.oath===li?" oath":S.aiOath===li?" aioath":S.oathStage===li?" oathhid":""}${nw>=0?" oathnew":""}" style="background-image:${VEIL},url('${img}')${nw>=0?`;--od:-${nw}ms`:""}" data-act="stage" data-li="${li}" data-lp="l${li}" tabindex="0">${seals}
     <span class="tot f${w==="e"?" lead":""}">${b}</span>
     <div class="inner"><div class="nm">${L.rev?d.name:"Lieu inconnu"}</div><div class="fx">${tags.length?`<b>${tags.join(" · ")}</b>`:(L.rev?d.fx:`Révélé au tour ${li+1}`)}</div></div>
     <span class="tot m${w==="p"?" lead":""}">${a}</span></div>`;
@@ -693,7 +705,7 @@ function infoHTML(){
                :`<div><div class="t">Lieu inconnu</div><div class="m">Il sera révélé au début du tour ${loc+1}.</div></div>`; }
   /* Aide générale : les 3 premières parties (jamais pendant le tutoriel, qui a son propre encadré), ou à la demande avec le « ? » */
   if(!(S.help||(!S.tut&&P.w+P.l+P.d<3))) return "";
-  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser. Tu peux aussi la glisser vers le haut sur un lieu. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
+  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser. Tu peux aussi la glisser vers le haut sur un lieu. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <span>Jusqu'au tour 5, le bouton <b>⚖ Serment</b> te laisse jurer sur un lieu.</span> <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
 }
 function handHTML(){
   return S.hand.p.map(c=>{
@@ -721,6 +733,12 @@ function fbSend(kind,card){
   const mode=S.mp?"duel":S.blitz?"blitz":"ia"; S.over.fb="sent"; sfx("click"); render();
   lbDb.feedback(kind,card||null,mode,BUILD).catch(()=>{});
 }
+/* Serment en duel ou au Blitz : ce qu'il a rapporté ou coûté en CHF */
+function oathChfHTML(o){
+  const x=o.oath, c=x.cross?"Serment croisé ":"Serment ", fin=o.blitz?" sur ton gain du Blitz":"", ok=x.kept, lost=x.cross?"perdu":"rompu";
+  const t=ok?(o.res==="win"?`${c}tenu : +${x.d} CHF${fin}`:`${c}tenu, mais la partie est perdue`):x.d<0?`${c}${lost} : −${-x.d} CHF${fin}`:`${c}${lost} : aucun CHF perdu`;
+  return `<div class="m oathres ${ok?"kept":"broken"}" style="text-align:center">⚖ ${t}</div>`;
+}
 function resultHTML(){
   const o=S.over; if(!o||o.closed||o.hold) return "";
   if(o.tut) return `<div class="veil"><div class="result" role="dialog" aria-label="Tutoriel terminé">
@@ -733,6 +751,7 @@ function resultHTML(){
     <h2>${t}</h2>
     ${o.blitz?`<div class="rankline"><b>Blitz · ${o.wins} victoire${o.wins>1?"s":""} sur 3</b><br><span>${o.ended?(o.gain?`Blitz terminé : +${o.gain} CHF`:"Blitz terminé, sans récompense"):o.res==="draw"?"Égalité : le match est à rejouer":`Prochain match contre une IA ${TIERS[BZ.tiers[o.wins]]}`}</span></div>`:`<div class="reward">+${o.gain} CHF</div>`}
     ${o.feat?`<div class="qdone">Lieu à l'honneur : +${o.feat} CHF pour ta première partie du jour.</div>`:""}
+    ${o.oath&&(o.mp||o.blitz)?oathChfHTML(o):""}
     ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
     ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
@@ -762,25 +781,41 @@ function gameHTML(){
   <div class="status">
     <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>
     <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span></div>
-    ${oathOK()&&S.oath==null&&!S.busy?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
+    ${oathOK()&&oathFree()&&!S.busy&&!(S.mp&&S.mp.locked)?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
     ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
   </div>
   ${S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
   <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${swimBtn()}${pilesHTML()}</div>
-  ${aiOathBar()}
+  ${aiOathBar()}${myOathBar()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
-  <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&S.oath==null?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
+  <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
   <div class="handwrap"><div class="hand">${handHTML()}</div></div></div>
   <div class="log" aria-live="polite">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>
   ${resultHTML()}${gzHTML()}`;
 }
-const oathOK=()=>S&&!S.mp&&!S.tut&&!S.blitz&&!S.over&&S.turn<=5;
+/* Le Serment est possible jusqu'au tour 5 : partie classée, Blitz, duel (caché jusqu'à la fin du tour) et partie guidée (sans enjeu). Jamais en replay ni pendant la reprise d'un duel. */
+const oathOK=()=>S&&!S.rp&&!S.over&&S.turn<=5&&!(S.mp&&(S.mp.resuming||S.mp.replaying));
+/* Mon Serment est-il encore à prêter ? (en duel, un Serment choisi mais pas encore révélé compte comme prêté) */
+const oathFree=()=>S.oath==null&&S.oathStage==null;
+function oathStakeText(cross){
+  if(S.tut) return "Dans la partie guidée, le Serment est un exercice : aucun enjeu.";
+  const mode=S.mp?"duel":S.blitz?"blitz":null;
+  if(mode){ const t=OATH_CHF[mode], k=cross?t.crossKept:t.kept, b=cross?t.crossBroken:t.broken, c=cross?"Serment croisé, c'est définitif. ":"C'est définitif. ";
+    return mode==="duel"?`${c}Duel : lieu et partie gagnés : +${k} CHF. Lieu perdu : −${b} CHF (jamais sous 0).`:`${c}Blitz : lieu et partie gagnés : +${k} CHF sur ton gain. Lieu perdu : −${b} CHF.`; }
+  return cross?"Serment croisé, c'est définitif. Lieu et partie gagnés : +4 étoiles. Lieu et partie perdus : −4. Sinon : 0.":"C'est définitif. Gagne ce lieu avec la partie : +2 étoiles. Perds-le : −1 étoile.";
+}
 function oathHTML(){
   const ls=[0,1,2].filter(li=>S.locs[li].rev);
-  if(S.oathPick!=null) return `<div><div class="t">⚖ Serment sur ${LOCS[S.locs[S.oathPick].id].name} ?</div><div class="m">${S.oathPick===S.aiOath?"Serment croisé, c'est définitif. Lieu et partie gagnés : +4 étoiles. Lieu et partie perdus : −4. Sinon : 0.":"C'est définitif. Gagne ce lieu avec la partie : +2 étoiles. Perds-le : −1 étoile."}</div><div class="oathbtns"><button class="primary small" data-act="oathok">Je le jure</button><button class="ghost small" data-act="oathno">Annuler</button></div></div>`;
+  if(S.oathPick!=null) return `<div><div class="t">⚖ Serment sur ${LOCS[S.locs[S.oathPick].id].name} ?</div><div class="m">${oathStakeText(S.oathPick===S.aiOath)}</div>${S.mp?`<div class="m">Ton Serment reste caché jusqu'à la fin du tour, puis il est révélé avec les cartes.</div>`:""}<div class="oathbtns"><button class="primary small" data-act="oathok">Je le jure</button><button class="ghost small" data-act="oathno">Annuler</button></div></div>`;
   return `<div><div class="t">⚖ Serment</div><div class="m">Une fois par partie, jusqu'au tour 5. Choisis un lieu révélé.</div><div class="oathbtns">${ls.map(li=>`<button class="toggle" data-act="oathpick" data-li="${li}">${LOCS[S.locs[li].id].name}</button>`).join("")}<button class="ghost small" data-act="oathclose">Fermer</button></div></div>`;
+}
+/* Duel : mon Serment choisi, caché à l'adversaire jusqu'à la fin du tour */
+function myOathBar(){
+  if(S.oathStage==null||S.oath!=null||S.over) return "";
+  const n=LOCS[S.locs[S.oathStage].id].name;
+  return `<div class="oathbar"><span>⚖ Tu jureras sur <b>${n}</b> à la fin du tour, en même temps que les cartes.</span>${S.mp&&S.mp.locked?"":`<button class="ghost small" data-act="oathunstage">Retirer</button>`}</div>`;
 }
 function gzHTML(){
   if(!gz||!S) return "";
@@ -1093,11 +1128,12 @@ document.addEventListener("click", e=>{
   if(S.mp&&S.mp.locked&&act!=="inspect") return;
   if(act==="oathmode"){ S.oathMode=!S.oathMode; S.oathPick=null; sfx("click"); render(); return; }
   if(act==="oathclose"){ S.oathMode=false; S.oathPick=null; render(); return; }
-  if(act==="oathpick"){ if(oathOK()&&S.oath==null) S.oathPick=+el.dataset.li; sfx("select"); render(); return; }
-  if(act==="oathcross"){ if(oathOK()&&S.oath==null&&S.aiOath!=null){ S.oath=S.aiOath; S.oathMode=false; S.oathPick=null; log(`Serment croisé sur ${LOCS[S.locs[S.oath].id].name}`); sfx("legend"); } render(); return; }
+  if(act==="oathunstage"){ S.oathStage=null; sfx("click"); render(); return; }
+  if(act==="oathpick"){ if(oathOK()&&oathFree()) S.oathPick=+el.dataset.li; sfx("select"); render(); return; }
+  if(act==="oathcross"){ if(oathOK()&&oathFree()&&S.aiOath!=null){ S.oathMode=false; S.oathPick=null; if(S.mp){ S.oathStage=S.aiOath; sfx("select"); } else swearOath("p",S.aiOath); } render(); return; }
   if(act==="oathskip"){ S.aiOathSkip=true; render(); return; }
   if(act==="oathno"){ S.oathPick=null; render(); return; }
-  if(act==="oathok"){ if(oathOK()&&S.oath==null&&S.oathPick!=null){ S.oath=S.oathPick; S.oathPick=null; S.oathMode=false; log(`Serment prêté sur ${LOCS[S.locs[S.oath].id].name}`); sfx("legend"); } render(); return; }
+  if(act==="oathok"){ if(oathOK()&&oathFree()&&S.oathPick!=null){ const li=S.oathPick; S.oathPick=null; S.oathMode=false; if(S.mp){ S.oathStage=li; sfx("select"); } else swearOath("p",li); } render(); return; }
   if(act==="mull"){ if(S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.staged.length){ const n=S.hand.p.length; S.deck.p=shuffle([...S.deck.p,...S.hand.p]); S.hand.p=[]; if(S.rec) S.rec.dp=S.deck.p.map(c=>c.id); for(let i=0;i<n;i++) draw("p"); S.mull=true; S.sel=null; log("Main changée"); sfx("pack"); } render(); return; }
   if(act==="hand"){ const uid=+el.dataset.uid; S.sel=S.sel===uid?null:uid; S.info=null; sfx("select"); render(); return; }
   if(act==="swim"){ if(S.swimP){ S.swimP=null; sfx("undo"); } else S.swimSel=!S.swimSel; S.sel=null; S.info=null; render(); return; }

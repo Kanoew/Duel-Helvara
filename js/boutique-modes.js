@@ -94,6 +94,8 @@ function stallHTML(){ if(!P.starter) return ""; const ids=stallIds();
 
 /* ======= BLITZ ======= */
 const BZ={start:["coursier","felix","celeste","izzy"], tiers:[2,4,6], gain:[0,75,150,300], price:75};
+/* gain du Blitz en cours : palier atteint + Serments (jamais sous 0) */
+const bzHeld=r=>Math.max(0,BZ.gain[r.wins]+(r.oath||0));
 const bzFree=()=>!P.bz||P.bz.day!==today()||!P.bz.used;
 function bzRoll(deck){ const chars=new Set(deck.map(charOf)); const pool=shuffle(POOL.filter(id=>REL(id)&&CARDS[id].r!=="U"&&!chars.has(charOf(id))&&!(id==="yarden_d"&&chars.has("yarden")))); const out=[], seen=new Set();
   for(const id of pool){ if(out.length>=4) break; if(seen.has(charOf(id))) continue; seen.add(charOf(id)); out.push(id); } return out; }
@@ -101,7 +103,7 @@ function bzStart(){ if(P.bz.run&&!P.bz.run.over) return;
   if(bzFree()){ P.bz.day=today(); P.bz.used=true; } else { if(P.chf<BZ.price) return; P.chf-=BZ.price; }
   const deck=[...BZ.start]; P.bz.run={deck,opts:bzRoll(deck),wins:0,over:false,gain:0}; save(); sfx("pack"); render(); }
 function bzPick(id){ const r=P.bz.run; if(!r||r.over||!r.opts.includes(id)||r.deck.length>=12) return; r.deck.push(id); r.opts=r.deck.length<12?bzRoll(r.deck):[]; save(); sfx("select"); render(); }
-function bzEndRun(){ const r=P.bz.run; if(!r||r.over) return; r.over=true; r.gain=BZ.gain[r.wins]; P.chf+=r.gain; save(); if(r.gain) setTimeout(()=>sfx("coin"),500); }
+function bzEndRun(){ const r=P.bz.run; if(!r||r.over) return; r.over=true; r.gain=bzHeld(r); P.chf+=r.gain; save(); if(r.gain) setTimeout(()=>sfx("coin"),500); }
 function bzGame(){ const r=P.bz.run; if(!r||r.over||r.deck.length<12) return;
   RNG=Math.random; const locIds=pickLocs(); games++;
   const t=BZ.tiers[r.wins];
@@ -135,15 +137,15 @@ function blitzHTML(){
     <div class="bzopts">${r.opts.map(id=>`<button class="pick" data-act="bzpick" data-id="${id}">${fullCard(id)}</button>`).join("")}</div></section>
     <section class="sec"><h2>Ton deck</h2>${strip}</section>`;
   else body=`<section class="sec"><h2>Match ${r.wins+1} / 3</h2>
-    <p>Adversaire de niveau <b>${TIERS[BZ.tiers[r.wins]]}</b>. ${r.wins?`Tu tiens déjà ${BZ.gain[r.wins]} CHF.`:"Gagne pour décrocher ta première récompense."}</p>
+    <p>Adversaire de niveau <b>${TIERS[BZ.tiers[r.wins]]}</b>. ${r.wins?`Tu tiens déjà ${bzHeld(r)} CHF.${r.oath?` Dont Serments : ${r.oath>0?"+":"−"}${Math.abs(r.oath)} CHF.`:""}`:"Gagne pour décrocher ta première récompense."}</p>
     ${ladder}<button class="play" data-act="bzplay">${S&&S.blitz&&!S.over?"Reprendre le match":"Jouer le match"}</button>${strip}</section>`;
-  return body+(r&&!r.over?`<button class="ghost" data-act="bzquit">Abandonner le Blitz${r.wins?` et prendre ${BZ.gain[r.wins]} CHF`:""}</button>`:"");
+  return body+(r&&!r.over?`<button class="ghost" data-act="bzquit">Abandonner le Blitz${r.wins?` et prendre ${bzHeld(r)} CHF`:""}</button>`:"");
 }
 
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.34", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.35", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Jetons et codes de salon : crypto.getRandomValues (pas Math.random). Code = LIEU- + 6 caractères sans I, L, O ni 0/1 (31 symboles, tirage sans biais). */
@@ -290,6 +292,7 @@ function mpStart(om,replay){
 }
 function mapPlays(side,plays){ const out=[]; if(!Array.isArray(plays)) return out;
   for(const pl of plays){ if(!Array.isArray(pl)) continue; const [uid,li]=pl;
+    if(pl[2]==="o"){ if(uid>=0&&uid<3) out.oath=uid|0; continue; }   /* Serment : [lieu, 0, "o"], révélé avec les cartes en fin de tour */
     if(pl[2]==="s"){ for(let f=0;f<3;f++){ const c=S.board[side][f].find(x=>x.uid===uid); if(c&&li>=0&&li<3) out.swim={c,li:li|0,from:f}; } continue; }   /* Nageuse du Lac : [uid, lieu, "s"] */
     const c=S.hand[side].find(x=>x.uid===uid);
     if(c&&li>=0&&li<3&&!out.some(x=>x.c===c)) out.push({c,li:li|0}); } return out; }
@@ -297,7 +300,7 @@ async function mpReplay(om){
   while(S&&S.mp&&!S.over){
     const mine=myMp.hist&&myMp.hist[S.turn], theirs=om.hist&&om.hist[S.turn];
     if(mine&&theirs){ await resolveTurn(mapPlays("p",mine), mapPlays("e",theirs), false); continue; }
-    if(mine){ const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.swimP=st.swim||null; S.mp.locked=true; }
+    if(mine){ const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.swimP=st.swim||null; S.oathStage=st.oath!=null?st.oath:null; S.mp.locked=true; }
     break;
   }
   if(S&&S.mp){ S.mp.replaying=false; }
@@ -306,6 +309,7 @@ async function mpReplay(om){
 function mpLock(){
   if(!S.mp||S.mp.locked||S.busy||S.over) return;
   const hist=Object.assign({},myMp.hist||{}); hist[S.turn]=S.staged.map(x=>[x.c.uid,x.li]); if(S.swimP) hist[S.turn].push([S.swimP.c.uid,S.swimP.li,"s"]);
+  if(S.oathStage!=null) hist[S.turn].push([S.oathStage,0,"o"]);   /* Serment caché : il voyage avec les coups du tour */
   S.mp.locked=true; mpPush({t:S.turn,hist}); mpSaveSession({mp:myMp,oppNick:S.mp.oppNick});
   render(); mpTryResolve();
 }
@@ -314,7 +318,7 @@ function mpTryResolve(){
   const o=mpOpp(); if(!o) return; const om=o.presence.mp;
   if(om.g!==S.mp.g||!om.hist||!om.hist[S.turn]) return;
   S.mp.locked=false; S.mp.oppLocked=false;
-  const mineP=S.staged.slice(); if(S.swimP) mineP.swim=S.swimP;
+  const mineP=S.staged.slice(); if(S.swimP) mineP.swim=S.swimP; if(S.oathStage!=null) mineP.oath=S.oathStage;
   resolveTurn(mineP, mapPlays("e",om.hist[S.turn]), true);
 }
 async function mpResume(){
