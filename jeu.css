@@ -563,6 +563,17 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .bzopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (min-width:700px){ .bzopts{grid-template-columns:repeat(4,minmax(0,1fr))} }
 .duelcard{width:100%;border-color:rgba(111,184,222,.45);background:linear-gradient(135deg,rgba(111,184,222,.14),rgba(17,24,39,.85) 60%)}
+/* Panneau « Jouer » (accueil) : Contre un rival mis en avant, Blitz verrouillé tant que le joueur n'a pas 10 parties */
+.modesheet{display:flex;flex-direction:column;gap:10px}
+.modesheet .qcard{padding:14px 16px}
+.modesheet .qcard .t{display:flex;align-items:center;gap:8px}
+.modesheet .qcard .m{font-size:13px}
+.modesheet .modemain{border-color:var(--warm);background:linear-gradient(135deg,rgba(219,168,98,.22),rgba(17,24,39,.85) 65%);box-shadow:0 0 0 1px rgba(219,168,98,.25)}
+.modesheet .modemain:disabled{opacity:.55;cursor:default}
+.modesheet .modelock{cursor:default;opacity:.7;border-style:dashed}
+.modesheet .modelock .ico{width:18px;height:18px;color:var(--warm)}
+.modemore{display:block;margin:8px auto 0}
+.modenotes{display:flex;flex-direction:column;gap:2px;margin:8px 0 10px}
 .mpbox{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 .mpcode{font-family:var(--display);font-size:34px;letter-spacing:.14em;color:var(--warm)}
 .mpjoin{display:flex;gap:8px;width:100%;flex-wrap:wrap}

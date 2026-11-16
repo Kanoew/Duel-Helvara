@@ -97,9 +97,13 @@ const BZ={start:["coursier","felix","celeste","izzy"], tiers:[2,4,6], gain:[0,75
 /* gain du Blitz en cours : palier atteint + Serments (jamais sous 0) */
 const bzHeld=r=>Math.max(0,BZ.gain[r.wins]+(r.oath||0));
 const bzFree=()=>!P.bz||P.bz.day!==today()||!P.bz.used;
+/* Déblocage du Blitz : BLITZ_UNLOCK, gamesPlayed() et blitzLeft() sont dans js/langue-profil.js (la quête « Gagne une partie de Blitz » en dépend au chargement). Un Blitz déjà en cours reste jouable. */
+const blitzRun=()=>!!(P.bz&&P.bz.run&&!P.bz.run.over);
+const blitzOpen=()=>blitzLeft()===0||blitzRun();
+const blitzLockText=()=>{ const n=blitzLeft(); return `Encore ${n} partie${n>1?"s":""} pour débloquer le Blitz`; };
 function bzRoll(deck){ const chars=new Set(deck.map(charOf)); const pool=shuffle(POOL.filter(id=>REL(id)&&CARDS[id].r!=="U"&&!chars.has(charOf(id))&&!(id==="yarden_d"&&chars.has("yarden")))); const out=[], seen=new Set();
   for(const id of pool){ if(out.length>=4) break; if(seen.has(charOf(id))) continue; seen.add(charOf(id)); out.push(id); } return out; }
-function bzStart(){ if(P.bz.run&&!P.bz.run.over) return;
+function bzStart(){ if(P.bz.run&&!P.bz.run.over) return; if(!blitzOpen()) return;
   if(bzFree()){ P.bz.day=today(); P.bz.used=true; } else { if(P.chf<BZ.price) return; P.chf-=BZ.price; }
   const deck=[...BZ.start]; P.bz.run={deck,opts:bzRoll(deck),wins:0,over:false,gain:0}; save(); sfx("pack"); render(); }
 function bzPick(id){ const r=P.bz.run; if(!r||r.over||!r.opts.includes(id)||r.deck.length>=12) return; r.deck.push(id); r.opts=r.deck.length<12?bzRoll(r.deck):[]; save(); sfx("select"); render(); }
@@ -119,6 +123,7 @@ function bzGame(){ const r=P.bz.run; if(!r||r.over||r.deck.length<12) return;
   screen="play"; startTurn(); }
 function blitzHTML(){
   const r=P.bz.run, free=bzFree();
+  if(!blitzOpen()&&!(r&&r.over)) return `<section class="sec"><h2>${ico("lock")} Blitz</h2><p>${blitzLockText()}</p><p class="hint">Les parties classées et les duels entre amis comptent.</p><button class="ghost" data-act="go" data-to="home">Retour à l'accueil</button></section>`;
   const ladder=`<div class="bzladder">${[1,2,3].map(n=>`<div class="bzstep ${r&&r.wins>=n?"on":""}"><b>${BZ.gain[n]} CHF</b><span>${n} victoire${n>1?"s":""} · IA ${TIERS[BZ.tiers[n-1]]}</span></div>`).join("")}</div>`;
   const strip=r?`<div class="strip">${Array.from({length:12},(_,i)=>r.deck[i]?thumb(r.deck[i],`data-act="zoom" data-id="${r.deck[i]}"`):`<div class="thumb empty"></div>`).join("")}</div>`:"";
   let body;

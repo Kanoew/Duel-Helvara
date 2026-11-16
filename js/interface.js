@@ -97,7 +97,8 @@ const ICO={
   board:'<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M8 20h8"/>',
   book:'<path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path d="M4 20a2 2 0 0 0 2 2h13v-4"/><path d="M9 7h6"/>',
   discord:'<path style="fill:currentColor;stroke:none" d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.3 18.3 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.89 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 5.99 3.03.08.08 0 0 0 .09-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03zM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42z"/>',
-  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'};
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'};
 const DISCORD="https://discord.gg/QgxFQGcjGT";
 const ico=k=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
 let sheet=null; /* "quests" ou "settings" : panneau ouvert depuis l'en-tête */
@@ -120,7 +121,7 @@ function dockHTML(){
 }
 function sheetHTML(){
   if(!sheet) return "";
-  const body=sheet==="quests"?questsHTML():`<section class="quests"><div class="qhead"><h2>Réglages</h2></div>
+  const body=sheet==="quests"?questsHTML():sheet==="play"?playSheetHTML():`<section class="quests"><div class="qhead"><h2>Réglages</h2></div>
     <div class="setrow"><span>Langue</span><button class="langbtn" data-act="lang" aria-label="${LANG==="fr"?"Switch to English":"Passer en français"}"><span class="${LANG==="fr"?"on":""}">FR</span><span class="${LANG==="en"?"on":""}">EN</span></button></div>
     <div class="setrow"><span>Son</span><span class="footbtns"><button class="toggle" data-act="music" aria-pressed="${P.music}">Musique : ${P.music?"activée":"coupée"}</button><button class="toggle" data-act="sfx" aria-pressed="${P.sfx}">Effets : ${P.sfx?"activés":"coupés"}</button></span></div>
     <div class="setrow"><span>Volume de la musique</span><span class="volrow"><input type="range" min="0" max="100" step="5" value="${P.vm??35}" data-vol="vm" aria-label="Volume de la musique"><b data-volv="vm">${P.vm??35}</b></span></div>
@@ -298,6 +299,22 @@ function noticeHTML(){
   const i=all.indexOf(left[0])+1, more=left.length>1;
   return `<div class="notice noticeq" role="status"><span class="ntxt">${left[0]}</span><span class="nctl">${all.length>1?`<span class="ncount" aria-label="Note ${i} sur ${all.length}">${i}/${all.length}</span>`:""}<button class="nbtn" data-act="notedismiss" data-t="${i-1}" aria-label="${more?"Note suivante":"Fermer la note"}">${more?"Suivant":"OK"}</button></span></div>`;
 }
+/* Un seul bouton « Jouer » : il ouvre ce panneau (même mécanique que les Quêtes et les Réglages : `sheet`). Rien n'est retiré, tout est rangé ici. */
+const duelLive=()=>!!(S&&S.mp&&!S.over);
+function homeNotes(){
+  const n=[]; if(duelLive()) n.push(`Duel en cours contre ${esc(S.mp.oppNick)}`); else if(mpSession()) n.push("Un duel peut être repris");
+  if(blitzRun()) n.push(`Blitz en cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`);
+  return n.length?`<div class="hint playhint modenotes" role="status">${n.map(t=>`<span>${t}</span>`).join("")}</div>`:"";
+}
+function playSheetHTML(){
+  const ready=deckReady(), inG=!!(S&&!S.over&&!S.blitz&&!S.rp&&!S.mp), rec=P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:"";
+  const rival=`<button class="qcard duelcard modemain" data-act="${inG?"resume":"play"}" ${ready||inG?"":"disabled"}><span class="t">Contre un rival</span><span class="m">${inG?"Partie en cours : la reprendre":ready?"Partie classée contre l'IA":"Il te faut un deck de 12 cartes"}</span></button>`;
+  const friend=`<button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Défier un ami</span><span class="m">${duelLive()?`En cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon"}${rec}</span></button>`;
+  const bz=blitzOpen()
+    ?`<button class="qcard duelcard bzcard" data-act="go" data-to="blitz"><span class="t">Blitz</span><span class="m">${blitzRun()?`En cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`:bzFree()?"Partie gratuite du jour":`Gratuit dans ${hoursToReset()} h`}</span></button>`
+    :`<div class="qcard duelcard bzcard modelock" role="group" aria-disabled="true"><span class="t">${ico("lock")} Blitz</span><span class="m">${blitzLockText()}</span></div>`;
+  return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div>${rival}${friend}${bz}</section>`;
+}
 function homeHTML(){
   const inGame=S && !S.over && !S.blitz && !S.rp;
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
@@ -305,11 +322,9 @@ function homeHTML(){
   ${noticeHTML()}
   ${vitrineHTML()}
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
-  <button class="play" data-act="${inGame?"resume":"play"}" ${deckReady()||inGame?"":"disabled"}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>
-  <div class="modes">
-    <button class="qcard duelcard bzcard" data-act="go" data-to="blitz"><span class="t">Blitz</span><span class="m">${P.bz.run&&!P.bz.run.over?`En cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`:bzFree()?"Partie gratuite du jour":`Gratuit dans ${hoursToReset()} h`}</span></button>
-    <button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Duel entre amis</span><span class="m">${S&&S.mp&&!S.over?`En cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon"}${P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:""}</span></button>
-  </div>
+  <button class="play" data-act="${inGame?"resume":"sheet"}" ${inGame?"":'data-s="play" aria-haspopup="dialog"'}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>
+  ${inGame?`<button class="ghost small modemore" data-act="sheet" data-s="play" aria-haspopup="dialog">Autres façons de jouer</button>`:""}
+  ${homeNotes()}
   ${seasonBarHTML()}
   ${featureHTML()}
   ${cardDayHTML()}
@@ -318,11 +333,25 @@ function homeHTML(){
 }
 
 /* --- profil --- */
+/* But d'une ultra-légendaire de faction (Journal des factions, collection), affichage seulement : aucune règle d'obtention ici.
+   Nommée seulement à partir de sa date d'annonce (SHOWN) ; avant, l'appelant garde le texte générique. Pas encore sortie : date de sortie + parties qui restent. */
+const gamesLeft=u=>Math.max(0,u.quest.n-fjGet(u.quest.k));
+function ulGoal(u){
+  const c=CARDS[u.id], left=gamesLeft(u), n=`${left} partie${left>1?"s":""}`;
+  if(P.owned.includes(u.id)) return `${c.name} · obtenue`;
+  if(!REL(u.id)) return `${c.name} : disponible le ${frDate(c.rel.slice(5))} · ${left?`encore ${n}`:"objectif atteint"}`;
+  return left?`${c.name} : encore ${n}`:`${c.name} : objectif atteint`;
+}
+/* Case d'une ultra-légendaire de faction non obtenue dans la collection (le nom reste caché tant que la carte n'est pas sortie) */
+function ulLockLine(id){
+  const u=ULof(id), left=gamesLeft(u), n=left?`encore ${left} partie${left>1?"s":""}`:"objectif atteint";
+  return REL(id)?`Journal des factions : ${n}`:`Disponible le ${frDate(CARDS[id].rel.slice(5))} · ${n}`;
+}
 function journalHTML(){
   /* une ligne par ultra-légendaire de faction, dans l'ordre des seuils (50, puis 150) ; la seconde n'apparaît qu'à sa date d'annonce */
   const rows=Object.entries(FAC).flatMap(([k,F])=>{ const us=ULS.filter(x=>x.quest&&x.quest.k===k).sort((a,b)=>a.quest.n-b.quest.n), out=[];
     const first=us[0], rowOf=(u,label)=>{ const n=u?u.quest.n:50, v=Math.min(fjGet(k),n), known=!!u&&SHOWN(u.id);
-      const goal=known?(P.owned.includes(u.id)?`${CARDS[u.id].name} · obtenue`:`Récompense : ${CARDS[u.id].name}`):"Récompense : une ultra-légendaire, bientôt";
+      const goal=known?ulGoal(u):"Récompense : une ultra-légendaire, bientôt";
       return `<div class="fjrow"><div class="fjtop"><b style="color:${F.c}">${label}</b><span>${known?`${v}/${n}`:`${fjGet(k)} partie${fjGet(k)>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${Math.round(v/n*100)}%;background:${F.c}"></i></div><small>${goal}</small></div>`; };
     out.push(rowOf(first,F.n));
     for(const u of us.slice(1)) if(SHOWN(u.id)) out.push(rowOf(u,`${F.n} · seconde ultra-légendaire`));
@@ -332,7 +361,7 @@ function journalHTML(){
   for(const q of [{u:"ananke_r",k:"anankenoel",w:NOEL_Q,label:"Noël · avec Ananké",col:"#9fb4ff"},{u:"nike_v",k:"nikev",w:VALENTIN,label:"Saint-Valentin · avec Nike",col:"#f2a7c8"},{u:"ananke_v",k:"anankev",w:VALENTIN,label:"Saint-Valentin · avec Ananké",col:"#f2a7c8"}]){
     const nv=ULof(q.u), nvKnown=!!nv&&SHOWN(nv.id);
     if(nv&&(nvKnown||inWin(q.w))){ const v=Math.min(fjGet(q.k),nv.quest.n), g=fjGet(q.k);
-      rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:${q.col}">${q.label}</b><span>${nvKnown?`${v}/${nv.quest.n}`:`${g} partie${g>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${nvKnown?Math.round(v/nv.quest.n*100):0}%;background:${q.col}"></i></div><small>${nvKnown?(P.owned.includes(nv.id)?`${CARDS[nv.id].name} · obtenue`:`Récompense : ${CARDS[nv.id].name}`):"Récompense : une ultra-légendaire, bientôt"}</small></div>`); } }
+      rows.push(`<div class="fjrow"><div class="fjtop"><b style="color:${q.col}">${q.label}</b><span>${nvKnown?`${v}/${nv.quest.n}`:`${g} partie${g>1?"s":""}`}</span></div><div class="fjbar"><i style="width:${nvKnown?Math.round(v/nv.quest.n*100):0}%;background:${q.col}"></i></div><small>${nvKnown?ulGoal(nv):"Récompense : une ultra-légendaire, bientôt"}</small></div>`); } }
   return `<section class="sec journal"><h2>Journal des factions</h2><p class="hint">Une partie compte quand ton deck contient au moins 8 cartes d'une faction (IA, Blitz et duels).</p>${rows.join("")}</section>`;
 }
 function profileHTML(){
@@ -588,7 +617,7 @@ function finishTuto(){
 }
 
 /* --- collection --- */
-function lockedCard(id){ return `<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?(ULof(id).quest?`Journal des factions : ${Math.min(fjGet(ULof(id).quest.k),ULof(id).quest.n)}/${ULof(id).quest.n} parties`:`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`; }
+function lockedCard(id){ return `<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?(ULof(id)&&ULof(id).quest?ulLockLine(id):`Disponible le ${frDate(CARDS[id].rel.slice(5))}`):CARDS[id].r==="U"?(ULof(id).quest?ulLockLine(id):`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`; }
 function locsHTML(){ return `<section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
     <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
@@ -599,7 +628,7 @@ function codexHTML(){
     const have=ids.filter(id=>P.owned.includes(id)).length;
     return `<section class="sec"><h2 style="color:${F.c}">${F.n} · ${have}/${ids.length}</h2>
       <p class="hint">Touche une carte pour l'agrandir.</p>
-      <div class="grid">${gridArt(()=>ids.map(id=>P.owned.includes(id)?`<button class="zoombtn" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button>`:`<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?`Disponible le ${frDate(CARDS[id].rel.slice(5))}`:CARDS[id].r==="U"?(ULof(id).quest?`Journal des factions : ${Math.min(fjGet(ULof(id).quest.k),ULof(id).quest.n)}/${ULof(id).quest.n} parties`:`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`).join(""))}</div></section>`; }).join("")}
+      <div class="grid">${gridArt(()=>ids.map(id=>P.owned.includes(id)?`<button class="zoombtn" data-act="zoom" data-id="${id}" aria-label="Agrandir ${CARDS[id].name}">${fullCard(id)}</button>`:`<div class="full locked ${REL(id)?"":"soon"}${CARDS[id].r==="U"?" holo":""}">${art(id)}<div class="lock">${REL(id)?CARDS[id].name:"Bientôt"}<br><span style="color:${RAR[CARDS[id].r].c}">${rarN(id)}</span><br>${CARDS[id].ex&&!REL(id)?`${PACKS.find(x=>x.id===CARDS[id].ex).name} · dès le ${frDate(CARDS[id].rel.slice(5))}`:!REL(id)?(ULof(id)&&ULof(id).quest?ulLockLine(id):`Disponible le ${frDate(CARDS[id].rel.slice(5))}`):CARDS[id].r==="U"?(ULof(id).quest?ulLockLine(id):`Possède ${ULof(id).n}`):CARDS[id].ex?`${PACKS.find(x=>x.id===CARDS[id].ex).name} uniquement`:"À trouver dans un pack"}</div></div>`).join(""))}</div></section>`; }).join("")}
   <section class="sec"><h2>Les lieux d'Helvara</h2>
     <p>Trois lieux par partie, révélés aux tours 1, 2 et 3.</p>
     <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
@@ -1098,8 +1127,8 @@ document.addEventListener("click", e=>{
     case "rpnext": if(S&&S.rp&&!S.busy) rpStep().then(()=>{ render(); }); return;
     case "rpauto": if(S&&S.rp){ S.rp.auto=!S.rp.auto; sfx("click"); render(); if(S.rp.auto) rpAuto(); } return;
     case "rpquit": S=null; screen="hist"; sfx("click"); render(); window.scrollTo(0,0); return;
-    case "play": sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
-    case "resume": screen="play"; sfx("click"); render(); return;
+    case "play": sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
+    case "resume": sheet=null; screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
     case "cancelname": editName=false; render(); return;
     case "music": P.music=!P.music; save(); render(); return;

@@ -38,7 +38,7 @@ ok('partie en ligne : les illustrations du deck adverse sont rangées en cache m
 await ctx.setOffline(true);
 await p.reload();await p.waitForFunction(()=>typeof newGame==='function',null,{timeout:15000});
 ok('hors ligne : la page se recharge depuis le cache',await p.evaluate(()=>!!document.querySelector('#app')&&document.querySelector('#app').children.length>0),'');
-await p.evaluate(()=>{document.querySelector('[data-act=play]').click()});await p.waitForTimeout(1500);
+await p.evaluate(()=>{document.querySelector('.play').click()});await p.waitForTimeout(300);await p.evaluate(()=>{document.querySelector('.modemain').click()});await p.waitForTimeout(1500); /* accueil : « Jouer » ouvre le panneau, « Contre un rival » lance la partie */
 ok('hors ligne : une partie contre l\'IA démarre',await p.evaluate(()=>!!S&&screen==='play'&&S.hand.p.length>0),'');
 const imgOK=await p.evaluate(()=>[...document.querySelectorAll('.hc .art')].every(e=>getComputedStyle(e).backgroundImage!=='none'));
 ok('hors ligne : la main s\'affiche avec ses illustrations',imgOK,'');
