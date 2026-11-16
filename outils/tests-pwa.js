@@ -30,6 +30,10 @@ const all=await p.evaluate(async()=>{const o=[];for(const k of await caches.keys
 ok('rien d\'externe (Supabase) dans les caches',!all.some(u=>!u.includes('127.0.0.1')),all.filter(u=>!u.includes('127.0.0.1')));
 const nAv=await p.evaluate(async()=>{for(let i=0;i<40;i++){const k=(await caches.keys()).find(k=>k.includes('media'));const n=(await (await caches.open(k)).keys()).filter(r=>/avatars\//.test(r.url)).length;if(n>=200)return n;await new Promise(r=>setTimeout(r,500))}return -1});
 ok('tous les avatars (miniatures du plateau, adversaire compris) sont rangés en arrière-plan',nAv>=200,nAv);
+// partie lancée en ligne : les illustrations du deck adverse sont rangées pour jouer hors ligne
+await p.evaluate(()=>{newGame();screen='play';render()});await p.waitForTimeout(1500);
+const foeCached=await p.evaluate(async()=>{const ids=[...new Set(S.deck.e.map(c=>(CARDS[c.id].img||'').split('?')[0]).filter(Boolean))];for(let i=0;i<40;i++){const k=(await caches.keys()).find(k=>k.includes('media'));const c=await caches.open(k);const have=new Set((await c.keys()).map(r=>new URL(r.url).pathname.slice(1)));const miss=ids.filter(u=>!have.has(u));if(!miss.length)return true;await new Promise(r=>setTimeout(r,500))}return false});
+ok('partie en ligne : les illustrations du deck adverse sont rangées en cache media',foeCached===true,foeCached);
 // hors ligne
 await ctx.setOffline(true);
 await p.reload();await p.waitForFunction(()=>typeof newGame==='function',null,{timeout:15000});
@@ -38,9 +42,6 @@ await p.evaluate(()=>{document.querySelector('[data-act=play]').click()});await 
 ok('hors ligne : une partie contre l\'IA démarre',await p.evaluate(()=>!!S&&screen==='play'&&S.hand.p.length>0),'');
 const imgOK=await p.evaluate(()=>[...document.querySelectorAll('.hc .art')].every(e=>getComputedStyle(e).backgroundImage!=='none'));
 ok('hors ligne : la main s\'affiche avec ses illustrations',imgOK,'');
-await p.evaluate(()=>{S.board.e[0].push(mk(Object.keys(CARDS).filter(id=>!CARDS[id].token&&!P.deck.includes(id))[0]));S.board.e[0][0].rev=true;render()});
-const oppOK=await p.evaluate(async()=>{const el=document.querySelector('.side.foe .art');if(!el)return 'pas de miniature';const u=getComputedStyle(el).backgroundImage.match(/url\("?(.*?)"?\)/);if(!u)return 'pas d\'image';const r=await fetch(u[1]).catch(()=>null);return !!r&&r.ok});
-ok('hors ligne : une carte adverse jamais vue s\'affiche aussi sur le plateau',oppOK===true,oppOK);
 await p.screenshot({path:path.join(ROOT,'pwa-hors-ligne.png')});
 await ctx.setOffline(false);
 // nouvelle version

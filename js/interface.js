@@ -17,6 +17,11 @@ function preRun(){
   if(preQ.length) preSched();
 }
 function preSched(){ if(preTimer) return; preTimer=(window.requestIdleCallback?requestIdleCallback(preRun,{timeout:2500}):setTimeout(preRun,200)); }
+function preloadFoe(){   /* illustrations pleines du deck adverse (le plateau les affiche) : elles entrent ainsi dans le cache hors ligne */
+  if(preSlow()||!S||!S.deck||!S.deck.e) return;
+  for(const c of S.deck.e){ const d=CARDS[c.id]; if(d&&d.img) preAdd(d.img); }
+  preSched();
+}
 function preloadDeck(){
   if(preSlow()||!P||!Array.isArray(P.deck)) return;
   for(const id of P.deck){ const d=CARDS[id]; if(!d||!d.img) continue; preAdd(d.img); preAdd(`images/avatars/${id}.webp?v=7`); }
@@ -713,6 +718,7 @@ function infoHTML(){
                :`<div><div class="t">Lieu inconnu</div><div class="m">Il sera révélé au début du tour ${loc+1}.</div></div>`; }
   /* Aide générale : les 3 premières parties (jamais pendant le tutoriel, qui a son propre encadré), ou à la demande avec le « ? » */
   if(!(S.help||(!S.tut&&P.w+P.l+P.d<3))) return "";
+  if(S.turn>1&&!S.help) return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Carte puis lieu pour poser · <b>appui long</b> pour voir en grand.</div></div>`;
   return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser. Tu peux aussi la glisser vers le haut sur un lieu. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <span>Jusqu'au tour 5, le bouton <b>⚖ Serment</b> te laisse jurer sur un lieu.</span> <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
 }
 function handHTML(){

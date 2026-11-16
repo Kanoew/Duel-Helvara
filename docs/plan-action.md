@@ -12,9 +12,9 @@ Cocher les cases au fur et à mesure. En cas d'écart avec le code, **le code fa
 
 ## Où on en est
 
-Tout le travail ci-dessous est sur la branche **`claude/game-action-plan-y9pgh7`**. **Rien n'est sur `main`** : le site en ligne n'a pas changé.
+La vague 1 a été fusionnée dans `main` par la PR n°1 (vérifié le 16 novembre : `origin/main` la contient), donc elle est **déjà en ligne**. Les corrections d'interface et de tests faites ensuite sont sur la branche `ccr-a2a09767-cv8ig6`, pas encore sur `main`.
 
-### Vague 1 : faite, pas encore publiée
+### Vague 1 : faite et fusionnée dans `main`
 
 - [x] Serment : étape au tour 5 de la partie guidée
 - [x] Serment : cérémonie (sceau ⚖ sur le lieu, lueur durable)
@@ -29,17 +29,18 @@ Tout le travail ci-dessous est sur la branche **`claude/game-action-plan-y9pgh7`
 
 Tests après fusion : 633 scénarios sur 633, bac à sable 15 sur 15, deux parties complètes jouées avec Serment en 390 × 844 et 360 × 740 sans erreur.
 
-### Avant de publier la vague 1 sur `main`
+### Vérifications à faire (la vague 1 est déjà en ligne)
 
 - [ ] **Jordan : un vrai duel entre amis avec Serment.** Il n'a tourné que sur un faux salon de test, jamais sur le vrai serveur.
 - [ ] Jordan : essai sur son téléphone (Android, Brave)
 - [ ] Jordan : jouer un Blitz complet avec Serment (testé seulement par scénarios)
 - [ ] Jordan : valider ou changer les chiffres provisoires (tableau ci-dessous)
 - [ ] Jordan : relire les cinq conseils de fin de partie et le texte de l'étape du tutoriel
-- [ ] Corriger : le panneau d'aide « À toi… » cache la barre du journal en 390 × 844 (le réduire à une ligne après le tour 1)
-- [ ] Corriger : la Cathédrale d'Helvara dépasse des autres lieux quand son nom tient sur deux lignes
+- [x] Corriger : le panneau d'aide « À toi… » cache la barre du journal en 390 × 844 (le réduire à une ligne après le tour 1)
+- [x] Corriger : la Cathédrale d'Helvara dépasse des autres lieux quand son nom tient sur deux lignes
 - [ ] Raccourcir les textes de lieux les plus longs (plume de Jordan)
-- [ ] Comprendre les deux tests en échec **avant même la vague 1** : `tests-holo.js` (5 sur 8) et `tests-pwa.js` (1 échec). Les deux attendent une seule carte holo et en trouvent deux.
+- [x] `tests-holo.js` : 68 sur 68. La collection affiche et précharge volontairement les cartes holo (confirmé par Jordan) ; le test comptait mal. Test mis à jour.
+- [x] `tests-pwa.js` : 0 échec. Cause : le plateau affiche les illustrations pleines, préchargées seulement pour ton deck. Décision de Jordan (16 novembre) : on garde les illustrations pleines. Correction : `preloadFoe()` (js/interface.js) range au lancement d'une partie les illustrations du deck adverse de l'IA ; le test vérifie maintenant cela. **Reste non couvert** : en duel en ligne, le deck adverse n'est pas connu au départ, donc ses cartes ne sont rangées que si elles ont déjà été vues.
 - [ ] Après publication : vérifier l'aperçu réel du lien sur Discord (ajouter `?x=1` au lien si l'ancien aperçu reste)
 
 ### Chiffres provisoires à valider
