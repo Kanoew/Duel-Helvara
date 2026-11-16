@@ -341,3 +341,21 @@ const FAC = {
   jugement:{c:"var(--jugement)",n:"Jugement"}
 };
 const RAR = {D:{n:"Départ",c:"var(--mist)"}, C:{n:"Commune",c:"#b9c4d4"}, R:{n:"Rare",c:"#7fb6e6"}, E:{n:"Épique",c:"#b58cf0"}, L:{n:"Légendaire",c:"var(--warm)"}, U:{n:"Ultra-légendaire",c:"#f2c6ff"}, T:{n:"Jeton",c:"var(--mist)"}};
+/* Decks prêts (constructeur de deck) : un archétype = 12 cartes déjà sorties, sans exclusive saisonnière ni ultra-légendaire.
+   fac : faction dominante (pastille) ; how : « comment ça se joue ». Le joueur charge un archétype d'un geste ; les cartes qu'il n'a pas sont remplacées (precBuild, js/interface.js). */
+const PRECONS = [
+  {id:"quartier", name:"Le quartier", fac:"helvara", how:"Des cartes peu chères qui se soutiennent : Ishara et la Doyenne renforcent tout le monde, le Colosse du Léman finit le travail.",
+   cards:["coursier","passante","ishara","felix","veilleur","celeste","funambule","doyenne","colosse","remi","vasseur","comptable"]},
+  {id:"miser", name:"Tout miser", fac:"primordial", how:"Garde ton énergie avec Prométhée, puis pose deux géants d'un coup aux derniers tours.",
+   cards:["promethee","jordan","esquille","araignee","ares","troll","yarden","pele","mere","nergal","apsu","ecorche"]},
+  {id:"captures", name:"Prises et captures", fac:"desir", how:"Vole la puissance adverse (Izzy), capture ses meilleures cartes (Calypso, Éris) et protège les tiennes ; Freyr et Freya vont ensemble.",
+   cards:["calypso","lipdentelle","izzy","eris","brigid","uzume","kitsune","maeve","devote","freyr","freya","andraste"]},
+  {id:"affaiblissement", name:"Affaiblissement", fac:"jugement", how:"Fais fondre la puissance adverse (l'Agent de Thot, Skadi, Oya, Balor) pour gagner les lieux sans courir après les gros chiffres.",
+   cards:["tyr","morrigan","maat","skadi","bia","selene","sekhmet","thot","oya","balor","hecate","artemis"]},
+  {id:"destruction", name:"Destruction", fac:"primordial", how:"Détruis les meilleures cartes adverses (Rusalka, l'Esquille, Anat, Nyx) et pioche avec Hécate pour tenir jusqu'au bout.",
+   cards:["rusalka","esquille","hecate","ares","anat","durga","sekhmet","troll","chasseur","nyx","ecorche","dante"]},
+  {id:"montee", name:"Montée en puissance", fac:"helvara", how:"Pose tôt des cartes qui grandissent toutes seules (Idunn, la Messagère d'Hécate, Vasseur, Sélène) et renforce-les avec Ishara et la Doyenne.",
+   cards:["idunn","messagere","vasseur","selene","ishara","doyenne","tefnut","bastet","colosse","hecate","comptable","relieur"]},
+  {id:"defausse", name:"Défausse", fac:"primordial", how:"Défausse des cartes (le Mendiant de la Riponne, Mélinoë) pour nourrir Rémi, Fange et le Charognard du M2, et détruis ce qui te gêne.",
+   cards:["mendiant","remi","charognard","melinoe","fange","lipdentelle","dante","hecate","rusalka","pele","troll","coursier"]}
+];
