@@ -36,8 +36,8 @@ Tests après fusion : 633 scénarios sur 633, bac à sable 15 sur 15, deux parti
 - [ ] Jordan : jouer un Blitz complet avec Serment (testé seulement par scénarios)
 - [ ] Jordan : valider ou changer les chiffres provisoires (tableau ci-dessous)
 - [ ] Jordan : relire les cinq conseils de fin de partie et le texte de l'étape du tutoriel
-- [ ] Corriger : le panneau d'aide « À toi… » cache la barre du journal en 390 × 844 (le réduire à une ligne après le tour 1)
-- [ ] Corriger : la Cathédrale d'Helvara dépasse des autres lieux quand son nom tient sur deux lignes
+- [x] Corriger : le panneau d'aide « À toi… » cache la barre du journal en 390 × 844 (le réduire à une ligne après le tour 1)
+- [x] Corriger : la Cathédrale d'Helvara dépasse des autres lieux quand son nom tient sur deux lignes
 - [ ] Raccourcir les textes de lieux les plus longs (plume de Jordan)
 - [ ] Comprendre les deux tests en échec **avant même la vague 1** : `tests-holo.js` (5 sur 8) et `tests-pwa.js` (1 échec). Les deux attendent une seule carte holo et en trouvent deux.
 - [ ] Après publication : vérifier l'aperçu réel du lien sur Discord (ajouter `?x=1` au lien si l'ancien aperçu reste)
