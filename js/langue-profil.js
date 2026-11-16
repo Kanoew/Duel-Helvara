@@ -290,9 +290,14 @@ function claimDaily(){
 const QMOVERS=["hermes","eris","susanoo","set","heimdall"], QDISC=["mendiant","melinoe","odin","lipdentelle","dionysos","morrigan_h"], QCHARS=["yarden","jordan","izzy","apsu"];
 const qFacs=()=>Object.keys(FAC).filter(f=>P.owned.filter(id=>CARDS[id]&&CARDS[id].fac===f).length>=6);
 const qChars=()=>QCHARS.filter(ch=>P.owned.some(id=>CARDS[id]&&charOf(id)===ch));
+/* Déblocage du Blitz (Jordan, 16 novembre) : après 10 parties terminées (partie classée + duels ; ni le tutoriel ni le Blitz ne comptent).
+   Aucun compteur ajouté au profil : on additionne ceux qui existent. Le bac à sable (?date=) a tout débloqué. */
+const BLITZ_UNLOCK=10;
+const gamesPlayed=()=>(P.w|0)+(P.l|0)+(P.d|0)+(P.dw|0)+(P.dl|0)+(P.dd|0);
+const blitzLeft=()=>window.__sandbox?0:Math.max(0,BLITZ_UNLOCK-gamesPlayed());
 const QOK={helv4:()=>P.owned.filter(id=>CARDS[id]&&CARDS[id].fac==="helvara").length>=4, move2:()=>P.owned.some(id=>CARDS[id]&&QMOVERS.includes(charOf(id))),
   disc3:()=>P.owned.some(id=>QDISC.includes(id)), six6:()=>P.owned.some(id=>CARDS[id]&&CARDS[id].cost>=6), fusion:()=>P.owned.some(id=>CARDS[id]&&CARDS[id].r==="U"),
-  blitz1:()=>!!P.starter, facwin:()=>qFacs().length>0, charwin:()=>qChars().length>0};
+  blitz1:()=>!!P.starter&&blitzLeft()===0, facwin:()=>qFacs().length>0, charwin:()=>qChars().length>0};
 const qOk=id=>!QOK[id]||QOK[id]();
 function mkQuest(id,seed){ const q={id,p:0,c:false};
   if(id==="facwin"){ const f=qFacs(); q.x=f[seed%f.length]; } if(id==="charwin"){ const ch=qChars(); q.x=ch[seed%ch.length]; } return q; }
