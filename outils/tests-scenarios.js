@@ -1238,6 +1238,112 @@ async function inPage() {
       const e2 = put("e", 0, "oeuf_maudit"); y.ward = true; T("Œuf maudit : les Œufs cumulent (−1 par œuf, l'autre Œuf compte), protégé par les protections contre l'affaiblissement", cardPow("e", 0, x) === 1 && cardPow("e", 0, e1) === -1 && cardPow("e", 0, y) === 3, `${cardPow("e", 0, x)} ${cardPow("e", 0, e1)} ${cardPow("e", 0, y)}`); }
   }
 
+  /* ===== Serment étendu aux duels, au Blitz et à la partie guidée ===== */
+  { const kept = { calls: [] }; const realQ = window.qProg; window.qProg = (id) => kept.calls.push(id);
+    const setBoard = (a, b, c, d, e, f) => { for (const s of ["p", "e"]) S.board[s] = [[], [], []]; [[a, d], [b, e], [c, f]].forEach(([x, y], li) => { put("p", li, plain[0], x); put("e", li, plain[1], y); }); };
+    const mpStub = (host) => ({ g: 1, meHost: host, oppNick: "Ami", locked: false, gone: false, replaying: false });
+    /* S1. Prêter un Serment : une fois, révélé, jusqu'au tour 5 seulement */
+    fresh(); S.turn = 3; T("Serment : possible en partie classée au tour 3", oathOK() === true && oathFree() === true, "");
+    T("Serment : prêté sur un lieu révélé", swearOath("p", 1) === true && S.oath === 1 && S.oathNew && S.oathNew.li === 1, "");
+    T("Serment : un seul par partie", swearOath("p", 2) === false && S.oath === 1, "");
+    fresh(); S.turn = 6; T("Serment : refusé au tour 6", swearOath("p", 0) === false && S.oath == null && oathOK() === false, "");
+    fresh(); S.turn = 4; S.locs[2].rev = false; T("Serment : refusé sur un lieu non révélé ou inexistant", swearOath("p", 2) === false && swearOath("p", 5) === false && S.oath == null, "");
+    /* S2. Où le Serment est possible */
+    fresh(); S.turn = 3; S.blitz = true; T("Serment : possible au Blitz", oathOK() === true, "");
+    fresh(); S.turn = 3; S.mp = mpStub(true); T("Serment : possible en duel", oathOK() === true, ""); S.mp.replaying = true; T("Serment : pas pendant la reprise d'un duel", oathOK() === false, "");
+    fresh(); S.turn = 3; S.rp = { r: {} }; T("Serment : pas dans un replay", oathOK() === false, "");
+    fresh(); S.turn = 3; S.mp = mpStub(true); S.aiOath = null; { const keep = Math.random; let used = 0; Math.random = () => { used++; return 0; }; aiOath(); Math.random = keep; T("Serment : l'IA ne jure jamais en duel (et ne tire rien)", S.aiOath == null && used === 0, ""); }
+    /* S3. Duel : coups d'un tour (protocole) */
+    fresh(); { const a = card(plain[0]), b = card(plain[1]); S.hand.p = [a, b];
+      const out = mapPlays("p", [[a.uid, 0], [1, 0, "o"], [b.uid, 2]]);
+      T("Protocole du duel : le Serment [lieu, 0, \"o\"] se lit à côté des cartes, sans être pris pour une carte", out.oath === 1 && out.length === 2 && out[0].c === a && out[1].c === b, `${out.length} cartes, oath ${out.oath}`);
+      T("Protocole du duel : Serment hors lieux ignoré", mapPlays("p", [[7, 0, "o"]]).oath === undefined && mapPlays("p", [[-1, 0, "o"]]).oath === undefined, ""); }
+    /* S4. Duel : le Serment est caché pendant le tour et révélé en fin de tour, identique chez les deux joueurs */
+    { const run = async (host, mineO, theirO) => { fresh(); S.turn = 3; S.mp = mpStub(host); const m = [], t = []; if (mineO != null) m.oath = mineO; if (theirO != null) t.oath = theirO;
+        S.oathStage = mineO != null ? mineO : null; const before = [S.oath, S.aiOath]; await resolveTurn(m, t, false); return { before, oath: S.oath, ai: S.aiOath, stage: S.oathStage, log: S.log.filter(l => /Serment|jure/.test(l)).reverse() }; };
+      const A = await run(true, 1, null), B = await run(false, null, 1);
+      T("Duel : mon Serment caché est révélé à la fin du tour (rien avant)", A.before[0] == null && A.oath === 1 && A.ai == null && A.stage == null, JSON.stringify(A));
+      T("Duel : l'adversaire voit le même Serment, de son côté", B.oath == null && B.ai === 1, JSON.stringify(B));
+      const C = await run(true, 2, 2), D = await run(false, 2, 2);
+      T("Duel : deux Serments sur le même lieu au même tour = Serment croisé chez les deux", C.oath === 2 && C.ai === 2 && D.oath === 2 && D.ai === 2, JSON.stringify([C, D]));
+      const E = await run(true, 0, 1), F = await run(false, 1, 0);
+      T("Duel : deux Serments sur des lieux différents ne se croisent pas, vus de façon symétrique", E.oath === 0 && E.ai === 1 && F.oath === 1 && F.ai === 0, JSON.stringify([E, F]));
+      T("Duel : journal identique d'un joueur à l'autre pour un Serment croisé (même nombre d'entrées)", C.log.length === D.log.length && C.log.length >= 2, C.log.join(" | ")); }
+    /* S5. Duel : relever un Serment adverse déjà révélé, au tour suivant */
+    fresh(); S.turn = 3; S.mp = mpStub(true); S.aiOath = 1; await resolveTurn(Object.assign([], { oath: 1 }), [], false);
+    T("Duel : relever le Serment adverse (même lieu) = croisé", S.oath === 1 && S.aiOath === 1 && S.log.some(l => /^Serment croisé sur/.test(l)), "");
+    fresh(); S.turn = 3; S.mp = mpStub(true); S.oath = 0; await resolveTurn(Object.assign([], { oath: 2 }), Object.assign([], { oath: 1 }), false);
+    T("Duel : un Serment déjà prêté ne se remplace pas, et ne se compte pas deux fois", S.oath === 0 && S.aiOath === 1, `${S.oath} ${S.aiOath}`);
+    /* S6. Duel : envoi des coups et reprise après coupure */
+    fresh(); S.turn = 2; S.mp = mpStub(true); myMp = { hist: {}, role: "host", code: "TEST-AAAAAA" }; S.oathStage = 1; mpLock();
+    T("Duel : mpLock envoie le Serment avec les coups du tour", JSON.stringify(myMp.hist[2]) === JSON.stringify([[1, 0, "o"]]) && S.mp.locked === true, JSON.stringify(myMp.hist));
+    { const mk2 = host => { newGame(); quiet = true; S.tut = false; S.mp = mpStub(host); S.mp.replaying = true; };
+      const hostHist = { 1: [[0, 0, "o"]], 2: [] }, guestHist = { 1: [], 2: [[0, 0, "o"]] };
+      mk2(true); myMp = { hist: hostHist, role: "host", code: "TEST-AAAAAA" }; await mpReplay({ hist: guestHist });
+      const logs = S.log.filter(l => /Serment/.test(l)).length;
+      T("Reprise d'un duel : Serments rejoués une seule fois chacun (prêté puis croisé), rien compté", S.oath === 0 && S.aiOath === 0 && logs === 2 && S.turn === 3 && !P.oathK, `oath ${S.oath}/${S.aiOath}, journal ${logs}, tour ${S.turn}`);
+      mk2(false); myMp = { hist: guestHist, role: "guest", code: "TEST-AAAAAA" }; await mpReplay({ hist: hostHist });
+      T("Reprise d'un duel : même résultat vu de l'autre joueur", S.oath === 0 && S.aiOath === 0 && S.turn === 3, `oath ${S.oath}/${S.aiOath}, tour ${S.turn}`);
+      mk2(true); myMp = { hist: { 1: [[2, 0, "o"]] }, role: "host", code: "TEST-AAAAAA" }; await mpReplay({ hist: {} });
+      T("Reprise d'un duel : mon Serment envoyé mais pas encore résolu revient en attente, caché, sans être appliqué", S.oathStage === 2 && S.oath == null && S.mp.locked === true, `stage ${S.oathStage}, oath ${S.oath}`); }
+    myMp = null;
+    /* S7. Fin de partie en duel : CHF, compteurs, quête */
+    const endDuel = async (pw, ow, cross) => { fresh(); S.turn = 6; S.mp = mpStub(true); S.oath = ow; if (cross) S.aiOath = ow; setBoard(...pw); finish(); return S.over; };
+    P.oathK = P.oathB = P.oathS = P.oathMax = 0; kept.calls.length = 0;
+    { P.chf = 100; const ov = await endDuel([5, 5, 1, 1, 1, 5], 0);
+      T("Duel : Serment tenu (lieu et partie gagnés) = +30 CHF", ov.res === "win" && P.chf === 100 + ECO.win + OATH_CHF.duel.kept && ov.oath.kept && ov.oath.d === OATH_CHF.duel.kept, `${P.chf} (gain ${ECO.win}), ${JSON.stringify(ov.oath)}`);
+      T("Duel : compteurs du profil (tenu 1, série 1) et quête « Tiens un Serment »", P.oathK === 1 && P.oathS === 1 && P.oathMax === 1 && P.oathB === 0 && kept.calls.includes("oath"), `${P.oathK} ${P.oathS} ${P.oathMax} ${kept.calls}`); }
+    { P.chf = 100; kept.calls.length = 0; const ov = await endDuel([5, 5, 1, 1, 1, 5], 2);
+      T("Duel : Serment rompu (lieu perdu) = −15 CHF même si la partie est gagnée", P.chf === 100 + ECO.win - OATH_CHF.duel.broken && !ov.oath.kept && ov.oath.d === -OATH_CHF.duel.broken, `${P.chf}`);
+      T("Duel : Serment rompu : série remise à 0, plus longue série conservée, pas de quête", P.oathB === 1 && P.oathS === 0 && P.oathMax === 1 && !kept.calls.includes("oath"), `${P.oathB} ${P.oathS} ${P.oathMax}`); }
+    { P.chf = 100; const ov = await endDuel([1, 1, 5, 5, 5, 1], 2);
+      T("Duel : lieu gagné mais partie perdue : ni gain ni perte (Serment tenu compté dans le profil)", ov.res === "lose" && ov.oath.kept && ov.oath.d === 0 && P.chf === 100 + ECO.loss && P.oathK === 2, `${ov.res} ${P.chf}`); }
+    { P.chf = 5; const ov = await endDuel([1, 1, 5, 5, 5, 1], 0);
+      T("Duel : les CHF ne passent jamais sous 0 (Serment rompu avec 5 CHF)", P.chf === Math.max(0, 5 + ECO.loss - OATH_CHF.duel.broken) && P.chf >= 0, `${P.chf}`); }
+    { P.chf = 100; fresh(); S.turn = 6; S.mp = mpStub(true); setBoard(5, 5, 1, 1, 1, 5); finish(); T("Duel : sans Serment, aucun CHF de Serment", P.chf === 100 + ECO.win && S.over.oath === null, `${P.chf}`); }
+    { P.chf = 100; await endDuel([5, 5, 1, 1, 1, 5], 0, true); T("Duel : Serment croisé tenu = +60 CHF", P.chf === 100 + ECO.win + OATH_CHF.duel.crossKept && S.over.oath.cross, `${P.chf}`);
+      P.chf = 100; await endDuel([5, 5, 1, 1, 1, 5], 2, true); T("Duel : Serment croisé perdu = −30 CHF", P.chf === 100 + ECO.win - OATH_CHF.duel.crossBroken, `${P.chf}`); }
+    /* S8. Blitz */
+    const endBlitz = (pw, ow, wins, cross) => { fresh(); S.turn = 6; S.blitz = true; S.oath = ow; if (cross) S.aiOath = ow; setBoard(...pw); P.bz = { day: "", used: false, run: { deck: [], opts: [], wins, over: false, gain: 0 } }; finish(); return { ov: S.over, r: P.bz.run }; };
+    P.oathK = P.oathB = P.oathS = P.oathMax = 0; kept.calls.length = 0;
+    { P.chf = 100; const { ov, r } = endBlitz([5, 5, 1, 1, 1, 5], 0, 0);
+      T("Blitz : Serment tenu = +50 CHF ajoutés au gain (1 victoire = 75 + 50)", r.wins === 1 && r.oath === OATH_CHF.blitz.kept && bzHeld(r) === BZ.gain[1] + 50 && !r.over, `${r.wins} ${r.oath}`);
+      T("Blitz : compteurs du profil et quête comptent aussi", P.oathK === 1 && kept.calls.includes("oath") && ov.oath.d === 50, `${P.oathK} ${kept.calls}`); }
+    { P.chf = 100; const { ov, r } = endBlitz([5, 5, 1, 1, 1, 5], 2, 1);
+      T("Blitz : Serment rompu = −50 CHF sur le gain, même en gagnant le match (2 victoires = 150 − 50)", r.wins === 2 && bzHeld(r) === 100 && r.oath === -50, `${r.wins} ${r.oath}`); }
+    { P.chf = 100; const { r } = endBlitz([1, 1, 5, 5, 5, 1], 0, 0);
+      T("Blitz : défaite avec Serment rompu sur 0 victoire : gain 0, jamais négatif, CHF intacts", r.over && r.gain === 0 && P.chf === 100, `${r.gain} ${P.chf}`); }
+    { P.chf = 100; const { r } = endBlitz([1, 1, 5, 5, 5, 1], 0, 2);
+      T("Blitz : défaite avec Serment rompu après 2 victoires : 150 − 50 = 100 CHF versés", r.over && r.gain === 100 && P.chf === 200, `${r.gain} ${P.chf}`); }
+    { P.chf = 100; const { r } = endBlitz([5, 5, 1, 1, 1, 5], 0, 0, true);
+      T("Blitz : Serment croisé tenu = +100", r.oath === OATH_CHF.blitz.crossKept, `${r.oath}`); }
+    { P.chf = 100; P.oathK = 0; const { ov, r } = endBlitz([3, 3, 3, 3, 3, 3], 0, 1);
+      T("Blitz : une égalité se rejoue, le Serment n'est ni compté ni payé", ov.res === "draw" && !r.oath && P.oathK === 0 && ov.oath === null && r.wins === 1, `${ov.res} ${r.oath}`); }
+    /* S9. Partie guidée */
+    { P.oathK = 4; startTutorial(); S.turn = 5; const wasOK = oathOK();
+      const c1 = card("yarden"); S.staged = [{ c: c1, li: 2 }];
+      T("Partie guidée : le Serment est possible, l'étape 5 l'exige en plus de la carte", wasOK && tutCards() && !tutDone(), `cartes ${tutCards()}, fini ${tutDone()}`);
+      T("Partie guidée : Serment prêté sans enjeu, étape validée", swearOath("p", 0) && tutDone() && oathStakeText(false).includes("aucun enjeu"), "");
+      T("Partie guidée : le Serment ne touche ni profil ni quête", oathSettle() === null && P.oathK === 4 && S.aiOath == null, "");
+      S.oath = null; { const keep = Math.random; Math.random = () => 0.0; for (let t = 2; t <= 4; t++) { S.turn = t; aiOath(); } Math.random = keep; } T("Partie guidée : l'IA ne jure jamais", S.aiOath == null, ""); }
+    /* S10. Profil */
+    { const f = freshProfile(); T("Profil : les compteurs du Serment existent à 0 dans un profil neuf", f.oathK === 0 && f.oathB === 0 && f.oathS === 0 && f.oathMax === 0, "");
+      const c = clean({ oathK: 5, oathB: -3, oathS: "x", oathMax: 7.9 }); T("Profil : nettoyage des compteurs (négatif, texte → 0, entier)", c.oathK === 5 && c.oathB === 0 && c.oathS === 0 && c.oathMax === 7, JSON.stringify([c.oathK, c.oathB, c.oathS, c.oathMax]));
+      const c2 = clean({}); T("Profil : un ancien profil sans compteurs se charge à 0", c2.oathK === 0 && c2.oathMax === 0, "");
+      const b = cleanBz({ run: { deck: [], opts: [], wins: 1, over: false, gain: 0, oath: -50 } }); T("Profil : le Serment du Blitz en cours est conservé et borné", b.run.oath === -50 && cleanBz({ run: { oath: 99999999 } }).run.oath === 9999 && cleanBz({ run: {} }).run.oath === 0, JSON.stringify(b.run));
+      const wk = window.__wiped; window.__wiped = true; const k0 = P.oathK; fresh(); S.turn = 6; S.mp = mpStub(true); S.oath = 0; setBoard(5, 5, 1, 1, 1, 5); finish(); T("Profil : bac à sable (__wiped) : compteurs du Serment intacts", P.oathK === k0, `${P.oathK} ${k0}`); window.__wiped = wk; }
+    /* S11. Anglais */
+    { const keepL = LANG; LANG = "en";
+      const en = t => trUI(t);
+      T("Anglais : Serment (profil, cérémonie, barre, résultats)", en("Serments tenus") === "Oaths kept" && en("Plus longue série de parole tenue") === "Longest streak of oaths kept" && en("⚖ Serment (caché)") === "⚖ Oath (hidden)" && en("⚖ Tu jureras sur") === "⚖ You will swear on" && en("⚖ Serment tenu : +30 CHF") === "⚖ Oath kept: +30 CHF" && en("⚖ Serment croisé perdu : −30 CHF") === "⚖ Cross Oath lost: −30 CHF" && en("⚖ Serment rompu : −50 CHF sur ton gain du Blitz") === "⚖ Oath broken: −50 CHF on your Blitz winnings", "");
+      fresh(); S.turn = 3; S.mp = mpStub(true); const t1 = oathStakeText(false), t2 = oathStakeText(true); S.mp = null; S.blitz = true; const t3 = oathStakeText(false), t4 = oathStakeText(true);
+      T("Anglais : enjeux du Serment (duel, Blitz, croisé) tous traduits", [t1, t2, t3, t4].every(x => !/[éèà]|Lieu|Duel :|gagnés/.test(en(x))), [t1, t2, t3, t4].map(en).join(" / "));
+      T("Anglais : étape du tutoriel et aide", en("Nouveau : le") === "New: the" && en("te laisse jurer sur un lieu.") === "lets you swear on a location." && en("Prête maintenant ton") === "Now swear your", "");
+      const rl = en(": tout se joue sur ce lieu. Gagne-le avec la partie : +100 CHF. Perds-le : −50 CHF."); T("Anglais : barre du Serment croisé en CHF", /^: everything rides/.test(rl), rl);
+      const rg = en(". Tu tiens déjà 125 CHF. Dont Serments : +50 CHF."); T("Anglais : gain du Blitz avec Serments", rg === ". You already hold 125 CHF. Oaths included: +50 CHF.", rg);
+      LANG = keepL; }
+    window.qProg = realQ; S = null; }
+
   /* ===== Cadres de fête (26 octobre) : liés à la carte (saison, variantes), en permanence ===== */
   { const keepC = P.cadres, keepScr = screen, keepZ = zoomId; P.cadres = true;
     T("Cadres : les cartes de saison ont leur cadre quelle que soit la date (Halloween, Noël, Nouvel An, Saint-Valentin, Pâques)", [frameCur("morrigan_h"), frameCur("aphrodite_n"), frameCur("hel_r"), frameCur("eos_v"), frameCur("ananke_v"), frameCur("ananke_r"), frameCur("ulqetjor_v")].join() === "halloween,noel,nouvelan,saintvalentin,saintvalentin,nouvelan,saintvalentin", [frameCur("morrigan_h"), frameCur("aphrodite_n"), frameCur("hel_r")].join());

@@ -284,12 +284,20 @@ function cardDayHTML(){
 }
 async function rpAuto(){ while(S&&S.rp&&S.rp.auto&&!S.rp.done){ if(!S.busy) await rpStep(); await sleep(900); } }
 let vIdx=0;
+/* Accueil (vague 1) : les notes (nouvelle saison, connexion du jour, remboursement) forment une file, un seul bandeau compact à la fois ; « Suivant » / « OK » passe à la suivante */
+let notesGone=new Set();
+function noticeHTML(){
+  const all=[seasonNote,dailyNote,migratedNote].filter(Boolean);
+  if(!all.length){ notesGone.clear(); return ""; }
+  const left=all.filter(t=>!notesGone.has(t)); if(!left.length) return "";
+  const i=all.indexOf(left[0])+1, more=left.length>1;
+  return `<div class="notice noticeq" role="status"><span class="ntxt">${left[0]}</span><span class="nctl">${all.length>1?`<span class="ncount" aria-label="Note ${i} sur ${all.length}">${i}/${all.length}</span>`:""}<button class="nbtn" data-act="notedismiss" data-t="${i-1}" aria-label="${more?"Note suivante":"Fermer la note"}">${more?"Suivant":"OK"}</button></span></div>`;
+}
 function homeHTML(){
   const inGame=S && !S.over && !S.blitz && !S.rp;
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
   return `
-  ${seasonNote?`<div class="notice">${seasonNote}</div>`:""}${dailyNote?`<div class="notice">${dailyNote}</div>`:""}
-  ${migratedNote?`<div class="notice">${migratedNote}</div>`:""}
+  ${noticeHTML()}
   ${vitrineHTML()}
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
   <button class="play" data-act="${inGame?"resume":"play"}" ${deckReady()||inGame?"":"disabled"}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>
@@ -343,6 +351,11 @@ function profileHTML(){
         <div class="stat"><div class="v">${P.sw}</div><div class="k">Victoires</div></div>
         <div class="stat"><div class="v">${P.sl}</div><div class="k">Défaites</div></div>
         <div class="stat"><div class="v">${P.sd}</div><div class="k">Égalités</div></div>
+      </div>
+      <div class="stats three oathstats">
+        <div class="stat"><div class="v">${P.oathK||0}</div><div class="k">Serments tenus</div></div>
+        <div class="stat"><div class="v">${P.oathB||0}</div><div class="k">Serments rompus</div></div>
+        <div class="stat"><div class="v">${P.oathMax||0}</div><div class="k">Plus longue série de parole tenue</div></div>
       </div>
       <div class="hint">Ces chiffres comptent les parties classées de la saison.<br>Depuis le début : ${played?`${P.w} V · ${P.l} D · ${P.d} É`:"aucune partie"} · Duels entre amis : ${P.dw} V · ${P.dl} D · ${P.dd} É · Collection : ${P.owned.length}/${avail().length} cartes.</div>
     </section>
@@ -538,7 +551,7 @@ const TUT={
    2:{req:[["felix",1]],t:"Le <b>Lac Ouchy</b> vient d'apparaître. Chaque lieu a sa règle : ici, ta première carte laisse un Reflet de 2. Pose <b>Félix</b> au Lac Ouchy : ta prochaine carte coûtera 1 de moins. Tu as maintenant 2 énergie, même si tu n'avais pas tout dépensé au tour 1."},
    3:{req:[["celeste",2],["passante",0]],t:"Céleste coûte 3, mais Félix et le <b>Sous-gare</b> la font passer à 1. Pose <b>Céleste</b> au Sous-gare, puis la <b>Passante</b> à la Ruelle. Tu peux jouer plusieurs cartes tant que tu as de l'énergie."},
    4:{req:[["izzy",1]],t:"L'Agent de Thot adverse a <b>affaibli</b> Céleste : son chiffre est passé en rouge. Pose <b>Izzy</b> au Lac Ouchy : elle copie la puissance de la carte adverse la plus forte du lieu. Appui long sur une carte pour la voir en grand."},
-   5:{req:[["yarden",2]],t:"Tu as des cartes dans les 3 lieux : <b>Yarden Weiss</b> gagne +4 de puissance en arrivant. Pose-la au Sous-gare."},
+   5:{req:[["yarden",2]],oath:true,t:"Tu as des cartes dans les 3 lieux : <b>Yarden Weiss</b> gagne +4 de puissance en arrivant. Pose-la au Sous-gare.<br>Nouveau : le <b>Serment</b>. Touche <b>⚖ Serment</b>, choisis un lieu où tu mènes, puis <b>Je le jure</b>. En vraie partie, gagner ce lieu avec la partie rapporte, le perdre coûte. Ici, aucun enjeu."},
    6:{req:[["colosse",1]],t:"Dernier tour. Pose le <b>Colosse du Léman</b> au Lac Ouchy. À la fin, celui qui mène sur 2 lieux sur 3 gagne."}
   }
 };
@@ -554,11 +567,13 @@ function startTutorial(){
   log("Partie guidée"); screen="play"; startTurn(); window.scrollTo(0,0);
 }
 const tutReq=()=>S&&S.tut&&TUT.steps[S.turn]?TUT.steps[S.turn].req:[];
-const tutDone=()=>tutReq().every(([id,li])=>S.staged.some(x=>x.c.id===id&&x.li===li));
+const tutCards=()=>tutReq().every(([id,li])=>S.staged.some(x=>x.c.id===id&&x.li===li));
+const tutOath=()=>!(S&&S.tut&&TUT.steps[S.turn]&&TUT.steps[S.turn].oath)||S.oath!=null;
+const tutDone=()=>tutCards()&&tutOath();
 function tutBarHTML(){
   if(!S||!S.tut||S.over) return ""; const st=TUT.steps[S.turn]; if(!st) return "";
   const todo=tutReq().filter(([id,li])=>!S.staged.some(x=>x.c.id===id&&x.li===li)).map(([id,li])=>`<b>${CARDS[id].name}</b> (<i>${LOCS[S.locs[li].id].name}</i>`);
-  return `<div class="tutbar"><div class="eyebrow">Partie guidée · tour ${S.turn}/6</div><p>${st.t}</p>${tutDone()?`<p class="ok">C'est bon : touche <b>Fin du tour</b>.</p>`:S.nudge?`<p class="nudge">Pas encore : pose d'abord ${todo.join("), puis ")}), puis touche <b>Fin du tour</b>.</p>`:""}</div>`;
+  return `<div class="tutbar"><div class="eyebrow">Partie guidée · tour ${S.turn}/6</div><p>${st.t}</p>${tutDone()?`<p class="ok">C'est bon : touche <b>Fin du tour</b>.</p>`:tutCards()?`<p class="${S.nudge?"nudge":"ok"}">Prête maintenant ton <b>Serment</b> : touche <b>⚖ Serment</b>, choisis un lieu, puis <b>Je le jure</b>.</p>`:S.nudge?`<p class="nudge">Pas encore : pose d'abord ${todo.join("), puis ")}), puis touche <b>Fin du tour</b>.</p>`:""}</div>`;
 }
 function finishTuto(){
   const first=!P.tuto; tutoStep=-1; if(S&&S.tut){ S=null; }
@@ -623,8 +638,9 @@ function rulesHTML(){
     <ol class="rules">
       <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I), sauf Héraut et Avatar qui en ont cinq (V à I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(START[i],"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
       <li>Victoire : +1 étoile, +2 à partir de 2 victoires d'affilée (jusqu'à Héraut). Défaite : −1 étoile, sauf en Passant et Initié où elle ne coûte rien. Égalité : rien ne bouge.</li>
-      <li><b>Le Serment</b> (parties classées uniquement) : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé. Si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
+      <li><b>Le Serment</b> : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé (partie classée, Blitz, duel entre amis ; sans enjeu dans la partie guidée). En partie classée, si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
       <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.</li>
+      <li><b>Serment en duel et au Blitz</b> : pas d'étoiles, des CHF (valeurs provisoires). Lieu et partie gagnés : +${OATH_CHF.duel.kept} CHF en duel, +${OATH_CHF.blitz.kept} CHF sur ton gain au Blitz. Lieu perdu : −${OATH_CHF.duel.broken} CHF en duel, −${OATH_CHF.blitz.broken} CHF au Blitz, jamais sous 0. Serment croisé : ${OATH_CHF.duel.crossKept} CHF en duel, ${OATH_CHF.blitz.crossKept} CHF au Blitz (perdu : −${OATH_CHF.duel.crossBroken} et −${OATH_CHF.blitz.crossBroken}). En duel, ton Serment reste caché à l'adversaire pendant le tour : il est révélé à la fin du tour, en même temps que les cartes, et tu peux relever le sien au tour suivant.</li>
       <li>Le début de chaque palier est un plancher : on ne redescend jamais sous un palier atteint pendant la saison.</li>
       <li>Plus ton rang est haut, plus l'adversaire construit un deck solide et joue bien. Il n'utilise jamais une rareté que tu n'as pas encore trouvée.</li>
       <li>Chaque mois, nouvelle saison : tu redescends de 3 paliers (une Divinité repart en Élu) et tu reçois 25 CHF par palier atteint (175 CHF pour la Divinité).</li>
@@ -670,9 +686,13 @@ function locHTML(li){
   const can=!S.busy&&((S.sel&&canStage(findHand(S.sel),li))||(S.swimSel&&swimOk(li)));
   const img=L.rev?d.img:"images/lieux/inconnu.webp";
   const cross=S.oath===li&&S.aiOath===li;
-  const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
-  return `<div class="loc${can?" can":""}${L.locked?" locked":""}${cross?" cross":S.oath===li?" oath":S.aiOath===li?" aioath":""}" style="background-image:${VEIL},url('${img}')" data-act="stage" data-li="${li}" data-lp="l${li}" tabindex="0">
-    <span class="tot f${w==="e"?" lead":""}">${b}</span>
+  const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":S.oathStage===li?"⚖ Serment (caché)":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
+  /* Cérémonie du Serment : sceau ⚖ posé sur le lieu + lueur durable. Pendant ~1,8 s après le serment, l'animation reprend là où elle en était à chaque nouveau rendu (délai négatif). */
+  const nw=S.oathNew&&S.oathNew.li===li&&Date.now()-S.oathNew.at<1800?Date.now()-S.oathNew.at:-1;
+  const seal=k=>`<span class="oathseal ${k}${nw>=0?" new":""}" ${nw>=0?`style="animation-delay:-${nw}ms"`:""} aria-hidden="true">⚖</span>`;
+  const seals=(S.oath===li?seal("me"):"")+(S.aiOath===li?seal("foe"):"");
+  return `<div class="loc${can?" can":""}${L.locked?" locked":""}${cross?" cross":S.oath===li?" oath":S.aiOath===li?" aioath":S.oathStage===li?" oathhid":""}${nw>=0?" oathnew":""}" style="background-image:${VEIL},url('${img}')${nw>=0?`;--od:-${nw}ms`:""}" data-act="stage" data-li="${li}" data-lp="l${li}" tabindex="0">${seals}
+    <span class="tot f${w==="e"?" lead":""}">${b}</span>${L.rev?`<button class="locinfo" data-act="locinfo" data-li="${li}" aria-label="Lire la règle : ${esc(d.name)}">i</button>`:""}
     <div class="inner"><div class="nm">${L.rev?d.name:"Lieu inconnu"}</div><div class="fx">${tags.length?`<b>${tags.join(" · ")}</b>`:(L.rev?d.fx:`Révélé au tour ${li+1}`)}</div></div>
     <span class="tot m${w==="p"?" lead":""}">${a}</span></div>`;
 }
@@ -693,7 +713,7 @@ function infoHTML(){
                :`<div><div class="t">Lieu inconnu</div><div class="m">Il sera révélé au début du tour ${loc+1}.</div></div>`; }
   /* Aide générale : les 3 premières parties (jamais pendant le tutoriel, qui a son propre encadré), ou à la demande avec le « ? » */
   if(!(S.help||(!S.tut&&P.w+P.l+P.d<3))) return "";
-  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser. Tu peux aussi la glisser vers le haut sur un lieu. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
+  return `<div><div class="t">À toi, ${esc(P.name)}</div><div class="m">Touche une carte de ta main puis un lieu pour la poser. Tu peux aussi la glisser vers le haut sur un lieu. <b>Appui long</b> sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre. <span>Jusqu'au tour 5, le bouton <b>⚖ Serment</b> te laisse jurer sur un lieu.</span> <button class="linkbtn" data-act="go" data-to="rules">Règles complètes</button></div></div>`;
 }
 function handHTML(){
   return S.hand.p.map(c=>{
@@ -721,6 +741,46 @@ function fbSend(kind,card){
   const mode=S.mp?"duel":S.blitz?"blitz":"ia"; S.over.fb="sent"; sfx("click"); render();
   lbDb.feedback(kind,card||null,mode,BUILD).catch(()=>{});
 }
+/* Bilan de fin de partie (vague 1, interface) : tout est calculé ici à partir de l'état S au moment de la fin, avec des règles fixes (aucun hasard).
+   tlog : pour chaque tour, l'énergie restée inutilisée alors qu'une carte de la main était jouable (noté au toucher de « Fin du tour »). */
+let tlogFor=null, tlog=[];
+function tlogNote(){
+  if(!S||S.over||S.busy||S.rp||S.tut) return;
+  if(tlogFor!==S){ tlogFor=S; tlog=[]; }
+  try{ const left=S.energy-used(), playable=S.hand.p.some(c=>[0,1,2].some(li=>canStage(c,li)));
+    tlog=tlog.filter(t=>t.turn!==S.turn); tlog.push({turn:S.turn,avoid:playable?Math.max(0,left):0}); }catch(e){}
+}
+function bilanOf(o){
+  if(!S||S.over!==o||o.tut) return null;
+  try{
+    const near=side=>o.rows.filter(r=>r.w===side).reduce((b,r)=>!b||Math.abs(r.a-r.b)<Math.abs(b.a-b.b)?r:b,null);
+    const lostR=near("e"), wonR=near("p"), line=o.res==="win"?(wonR&&{r:wonR,k:"win"}):(lostR?{r:lostR,k:"lose"}:wonR&&{r:wonR,k:"win"});
+    let best=null;
+    for(const s of ["p","e"]) S.board[s].forEach((col,li)=>col.forEach(c=>{ if(!c.rev||!CARDS[c.id]||(charmOf(c)||s)!=="e") return; const pw=cardPow(s,li,c); if(!best||pw>best.pw) best={n:CARDS[c.id].name,pw}; }));
+    /* conseil : premier cas qui s'applique, dans cet ordre */
+    const known=tlog.length>=3&&tlogFor===S, waste=known?tlog.filter(t=>t.avoid>0):[], wsum=waste.reduce((a,t)=>a+t.avoid,0);
+    const mine=S.board.p.map(col=>col.filter(c=>CARDS[c.id]&&!CARDS[c.id].token).length), nm=mine.reduce((a,b)=>a+b,0);
+    const emptyLost=o.rows.find((r,i)=>mine[i]===0&&r.w!=="p");
+    let tip="";
+    if(o.res!=="win"&&emptyLost) tip=`Aucune de tes cartes à « ${emptyLost.n} ». Même une petite y change tout : pense à présenter quelque chose partout.`;
+    else if(waste.length>=2&&wsum>=3) tip=`Tu as laissé de l'énergie inutilisée alors que tu pouvais jouer (${wsum} au total, sur ${waste.length} tours). Elle ne se cumule pas : autant l'utiliser.`;
+    else if(o.res!=="win"&&nm>=4&&Math.max(...mine)/nm>=.75) tip="Presque toutes tes cartes étaient au même lieu. Il suffit d'en gagner 2 sur 3 : répartis-les.";
+    else if(o.res!=="win"&&lostR&&Math.abs(lostR.a-lostR.b)<=2) tip="Défaite de justesse : quelques points ont tout changé. Chaque carte compte, même la plus petite.";
+    else if(o.res!=="win") tip="Appui long sur une carte adverse pour lire son effet : mieux la connaître aide à la contrer.";
+    return {line,best,tip};
+  }catch(e){ return null; }
+}
+function bilanHTML(o){
+  const b=bilanOf(o); if(!b||(!b.line&&!b.best&&!b.tip)) return "";
+  const m=b.line&&Math.abs(b.line.r.a-b.line.r.b);
+  return `<div class="bilan" role="group" aria-label="Bilan de la partie">${b.line?`<div class="bl"><b>${esc(b.line.r.n)}</b> : lieu ${b.line.k==="win"?"gagné":"perdu"} ${m>0?`de ${m}`:"à égalité"}</div>`:""}${b.best?`<div class="bl">Carte adverse la plus forte : <b>${esc(b.best.n)}</b> (${b.best.pw})</div>`:""}${b.tip?`<div class="bl tip"><b>Conseil :</b> ${esc(b.tip)}</div>`:""}</div>`;
+}
+/* Serment en duel ou au Blitz : ce qu'il a rapporté ou coûté en CHF */
+function oathChfHTML(o){
+  const x=o.oath, c=x.cross?"Serment croisé ":"Serment ", fin=o.blitz?" sur ton gain du Blitz":"", ok=x.kept, lost=x.cross?"perdu":"rompu";
+  const t=ok?(o.res==="win"?`${c}tenu : +${x.d} CHF${fin}`:`${c}tenu, mais la partie est perdue`):x.d<0?`${c}${lost} : −${-x.d} CHF${fin}`:`${c}${lost} : aucun CHF perdu`;
+  return `<div class="m oathres ${ok?"kept":"broken"}" style="text-align:center">⚖ ${t}</div>`;
+}
 function resultHTML(){
   const o=S.over; if(!o||o.closed||o.hold) return "";
   if(o.tut) return `<div class="veil"><div class="result" role="dialog" aria-label="Tutoriel terminé">
@@ -733,15 +793,28 @@ function resultHTML(){
     <h2>${t}</h2>
     ${o.blitz?`<div class="rankline"><b>Blitz · ${o.wins} victoire${o.wins>1?"s":""} sur 3</b><br><span>${o.ended?(o.gain?`Blitz terminé : +${o.gain} CHF`:"Blitz terminé, sans récompense"):o.res==="draw"?"Égalité : le match est à rejouer":`Prochain match contre une IA ${TIERS[BZ.tiers[o.wins]]}`}</span></div>`:`<div class="reward">+${o.gain} CHF</div>`}
     ${o.feat?`<div class="qdone">Lieu à l'honneur : +${o.feat} CHF pour ta première partie du jour.</div>`:""}
+    ${o.oath&&(o.mp||o.blitz)?oathChfHTML(o):""}
     ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
     ${o.blitz?"":o.mp?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>Duel entre amis · hors classement</span></div>`:`<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
-    <div class="rows">${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span><span style="color:var(--me)">${r.a}</span> · <span style="color:var(--foe)">${r.b}</span></span></div>`).join("")}</div>
+    <div class="rows sc3"><div class="row rh" aria-hidden="true"><span>Lieu</span><span class="c me">Toi</span><span class="c foe"${o.mp?` title="${esc(S.mp.oppNick)}"`:""}>${o.mp?esc(S.mp.oppNick):"IA"}</span></div>${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span class="c me${r.w==="p"?" w":""}">${r.a}</span><span class="c foe${r.w==="e"?" w":""}">${r.b}</span></div>`).join("")}</div>
+    ${bilanHTML(o)}
     ${fbHTML(o)}
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
     <div class="row2"><button class="ghost" data-act="mpquit">Quitter le salon</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.blitz?`<button class="primary" data-act="go" data-to="blitz">${o.ended?"Voir le bilan":"Continuer le Blitz"}</button><div class="row2"><button class="ghost" data-act="close">Voir le plateau</button></div>`:`<button class="primary" data-act="play">Rejouer</button>
     <div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`}
   </div></div>`;
+}
+/* Journal de partie (vague 1) : rangé derrière un bouton ; la dernière ligne reste visible ; pastille quand il y a du nouveau depuis la dernière ouverture */
+let logFor=null, logOpen=false, logSeen="";
+const logSig=()=>S.log.length+"|"+(S.log[0]||"");
+function logHTML(){
+  if(logFor!==S){ logFor=S; logOpen=false; logSeen=logSig(); }
+  if(logOpen) logSeen=logSig();
+  const fresh=!logOpen&&logSig()!==logSeen, last=S.log[0];
+  return `<div class="logwrap"><div class="logbar"><span class="logline" aria-live="polite">${last?esc(last):"Aucun événement pour l'instant."}</span>
+    <button class="logbtn${logOpen?" on":""}" data-act="logtoggle" aria-expanded="${logOpen}" aria-controls="logpanel" aria-label="${logOpen?"Fermer le journal de partie":fresh?"Ouvrir le journal de partie : du nouveau":"Ouvrir le journal de partie"}">Journal${fresh?`<i class="logdot" aria-hidden="true"></i>`:""}</button></div>
+    ${logOpen?`<div class="log" id="logpanel" role="log" tabindex="0" aria-label="Journal de partie">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>`:""}</div>`;
 }
 function replayHTML(){
   const rp=S.rp, left=S.energy-used();
@@ -751,7 +824,7 @@ function replayHTML(){
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   <div class="rpbar">${rp.done?`<div class="rpnote">${rp.ok===false?"Le replay diffère de la partie d'origine.":"Fin du replay."}</div><button class="primary" data-act="rpquit">Retour à l'historique</button>`
     :`<button class="primary" data-act="rpnext" ${S.busy?"disabled":""}>${S.turn>=6?"Dernier tour ▶":`Tour ${S.turn} ▶`}</button><button class="toggle" data-act="rpauto" aria-pressed="${!!rp.auto}">${rp.auto?"Auto : activé":"Lecture auto"}</button>`}</div>
-  <div class="log" aria-live="polite">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>
+  ${logHTML()}
   ${gzHTML()}`;
 }
 function gameHTML(){
@@ -762,25 +835,41 @@ function gameHTML(){
   <div class="status">
     <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>
     <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span></div>
-    ${oathOK()&&S.oath==null&&!S.busy?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
+    ${oathOK()&&oathFree()&&!S.busy&&!(S.mp&&S.mp.locked)?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
     ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
   </div>
   ${S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
   <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${swimBtn()}${pilesHTML()}</div>
-  ${aiOathBar()}
+  ${aiOathBar()}${myOathBar()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
-  <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&S.oath==null?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
+  ${logHTML()}
+  <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
   <div class="handwrap"><div class="hand">${handHTML()}</div></div></div>
-  <div class="log" aria-live="polite">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>
   ${resultHTML()}${gzHTML()}`;
 }
-const oathOK=()=>S&&!S.mp&&!S.tut&&!S.blitz&&!S.over&&S.turn<=5;
+/* Le Serment est possible jusqu'au tour 5 : partie classée, Blitz, duel (caché jusqu'à la fin du tour) et partie guidée (sans enjeu). Jamais en replay ni pendant la reprise d'un duel. */
+const oathOK=()=>S&&!S.rp&&!S.over&&S.turn<=5&&!(S.mp&&(S.mp.resuming||S.mp.replaying));
+/* Mon Serment est-il encore à prêter ? (en duel, un Serment choisi mais pas encore révélé compte comme prêté) */
+const oathFree=()=>S.oath==null&&S.oathStage==null;
+function oathStakeText(cross){
+  if(S.tut) return "Dans la partie guidée, le Serment est un exercice : aucun enjeu.";
+  const mode=S.mp?"duel":S.blitz?"blitz":null;
+  if(mode){ const t=OATH_CHF[mode], k=cross?t.crossKept:t.kept, b=cross?t.crossBroken:t.broken, c=cross?"Serment croisé, c'est définitif. ":"C'est définitif. ";
+    return mode==="duel"?`${c}Duel : lieu et partie gagnés : +${k} CHF. Lieu perdu : −${b} CHF (jamais sous 0).`:`${c}Blitz : lieu et partie gagnés : +${k} CHF sur ton gain. Lieu perdu : −${b} CHF.`; }
+  return cross?"Serment croisé, c'est définitif. Lieu et partie gagnés : +4 étoiles. Lieu et partie perdus : −4. Sinon : 0.":"C'est définitif. Gagne ce lieu avec la partie : +2 étoiles. Perds-le : −1 étoile.";
+}
 function oathHTML(){
   const ls=[0,1,2].filter(li=>S.locs[li].rev);
-  if(S.oathPick!=null) return `<div><div class="t">⚖ Serment sur ${LOCS[S.locs[S.oathPick].id].name} ?</div><div class="m">${S.oathPick===S.aiOath?"Serment croisé, c'est définitif. Lieu et partie gagnés : +4 étoiles. Lieu et partie perdus : −4. Sinon : 0.":"C'est définitif. Gagne ce lieu avec la partie : +2 étoiles. Perds-le : −1 étoile."}</div><div class="oathbtns"><button class="primary small" data-act="oathok">Je le jure</button><button class="ghost small" data-act="oathno">Annuler</button></div></div>`;
+  if(S.oathPick!=null) return `<div><div class="t">⚖ Serment sur ${LOCS[S.locs[S.oathPick].id].name} ?</div><div class="m">${oathStakeText(S.oathPick===S.aiOath)}</div>${S.mp?`<div class="m">Ton Serment reste caché jusqu'à la fin du tour, puis il est révélé avec les cartes.</div>`:""}<div class="oathbtns"><button class="primary small" data-act="oathok">Je le jure</button><button class="ghost small" data-act="oathno">Annuler</button></div></div>`;
   return `<div><div class="t">⚖ Serment</div><div class="m">Une fois par partie, jusqu'au tour 5. Choisis un lieu révélé.</div><div class="oathbtns">${ls.map(li=>`<button class="toggle" data-act="oathpick" data-li="${li}">${LOCS[S.locs[li].id].name}</button>`).join("")}<button class="ghost small" data-act="oathclose">Fermer</button></div></div>`;
+}
+/* Duel : mon Serment choisi, caché à l'adversaire jusqu'à la fin du tour */
+function myOathBar(){
+  if(S.oathStage==null||S.oath!=null||S.over) return "";
+  const n=LOCS[S.locs[S.oathStage].id].name;
+  return `<div class="oathbar"><span>⚖ Tu jureras sur <b>${n}</b> à la fin du tour, en même temps que les cartes.</span>${S.mp&&S.mp.locked?"":`<button class="ghost small" data-act="oathunstage">Retirer</button>`}</div>`;
 }
 function gzHTML(){
   if(!gz||!S) return "";
@@ -788,7 +877,7 @@ function gzHTML(){
   if(gz[0]==="l"){ const li=+gz.slice(1), L=S.locs[li], d=LOCS[L.id];
     return `<div class="veil" data-act="gzclose"><div class="gzloc"><div class="gzimg" style="background-image:url('${L.rev?d.img:"images/lieux/inconnu.webp"}')"></div>
       <div class="zoominfo"><div class="t">${L.rev?d.name:"Lieu inconnu"}</div><p>${L.rev?d.fx:`Il sera révélé au début du tour ${li+1}.`}${L.stopped?" <b>Effet arrêté par Perséphone.</b>":""}${L.locked?" <b>Verrouillé par Vritra : plus personne ne peut y jouer.</b>":""}</p>
-      <div class="m">Puissance : <span style="color:var(--me)">toi ${total("p",li)}</span> · <span style="color:var(--foe)">adversaire ${total("e",li)}</span></div></div></div></div>`; }
+      <div class="m">Puissance : <span style="color:var(--me)">toi ${total("p",li)}</span> · <span style="color:var(--foe)">adversaire ${total("e",li)}</span></div><button class="ghost" data-act="gzclose">Fermer</button></div></div></div>`; }
   const uid=+gz.slice(1), f=findAny(uid); if(!f){ return ""; } const c=f.c, d=CARDS[c.id];
   const onBoard=f.li!=null&&c.rev, cur=onBoard?cardPow(f.s,f.li,c):c.pow, cont=onBoard?cur-c.pow:0;
   const mods=(c.mods||[]);
@@ -995,6 +1084,9 @@ document.addEventListener("click", e=>{
     case "sheet": sheet=sheet===el.dataset.s?null:el.dataset.s; sfx("click"); render(); return;
     case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; sheet=null; render(); return;
     case "sheetin": case "holoin": return;
+    case "notedismiss": { const t=[seasonNote,dailyNote,migratedNote].filter(Boolean)[+el.dataset.t]; if(t) notesGone.add(t); sfx("click"); render(); return; }
+    case "logtoggle": if(S){ logOpen=!logOpen; sfx("click"); render(); } return;
+    case "locinfo": if(S&&screen==="play"){ gz="l"+el.dataset.li; sfx("select"); render(); } return;
     case "go": { const to=el.dataset.to; packFocus=null; if(to==="board"||to==="home") lbRefresh(); sheet=null; if(to!=="home"){ seasonNote=""; dailyNote=""; } if(to==="home"&&S&&S.over) S.over.closed=true; screen=to; deckMsg=""; editName=false; migratedNote=to==="home"?migratedNote:""; sfx("click"); render(); window.scrollTo(0,0); return; }
     case "rpstart": { const ok=rpStart(+el.dataset.t); if(!ok){ sfx("debuff"); seasonNote="Termine ou quitte ta partie en cours avant de revoir une partie."; screen="home"; } else sfx("click"); render(); window.scrollTo(0,0); return; }
     case "rpnext": if(S&&S.rp&&!S.busy) rpStep().then(()=>{ render(); }); return;
@@ -1089,15 +1181,16 @@ document.addEventListener("click", e=>{
   if(act==="gzclose"&&gz&&gz[0]==="p"&&e.target.closest(".pilepanel")&&!e.target.closest("button")) return; /* un toucher dans le panneau ne le ferme pas */
   if(act==="gzclose"){ gz=null; render(); return; }
   if(!S||S.busy) return;
-  if(act==="end"){ sfx("click"); endTurn(); return; }
+  if(act==="end"){ sfx("click"); tlogNote(); endTurn(); return; }
   if(S.mp&&S.mp.locked&&act!=="inspect") return;
   if(act==="oathmode"){ S.oathMode=!S.oathMode; S.oathPick=null; sfx("click"); render(); return; }
   if(act==="oathclose"){ S.oathMode=false; S.oathPick=null; render(); return; }
-  if(act==="oathpick"){ if(oathOK()&&S.oath==null) S.oathPick=+el.dataset.li; sfx("select"); render(); return; }
-  if(act==="oathcross"){ if(oathOK()&&S.oath==null&&S.aiOath!=null){ S.oath=S.aiOath; S.oathMode=false; S.oathPick=null; log(`Serment croisé sur ${LOCS[S.locs[S.oath].id].name}`); sfx("legend"); } render(); return; }
+  if(act==="oathunstage"){ S.oathStage=null; sfx("click"); render(); return; }
+  if(act==="oathpick"){ if(oathOK()&&oathFree()) S.oathPick=+el.dataset.li; sfx("select"); render(); return; }
+  if(act==="oathcross"){ if(oathOK()&&oathFree()&&S.aiOath!=null){ S.oathMode=false; S.oathPick=null; if(S.mp){ S.oathStage=S.aiOath; sfx("select"); } else swearOath("p",S.aiOath); } render(); return; }
   if(act==="oathskip"){ S.aiOathSkip=true; render(); return; }
   if(act==="oathno"){ S.oathPick=null; render(); return; }
-  if(act==="oathok"){ if(oathOK()&&S.oath==null&&S.oathPick!=null){ S.oath=S.oathPick; S.oathPick=null; S.oathMode=false; log(`Serment prêté sur ${LOCS[S.locs[S.oath].id].name}`); sfx("legend"); } render(); return; }
+  if(act==="oathok"){ if(oathOK()&&oathFree()&&S.oathPick!=null){ const li=S.oathPick; S.oathPick=null; S.oathMode=false; if(S.mp){ S.oathStage=li; sfx("select"); } else swearOath("p",li); } render(); return; }
   if(act==="mull"){ if(S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.staged.length){ const n=S.hand.p.length; S.deck.p=shuffle([...S.deck.p,...S.hand.p]); S.hand.p=[]; if(S.rec) S.rec.dp=S.deck.p.map(c=>c.id); for(let i=0;i<n;i++) draw("p"); S.mull=true; S.sel=null; log("Main changée"); sfx("pack"); } render(); return; }
   if(act==="hand"){ const uid=+el.dataset.uid; S.sel=S.sel===uid?null:uid; S.info=null; sfx("select"); render(); return; }
   if(act==="swim"){ if(S.swimP){ S.swimP=null; sfx("undo"); } else S.swimSel=!S.swimSel; S.sel=null; S.info=null; render(); return; }
