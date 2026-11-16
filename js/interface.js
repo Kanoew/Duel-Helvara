@@ -24,7 +24,7 @@ function preloadFoe(){   /* illustrations pleines du deck adverse (le plateau le
 }
 function preloadDeck(){
   if(preSlow()||!P||!Array.isArray(P.deck)) return;
-  for(const id of P.deck){ const d=CARDS[id]; if(!d||!d.img) continue; preAdd(d.img); preAdd(`images/avatars/${id}.webp?v=7`); }
+  for(const id of P.deck){ const d=CARDS[id]; if(!d||!d.img) continue; preAdd(d.img); preAdd(`images/avatars/${id}.webp?v=8`); }
   if(!nextPlay) nextPlay=Math.random()<.5?"play":"play2"; preAdd(MUSIC[nextPlay],true);
   preSched();
 }
@@ -33,7 +33,7 @@ const gridArt=fn=>{ ART_MINI=true; try{ return fn(); } finally{ ART_MINI=false; 
 function art(id,light){
   const d=CARDS[id];
   if(ART_MINI&&!d.token&&d.img&&/^images\/[^/]+\.webp/.test(d.img)) return `<div class="art" style="background-image:url('${d.img.replace("images/","images/mini/")}')"></div>`;
-  if(light&&light!=="big"&&!d.token&&d.img) return `<div class="art" style="background-image:url('images/avatars/${id}.webp?v=7')"></div>`;
+  if(light&&light!=="big"&&!d.token&&d.img) return `<div class="art" style="background-image:url('images/avatars/${id}.webp?v=8')"></div>`;
   if(d.token&&d.img) return `<div class="art" style="background-image:url('${d.img}')"></div>`;
   if(d.token) return `<div class="art token-img" style="background-image:url('images/reflet.webp')${id==="illusion"?";filter:sepia(.7) saturate(2.2) hue-rotate(-12deg)":id==="cendreux"?";filter:grayscale(1) sepia(.5) brightness(.7)":id==="lanterne"?";filter:sepia(1) saturate(4) hue-rotate(-25deg) brightness(.8)":""}"></div>`;
   /* grand format : la miniature (déjà vue dans la grille) sert de fond le temps que la grande image arrive, au lieu d'une case sombre */
@@ -606,7 +606,7 @@ function avGridHTML(){
   if(!ids.length) return `<p class="hint avnone">Aucun résultat</p>`;
   return ids.map(id=>{ const own=P.owned.includes(id);
       return `<button class="avopt ${P.avatar===id?"on":""}" ${own?`data-act="avset" data-id="${id}"`:"disabled"} aria-label="${CARDS[id].name}${own?"":" (verrouillé)"}">
-        <span class="avatar md ${own?"":"locked"}" style="background-image:url('images/avatars/${id}.webp?v=7')"></span><span class="avn">${own?CARDS[id].name:"?"}</span></button>`; }).join("");
+        <span class="avatar md ${own?"":"locked"}" style="background-image:url('images/avatars/${id}.webp?v=8')"></span><span class="avn">${own?CARDS[id].name:"?"}</span></button>`; }).join("");
 }
 function avPickHTML(){
   if(!avPick) return "";
@@ -935,7 +935,7 @@ function gameHTML(){
   <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${swimBtn()}${pilesHTML()}</div>
   ${S.rival&&!S.mp&&!S.tut&&!S.rp&&rivalOf(S.rival.id)?`<div class="mpbar foebar">${rivalAv(rivalOf(S.rival.id),"sm")}<span>Contre <b>${esc(foeName())}</b> · <span>${esc(TIERS[S.aiTier])}</span></span></div>`:""}
   ${aiOathBar()}${myOathBar()}${oathCerHTML()}
-  ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=7')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
+  ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
   ${logHTML()}

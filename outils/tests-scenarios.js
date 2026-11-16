@@ -299,7 +299,7 @@ async function inPage() {
   /* Préchargement du deck choisi */
   {
     fresh(); PRE.clear(); preQ.length = 0; nextPlay = null; preloadDeck();
-    const wantImgs = P.deck.every(id => PRE.has(CARDS[id].img) && PRE.has(`images/avatars/${id}.webp?v=7`));
+    const wantImgs = P.deck.every(id => PRE.has(CARDS[id].img) && PRE.has(`images/avatars/${id}.webp?v=8`));
     T("Préchargement : les illustrations et avatars des 12 cartes du deck sont mis en file", P.deck.length === 12 && wantImgs, PRE.size);
     T("Préchargement : le morceau de partie est choisi et mis en file", (nextPlay === "play" || nextPlay === "play2") && PRE.has(MUSIC[nextPlay]), nextPlay);
     const before = PRE.size; preloadDeck(); T("Préchargement : rien n'est mis en file deux fois", PRE.size === before, "");

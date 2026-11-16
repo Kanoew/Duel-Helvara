@@ -157,7 +157,7 @@ function pileHTML(){
 const foeName=()=>{ const r=S&&S.rival&&rivalOf(S.rival.id); return r?r.n:"IA"; };
 const foeLabel=()=>S.rival&&rivalOf(S.rival.id)?`${foeName()} · ${TIERS[S.aiTier]}`:`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`;
 /* Portrait rond du rival (id de carte de la table RIVALS ; filtré par POOL comme tout avatar) */
-const rivalAv=(r,cls)=>POOL.includes(r.av)?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${r.av}.webp?v=7')"></span>`:`<span class="avatar ${cls}">${esc(r.n.charAt(0))}</span>`;
+const rivalAv=(r,cls)=>POOL.includes(r.av)?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${r.av}.webp?v=8')"></span>`:`<span class="avatar ${cls}">${esc(r.n.charAt(0))}</span>`;
 /* Phrase du rival, gardée sous le serment adverse (c'est le seul indice sur son tempérament tiré) */
 function rivalSayHTML(){ const r=S.rival&&rivalOf(S.rival.id); if(!r||!S.aiOathSay) return "";
   return `<div class="oathsay">${rivalAv(r,"sm")}<span><b>${esc(r.n)}</b> : <i>${esc(S.aiOathSay)}</i></span></div>`; }
