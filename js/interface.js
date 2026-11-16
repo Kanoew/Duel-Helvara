@@ -617,54 +617,55 @@ function codexHTML(){
     <div class="locs">${locPool().map(k=>LOCS[k]).map(l=>`<div class="locard" style="background-image:linear-gradient(180deg,rgba(8,12,20,.1),rgba(8,12,20,.9) 70%),url('${l.img}')"><div class="n">${l.name}</div><div class="e">${l.fx}</div></div>`).join("")}</div>
   </section>`;
 }
+/* Aide (écran « ? ») : rubriques repliables, une seule ouverte à la fois (<details name="aide"> : exclusivité native, sans script). La rubrique ouverte survit aux redessins (aideOpen, mis à jour par l'événement « toggle »). */
+let aideOpen="bases";
+document.addEventListener("toggle",e=>{ const d=e.target; if(d&&d.classList&&d.classList.contains("acc")&&d.dataset.k){ if(d.open) aideOpen=d.dataset.k; else if(aideOpen===d.dataset.k) aideOpen=""; } },true);
 function rulesHTML(){
+  const acc=(k,t,body)=>`<details class="acc" name="aide" data-k="${k}"${aideOpen===k?" open":""}><summary>${t}</summary><div class="accb">${body}</div></details>`;
   return `
-  <section class="sec"><h2>Comment jouer</h2>
-    <p>Le tutoriel complet est disponible à tout moment.</p>
+  <p class="provis"><b>Design provisoire</b> : les illustrations et le design des cartes sont provisoires et ne représentent pas le rendu final du jeu.</p>
+  <div class="accs">
+  ${acc("bases","Les bases",`<p>Le tutoriel complet est disponible à tout moment.</p>
     <button class="ghost" data-act="tuto">Revoir le tutoriel</button>
-  </section>
-  <section class="sec"><h2>Règles</h2>
     <ol class="rules">
-      <li>6 tours. Au tour N, tu as N énergie, qui ne se cumule pas d'un tour à l'autre (sauf effet de carte). Tu pioches 1 carte par tour (main de 7 maximum).</li>
-      <li>Tu poses tes cartes, l'adversaire pose les siennes face cachée. Tout est révélé en fin de tour, lieu par lieu : dans chaque lieu, le joueur qui mène révèle ses cartes en premier. En cas d'égalité, tes cartes d'abord (en duel, celles de l'hôte).</li>
-      <li>4 cartes maximum par joueur et par lieu.</li>
-      <li>Au tour 1, avant de poser une carte, tu peux <b>changer ta main</b> une fois : tes cartes repartent dans le deck, qui est mélangé, et tu en pioches autant. Pas en duel entre amis.</li>
-      <li>« Révélation » se déclenche une fois quand la carte se retourne. « Continu » agit tant que la carte est en jeu et n'a pas perdu ses effets. Une carte qui perd ses effets garde ce que sa Révélation lui a déjà donné.</li>
-      <li>« En jeu » veut dire révélée sur le plateau, de n'importe quel côté.</li>
-            <li>À la fin du tour 6, remporte 2 lieux sur 3. En cas d'égalité, la puissance totale départage.</li>
-    </ol>
-  </section>
-  <section class="sec"><h2>Vocabulaire</h2>
-    <ol class="rules">
-      <li><b>Détruire</b> : la carte quitte le plateau. Eir et Ame-no-Uzume l'empêchent, sauf si l'effet dit « rien ne la protège » : là, aucune protection ne tient.</li>
-      <li><b>Défausser</b> : la carte quitte ta main sans être jouée.</li>
-      <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
-      <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
-      <li><b>Perdre ses effets</b> : la carte garde sa puissance et les bonus déjà gagnés, mais ses effets Continu et de fin de tour ne s'appliquent plus.</li>
-      <li><b>Les fusions sortent des paquets.</b> 1 % par paquet à 100 CHF, 2 % à 200 CHF, 4 % à 300 CHF (garantie à la 10e ouverture), 5 % pour les paquets d'édition. Aucune fusion ne se gagne plus en réunissant ses cartes.</li>
-      <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, se gagne dans le Journal des factions (50 parties jouées avec 8 cartes de sa faction) et exige 8 cartes de sa faction dans le deck.</li>
-      <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
-      <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
-      <li><b>Ressusciter</b> : une carte défaussée ou détruite revient sur le plateau, révélée, à sa puissance de base, sans déclencher sa Révélation (sauf mention contraire).</li>
-      <li><b>Charmer</b> : la carte reste du côté adverse, mais sa puissance compte pour toi.</li>
-      <li><b>De ton côté</b> : uniquement tes cartes révélées. <b>En jeu</b> : n'importe quelle carte révélée, des deux côtés.</li>
-      <li>Sur le plateau, le petit chiffre vert ou rouge indique l'écart avec la puissance de base. Appui long pour voir le détail.</li>
-    </ol>
-  </section>
-  <section class="sec"><h2>Rangs et saisons</h2>
-    <ol class="rules">
-      <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I), sauf Héraut et Avatar qui en ont cinq (V à I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(START[i],"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
-      <li>Victoire : +1 étoile, +2 à partir de 2 victoires d'affilée (jusqu'à Héraut). Défaite : −1 étoile, sauf en Passant et Initié où elle ne coûte rien. Égalité : rien ne bouge.</li>
-      <li><b>Le Serment</b> : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé (partie classée, Blitz, duel entre amis ; sans enjeu dans la partie guidée). En partie classée, si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
-      <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.</li>
-      <li><b>Serment en duel et au Blitz</b> : pas d'étoiles, des CHF (valeurs provisoires). Lieu et partie gagnés : +${OATH_CHF.duel.kept} CHF en duel, +${OATH_CHF.blitz.kept} CHF sur ton gain au Blitz. Lieu perdu : −${OATH_CHF.duel.broken} CHF en duel, −${OATH_CHF.blitz.broken} CHF au Blitz, jamais sous 0. Serment croisé : ${OATH_CHF.duel.crossKept} CHF en duel, ${OATH_CHF.blitz.crossKept} CHF au Blitz (perdu : −${OATH_CHF.duel.crossBroken} et −${OATH_CHF.blitz.crossBroken}). En duel, ton Serment reste caché à l'adversaire pendant le tour : il est révélé à la fin du tour, en même temps que les cartes, et tu peux relever le sien au tour suivant.</li>
-      <li>Le début de chaque palier est un plancher : on ne redescend jamais sous un palier atteint pendant la saison.</li>
-      <li>Plus ton rang est haut, plus l'adversaire construit un deck solide et joue bien. Il n'utilise jamais une rareté que tu n'as pas encore trouvée.</li>
-      <li>Chaque mois, nouvelle saison : tu redescends de 3 paliers (une Divinité repart en Élu) et tu reçois 25 CHF par palier atteint (175 CHF pour la Divinité).</li>
-    </ol>
-  </section>`;
+        <li>6 tours. Au tour N, tu as N énergie, qui ne se cumule pas d'un tour à l'autre (sauf effet de carte). Tu pioches 1 carte par tour (main de 7 maximum).</li>
+        <li>Tu poses tes cartes, l'adversaire pose les siennes face cachée. Tout est révélé en fin de tour, lieu par lieu : dans chaque lieu, le joueur qui mène révèle ses cartes en premier. En cas d'égalité, tes cartes d'abord (en duel, celles de l'hôte).</li>
+        <li>4 cartes maximum par joueur et par lieu.</li>
+        <li>Au tour 1, avant de poser une carte, tu peux <b>changer ta main</b> une fois : tes cartes repartent dans le deck, qui est mélangé, et tu en pioches autant. Pas en duel entre amis.</li>
+        <li>À la fin du tour 6, remporte 2 lieux sur 3. En cas d'égalité, la puissance totale départage.</li>
+        <li>Sur le plateau, le petit chiffre vert ou rouge indique l'écart avec la puissance de base. Appui long pour voir le détail.</li>
+      </ol>`)}
+  ${acc("effets","Les effets et le vocabulaire",`<ol class="rules">
+        <li>« Révélation » se déclenche une fois quand la carte se retourne. « Continu » agit tant que la carte est en jeu et n'a pas perdu ses effets. Une carte qui perd ses effets garde ce que sa Révélation lui a déjà donné.</li>
+        <li><b>De ton côté</b> : uniquement tes cartes révélées. <b>En jeu</b> : n'importe quelle carte révélée, des deux côtés.</li>
+        <li><b>Détruire</b> : la carte quitte le plateau. Eir et Ame-no-Uzume l'empêchent, sauf si l'effet dit « rien ne la protège » : là, aucune protection ne tient.</li>
+        <li><b>Défausser</b> : la carte quitte ta main sans être jouée.</li>
+        <li>Rémi et le Charognard du M2 comptent les cartes détruites <b>et</b> défaussées.</li>
+        <li><b>Affaiblir</b> (−X) : la carte perd de la puissance. La puissance peut devenir négative. Eir, Amaterasu, l'Écorché Silencieux et Jordan, le Créateur l'empêchent.</li>
+        <li><b>Perdre ses effets</b> : la carte garde sa puissance et les bonus déjà gagnés, mais ses effets Continu et de fin de tour ne s'appliquent plus.</li>
+        <li><b>Condamner</b> : une case du lieu est fermée pour l'adversaire jusqu'à la fin de la partie. <b>Captive</b> : la carte tombe à 0 tant que sa geôlière reste en jeu. <b>Silence</b> : l'adversaire ne peut pas jouer dans ce lieu au tour suivant.</li>
+        <li><b>Ressusciter</b> : une carte défaussée ou détruite revient sur le plateau, révélée, à sa puissance de base, sans déclencher sa Révélation (sauf mention contraire).</li>
+        <li><b>Charmer</b> : la carte reste du côté adverse, mais sa puissance compte pour toi.</li>
+      </ol>`)}
+  ${acc("serment","Le Serment",`<ol class="rules">
+        <li><b>Le Serment</b> : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé (partie classée, Blitz, duel entre amis ; sans enjeu dans la partie guidée). En partie classée, si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
+        <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.</li>
+        <li><b>Serment en duel et au Blitz</b> : pas d'étoiles, des CHF (valeurs provisoires). Lieu et partie gagnés : +${OATH_CHF.duel.kept} CHF en duel, +${OATH_CHF.blitz.kept} CHF sur ton gain au Blitz. Lieu perdu : −${OATH_CHF.duel.broken} CHF en duel, −${OATH_CHF.blitz.broken} CHF au Blitz, jamais sous 0. Serment croisé : ${OATH_CHF.duel.crossKept} CHF en duel, ${OATH_CHF.blitz.crossKept} CHF au Blitz (perdu : −${OATH_CHF.duel.crossBroken} et −${OATH_CHF.blitz.crossBroken}). En duel, ton Serment reste caché à l'adversaire pendant le tour : il est révélé à la fin du tour, en même temps que les cartes, et tu peux relever le sien au tour suivant.</li>
+      </ol>`)}
+  ${acc("decks","Decks, ultra-légendaires et fusions",`<ol class="rules">
+        <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
+        <li><b>Une seule ultra-légendaire par deck.</b> Chaque fusion exige ses deux personnages dans le deck. Une ultra-légendaire de faction, comme Nike, se gagne dans le Journal des factions (50 parties jouées avec 8 cartes de sa faction) et exige 8 cartes de sa faction dans le deck.</li>
+        <li><b>Les fusions sortent des paquets.</b> 1 % par paquet à 100 CHF, 2 % à 200 CHF, 4 % à 300 CHF (garantie à la 10e ouverture), 5 % pour les paquets d'édition. Aucune fusion ne se gagne plus en réunissant ses cartes.</li>
+      </ol>`)}
+  ${acc("rangs","Rangs et saisons",`<ol class="rules">
+        <li>Sept paliers : ${TIERS.join(" → ")}. Chacun a trois divisions (III, II, I), sauf Héraut et Avatar qui en ont cinq (V à I). Il faut 3 étoiles par division en Passant et Initié, 4 en Agent et Élu, 5 en Héraut et Avatar.<div class="rkstrip">${TIERS.map((t,i)=>`<figure>${rankIcon(START[i],"md")}<figcaption>${t}</figcaption></figure>`).join("")}</div></li>
+        <li>Victoire : +1 étoile, +2 à partir de 2 victoires d'affilée (jusqu'à Héraut). Défaite : −1 étoile, sauf en Passant et Initié où elle ne coûte rien. Égalité : rien ne bouge.</li>
+        <li>Le début de chaque palier est un plancher : on ne redescend jamais sous un palier atteint pendant la saison.</li>
+        <li>Plus ton rang est haut, plus l'adversaire construit un deck solide et joue bien. Il n'utilise jamais une rareté que tu n'as pas encore trouvée.</li>
+        <li>Chaque mois, nouvelle saison : tu redescends de 3 paliers (une Divinité repart en Élu) et tu reçois 25 CHF par palier atteint (175 CHF pour la Divinité).</li>
+      </ol>`)}
+  </div>`;
 }
-
 /* --- partie --- */
 function deltaBadge(v){ return v?`<span class="dlt ${v>0?"up":"down"}">${v>0?"+":"−"}${Math.abs(v)}</span>`:""; }
 function mini(s,li,c,staged){
