@@ -14,6 +14,8 @@
   --primordial:#8f74dc;
   --desir:#d6ab5e;
   --jugement:#b9c3d2;
+  --sakura:#f4a7c0;   /* touche Yarden : rose Sakura (décor seulement, aucun sens de jeu) */
+  --tiamat:#7b4bd6;   /* touche Tiamat : violet profond, une teinte et non une figure (décor seulement) */
   --display:"Marcellus", "Cormorant Garamond", Georgia, serif;
   --sc:"Marcellus SC", "Marcellus", Georgia, serif;
   --body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -32,6 +34,7 @@ body{
 }
 button{font:inherit;color:inherit}
 button:focus-visible,label:focus-within,[data-act]:focus-visible{outline:2px solid var(--me);outline-offset:2px}
+summary:focus-visible{outline:2px solid var(--tiamat);outline-offset:2px}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(10,14,22,.55),rgba(10,14,22,.8)),url("images/fond.webp") center/cover no-repeat,var(--ink)}
 .wrap{position:relative;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 
@@ -1007,3 +1010,26 @@ body:has(.sandbar) #app{padding-top:62px}
 .noticeq .nbtn{min-height:34px;min-width:60px;padding:0 12px;border-radius:999px;border:1px solid rgba(219,168,98,.55);background:rgba(219,168,98,.12);color:var(--warm);font-size:13px;font-weight:600;cursor:pointer}
 .noticeq .nbtn:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
 .result .sc3 .rh{text-transform:none;letter-spacing:.02em}
+
+/* Touches Sakura (rose) et Tiamat (violet) : décor discret, hors couleurs de jeu (--me, --foe, factions, raretés). Aucune animation, aucun flou. */
+body:not(.inplay)::before{background:radial-gradient(90% 34% at 50% 0%,rgba(123,75,214,.17),transparent 72%),linear-gradient(180deg,rgba(10,14,22,.55),rgba(10,14,22,.8)),url("images/fond.webp") center/cover no-repeat,var(--ink)}
+body:not(.inplay) header.top{position:relative;padding-bottom:9px}
+body:not(.inplay) header.top::after{content:"";position:absolute;left:0;bottom:0;width:112px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--sakura),var(--tiamat) 72%,transparent)}
+.dock button[aria-current]{box-shadow:inset 0 2px 0 var(--sakura)}
+@media (min-width:900px){ .dock button[aria-current]{box-shadow:inset 3px 0 0 var(--sakura)} }
+button:focus-visible,label:focus-within,[data-act]:focus-visible{outline-color:var(--tiamat)}
+.loc.oath::before{background:radial-gradient(ellipse at 50% 108%,rgba(219,168,98,.42),transparent 70%),radial-gradient(ellipse at 50% -10%,rgba(123,75,214,.55),transparent 72%)}
+/* Aide : rubriques repliables */
+.provis{margin:0 0 10px;padding:9px 12px;border:1px solid rgba(123,75,214,.55);border-left-width:3px;border-radius:12px;background:linear-gradient(135deg,rgba(123,75,214,.16),rgba(17,24,39,.85) 70%);color:var(--frost);font-size:13px;max-width:62ch}
+.provis b{color:var(--sakura)}
+.accs{display:flex;flex-direction:column;gap:8px}
+.acc{border:1px solid var(--line);border-radius:14px;background:rgba(17,24,39,.78)}
+.acc>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:10px 14px;cursor:pointer;list-style:none;font-family:var(--sc);font-size:17px;letter-spacing:.05em;-webkit-tap-highlight-color:transparent}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--mist);border-bottom:2px solid var(--mist);transform:rotate(45deg) translateY(-2px)}
+.acc[open]{border-color:rgba(123,75,214,.6)}
+.acc[open]>summary{border-bottom:1px solid var(--line)}
+.acc[open]>summary::after{border-color:var(--sakura);transform:rotate(-135deg) translateY(-2px)}
+.accb{padding:12px 14px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0}
+.accb p{margin:0;color:var(--mist);max-width:62ch}
+.accb .rules{align-self:stretch;overflow-wrap:anywhere}
