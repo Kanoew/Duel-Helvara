@@ -95,6 +95,7 @@ const ICO={
   deck:'<rect x="4" y="6" width="11" height="15" rx="2"/><path d="M9 3h9a2 2 0 0 1 2 2v13"/>',
   shop:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
   board:'<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M8 20h8"/>',
+  log:'<path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',
   book:'<path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path d="M4 20a2 2 0 0 0 2 2h13v-4"/><path d="M9 7h6"/>',
   discord:'<path style="fill:currentColor;stroke:none" d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.3 18.3 0 0 0-5.49 0 12.6 12.6 0 0 0-.62-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.89 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.06 19.9 19.9 0 0 0 5.99 3.03.08.08 0 0 0 .09-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.89.08.08 0 0 1-.01-.13l.37-.29a.07.07 0 0 1 .08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 0 1 .08.01l.37.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.89a.08.08 0 0 0-.04.11c.36.7.77 1.36 1.23 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 0 0-.03-.03zM8.02 15.33c-1.18 0-2.16-1.09-2.16-2.42s.96-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.96 2.42-2.16 2.42zm7.97 0c-1.18 0-2.15-1.09-2.15-2.42s.95-2.42 2.15-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.33-.95 2.42-2.16 2.42z"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
@@ -106,7 +107,7 @@ const questReady=()=>{ const a=ensureQuests(), b=ensureWeek(); if(a||b) save(); 
 function header(){
   const ready=questReady();
   const icons=`<button class="helpbtn icobtn${ready?" dot":""}" data-act="sheet" data-s="quests" aria-label="Quêtes du jour">${ico("book")}</button><button class="helpbtn icobtn" data-act="sheet" data-s="settings" aria-label="Réglages">${ico("gear")}</button><button class="helpbtn" data-act="go" data-to="rules" aria-label="Règles" ${screen==="rules"?'aria-current="page"':""}>?</button>`;
-  if(screen==="play") return `<header class="top"><button class="back" data-act="go" data-to="home">← Accueil</button><div class="topright">${icons.replace('data-act="go" data-to="rules" aria-label="Règles" >?','data-act="playhelp" aria-label="Règles" aria-pressed="'+(S&&S.help?"true":"false")+'">?')}</div></header>`;
+  if(screen==="play") return `<header class="top gametop"><button class="back" data-act="go" data-to="home">← Accueil</button>${S?foeChipHTML():""}<div class="topright">${S?logBtnHTML():""}${icons.replace('data-act="go" data-to="rules" aria-label="Règles" >?','data-act="playhelp" aria-label="Règles" aria-pressed="'+(S&&S.help?"true":"false")+'">?')}</div>${S?logPanelHTML():""}</header>`;
   /* Discord : hors partie seulement, pour ne pas quitter un duel d'un toucher */
   const discord=`<a class="helpbtn icobtn" href="${DISCORD}" target="_blank" rel="noopener" aria-label="Discord du jeu">${ico("discord")}</a>`;
   return `<header class="top"><h1 class="brand">Duel d'Helvara<small>Le Sang de Tiamat</small>${season()?`<small class="ssub">${SEASON[season()].sub}</small>`:""}</h1>
@@ -901,13 +902,26 @@ function resultHTML(){
 /* Journal de partie (vague 1) : rangé derrière un bouton ; la dernière ligne reste visible ; pastille quand il y a du nouveau depuis la dernière ouverture */
 let logFor=null, logOpen=false, logSeen="";
 const logSig=()=>S.log.length+"|"+(S.log[0]||"");
-function logHTML(){
+function logState(){
   if(logFor!==S){ logFor=S; logOpen=false; logSeen=logSig(); }
   if(logOpen) logSeen=logSig();
-  const fresh=!logOpen&&logSig()!==logSeen, last=S.log[0];
-  return `<div class="logwrap"><div class="logbar"><span class="logline" aria-live="polite">${last?esc(last):"Aucun événement pour l'instant."}</span>
-    <button class="logbtn${logOpen?" on":""}" data-act="logtoggle" aria-expanded="${logOpen}" aria-controls="logpanel" aria-label="${logOpen?"Fermer le journal de partie":fresh?"Ouvrir le journal de partie : du nouveau":"Ouvrir le journal de partie"}">Journal${fresh?`<i class="logdot" aria-hidden="true"></i>`:""}</button></div>
-    ${logOpen?`<div class="log" id="logpanel" role="log" tabindex="0" aria-label="Journal de partie">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div>`:""}</div>`;
+  return !logOpen&&logSig()!==logSeen;
+}
+/* Bouton rond « journal » dans la première ligne (même style que livre, réglages, ?) */
+function logBtnHTML(){
+  const fresh=logState();
+  return `<button class="helpbtn icobtn logbtn${logOpen?" on":""}" data-act="logtoggle" aria-expanded="${logOpen}" aria-controls="logpanel" aria-label="${logOpen?"Fermer le journal de partie":fresh?"Ouvrir le journal de partie : du nouveau":"Ouvrir le journal de partie"}">${ico("log")}${fresh?`<i class="logdot" aria-hidden="true"></i>`:""}</button>`;
+}
+/* Panneau du journal : sous la barre du haut, par-dessus le plateau */
+function logPanelHTML(){
+  return logOpen?`<div class="log" id="logpanel" role="log" tabindex="0" aria-label="Journal de partie">${S.log.length?S.log.map(l=>`<div>${esc(l)}</div>`).join(""):`<div>Aucun événement pour l'instant.</div>`}</div>`:"";
+}
+/* Adversaire dans la première ligne : petit portrait + nom (+ titre) */
+function foeChipHTML(){
+  if(S.tut||S.rp) return "";
+  if(S.mp) return `<span class="foechip" title="${esc(S.mp.oppNick)}"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span class="fn"><b>${esc(S.mp.oppNick)}</b></span></span>`;
+  const r=S.rival&&rivalOf(S.rival.id); if(!r) return "";
+  return `<span class="foechip" title="${esc(foeName())} · ${esc(TIERS[S.aiTier])}">${rivalAv(r,"sm")}<span class="fn"><b>${esc(foeName())}</b><span class="ft"> · ${esc(TIERS[S.aiTier])}</span></span></span>`;
 }
 function replayHTML(){
   const rp=S.rp, left=S.energy-used();
@@ -917,7 +931,6 @@ function replayHTML(){
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   <div class="rpbar">${rp.done?`<div class="rpnote">${rp.ok===false?"Le replay diffère de la partie d'origine.":"Fin du replay."}</div><button class="primary" data-act="rpquit">Retour à l'historique</button>`
     :`<button class="primary" data-act="rpnext" ${S.busy?"disabled":""}>${S.turn>=6?"Dernier tour ▶":`Tour ${S.turn} ▶`}</button><button class="toggle" data-act="rpauto" aria-pressed="${!!rp.auto}">${rp.auto?"Auto : activé":"Lecture auto"}</button>`}</div>
-  ${logHTML()}
   ${gzHTML()}`;
 }
 function gameHTML(){
@@ -928,12 +941,10 @@ function gameHTML(){
   return `
   ${S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
   <div class="subbar">${pilesHTML()}</div>
-  ${S.rival&&!S.aiOathSay&&!S.mp&&!S.tut&&!S.rp&&rivalOf(S.rival.id)?`<div class="mpbar foebar">${rivalAv(rivalOf(S.rival.id),"sm")}<span>Contre <b>${esc(foeName())}</b> · <span>${esc(TIERS[S.aiTier])}</span></span></div>`:""}
   ${aiOathBar()}${myOathBar()}${oathCerHTML()}
-  ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
+  ${S.mp&&(S.mp.gone||(S.mp.oppLocked&&!S.mp.locked&&!S.busy))?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
-  ${logHTML()}
   <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
   <div class="status actbar${mullB||swB?" many":""}">
     <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>

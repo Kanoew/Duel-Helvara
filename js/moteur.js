@@ -167,15 +167,16 @@ function oathStake(mode,o,res){
   return o.kept?(res==="win"?(o.cross?t.crossKept:t.kept):0):-(o.cross?t.crossBroken:t.broken);
 }
 function pilesHTML(){ if(S.tut) return ""; piles(); const D=S.discardPile, G=S.graveyard;
-  return `<div class="pilesbar"><span>Main adverse : <b>${S.hand.e.length}</b></span><button class="pilebtn" data-act="pileview" data-p="d"><span>Défausses :</span> <b style="color:var(--me)">${D.p.length}</b> · <b style="color:var(--foe)">${D.e.length}</b></button><button class="pilebtn" data-act="pileview" data-p="g"><span>Cimetières :</span> <b style="color:var(--me)">${G.p.length}</b> · <b style="color:var(--foe)">${G.e.length}</b></button></div>`; }
-/* Défausse ou cimetière ouverts au toucher : les deux camps, la carte la plus récente en premier. */
+  const np=D.p.length+G.p.length, ne=D.e.length+G.e.length;
+  return `<div class="pilesbar"><span>Main adverse : <b>${S.hand.e.length}</b></span><button class="pilebtn" data-act="pileview" data-p="a"><span>Défausses &amp; cimetières :</span> <b style="color:var(--me)">${np}</b> · <b style="color:var(--foe)">${ne}</b></button></div>`; }
+/* Défausses et cimetières ouverts au toucher, dans une seule vue : les deux camps, la carte la plus récente en premier. */
 function pileHTML(){
-  piles(); const grave=gz==="pg", P2=grave?S.graveyard:S.discardPile;
-  const side=(s,lab,col)=>{ const ids=P2[s].slice().reverse();
+  piles();
+  const side=(P2,s,lab,col)=>{ const ids=P2[s].slice().reverse();
     return `<div class="pileside"><div class="m" style="color:${col}">${lab} · ${ids.length}</div>${ids.length?`<div class="pilegrid">${ids.map(id=>thumb(id,`data-act="zoom" data-id="${id}"`)).join("")}</div>`:`<p class="hint">Vide.</p>`}</div>`; };
-  return `<div class="veil" data-act="gzclose"><div class="pilepanel zoominfo"><div class="t">${grave?"Cimetières":"Défausses"}</div>
-    <p class="hint">${grave?"Les cartes détruites.":"Les cartes défaussées depuis la main."} Touche une carte pour la lire.</p>
-    ${side("p","Toi","var(--me)")}${side("e","Adversaire","var(--foe)")}
+  const sec=(P2,title,hint)=>`<div class="pilesec"><div class="t">${title}</div><p class="hint">${hint}</p>${side(P2,"p","Toi","var(--me)")}${side(P2,"e","Adversaire","var(--foe)")}</div>`;
+  return `<div class="veil" data-act="gzclose"><div class="pilepanel zoominfo"><p class="hint">Touche une carte pour la lire.</p>
+    ${sec(S.discardPile,"Défausses","Les cartes défaussées depuis la main.")}${sec(S.graveyard,"Cimetières","Les cartes détruites.")}
     <button class="ghost" data-act="gzclose">Fermer</button></div></div>`; }
 /* Nom affiché de l'adversaire IA : le rival (ex. « Exodus · Héraut ») ; sans rival, l'ancien libellé « IA <faction> · <palier> » */
 const foeName=()=>{ const r=S&&S.rival&&rivalOf(S.rival.id); return r?r.n:"IA"; };

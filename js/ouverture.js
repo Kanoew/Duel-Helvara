@@ -3,11 +3,11 @@
    Le calque est monté hors de #app (render() réécrit #app à chaque changement) : il ne dépend d'aucun rendu du jeu.
    Les cartes sont déjà ajoutées à la collection et sauvegardées par buyPack() avant l'ouverture : fermer à tout moment ne perd rien. */
 
-/* ---- Durées (ms), le SEUL endroit où elles sont définies. reward:null = la carte reste jusqu'à ce que le joueur touche l'écran ---- */
+/* ---- Durées (ms), le SEUL endroit où elles sont définies. reward:null = la carte reste jusqu'à ce que le joueur touche l'écran. Pour C/R/E, reward = temps de lecture (nom + effet) avant le retour automatique ; un toucher l'écourte ---- */
 const OUV_TIMING = {
-  C: { wait: 220, tension: 0,    reveal: 300, reward: 450 },
-  R: { wait: 240, tension: 380,  reveal: 380, reward: 800 },
-  E: { wait: 300, tension: 650,  reveal: 400, reward: 1000 },
+  C: { wait: 220, tension: 0,    reveal: 300, reward: 1400 },
+  R: { wait: 240, tension: 380,  reveal: 380, reward: 1900 },
+  E: { wait: 300, tension: 650,  reveal: 400, reward: 2300 },
   L: { wait: 380, tension: 1250, reveal: 450, reward: null },
   U: { wait: 800, tension: 2300, reveal: 550, reward: null }
 };
@@ -215,7 +215,7 @@ function ouvrirTirage(op){
       else { b.style.setProperty("--rot", "0deg"); b.style.setProperty("--ty", "0px"); }
       b.setAttribute("aria-label", tr("Carte") + " " + (i + 1) + ", " + tr("face cachée"));
       b.innerHTML = `<div class="t-dealer"><div class="t-mini">${backHTML(c.r)}${miniFront(c)}</div></div><span class="t-tag"></span>`;
-      b.addEventListener("click", e => { e.stopPropagation(); if(state === "idle" && !c.open) reveal(i); else if(state === "waiting") settle(); });
+      b.addEventListener("click", e => { e.stopPropagation(); if(state === "idle" && !c.open) reveal(i); else if(state === "waiting") settle(); else if(c.open && (state === "idle" || state === "done")) zoomCard(c); });
       fan.appendChild(b);
     });
   }
@@ -386,8 +386,9 @@ function ouvrirTirage(op){
         anim(banner, [{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 260, commit: true });
         later(skyStop, 500);
       }
+      state = "waiting"; say("Touche pour continuer");   /* lecture : retour automatique après T.reward, ou dès que le joueur touche */
       await sleep(T.reward);
-      if(closed || skipped) return;
+      if(closed || skipped || current !== i || state !== "waiting") return;
       settle();
     }
   }
@@ -436,13 +437,26 @@ function ouvrirTirage(op){
     const pk = op.pid && PACKS.find(x => x.id === op.pid);
     const again = pk && !pk.starter && typeof packBuyable === "function" && packBuyable(pk);
     const lack = pk && !pk.starter ? pk.price - P.chf : 0;
-    endEl.innerHTML = `${refund ? `<div class="t-refund">${tr("Doublons")} : +${refund} CHF</div>` : ""}
+    endEl.innerHTML = `<div class="t-hint">${tr("Touche une carte pour la lire")}</div>${refund ? `<div class="t-refund">${tr("Doublons")} : +${refund} CHF</div>` : ""}
       <div class="t-btns">${pk && !pk.starter ? `<button class="primary" type="button" data-t="again" ${again ? "" : "disabled"}>${again ? tr("Ouvrir un autre paquet") : (lack > 0 ? tr("Il manque") + " " + lack + " CHF" : tr("Paquet indisponible"))}</button>` : ""}
       <button class="ghost" type="button" data-t="close">${tr("Continuer")}</button></div>`;
     endEl.hidden = false;
     anim(endEl, [{ opacity: 0, transform: "translate(-50%,-44%)" }, { opacity: 1, transform: "translate(-50%,-50%)" }], { duration: 320, commit: true });
     const first = endEl.querySelector("button:not([disabled])"); if(first) first.focus({ preventScroll: true });
   }
+
+  /* ---------- Une carte obtenue en grand (nom et effet lisibles) ---------- */
+  let zoomEl = null;
+  function zoomCard(c){
+    if(zoomEl || closed) return;
+    zoomEl = document.createElement("div"); zoomEl.className = "t-zoom";
+    zoomEl.innerHTML = `<div class="t-zoomwrap">${fullCard(c.id, "big")}
+      <div class="zoominfo"><div class="row2"><button class="ghost" type="button" data-z="close">${tr("Fermer")}</button></div></div></div>`;
+    zoomEl.addEventListener("click", e => { e.stopPropagation(); closeZoom(); });
+    root.appendChild(zoomEl);
+    const b = zoomEl.querySelector("button"); if(b) b.focus({ preventScroll: true });
+  }
+  function closeZoom(){ if(zoomEl){ zoomEl.remove(); zoomEl = null; const f = endEl.querySelector("button:not([disabled])"); if(f && state === "done") f.focus({ preventScroll: true }); } }
 
   /* ---------- Passer : tout retourner, sans animation ---------- */
   function skipAll(){
@@ -467,7 +481,7 @@ function ouvrirTirage(op){
     if(typeof packOpen !== "undefined") packOpen = null;
   }
   function close(){ destroy(); if(typeof render === "function") render(); }
-  function onKey(e){ if(e.key === "Escape"){ e.preventDefault(); if(state === "done") close(); else skipAll(); } }
+  function onKey(e){ if(e.key === "Escape"){ e.preventDefault(); if(zoomEl) closeZoom(); else if(state === "done") close(); else skipAll(); } }
   document.addEventListener("keydown", onKey);
 
   root.addEventListener("click", e => {
