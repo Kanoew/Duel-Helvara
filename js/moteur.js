@@ -9,14 +9,17 @@ const OATH_CHF={ duel:{kept:30,broken:15,crossKept:60,crossBroken:30}, blitz:{ke
 /* Rivaux nommés (axe 2 du plan d'action) : l'adversaire de la partie contre l'IA. Chaque rival a un tempérament SIGNATURE ; à chaque partie, le tempérament réel est tiré
    (RIVAL_MOOD_SIG de chances d'avoir le signature, le reste réparti à parts égales sur les trois autres) et reste CACHÉ : seule la phrase du serment le trahit.
    Tempéraments : allin = jure tôt et fort ; bluff = jure pour tromper ; prudent = ne jure que s'il mène nettement et tard ; zele = jure presque à chaque partie.
-   fac = faction du deck (provisoire sauf Exodus). av = id d'une carte déjà sortie dont le portrait sert d'avatar : PROVISOIRE, Jordan fournira les vrais portraits, un seul champ à changer ici. */
+   fac = faction du deck (provisoire ; Exodus, lui, joue le deck prêt « Tout miser » dès le palier Élu, voir aiPreconDeck, et n'est jamais tiré avant). Portrait : images/avatars/rivaux/<id>.webp (portraits de Jordan, 17 novembre ; jamais proposés comme avatar de joueur). */
 const RIVAL_MOOD_SIG=0.55;
 const RIVALS=[
-  {id:"exodus",  n:"Exodus",   mood:"allin",   fac:"primordial", av:"set"},
-  {id:"clara",   n:"Clara",    mood:"bluff",   fac:"desir",      av:"lilith"},
-  {id:"timothee",n:"Timothée", mood:"prudent", fac:"jugement",   av:"anubis"},
-  {id:"mira",    n:"Mira",     mood:"zele",    fac:"helvara",    av:"joanna"}];
+  {id:"exodus",  n:"Exodus",   mood:"allin",   fac:"primordial"},
+  {id:"clara",   n:"Clara",    mood:"bluff",   fac:"desir"},
+  {id:"timothee",n:"Timothée", mood:"prudent", fac:"jugement"},
+  {id:"mira",    n:"Mira",     mood:"zele",    fac:"helvara"}];
 const RIVAL_MOODS=["allin","bluff","prudent","zele"];
+const RIVAL_EXODUS_MIN=3;   /* palier Élu (TIERS[3]) : Exodus n'apparaît pas avant */
+/* Phrases du joueur quand il jure (une seule affichée, tirée au hasard : purement visuel, Math.random comme gQuote ; jamais transmise à l'adversaire ; pas dans la partie guidée). Chaque phrase est traduite dans interface-en.js (exact). */
+const PLAYER_QUOTES=["« Tu n’aurais vraiment pas dû me forcer à en arriver là. »","« Merde, je t’avais prévenu. Maintenant c’est trop tard. »","« Bordel, tu crois que je vais encore te laisser le choix ? »","« Foutu destin… tu viens de te mettre en travers du mien. »","« Sacrée chance… tu aurais pu simplement te barrer. »"];
 /* Phrases du serment, par tempérament TIRÉ (une liste par tempérament : en ajouter librement ; chaque phrase doit aussi être traduite dans interface-en.js, exact) */
 const RIVAL_QUOTES={
   bluff:["« Tu crois vraiment que ça va s’arrêter là ? »"],
@@ -25,8 +28,9 @@ const RIVAL_QUOTES={
   prudent:["« Foutu hasard… tu viens de te choisir le pire ennemi possible. »"]};
 const rivalOf=id=>RIVALS.find(r=>r.id===id)||null;
 /* Tirage du rival et de son tempérament : Math.random, comme l'ancien aiOath (jamais RNG : aucun effet sur le tirage partagé de la partie ni sur les replays) */
-function drawRival(){
-  const r=RIVALS[Math.floor(Math.random()*RIVALS.length)];
+function drawRival(tier){
+  const pool=RIVALS.filter(x=>x.id!=="exodus"||(tier||0)>=RIVAL_EXODUS_MIN);   /* Exodus : palier Élu et au-delà seulement */
+  const r=pool[Math.floor(Math.random()*pool.length)];
   const others=RIVAL_MOODS.filter(m=>m!==r.mood);
   const mood=Math.random()<RIVAL_MOOD_SIG?r.mood:others[Math.floor(Math.random()*others.length)];
   return {id:r.id,mood};
@@ -66,6 +70,26 @@ function aiDeck(t,full,noUL,wantFac){   /* noUL : le Blitz n'a aucune ultra-lég
       const was=deck[k]; deck[k]=id; if(u&&!ulOk(u,deck)){ deck[k]=was; break; } have++; } }
   return {deck:deck.slice(0,ECO.deckSize),fac};
 }
+/* Deck d'un rival : Exodus joue le deck prêt « Tout miser » (PRECONS), mais avec les mêmes limites que aiDeck (rareté max selon le palier et les cartes possédées, carte sortie, pas reflet_noir, pas d'ultra-légendaire si noUL).
+   Une carte non permise est remplacée par la carte permise la plus proche (même faction d'abord, puis coût et puissance les plus proches), sans casser « une version par personnage ». Les autres rivaux gardent aiDeck. */
+function aiPreconDeck(precId,t,full,noUL){
+  const pc=PRECONS.find(p=>p.id===precId); if(!pc) return aiDeck(t,full,noUL);
+  const own=full?4:Math.max(2,...P.owned.map(id=>RVAL[CARDS[id].r]));
+  const cap=Math.min([1,2,3,3,4,4,4][t],own);
+  const pool=PACK().filter(id=>RVAL[CARDS[id].r]<=cap&&id!=="reflet_noir"&&!CARDS[id].token&&!(noUL&&ULof(id)));
+  const inPool=new Set(pool), deck=[], miss=[];
+  const clash=(id)=>deck.some(x=>x!==id&&charOf(x)===charOf(id));
+  for(const id of pc.cards){ if(inPool.has(id)&&!deck.includes(id)&&!clash(id)) deck.push(id); else miss.push(id); }
+  for(const id of miss){
+    const d=CARDS[id];
+    const cand=pool.filter(x=>!deck.includes(x)&&!ULof(x)&&!clash(x))
+      .sort((a,b)=>((CARDS[a].fac===d.fac?0:1)-(CARDS[b].fac===d.fac?0:1))||Math.abs(CARDS[a].cost-d.cost)-Math.abs(CARDS[b].cost-d.cost)||Math.abs(CARDS[a].pow-d.pow)-Math.abs(CARDS[b].pow-d.pow)||(a<b?-1:1));
+    if(cand.length) deck.push(cand[0]);
+  }
+  if(deck.length<ECO.deckSize){ for(const id of pool.filter(x=>!deck.includes(x)&&!ULof(x)&&!clash(x)).sort((a,b)=>((CARDS[b].fac===pc.fac)-(CARDS[a].fac===pc.fac))||RVAL[CARDS[b].r]-RVAL[CARDS[a].r]||(a<b?-1:1))){ if(deck.length>=ECO.deckSize) break; deck.push(id); } }
+  return {deck:deck.slice(0,ECO.deckSize),fac:pc.fac};
+}
+const rivalDeck=(rv,t,full,noUL)=>rv.id==="exodus"?aiPreconDeck("miser",t,full,noUL):aiDeck(t,full,noUL,rivalOf(rv.id).fac);
 /* Trois lieux au hasard ; le week-end, le lieu à l'honneur du jour en fait toujours partie (à une place tirée au hasard) */
 function pickLocs(){ const f=featureLoc(); let ids=shuffle(locPool()).slice(0,3); if(f&&!ids.includes(f)) ids=shuffle([f,...ids.slice(0,2)]); return ids; }
 function newGame(){
@@ -81,7 +105,7 @@ function newGame(){
     staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
     log:[], sel:null, info:null, busy:false, over:null};
   S.feat=!firstEver&&locIds.includes(featureLoc())?featureLoc():null; /* lieu à l'honneur présent dans cette partie */
-  S.rival=drawRival(); const ai=aiDeck(S.aiTier,false,false,rivalOf(S.rival.id).fac); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac; if(typeof preloadFoe==="function") preloadFoe(); /* range les illustrations du deck adverse pour jouer hors ligne */
+  S.rival=drawRival(S.aiTier); const ai=rivalDeck(S.rival,S.aiTier,false,false); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac; if(typeof preloadFoe==="function") preloadFoe(); /* range les illustrations du deck adverse pour jouer hors ligne */
   /* Replay (25 octobre) : graine du hasard de la partie et ordre exact des decks ; les coups de chaque tour sont ajoutés par resolveTurn */
   { const seed=(Math.random()*2147483647)|0; RNG=mulberry(seed); S.rec={v:BUILD,seed,locs:locIds.slice(),feat:S.feat||null,dp:S.deck.p.map(c=>c.id),de:S.deck.e.map(c=>c.id),fac:S.aiFac,tier:S.aiTier,turns:[]}; }
   for(let i=0;i<3;i++){draw("p");draw("e");}
@@ -101,7 +125,7 @@ function swearOath(side,li){
   if(!S||S[k]!=null||S.turn>5||!(li>=0&&li<3)||!S.locs[li]||!S.locs[li].rev) return false;
   S[k]=li; S.oathNew={li,at:Date.now()};
   /* Cérémonie : portrait + nom (+ phrase du rival, selon son tempérament tiré), affichée OATH_CER_MS ; la phrase reste ensuite dans la barre du serment adverse */
-  if(side==="p"||S.rival){ const say=side==="e"?gQuote(S.rival.mood):null; if(side==="e") S.aiOathSay=say; const cer=S.oathCer={side,li,at:Date.now(),say}, sRef=S;
+  if(side==="p"||S.rival){ const say=side==="e"?gQuote(S.rival.mood):(!S.tut?PLAYER_QUOTES[Math.floor(Math.random()*PLAYER_QUOTES.length)]:null); if(side==="e") S.aiOathSay=say; const cer=S.oathCer={side,li,at:Date.now(),say}, sRef=S;
     setTimeout(()=>{ if(S===sRef&&S.oathCer===cer&&typeof render==="function"&&screen==="play") render(); },OATH_CER_MS+150); }
   const n=LOCS[S.locs[li].id].name;
   log(o===li?`Serment croisé sur ${n}`:side==="p"?`Serment prêté sur ${n}`:`L'adversaire jure sur ${n}`); sfx("legend"); return true;
@@ -156,8 +180,8 @@ function pileHTML(){
 /* Nom affiché de l'adversaire IA : le rival (ex. « Exodus · Héraut ») ; sans rival, l'ancien libellé « IA <faction> · <palier> » */
 const foeName=()=>{ const r=S&&S.rival&&rivalOf(S.rival.id); return r?r.n:"IA"; };
 const foeLabel=()=>S.rival&&rivalOf(S.rival.id)?`${foeName()} · ${TIERS[S.aiTier]}`:`IA ${FAC[S.aiFac].n} · ${TIERS[S.aiTier]}`;
-/* Portrait rond du rival (id de carte de la table RIVALS ; filtré par POOL comme tout avatar) */
-const rivalAv=(r,cls)=>POOL.includes(r.av)?`<span class="avatar ${cls}" style="background-image:url('images/avatars/${r.av}.webp?v=8')"></span>`:`<span class="avatar ${cls}">${esc(r.n.charAt(0))}</span>`;
+/* Portrait rond du rival : images/avatars/rivaux/<id>.webp (id venant de la table RIVALS, jamais de la base) */
+const rivalAv=(r,cls)=>RIVALS.includes(r)?`<span class="avatar ${cls}" style="background-image:url('images/avatars/rivaux/${r.id}.webp?v=8')"></span>`:`<span class="avatar ${cls}">${esc(r.n.charAt(0))}</span>`;
 /* Phrase du rival, gardée sous le serment adverse (c'est le seul indice sur son tempérament tiré) */
 function rivalSayHTML(){ const r=S.rival&&rivalOf(S.rival.id); if(!r||!S.aiOathSay) return "";
   return `<div class="oathsay">${rivalAv(r,"sm")}<span><b>${esc(r.n)}</b> : <i>${esc(S.aiOathSay)}</i></span></div>`; }
@@ -167,7 +191,7 @@ function oathCerHTML(){
   const foe=c.side==="e", r=foe&&S.rival&&rivalOf(S.rival.id); if(foe&&!r) return "";
   const n=LOCS[S.locs[c.li].id].name;
   return `<div class="oathcer ${foe?"foe":"me"}" style="animation-delay:-${age}ms" role="status">${foe?rivalAv(r,"md"):avatarHTML("md")}
-    <div class="oc"><div class="ocn">${foe?esc(r.n):esc(P.name)}</div><div class="ocl">jure sur <b>${esc(n)}</b></div>${foe&&c.say?`<div class="ocq">${esc(c.say)}</div>`:""}</div></div>`; }
+    <div class="oc"><div class="ocn">${foe?esc(r.n):esc(P.name)}</div><div class="ocl">jure sur <b>${esc(n)}</b></div>${c.say?`<div class="ocq">${esc(c.say)}</div>`:""}</div></div>`; }
 function aiOathBar(){
   if(S.aiOath==null||S.over) return "";
   const n=LOCS[S.locs[S.aiOath].id].name;

@@ -692,7 +692,7 @@ function codexHTML(){
   </section>`;
 }
 /* Aide (écran « ? ») : rubriques repliables, une seule ouverte à la fois (<details name="aide"> : exclusivité native, sans script). La rubrique ouverte survit aux redessins (aideOpen, mis à jour par l'événement « toggle »). */
-let aideOpen="bases";
+let aideOpen="";
 document.addEventListener("toggle",e=>{ const d=e.target; if(d&&d.classList&&d.classList.contains("acc")&&d.dataset.k){ if(d.open) aideOpen=d.dataset.k; else if(aideOpen===d.dataset.k) aideOpen=""; } },true);
 function rulesHTML(){
   const acc=(k,t,body)=>`<details class="acc" name="aide" data-k="${k}"${aideOpen===k?" open":""}><summary>${t}</summary><div class="accb">${body}</div></details>`;
