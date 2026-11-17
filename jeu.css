@@ -138,7 +138,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-grad
 .cost{position:absolute;left:4px;top:4px;width:24px;height:27px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:var(--warm);color:#1b1206;display:grid;place-items:center;font-family:var(--display);font-size:14px;font-variant-numeric:tabular-nums}
 .cost.cut{background:#9fe0b0}
 .hc .pw,.full .pw{position:absolute;right:4px;bottom:4px;width:26px;height:26px;border-radius:50%;background:rgba(6,10,18,.88);border:1px solid rgba(255,255,255,.25);display:grid;place-items:center;font-family:var(--display);font-size:15px;font-variant-numeric:tabular-nums}
-.hc .nm{position:absolute;left:0;right:0;bottom:0;padding:18px 32px 6px 6px;font-family:var(--display);font-size:11.5px;line-height:1.15;text-align:left;background:linear-gradient(transparent,rgba(6,10,18,.92) 55%)}
+.hc .nm{position:absolute;left:0;right:0;bottom:30px;padding:18px 5px 2px 6px;box-shadow:0 30px 0 rgba(6,10,18,.92);font-family:var(--display);font-size:11px;line-height:1.1;text-align:left;overflow-wrap:anywhere;hyphens:auto;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;background:linear-gradient(transparent,rgba(6,10,18,.92) 40%)}
 
 /* art placeholders */
 .art{background-size:cover;background-position:center 20%}
@@ -467,6 +467,10 @@ html[data-season="noel"] body::after,html[data-season="nouvelan"] body::after{ba
 .oathbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid rgba(219,168,98,.45);background:linear-gradient(135deg,rgba(219,168,98,.14),rgba(17,24,39,.85) 60%);border-radius:12px;padding:8px 12px;margin:8px 0;font-size:13px}
 .oathbar.sworn{color:var(--warm);display:block}
 .oathbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+/* en partie : le bandeau « Relever le défi ? » tient en hauteur (boutons empilés à droite du texte), pour laisser la place au plateau */
+body.inplay .oathbar{margin:0;flex-wrap:nowrap;padding:6px 8px 6px 12px}
+body.inplay .oathbar .oathbtns{flex-direction:column;flex:none;gap:4px}
+body.inplay .oathbar .oathbtns .small{padding:5px 12px}
 .oathchip{border-color:rgba(219,168,98,.55);color:var(--warm)}
 .oathchip.on{background:rgba(219,168,98,.16)}
 .loc.oath{box-shadow:0 0 0 2px var(--warm) inset}
@@ -735,7 +739,7 @@ body.hasdock .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom))} /* l
 body.inplay{padding-block:8px 16px}
 body.inplay .wrap{gap:8px}
 body.inplay .status{flex-wrap:nowrap;gap:10px}
-body.inplay .side{--mh:clamp(44px,min(17vw,calc((100dvh - 500px)/4)),96px)}
+body.inplay .side{--mh:var(--mhfit,clamp(44px,min(17vw,calc((100dvh - 500px)/4)),96px))}
 body.inplay .loc{min-height:92px}
 .subbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
 .subbar .pilesbar{margin:0}

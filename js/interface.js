@@ -1021,11 +1021,31 @@ function render(){
   document.body.classList.toggle("inplay",screen==="play");
   setTimeout(()=>FX.decorate(app),30);
   translateDOM(app);
+  fitBoard();
   const h=document.querySelector(".handwrap"); if(h) h.scrollLeft=hs;
   if(mpKeep){ const i=document.getElementById("mp-code"); if(i){ i.value=mpKeep.v; if(mpKeep.f){ i.focus(); try{ i.setSelectionRange(mpKeep.s,mpKeep.e); }catch(e){} } } }
   music();
   if(editName){ const i=document.getElementById("name-input"); if(i && document.activeElement!==i){ i.focus(); i.select(); } }
 }
+
+/* Partie : le plateau tient au-dessus du cadre du bas (main, carte choisie). La hauteur des cases (--mh) part d'une estimation en CSS ;
+   le haut de l'écran varie (serment, réplique, bonus de coût…), donc on mesure ce qui dépasse et on rétrécit les cases juste assez.
+   La place du cadre « carte choisie » est toujours réservée : le plateau ne saute pas quand on touche une carte. */
+let infoH=64;
+function fitBoard(){
+  const b=document.body; b.style.removeProperty("--mhfit");
+  if(screen!=="play"||!S||S.rp||!document.querySelector(".handdock")) return;
+  const inf=document.querySelector(".handdock .info"); if(inf) infoH=inf.offsetHeight;
+  const extra=inf?0:infoH+8;
+  for(let i=0;i<3;i++){
+    const cell=document.querySelector(".side>*"); if(!cell) return;
+    const over=document.scrollingElement.scrollHeight-innerHeight+extra; if(over<=1) return;
+    const h=cell.getBoundingClientRect().height, n=Math.max(...[...document.querySelectorAll(".col")].map(c=>[...c.querySelectorAll(".side")].reduce((t,sd)=>t+Math.ceil(sd.children.length/2),0)));
+    const nh=Math.max(36,Math.floor(h-over/n)); if(nh>=h) return;
+    b.style.setProperty("--mhfit",nh+"px");
+  }
+}
+{ let fitRaf=0; addEventListener("resize",()=>{ cancelAnimationFrame(fitRaf); fitRaf=requestAnimationFrame(fitBoard); }); }
 
 /* ======= INTERACTIONS ======= */
 /* Inclinaison et reflet qui suivent le doigt sur une légendaire ou ultra-légendaire en grand */
