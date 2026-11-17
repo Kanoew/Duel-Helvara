@@ -938,11 +938,32 @@ function gameHTML(){
   if(S.rp) return replayHTML();
   const left=S.energy-used();
   const swB=S.over?"":swimBtn(), mullB=S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:"";
-  return `
-  ${S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
+  const modsH=S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:"";
+  const mpH=S.mp&&(S.mp.gone||(S.mp.oppLocked&&!S.mp.locked&&!S.busy))?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:"";
+  /* Essai (LAY2) : cadre fixe. Une ligne de message réservée en haut (serment, duel), le cadre « carte choisie » toujours présent en bas
+     (sans carte choisie : changer sa main, bonus de coût ou aide), la barre des boutons sur une seule ligne. Rien ne change de taille pendant la partie. */
+  const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():infoHTML();
+  const dflt=mullB?`<div><div class="m">Ta main ne te plaît pas ?</div><div class="oathbtns" style="margin-top:6px">${mullB}</div></div>`
+    :modsH?`<div>${modsH}</div>`:`<div><div class="m">Touche une carte pour la voir ici.</div></div>`;
+  return LAY2?`
+  <div class="subbar">${pilesHTML()}</div>
+  <div class="topslot">${aiOathBar()}${myOathBar()}${mpH}</div>${oathCerHTML()}
+  <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
+  ${tutBarHTML()}
+  <div class="handdock"><div class="infoslot"><div class="info${inf?"":" dflt"}${S.sel?" pick":""}">${inf?inf+(mullB&&!S.sel&&!S.oathMode?`<div class="oathbtns" style="margin:0">${mullB}</div>`:""):dflt}</div></div>
+  <div class="status actbar">
+    <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>
+    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span></div>
+    ${oathOK()&&oathFree()&&!S.busy&&!(S.mp&&S.mp.locked)?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
+    ${swB}
+    ${endBtnHTML()}
+  </div>
+  <div class="handwrap"><div class="hand">${handHTML()}</div></div></div>
+  ${resultHTML()}${gzHTML()}`:`
+  ${modsH}
   <div class="subbar">${pilesHTML()}</div>
   ${aiOathBar()}${myOathBar()}${oathCerHTML()}
-  ${S.mp&&(S.mp.gone||(S.mp.oppLocked&&!S.mp.locked&&!S.busy))?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
+  ${mpH}
   <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
   ${tutBarHTML()}
   <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
@@ -951,10 +972,13 @@ function gameHTML(){
     <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span></div>
     ${oathOK()&&oathFree()&&!S.busy&&!(S.mp&&S.mp.locked)?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
     ${mullB}${swB}
-    ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
+    ${endBtnHTML()}
   </div>
   <div class="handwrap"><div class="hand">${handHTML()}</div></div></div>
   ${resultHTML()}${gzHTML()}`;
+}
+function endBtnHTML(){
+  return S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`;
 }
 /* Le Serment est possible jusqu'au tour 5 : partie classée, Blitz, duel (caché jusqu'à la fin du tour) et partie guidée (sans enjeu). Jamais en replay ni pendant la reprise d'un duel. */
 const oathOK=()=>S&&!S.rp&&!S.over&&S.turn<=5&&!(S.mp&&(S.mp.resuming||S.mp.replaying));
