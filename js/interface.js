@@ -1031,9 +1031,15 @@ function render(){
 /* Partie : le plateau tient au-dessus du cadre du bas (main, carte choisie). La hauteur des cases (--mh) part d'une estimation en CSS ;
    le haut de l'écran varie (serment, réplique, bonus de coût…), donc on mesure ce qui dépasse et on rétrécit les cases juste assez.
    La place du cadre « carte choisie » est toujours réservée : le plateau ne saute pas quand on touche une carte. */
+/* Essai de mise en page adaptative (écran de partie en trois bandes : haut, plateau qui prend toute la place restante, main en bas).
+   Éteinte par défaut ; « ?essai=1 » l'allume sur cet appareil (gardé en mémoire), « ?essai=0 » l'éteint. Purement visuel : aucun effet sur la partie. */
+const LAY2=(()=>{ try{ const q=new URLSearchParams(location.search).get("essai");
+  if(q!=null&&!window.__wiped){ if(q==="0") localStorage.removeItem("helvara-essai"); else localStorage.setItem("helvara-essai","1"); }
+  return q!=null?q!=="0":localStorage.getItem("helvara-essai")==="1"; }catch(e){ return false; } })();
 let infoH=64;
 function fitBoard(){
-  const b=document.body; b.style.removeProperty("--mhfit");
+  const b=document.body; b.style.removeProperty("--mhfit"); b.classList.toggle("lay2",LAY2);
+  if(LAY2) return; /* la mise en page adaptative se règle seule, en CSS */
   const dock=document.querySelector(".handdock");
   if(screen!=="play"||!S||S.rp||!dock||!dock.previousElementSibling) return;
   const inf=dock.querySelector(".info"); if(inf) infoH=inf.offsetHeight;

@@ -1112,3 +1112,17 @@ body.inplay .actbar .endbtn{padding:9px 12px;font-size:14px}
 /* écrans étroits (≤ 400 px) : ligne 1 = Tour, énergie, Fin du tour (sous le pouce) ; ligne 2 = Serment, Changer ma main, Nageuse */
 @media (max-width:480px){ body.inplay .actbar{gap:5px} body.inplay .actbar .toggle{padding:7px 7px;font-size:11.5px} body.inplay .actbar .turn{font-size:13.5px} body.inplay .actbar .hex{width:26px;height:30px;font-size:14px} body.inplay .actbar .endbtn{padding:9px 10px;font-size:13.5px} }
 @media (max-width:390px){ body.inplay .actbar.many::after{content:"";order:1;flex-basis:100%;height:0} body.inplay .actbar.many .toggle{order:2} }
+
+/* Essai : mise en page adaptative de la partie (body.lay2, voir LAY2 dans interface.js). L'écran fait exactement la hauteur du téléphone :
+   haut et bas à leur taille naturelle, le plateau prend tout le reste. Les cases grandissent jusqu'à une taille maximale, puis le plateau se centre. */
+body.lay2.inplay{padding-block:8px 0}
+body.lay2.inplay #app{box-sizing:border-box;height:calc(100dvh - 8px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+body.lay2.inplay #app>*{flex:none}
+body.lay2.inplay #app>.board{flex:1 1 0;min-height:0}
+body.lay2.inplay .col{min-height:0;justify-content:center}
+body.lay2.inplay .loc{flex:none}
+body.lay2.inplay .side{--cell:min(100px,21vw);flex:0 1 calc(2 * var(--cell) + 16px);min-height:calc(2 * 28px + 16px);grid-auto-rows:minmax(0,1fr);align-content:stretch;box-sizing:border-box}
+body.lay2.inplay .slot,body.lay2.inplay .mini{height:auto;min-height:0}
+body.lay2.inplay .handdock{padding-bottom:4px}
+body.lay2.inplay .loc{flex:0 .12 auto;min-height:62px}
+body.lay2.inplay .loc .fx{-webkit-line-clamp:2}
