@@ -1113,7 +1113,7 @@ body.inplay .actbar .endbtn{padding:9px 12px;font-size:14px}
 @media (max-width:480px){ body.inplay .actbar{gap:5px} body.inplay .actbar .toggle{padding:7px 7px;font-size:11.5px} body.inplay .actbar .turn{font-size:13.5px} body.inplay .actbar .hex{width:26px;height:30px;font-size:14px} body.inplay .actbar .endbtn{padding:9px 10px;font-size:13.5px} }
 @media (max-width:390px){ body.inplay .actbar.many::after{content:"";order:1;flex-basis:100%;height:0} body.inplay .actbar.many .toggle{order:2} }
 
-/* Essai : écran de jeu fixe (body.lay2, voir LAY2 / L2 dans interface.js ; jamais dans le tutoriel). L'écran fait la hauteur du téléphone,
+/* Écran de jeu fixe (body.lay2, voir L2 dans interface.js ; toutes les parties sauf tutoriel et replay). L'écran fait la hauteur du téléphone,
    le plateau prend toute la place entre le haut et la main, et ne change plus de taille pendant la partie. Le passager flotte par-dessus. */
 body.lay2.inplay{padding-block:8px 0}
 body.lay2.inplay #app{box-sizing:border-box;height:calc(100dvh - 8px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
@@ -1141,3 +1141,6 @@ body.lay2.inplay .info.bubble .m{display:block;-webkit-line-clamp:unset}
 body.lay2.inplay .bubx{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:none;color:var(--mist);font-size:20px;line-height:1;cursor:pointer}
 body.lay2.inplay .floatzone>.mullfloat{align-self:flex-end;box-shadow:none;margin:6px 6px 0 0}
 body.lay2.inplay .mullfloat .toggle{background:rgba(17,24,39,.95);box-shadow:0 6px 18px rgba(0,0,0,.55)}
+body.lay2.inplay .modsbtn{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid rgba(159,224,176,.6);background:rgba(159,224,176,.1);color:#9fe0b0;font-weight:700;font-size:14px;line-height:1;cursor:pointer;padding:0}
+body.lay2.inplay .modsbtn.on{background:rgba(159,224,176,.28)}
+body.lay2.inplay .info.bubble .mods{margin:4px 0 0}

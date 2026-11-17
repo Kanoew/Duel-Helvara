@@ -805,13 +805,13 @@ async function inPage() {
       /* 7. La Patronne d'Ouchy et Typhon : coûts du tour suivant */
       fresh(); S.turn = 3; { const pa = card("patronne"), t = card(plain[0]); S.hand.p = [pa]; await resolveTurn([{ c: pa, li: 0 }], [], false); const cst = CARDS[plain[0]].cost;
         T("Patronne : au tour suivant, tes cartes coûtent 1 de moins (pas celles de l'adversaire)", S.turn === 4 && S.costNow.p === -1 && S.costNow.e === 0 && costFor("p", plain[0], 0, false, false) === Math.max(0, cst - 1) && costFor("e", plain[0], 0, false, false) === cst, JSON.stringify(S.costNow));
-        T("Patronne : le bandeau de la partie l'annonce", gameHTML().includes("toutes tes cartes −1 ce tour"));
+        T("Patronne : la partie l'annonce (bouton ± puis bulle des coûts)", gameHTML().includes('data-act="mods"') && (S.modsOpen = true, gameHTML().includes("toutes tes cartes −1 ce tour"))); S.modsOpen = false;
         S.hand.p = [card(plain[1])]; await resolveTurn([], [], false); T("Patronne : seulement un tour (le suivant, plus de réduction)", S.costNow.p === 0 && costFor("p", plain[0], 0, false, false) === cst, JSON.stringify(S.costNow)); }
       fresh(); S.turn = 6; { const pa = card("patronne"); S.hand.p = [pa]; await resolveTurn([{ c: pa, li: 0 }], [], false); T("Patronne : sans effet au tour 6 (la partie est finie)", S.over && true); }
       fresh(); S.turn = 3; S.energy = S.energyE = 5; { const pa = card("patronne"), z = card(plain[0]); S.hand.e = [pa, z]; const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : joue la Patronne avant le tour 6", ids.includes("patronne"), ids.join()); }
       fresh(); S.turn = 3; { const ty = card("typhon"); S.hand.p = [ty]; await resolveTurn([{ c: ty, li: 0 }], [], false); const cst = CARDS[plain[0]].cost;
         T("Typhon : au tour suivant, toutes les cartes des deux joueurs coûtent 1 de plus", S.turn === 4 && S.costNow.p === 1 && S.costNow.e === 1 && costFor("p", plain[0], 0, false, false) === cst + 1 && costFor("e", plain[0], 0, false, false) === cst + 1, JSON.stringify(S.costNow));
-        T("Typhon : le bandeau l'annonce", gameHTML().includes("toutes tes cartes +1 ce tour")); }
+        T("Typhon : la partie l'annonce (bouton ± puis bulle des coûts)", gameHTML().includes('data-act="mods"') && (S.modsOpen = true, gameHTML().includes("toutes tes cartes +1 ce tour"))); S.modsOpen = false; }
       fresh(); S.turn = 3; { const pa = card("patronne"), ty = card("typhon"); S.hand.p = [pa, ty]; await resolveTurn([pa, ty].map(c => ({ c, li: 0 })), [], false); T("Patronne + Typhon : −1 et +1 s'annulent pour toi (0), l'adversaire paie +1", S.costNow.p === 0 && S.costNow.e === 1, JSON.stringify(S.costNow)); }
       fresh(); S.turn = 3; S.energy = 4; { const ty = card("typhon"); S.hand.p = [ty]; T("Typhon : le coût d'une carte ne descend jamais sous 0 avec la Patronne (carte gratuite)", costFor("p", "enfant", 0, true, true) === 0); S.costNow = { p: -1, e: 0 }; T("Coût 0 − 1 reste 0", costFor("p", "enfant", 0, true, true) === 0 && costOf("p", card("enfant"), 0, true, true) === 0); }
       /* 8. L'Archiviste X La Patronne */

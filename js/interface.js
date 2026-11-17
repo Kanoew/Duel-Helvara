@@ -940,10 +940,10 @@ function gameHTML(){
   const swB=S.over?"":swimBtn(), mullB=S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:"";
   const modsH=S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:"";
   const mpH=S.mp&&(S.mp.gone||(S.mp.oppLocked&&!S.mp.locked&&!S.busy))?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:"";
-  /* Essai (LAY2, jamais dans le tutoriel) : écran de jeu fixe. Le plateau garde la même taille toute la partie ; tout ce qui est passager
+  /* Écran de jeu fixe (L2(), jamais dans le tutoriel ni le replay). Le plateau garde la même taille toute la partie ; tout ce qui est passager
      (texte de la carte choisie, serment à relever, duel) flotte par-dessus le haut du plateau puis disparaît. Les bonus de coût se lisent sur les cartes de la main. */
   if(L2()){
-    const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():(S.sel||S.info||S.help)?infoHTML():"";
+    const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():(S.sel||S.info||S.help)?infoHTML():S.modsOpen&&modsH?`<div><div class="t">Coûts et énergie</div>${modsH}</div>`:"";
     const floats=(inf?`<div class="info bubble">${inf}${S.oathMode?"":`<button class="bubx" data-act="bubclose" aria-label="Fermer">×</button>`}</div>`:"")+(mullB&&!inf?`<div class="mullfloat">${mullB}</div>`:"")+aiOathBar()+myOathBar()+mpH;
     return `
   <div class="subbar">${pilesHTML()}</div>${oathCerHTML()}
@@ -951,7 +951,7 @@ function gameHTML(){
   <div class="floatzone">${floats}</div></div>
   <div class="handdock"><div class="status actbar">
     <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>
-    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div>${S.bonus.p?`<span class="nrgnext">+${S.bonus.p}</span>`:""}</div>
+    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div>${S.bonus.p?`<span class="nrgnext">+${S.bonus.p}</span>`:""}</div>${modsH?`<button class="modsbtn${S.modsOpen?" on":""}" data-act="mods" aria-label="Effets de coût en cours">±</button>`:""}
     ${oathOK()&&oathFree()&&!S.busy&&!(S.mp&&S.mp.locked)?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
     ${swB}
     ${endBtnHTML()}
@@ -1055,16 +1055,15 @@ function render(){
 /* Partie : le plateau tient au-dessus du cadre du bas (main, carte choisie). La hauteur des cases (--mh) part d'une estimation en CSS ;
    le haut de l'écran varie (serment, réplique, bonus de coût…), donc on mesure ce qui dépasse et on rétrécit les cases juste assez.
    La place du cadre « carte choisie » est toujours réservée : le plateau ne saute pas quand on touche une carte. */
-/* Essai de mise en page adaptative (écran de partie en trois bandes : haut, plateau qui prend toute la place restante, main en bas).
-   Éteinte par défaut ; « ?essai=1 » l'allume sur cet appareil (gardé en mémoire), « ?essai=0 » l'éteint. Purement visuel : aucun effet sur la partie. */
-const LAY2=(()=>{ try{ const q=new URLSearchParams(location.search).get("essai");
-  if(q!=null&&!window.__wiped){ if(q==="0") localStorage.removeItem("helvara-essai"); else localStorage.setItem("helvara-essai","1"); }
-  return q!=null?q!=="0":localStorage.getItem("helvara-essai")==="1"; }catch(e){ return false; } })();
-const L2=()=>LAY2&&!!S&&!S.tut&&!S.rp;
+/* Écran de partie fixe (classe body.lay2) : actif pour toutes les parties, sauf le tutoriel et le replay, qui gardent l'ancien affichage
+   (mesuré par fitBoard ci-dessous). Purement visuel : aucun effet sur la partie. */
+const L2=()=>!!S&&!S.tut&&!S.rp;
+/* Nettoyage de l'ancien interrupteur d'essai (clé locale supprimée). */
+try{ if(!window.__wiped) localStorage.removeItem("helvara-essai"); }catch(e){}
 let infoH=64;
 function fitBoard(){
   const b=document.body; b.style.removeProperty("--mhfit"); b.classList.toggle("lay2",screen==="play"&&L2());
-  if(screen==="play"&&L2()) return; /* la mise en page adaptative se règle seule, en CSS */
+  if(screen==="play"&&L2()) return; /* écran fixe : la mise en page se règle seule, en CSS ; fitBoard ne sert plus qu'au tutoriel et au replay */
   const dock=document.querySelector(".handdock");
   if(screen!=="play"||!S||S.rp||!dock||!dock.previousElementSibling) return;
   const inf=dock.querySelector(".info"); if(inf) infoH=inf.offsetHeight;
@@ -1242,7 +1241,7 @@ document.addEventListener("click", e=>{
   if(Date.now()-fanSwiped<400){ fanSwiped=0; e.preventDefault(); return; } /* le clic qui suit un glissement */
   const el=e.target.closest("[data-act]");
   /* Essai : toucher ailleurs ferme la bulle de la carte choisie */
-  if(!el){ if(screen==="play"&&L2()&&(S.sel||S.info||S.help)&&!e.target.closest(".floatzone")){ S.sel=null; S.info=null; S.help=false; render(); } return; }
+  if(!el){ if(screen==="play"&&L2()&&(S.sel||S.info||S.help||S.modsOpen)&&!e.target.closest(".floatzone")){ S.sel=null; S.info=null; S.help=false; S.modsOpen=false; render(); } return; }
   const act=el.dataset.act;
   ac(); bgmArmed=true;
   switch(act){
@@ -1304,7 +1303,8 @@ document.addEventListener("click", e=>{
     case "fbpick": if(S&&S.over){ S.over.fb="pick"; sfx("click"); render(); } return;
     case "fbcancel": if(S&&S.over){ S.over.fb=null; render(); } return;
     case "fbsend": { const sel=document.getElementById("fb-card"); if(sel&&sel.value) fbSend("unfair",sel.value); return; }
-    case "bubclose": if(S){ S.sel=null; S.info=null; S.help=false; sfx("click"); render(); } return;
+    case "bubclose": if(S){ S.sel=null; S.info=null; S.help=false; S.modsOpen=false; sfx("click"); render(); } return;
+    case "mods": if(S){ S.modsOpen=!S.modsOpen; S.sel=null; S.info=null; S.help=false; sfx("click"); render(); } return;
     case "playhelp": if(S){ S.help=!S.help; sfx("click"); render(); } return;
     case "mqstart": mqStart(); return;
     case "mqcancel": mqStop(""); sfx("click"); return;
@@ -1363,7 +1363,7 @@ document.addEventListener("click", e=>{
   if(act==="oathno"){ S.oathPick=null; render(); return; }
   if(act==="oathok"){ if(oathOK()&&oathFree()&&S.oathPick!=null){ const li=S.oathPick; S.oathPick=null; S.oathMode=false; if(S.mp){ S.oathStage=li; sfx("select"); } else swearOath("p",li); } render(); return; }
   if(act==="mull"){ if(S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.staged.length){ const n=S.hand.p.length; S.deck.p=shuffle([...S.deck.p,...S.hand.p]); S.hand.p=[]; if(S.rec) S.rec.dp=S.deck.p.map(c=>c.id); for(let i=0;i<n;i++) draw("p"); S.mull=true; S.sel=null; log("Main changée"); sfx("pack"); } render(); return; }
-  if(act==="hand"){ const uid=+el.dataset.uid; S.sel=S.sel===uid?null:uid; S.info=null; sfx("select"); render(); return; }
+  if(act==="hand"){ const uid=+el.dataset.uid; S.sel=S.sel===uid?null:uid; S.info=null; S.modsOpen=false; sfx("select"); render(); return; }
   if(act==="swim"){ if(S.swimP){ S.swimP=null; sfx("undo"); } else S.swimSel=!S.swimSel; S.sel=null; S.info=null; render(); return; }
   if(act==="unstage"){ e.stopPropagation(); const uid=+el.dataset.uid; if(S.swimP&&S.swimP.c.uid===uid){ S.swimP=null; sfx("undo"); render(); return; } const x=S.staged.find(s=>s.c.uid===uid);
     if(x){ S.staged=S.staged.filter(s=>s!==x); S.hand.p.push(x.c); sfx("undo"); } render(); return; }

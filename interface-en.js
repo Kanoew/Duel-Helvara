@@ -279,7 +279,7 @@
     "Touche une carte de ta main puis un lieu pour la poser. Tu peux aussi la glisser vers le haut sur un lieu.":"Tap a card in your hand, then a location to play it. You can also drag it upwards onto a location.",
     "Touche une carte de ta main puis un lieu pour la poser.":"Tap a card in your hand, then a location to play it.", "Tu peux aussi la glisser vers le haut sur un lieu.":"You can also drag it upwards onto a location.", "Appui long":"Long-press",
     "sur une carte ou un lieu pour le voir en grand. Touche une carte posée ce tour pour la reprendre.":"a card or a location to see it full-size. Tap a card played this turn to take it back.",
-    "Main vide.":"Empty hand.", "Ta main ne te plaît pas ?":"Not happy with your hand?", "Touche une carte pour la voir ici.":"Tap a card to see it here.", "Annuler la traversée":"Cancel the crossing", "Puissance :":"Power:", "Cette carte a perdu ses effets.":"This card has lost its effects.",
+    "Main vide.":"Empty hand.", "Ta main ne te plaît pas ?":"Not happy with your hand?", "Touche une carte pour la voir ici.":"Tap a card to see it here.", "Coûts et énergie":"Costs and energy", "Annuler la traversée":"Cancel the crossing", "Puissance :":"Power:", "Cette carte a perdu ses effets.":"This card has lost its effects.",
     "Verrouillé par Vritra : plus personne ne peut y jouer.":"Locked by Vritra: no one can play here anymore.",
     "C'est définitif. Gagne ce lieu avec la partie : +2 étoiles. Perds-le : −1 étoile.":"This is final. Win this location and the game: +2 stars. Lose it: −1 star.",
     "Je le jure":"I swear it", "Une fois par partie, jusqu'au tour 5. Choisis un lieu révélé.":"Once per game, up to turn 5. Choose a revealed location.",
