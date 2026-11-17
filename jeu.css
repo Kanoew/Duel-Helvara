@@ -1086,3 +1086,13 @@ button:focus-visible,label:focus-within,[data-act]:focus-visible{outline-color:v
 .oathcer .ocq{margin-top:4px;font-size:14px;line-height:1.3;font-style:italic;color:#f1ece0}
 @keyframes oathcer{0%{opacity:0;transform:translate(-50%,-14px)}7%{opacity:1;transform:translate(-50%,0)}88%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-6px)}}
 @media (prefers-reduced-motion:reduce){ .oathcer{animation:none} }
+
+/* Option A (17 novembre) : barre d'actions juste au-dessus de la main (pouce) */
+body.inplay .actbar{flex-wrap:wrap;gap:6px 6px;padding:2px 0}
+body.inplay .actbar .toggle{padding:7px 9px;font-size:12px;white-space:nowrap}
+body.inplay .actbar .turn{font-size:14px}
+body.inplay .actbar .hex{width:28px;height:32px;font-size:15px}
+body.inplay .actbar .endbtn{padding:9px 12px;font-size:14px}
+/* écrans étroits (≤ 400 px) : ligne 1 = Tour, énergie, Fin du tour (sous le pouce) ; ligne 2 = Serment, Changer ma main, Nageuse */
+@media (max-width:480px){ body.inplay .actbar{gap:5px} body.inplay .actbar .toggle{padding:7px 7px;font-size:11.5px} body.inplay .actbar .turn{font-size:13.5px} body.inplay .actbar .hex{width:26px;height:30px;font-size:14px} body.inplay .actbar .endbtn{padding:9px 10px;font-size:13.5px} }
+@media (max-width:390px){ body.inplay .actbar.many::after{content:"";order:1;flex-basis:100%;height:0} body.inplay .actbar .toggle{order:2} }
