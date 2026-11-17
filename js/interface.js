@@ -940,11 +940,13 @@ function gameHTML(){
   const swB=S.over?"":swimBtn(), mullB=S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:"";
   const modsH=S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:"";
   const mpH=S.mp&&(S.mp.gone||(S.mp.oppLocked&&!S.mp.locked&&!S.busy))?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:"";
-  /* Écran de jeu fixe (L2(), jamais dans le tutoriel ni le replay). Le plateau garde la même taille toute la partie ; tout ce qui est passager
+  /* Écran de jeu fixe (L2(), tutoriel compris ; jamais dans le replay ; les consignes du tutoriel flottent en tête). Le plateau garde la même taille toute la partie ; tout ce qui est passager
      (texte de la carte choisie, serment à relever, duel) flotte par-dessus le haut du plateau puis disparaît. Les bonus de coût se lisent sur les cartes de la main. */
   if(L2()){
     const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():(S.sel||S.info||S.help)?infoHTML():S.modsOpen&&modsH?`<div><div class="t">Coûts et énergie</div>${modsH}</div>`:"";
-    const floats=(inf?`<div class="info bubble">${inf}${S.oathMode?"":`<button class="bubx" data-act="bubclose" aria-label="Fermer">×</button>`}</div>`:"")+(mullB&&!inf?`<div class="mullfloat">${mullB}</div>`:"")+aiOathBar()+myOathBar()+mpH;
+    /* tutoriel : la consigne nomme déjà la carte et le lieu ; on n'empile pas la bulle de la carte dessus (les lieux restent lisibles), et le choix du Serment s'affiche seul */
+    const tutB=S.tut&&!S.oathMode?tutBarHTML():"", bub=S.tut&&S.sel&&!S.oathMode?"":inf;
+    const floats=tutB+(bub?`<div class="info bubble">${bub}${S.oathMode?"":`<button class="bubx" data-act="bubclose" aria-label="Fermer">×</button>`}</div>`:"")+(mullB&&!inf?`<div class="mullfloat">${mullB}</div>`:"")+aiOathBar()+myOathBar()+mpH;
     return `
   <div class="subbar">${pilesHTML()}</div>${oathCerHTML()}
   <div class="boardwrap"><div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
@@ -1055,15 +1057,15 @@ function render(){
 /* Partie : le plateau tient au-dessus du cadre du bas (main, carte choisie). La hauteur des cases (--mh) part d'une estimation en CSS ;
    le haut de l'écran varie (serment, réplique, bonus de coût…), donc on mesure ce qui dépasse et on rétrécit les cases juste assez.
    La place du cadre « carte choisie » est toujours réservée : le plateau ne saute pas quand on touche une carte. */
-/* Écran de partie fixe (classe body.lay2) : actif pour toutes les parties, sauf le tutoriel et le replay, qui gardent l'ancien affichage
+/* Écran de partie fixe (classe body.lay2) : actif pour toutes les parties, tutoriel compris ; seul le replay garde l'ancien affichage
    (mesuré par fitBoard ci-dessous). Purement visuel : aucun effet sur la partie. */
-const L2=()=>!!S&&!S.tut&&!S.rp;
+const L2=()=>!!S&&!S.rp;
 /* Nettoyage de l'ancien interrupteur d'essai (clé locale supprimée). */
 try{ if(!window.__wiped) localStorage.removeItem("helvara-essai"); }catch(e){}
 let infoH=64;
 function fitBoard(){
   const b=document.body; b.style.removeProperty("--mhfit"); b.classList.toggle("lay2",screen==="play"&&L2());
-  if(screen==="play"&&L2()) return; /* écran fixe : la mise en page se règle seule, en CSS ; fitBoard ne sert plus qu'au tutoriel et au replay */
+  if(screen==="play"&&L2()) return; /* écran fixe : la mise en page se règle seule, en CSS ; fitBoard ne sert plus qu'au replay */
   const dock=document.querySelector(".handdock");
   if(screen!=="play"||!S||S.rp||!dock||!dock.previousElementSibling) return;
   const inf=dock.querySelector(".info"); if(inf) infoH=inf.offsetHeight;

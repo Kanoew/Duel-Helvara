@@ -1113,7 +1113,7 @@ body.inplay .actbar .endbtn{padding:9px 12px;font-size:14px}
 @media (max-width:480px){ body.inplay .actbar{gap:5px} body.inplay .actbar .toggle{padding:7px 7px;font-size:11.5px} body.inplay .actbar .turn{font-size:13.5px} body.inplay .actbar .hex{width:26px;height:30px;font-size:14px} body.inplay .actbar .endbtn{padding:9px 10px;font-size:13.5px} }
 @media (max-width:390px){ body.inplay .actbar.many::after{content:"";order:1;flex-basis:100%;height:0} body.inplay .actbar.many .toggle{order:2} }
 
-/* Écran de jeu fixe (body.lay2, voir L2 dans interface.js ; toutes les parties sauf tutoriel et replay). L'écran fait la hauteur du téléphone,
+/* Écran de jeu fixe (body.lay2, voir L2 dans interface.js ; toutes les parties, tutoriel compris ; pas le replay). L'écran fait la hauteur du téléphone,
    le plateau prend toute la place entre le haut et la main, et ne change plus de taille pendant la partie. Le passager flotte par-dessus. */
 body.lay2.inplay{padding-block:8px 0}
 body.lay2.inplay #app{box-sizing:border-box;height:calc(100dvh - 8px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
@@ -1131,7 +1131,9 @@ body.lay2.inplay .actbar .toggle{flex:none}
 body.lay2.inplay .energy{position:relative}
 body.lay2.inplay .nrgnext{position:absolute;right:-8px;top:-6px;font-size:11px;font-weight:700;color:#9fe0b0;background:var(--ink);border:1px solid rgba(159,224,176,.6);border-radius:8px;padding:0 4px;line-height:15px}
 body.lay2.inplay .floatzone{position:absolute;left:0;right:0;top:0;z-index:5;display:flex;flex-direction:column;gap:6px;pointer-events:none}
-body.lay2.inplay .floatzone>*{pointer-events:auto;margin:0;box-shadow:0 10px 28px rgba(0,0,0,.6);animation:bubin .18s ease-out}
+body.lay2.inplay .floatzone>*{pointer-events:auto;margin:0;box-shadow:0 10px 28px rgba(0,0,0,.6)}
+/* fondu d'entrée pour la seule bulle de carte : les messages qui restent (consigne, défi, duel) sont redessinés à chaque toucher et clignoteraient */
+body.lay2.inplay .floatzone>.bubble{animation:bubin .18s ease-out}
 @keyframes bubin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){ body.lay2.inplay .floatzone>*{animation:none} }
 body.lay2.inplay .floatzone .oathsay,body.lay2.inplay .floatzone .oathbar.sworn{display:none}
@@ -1144,3 +1146,5 @@ body.lay2.inplay .mullfloat .toggle{background:rgba(17,24,39,.95);box-shadow:0 6
 body.lay2.inplay .modsbtn{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid rgba(159,224,176,.6);background:rgba(159,224,176,.1);color:#9fe0b0;font-weight:700;font-size:14px;line-height:1;cursor:pointer;padding:0}
 body.lay2.inplay .modsbtn.on{background:rgba(159,224,176,.28)}
 body.lay2.inplay .info.bubble .mods{margin:4px 0 0}
+body.lay2.inplay .floatzone .tutbar{background:linear-gradient(135deg,rgba(54,42,22,.98),rgba(17,24,39,.98) 70%);padding:8px 12px}
+body.lay2.inplay .floatzone .tutbar p{font-size:13px;line-height:1.35}
