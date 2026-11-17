@@ -940,26 +940,26 @@ function gameHTML(){
   const swB=S.over?"":swimBtn(), mullB=S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:"";
   const modsH=S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:"";
   const mpH=S.mp&&(S.mp.gone||(S.mp.oppLocked&&!S.mp.locked&&!S.busy))?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:"";
-  /* Essai (LAY2) : cadre fixe. Une ligne de message réservée en haut (serment, duel), le cadre « carte choisie » toujours présent en bas
-     (sans carte choisie : changer sa main, bonus de coût ou aide), la barre des boutons sur une seule ligne. Rien ne change de taille pendant la partie. */
-  const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():infoHTML();
-  const dflt=mullB?`<div><div class="m">Ta main ne te plaît pas ?</div><div class="oathbtns" style="margin-top:6px">${mullB}</div></div>`
-    :modsH?`<div>${modsH}</div>`:`<div><div class="m">Touche une carte pour la voir ici.</div></div>`;
-  return LAY2?`
-  <div class="subbar">${pilesHTML()}</div>
-  <div class="topslot">${aiOathBar()}${myOathBar()}${mpH}</div>${oathCerHTML()}
-  <div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
-  ${tutBarHTML()}
-  <div class="handdock"><div class="infoslot"><div class="info${inf?"":" dflt"}${S.sel?" pick":""}">${inf?inf+(mullB&&!S.sel&&!S.oathMode?`<div class="oathbtns" style="margin:0">${mullB}</div>`:""):dflt}</div></div>
-  <div class="status actbar">
+  /* Essai (LAY2, jamais dans le tutoriel) : écran de jeu fixe. Le plateau garde la même taille toute la partie ; tout ce qui est passager
+     (texte de la carte choisie, serment à relever, duel) flotte par-dessus le haut du plateau puis disparaît. Les bonus de coût se lisent sur les cartes de la main. */
+  if(L2()){
+    const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():(S.sel||S.info||S.help)?infoHTML():"";
+    const floats=(inf?`<div class="info bubble">${inf}${S.oathMode?"":`<button class="bubx" data-act="bubclose" aria-label="Fermer">×</button>`}</div>`:"")+(mullB&&!inf?`<div class="mullfloat">${mullB}</div>`:"")+aiOathBar()+myOathBar()+mpH;
+    return `
+  <div class="subbar">${pilesHTML()}</div>${oathCerHTML()}
+  <div class="boardwrap"><div class="board">${[0,1,2].map(li=>`<div class="col">${sideHTML("e",li)}${locHTML(li)}${sideHTML("p",li)}</div>`).join("")}</div>
+  <div class="floatzone">${floats}</div></div>
+  <div class="handdock"><div class="status actbar">
     <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>
-    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span></div>
+    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div>${S.bonus.p?`<span class="nrgnext">+${S.bonus.p}</span>`:""}</div>
     ${oathOK()&&oathFree()&&!S.busy&&!(S.mp&&S.mp.locked)?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
     ${swB}
     ${endBtnHTML()}
   </div>
   <div class="handwrap"><div class="hand">${handHTML()}</div></div></div>
-  ${resultHTML()}${gzHTML()}`:`
+  ${resultHTML()}${gzHTML()}`;
+  }
+  return `
   ${modsH}
   <div class="subbar">${pilesHTML()}</div>
   ${aiOathBar()}${myOathBar()}${oathCerHTML()}
@@ -1060,10 +1060,11 @@ function render(){
 const LAY2=(()=>{ try{ const q=new URLSearchParams(location.search).get("essai");
   if(q!=null&&!window.__wiped){ if(q==="0") localStorage.removeItem("helvara-essai"); else localStorage.setItem("helvara-essai","1"); }
   return q!=null?q!=="0":localStorage.getItem("helvara-essai")==="1"; }catch(e){ return false; } })();
+const L2=()=>LAY2&&!!S&&!S.tut&&!S.rp;
 let infoH=64;
 function fitBoard(){
-  const b=document.body; b.style.removeProperty("--mhfit"); b.classList.toggle("lay2",LAY2);
-  if(LAY2) return; /* la mise en page adaptative se règle seule, en CSS */
+  const b=document.body; b.style.removeProperty("--mhfit"); b.classList.toggle("lay2",screen==="play"&&L2());
+  if(screen==="play"&&L2()) return; /* la mise en page adaptative se règle seule, en CSS */
   const dock=document.querySelector(".handdock");
   if(screen!=="play"||!S||S.rp||!dock||!dock.previousElementSibling) return;
   const inf=dock.querySelector(".info"); if(inf) infoH=inf.offsetHeight;
@@ -1239,7 +1240,9 @@ document.addEventListener("click", e=>{
   if(Date.now()-dragEnd<150){ dragEnd=0; e.preventDefault(); e.stopPropagation(); return; }
   if(lpFired){ lpFired=false; e.preventDefault(); e.stopPropagation(); return; }
   if(Date.now()-fanSwiped<400){ fanSwiped=0; e.preventDefault(); return; } /* le clic qui suit un glissement */
-  const el=e.target.closest("[data-act]"); if(!el) return;
+  const el=e.target.closest("[data-act]");
+  /* Essai : toucher ailleurs ferme la bulle de la carte choisie */
+  if(!el){ if(screen==="play"&&L2()&&(S.sel||S.info||S.help)&&!e.target.closest(".floatzone")){ S.sel=null; S.info=null; S.help=false; render(); } return; }
   const act=el.dataset.act;
   ac(); bgmArmed=true;
   switch(act){
@@ -1301,6 +1304,7 @@ document.addEventListener("click", e=>{
     case "fbpick": if(S&&S.over){ S.over.fb="pick"; sfx("click"); render(); } return;
     case "fbcancel": if(S&&S.over){ S.over.fb=null; render(); } return;
     case "fbsend": { const sel=document.getElementById("fb-card"); if(sel&&sel.value) fbSend("unfair",sel.value); return; }
+    case "bubclose": if(S){ S.sel=null; S.info=null; S.help=false; sfx("click"); render(); } return;
     case "playhelp": if(S){ S.help=!S.help; sfx("click"); render(); } return;
     case "mqstart": mqStart(); return;
     case "mqcancel": mqStop(""); sfx("click"); return;

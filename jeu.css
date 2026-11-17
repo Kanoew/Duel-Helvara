@@ -1113,33 +1113,31 @@ body.inplay .actbar .endbtn{padding:9px 12px;font-size:14px}
 @media (max-width:480px){ body.inplay .actbar{gap:5px} body.inplay .actbar .toggle{padding:7px 7px;font-size:11.5px} body.inplay .actbar .turn{font-size:13.5px} body.inplay .actbar .hex{width:26px;height:30px;font-size:14px} body.inplay .actbar .endbtn{padding:9px 10px;font-size:13.5px} }
 @media (max-width:390px){ body.inplay .actbar.many::after{content:"";order:1;flex-basis:100%;height:0} body.inplay .actbar.many .toggle{order:2} }
 
-/* Essai : mise en page adaptative de la partie (body.lay2, voir LAY2 dans interface.js). L'écran fait exactement la hauteur du téléphone :
-   haut et bas à leur taille naturelle, le plateau prend tout le reste. Les cases grandissent jusqu'à une taille maximale, puis le plateau se centre. */
+/* Essai : écran de jeu fixe (body.lay2, voir LAY2 / L2 dans interface.js ; jamais dans le tutoriel). L'écran fait la hauteur du téléphone,
+   le plateau prend toute la place entre le haut et la main, et ne change plus de taille pendant la partie. Le passager flotte par-dessus. */
 body.lay2.inplay{padding-block:8px 0}
 body.lay2.inplay #app{box-sizing:border-box;height:calc(100dvh - 8px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
 body.lay2.inplay #app>*{flex:none}
-body.lay2.inplay #app>.board{flex:1 1 0;min-height:0}
+body.lay2.inplay #app>.boardwrap{flex:1 1 0;min-height:0;position:relative;display:flex;flex-direction:column}
+body.lay2.inplay .board{flex:1 1 0;min-height:0}
 body.lay2.inplay .col{min-height:0;justify-content:center}
-body.lay2.inplay .loc{flex:none}
+body.lay2.inplay .loc{flex:0 .12 auto;min-height:62px}
 body.lay2.inplay .side{--cell:min(100px,21vw);flex:0 1 calc(2 * var(--cell) + 16px);min-height:calc(2 * 28px + 16px);grid-auto-rows:minmax(0,1fr);align-content:stretch;box-sizing:border-box}
 body.lay2.inplay .slot,body.lay2.inplay .mini{height:auto;min-height:0}
 body.lay2.inplay .handdock{padding-bottom:4px}
-body.lay2.inplay .loc{flex:0 .12 auto;min-height:62px}
-body.lay2.inplay .loc .fx{-webkit-line-clamp:2}
-/* Essai : cadre fixe. Les zones de message ont une hauteur réservée ; un contenu plus long passe par-dessus le plateau (sans le pousser). */
-body.lay2.inplay .topslot{height:44px;position:relative;z-index:4;display:flex;flex-direction:column;gap:4px}
-body.lay2.inplay .topslot:empty{visibility:hidden}
-body.lay2.inplay .topslot .oathsay{display:none}
-body.lay2.inplay .topslot .oathbar{margin:0;min-height:44px;box-sizing:border-box;padding:5px 8px 5px 10px;font-size:12.5px;line-height:1.3;background:linear-gradient(135deg,rgba(60,46,26,.97),rgba(17,24,39,.97) 60%)}
-body.lay2.inplay .topslot .oathbar>span:first-child{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-body.lay2.inplay .topslot .oathbar.sworn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-body.lay2.inplay .topslot .oathbar .oathbtns{flex-direction:row}
-body.lay2.inplay .topslot .mpbar{margin:0}
-body.lay2.inplay .infoslot{height:86px;position:relative;z-index:4}
-body.lay2.inplay .infoslot .info{position:absolute;left:0;right:0;bottom:0;min-height:100%;box-sizing:border-box;padding:8px 12px;flex-wrap:wrap;align-content:center;background:var(--deep)}
-body.lay2.inplay .info.pick .m{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-body.lay2.inplay .info.pick .m+.m{-webkit-line-clamp:1}
-body.lay2.inplay .info.dflt .mods{margin:0}
-body.lay2.inplay .actbar{flex-wrap:nowrap}
+body.lay2.inplay .actbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
 body.lay2.inplay .actbar .endbtn{margin-left:auto}
-@media (max-height:700px){ body.lay2.inplay .infoslot{height:68px} body.lay2.inplay .info.pick .m{-webkit-line-clamp:1} }
+body.lay2.inplay .actbar .toggle{flex:none}
+body.lay2.inplay .energy{position:relative}
+body.lay2.inplay .nrgnext{position:absolute;right:-8px;top:-6px;font-size:11px;font-weight:700;color:#9fe0b0;background:var(--ink);border:1px solid rgba(159,224,176,.6);border-radius:8px;padding:0 4px;line-height:15px}
+body.lay2.inplay .floatzone{position:absolute;left:0;right:0;top:0;z-index:5;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+body.lay2.inplay .floatzone>*{pointer-events:auto;margin:0;box-shadow:0 10px 28px rgba(0,0,0,.6);animation:bubin .18s ease-out}
+@keyframes bubin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){ body.lay2.inplay .floatzone>*{animation:none} }
+body.lay2.inplay .floatzone .oathsay,body.lay2.inplay .floatzone .oathbar.sworn{display:none}
+body.lay2.inplay .floatzone .oathbar{background:linear-gradient(135deg,rgba(60,46,26,.98),rgba(17,24,39,.98) 60%)}
+body.lay2.inplay .info.bubble{position:relative;min-height:0;padding:10px 34px 10px 12px;background:rgba(17,24,39,.97);border-color:rgba(111,184,222,.45)}
+body.lay2.inplay .info.bubble .m{display:block;-webkit-line-clamp:unset}
+body.lay2.inplay .bubx{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:none;color:var(--mist);font-size:20px;line-height:1;cursor:pointer}
+body.lay2.inplay .floatzone>.mullfloat{align-self:flex-end;box-shadow:none;margin:6px 6px 0 0}
+body.lay2.inplay .mullfloat .toggle{background:rgba(17,24,39,.95);box-shadow:0 6px 18px rgba(0,0,0,.55)}
