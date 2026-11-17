@@ -1362,10 +1362,10 @@ async function inPage() {
   /* ===== Rivaux nommés : tempérament tiré, serment adverse, affichage ===== */
   { fresh();
     T("Rivaux : une partie contre l'IA a un rival (nom connu) et le deck de sa faction", !!S.rival && !!rivalOf(S.rival.id) && RIVAL_MOODS.includes(S.rival.mood) && S.aiFac === rivalOf(S.rival.id).fac, JSON.stringify(S.rival) + " " + S.aiFac);
-    T("Rivaux : les avatars provisoires sont des cartes sorties dont le portrait existe", RIVALS.every(r => POOL.includes(r.av) && REL(r.av)), RIVALS.map(r => r.av).join(","));
+    T("Rivaux : portraits propres (images/avatars/rivaux/<id>.webp, jamais dans POOL)", RIVALS.every(r => !r.av && !POOL.includes(r.id) && rivalAv(r, "sm").includes("images/avatars/rivaux/" + r.id + ".webp")), RIVALS.map(r => r.id).join(","));
     T("Rivaux : table (Exodus allin/primordial, Clara bluff, Timothée prudent, Mira zele)", RIVALS.map(r => r.n + ":" + r.mood).join() === "Exodus:allin,Clara:bluff,Timothée:prudent,Mira:zele" && rivalOf("exodus").fac === "primordial", "");
     const rr = RIVALS.map(r => r.id); const cnt = {}; let sig = 0; const N = 6000, oth = {};
-    for (let i = 0; i < N; i++) { const d = drawRival(); cnt[d.id] = (cnt[d.id] || 0) + 1; if (d.mood === rivalOf(d.id).mood) sig++; else oth[d.mood] = (oth[d.mood] || 0) + 1; }
+    for (let i = 0; i < N; i++) { const d = drawRival(3); cnt[d.id] = (cnt[d.id] || 0) + 1; if (d.mood === rivalOf(d.id).mood) sig++; else oth[d.mood] = (oth[d.mood] || 0) + 1; }
     T("Rivaux : les quatre rivaux sortent à peu près à parts égales", rr.every(id => cnt[id] > N * 0.21 && cnt[id] < N * 0.29), JSON.stringify(cnt));
     T("Rivaux : tempérament signature ≈ 55 % (RIVAL_MOOD_SIG)", Math.abs(sig / N - RIVAL_MOOD_SIG) < 0.03, sig / N);
     T("Rivaux : chacun des trois autres tempéraments ≈ 15 %", Math.abs((N - sig) / N - 0.45) < 0.03, (N - sig) / N);
@@ -1414,7 +1414,7 @@ async function inPage() {
         T(`Rivaux · phrase du tempérament ${m} (même si le rival est Exodus)`, RIVAL_QUOTES[m].includes(S.aiOathSay) && S.oathCer && S.oathCer.side === "e" && S.oathCer.say === S.aiOathSay, S.aiOathSay); }
       const q = RIVAL_QUOTES; T("Rivaux : les quatre phrases demandées", q.bluff[0] === "« Tu crois vraiment que ça va s’arrêter là ? »" && q.zele[0].startsWith("« Merde, je te jure") && q.allin[0].startsWith("« Bordel, tu m’as forcé la main.") && q.prudent[0].startsWith("« Foutu hasard…"), "");
       fresh(); S.turn = 3; S.locs.forEach(L => L.rev = true); S.rival = { id: "clara", mood: "bluff" }; swearOath("e", 0); screen = "play"; const h = aiOathBar() + oathCerHTML(); screen = "play";
-      T("Rivaux : barre du serment adverse et cérémonie montrent le nom, le portrait et la phrase", /Clara/.test(h) && /images\/avatars\/lilith\.webp/.test(h) && /s’arrêter là/.test(h) && /class="oathcer foe"/.test(h), h.slice(0, 120));
+      T("Rivaux : barre du serment adverse et cérémonie montrent le nom, le portrait et la phrase", /Clara/.test(h) && /images\/avatars\/rivaux\/clara\.webp/.test(h) && /s’arrêter là/.test(h) && /class="oathcer foe"/.test(h), h.slice(0, 120));
       const my = (swearOath("p", 2), oathCerHTML()); T("Rivaux : quand le joueur jure, la cérémonie montre son propre nom et avatar", /class="oathcer me"/.test(my) && my.includes(esc(P.name)), my.slice(0, 120));
       S.oathCer.at -= OATH_CER_MS + 10; T("Rivaux : la cérémonie disparaît après son délai, la phrase reste dans la barre", oathCerHTML() === "" && /s’arrêter là/.test(aiOathBar()), "");
       const lg = LANG; LANG = "en"; T("Rivaux : phrases traduites en anglais", RIVAL_MOODS.every(m => RIVAL_QUOTES[m].every(x => { const t = trUI(x); return t !== x && !/[éèàç]/.test(t); })), RIVAL_MOODS.map(m => trUI(RIVAL_QUOTES[m][0])).join(" | ")); LANG = lg; }

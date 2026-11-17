@@ -692,7 +692,7 @@ function codexHTML(){
   </section>`;
 }
 /* Aide (écran « ? ») : rubriques repliables, une seule ouverte à la fois (<details name="aide"> : exclusivité native, sans script). La rubrique ouverte survit aux redessins (aideOpen, mis à jour par l'événement « toggle »). */
-let aideOpen="bases";
+let aideOpen="";
 document.addEventListener("toggle",e=>{ const d=e.target; if(d&&d.classList&&d.classList.contains("acc")&&d.dataset.k){ if(d.open) aideOpen=d.dataset.k; else if(aideOpen===d.dataset.k) aideOpen=""; } },true);
 function rulesHTML(){
   const acc=(k,t,body)=>`<details class="acc" name="aide" data-k="${k}"${aideOpen===k?" open":""}><summary>${t}</summary><div class="accb">${body}</div></details>`;
@@ -924,15 +924,10 @@ function gameHTML(){
   if(!S) return `<p class="hint">Aucune partie en cours.</p>`;
   if(S.rp) return replayHTML();
   const left=S.energy-used();
+  const swB=S.over?"":swimBtn(), mullB=S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:"";
   return `
-  <div class="status">
-    <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>
-    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span></div>
-    ${oathOK()&&oathFree()&&!S.busy&&!(S.mp&&S.mp.locked)?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
-    ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
-  </div>
   ${S.disc.p||S.bonus.p||vestaOn("p")||(S.costNow&&S.costNow.p)||(S.costNext&&S.costNext.p)?`<div class="mods">${S.costNow&&S.costNow.p?`<span>toutes tes cartes ${S.costNow.p<0?"−":"+"}${Math.abs(S.costNow.p)} ce tour</span>`:""}${S.costNext&&S.costNext.p?`<span>au prochain tour : tes cartes ${S.costNext.p<0?"−":"+"}${Math.abs(S.costNext.p)}</span>`:""}${S.disc.p?`<span>prochaine carte −${S.disc.p}</span>`:""}${vestaOn("p")?`<span>prochaine carte Jugement −1</span>`:""}${S.bonus.p?`<span>+${S.bonus.p} au prochain tour</span>`:""}</div>`:""}
-  <div class="subbar">${S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.busy&&!S.over&&!S.staged.length?`<button class="toggle" data-act="mull">Changer ma main</button>`:""}${swimBtn()}${pilesHTML()}</div>
+  <div class="subbar">${pilesHTML()}</div>
   ${S.rival&&!S.aiOathSay&&!S.mp&&!S.tut&&!S.rp&&rivalOf(S.rival.id)?`<div class="mpbar foebar">${rivalAv(rivalOf(S.rival.id),"sm")}<span>Contre <b>${esc(foeName())}</b> · <span>${esc(TIERS[S.aiTier])}</span></span></div>`:""}
   ${aiOathBar()}${myOathBar()}${oathCerHTML()}
   ${S.mp?`<div class="mpbar"><span class="avatar sm" ${S.mp.oppAv?`style="background-image:url('images/avatars/${S.mp.oppAv}.webp?v=8')"`:""}>${S.mp.oppAv?"":esc(S.mp.oppNick.charAt(0).toUpperCase())}</span><span>Duel contre <b>${esc(S.mp.oppNick)}</b>${S.mp.gone?` · <span style="color:var(--ko)">déconnecté, en attente de son retour</span>`:S.mp.oppLocked&&!S.mp.locked&&!S.busy?` · a terminé son tour`:""}</span>${S.mp.gone&&!S.over?`<button class="toggle" data-act="mpquit">Abandonner</button>`:""}</div>`:""}
@@ -940,6 +935,13 @@ function gameHTML(){
   ${tutBarHTML()}
   ${logHTML()}
   <div class="handdock">${(()=>{ const inf=S.oathMode&&oathOK()&&oathFree()?oathHTML():infoHTML(); return inf?`<div class="info">${inf}</div>`:""; })()}
+  <div class="status actbar${mullB||swB?" many":""}">
+    <div class="turn">Tour <b>${S.turn}</b><span style="color:var(--mist)"> / 6</span></div>
+    <div class="energy"><div class="hex${left===0?" spent":""}">${left}</div><span class="elab">énergie</span></div>
+    ${oathOK()&&oathFree()&&!S.busy&&!(S.mp&&S.mp.locked)?`<button class="toggle oathchip${S.oathMode?" on":""}" data-act="oathmode">⚖ Serment</button>`:""}
+    ${mullB}${swB}
+    ${S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`}
+  </div>
   <div class="handwrap"><div class="hand">${handHTML()}</div></div></div>
   ${resultHTML()}${gzHTML()}`;
 }
