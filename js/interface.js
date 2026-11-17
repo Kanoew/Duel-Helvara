@@ -1034,12 +1034,14 @@ function render(){
 let infoH=64;
 function fitBoard(){
   const b=document.body; b.style.removeProperty("--mhfit");
-  if(screen!=="play"||!S||S.rp||!document.querySelector(".handdock")) return;
-  const inf=document.querySelector(".handdock .info"); if(inf) infoH=inf.offsetHeight;
-  const extra=inf?0:infoH+8;
+  const dock=document.querySelector(".handdock");
+  if(screen!=="play"||!S||S.rp||!dock||!dock.previousElementSibling) return;
+  const inf=dock.querySelector(".info"); if(inf) infoH=inf.offsetHeight;
+  const extra=inf?0:infoH+8, padB=parseFloat(getComputedStyle(b).paddingBottom)||0;
   for(let i=0;i<3;i++){
     const cell=document.querySelector(".side>*"); if(!cell) return;
-    const over=document.scrollingElement.scrollHeight-innerHeight+extra; if(over<=1) return;
+    /* bas réel du contenu (le cadre du bas est « collé » : on part de l'élément qui le précède) ; la hauteur de page ne descend jamais sous l'écran, elle ne sert donc pas ici */
+    const over=dock.previousElementSibling.getBoundingClientRect().bottom+scrollY+8+dock.offsetHeight+padB+extra-innerHeight; if(over<=1) return;
     const h=cell.getBoundingClientRect().height, n=Math.max(...[...document.querySelectorAll(".col")].map(c=>[...c.querySelectorAll(".side")].reduce((t,sd)=>t+Math.ceil(sd.children.length/2),0)));
     const nh=Math.max(36,Math.floor(h-over/n)); if(nh>=h) return;
     b.style.setProperty("--mhfit",nh+"px");
