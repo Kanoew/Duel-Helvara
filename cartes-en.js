@@ -272,6 +272,10 @@ window.HELVARA_EN = {
     flon:{n:"The Flon", fx:"Cards that arrive here by moving get +2 Power."},
     escaliers:{n:"The Market Stairs", fx:"Helvara cards have +2 Power here."},
     cathedrale:{n:"Helvara Cathedral", fx:"The gods are watching: the side with fewer cards here gets +3 Power."},
-    trone:{n:"Throne of Tiamat", fx:"The throne shifts allegiance: until turn 3, the side with fewer cards here gets +2 Power; from turn 4, the side with more cards."}
+    trone:{n:"Throne of Tiamat", fx:"The throne shifts allegiance: until turn 3, the side with fewer cards here gets +2 Power; from turn 4, the side with more cards."},
+    autel:{n:"Altar of Silence", fx:"The bells fall silent: cards played here lose their effects, On Reveal included."},
+    jardins:{n:"Gardens of Desire", fx:"The first card each player plays here gets +2 Power."},
+    fracture:{n:"The Fracture", fx:"Each card played here makes every card at the neighbouring locations lose 1 Power, on both sides."},
+    marche:{n:"Shadow Market", fx:"End of turn 4: each player's weakest card here switches sides."}
   }
 };

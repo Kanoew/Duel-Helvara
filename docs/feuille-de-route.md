@@ -41,11 +41,11 @@ Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantier
 
 Tu as déjà fait beaucoup de tests (25 parties depuis hier). Ces points n'ont **pas encore été notés comme vérifiés** : si c'est déjà fait, dis-le-moi et je coche.
 
-- 🟣 👤 **Un vrai duel entre amis avec Serment, sur le vrai serveur.** Il n'a tourné que dans un faux salon de test.
-- 🟣 👤 **Recherche automatique d'adversaire en ligne** : réécrite (18 novembre). La base fait l'appariement (un seul arbitre, `file-attente.sql`, relu par `db-guard`), les téléphones en veille sortent seuls de la file au bout de 20 s. Testé à deux onglets avec une base simulée. `file-attente.sql` lancé dans Supabase et vérifié le 18 novembre. **À faire par toi** : un vrai essai à deux téléphones après la mise en ligne.
+- ✅ Duels en ligne testés par toi sur le vrai serveur (3 parties, rapide et fonctionnel).
+- ✅ **Recherche automatique d'adversaire en ligne** : réécrite avec la file d'attente dans la base (`file-attente.sql`), testée par toi sur deux navigateurs : rapide et fonctionnelle.
 - ✅ Aperçu du lien sur Discord vérifié par toi (avec et sans `?x=1`).
 - 🟣 👤 Musique : l'idée de la tension au tour 5 plaît, mais la gestion ou les morceaux pourraient être meilleurs. Mis de côté.
-- 🟣 👤 Cartes holo : correctes sur Sony Xperia 10 IV ; sur Xiaomi Redmi Note 14 ouvert **dans Messenger**, carte noire ou par morceaux (manque de mémoire graphique du navigateur intégré). Correctif du 18 novembre : holo allégé dans les navigateurs intégrés et sur les téléphones à 4 Go ou moins, petites cartes holo arrêtées sous le zoom. **À refaire tester** par ton pote, dans Messenger puis dans Chrome.
+- ✅ Cartes holo : correctes chez ton pote dans Chrome (Xiaomi). Dans Messenger, le correctif du 18 novembre n'a pas été retesté.
 
 ---
 
@@ -55,11 +55,12 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 
 ### 3.1 🟣 🛠️ Lieux à état
 - ✅ Trône de Tiamat (change de camp au tour 4), avec ton illustration. Mesuré sur 12 000 parties : équilibré, plus discret que la Cathédrale. Le +2 des tours 1 à 3 ne compte jamais au décompte final : c'est un piège visuel.
-- 🟣 Autel du Silence (aucun effet Révélation ni Continu ici)
-- 🟣 Marché des Ombres (au tour 4, échange la carte la plus faible de chaque joueur ici). À trancher : la carte échangée garde-t-elle son effet Continu ?
-- 🟣 Le lieu « voisins », ex-Faille d'Apsu : nouveau nom à trouver (« La Faille » existe déjà), et il affecte « les lieux voisins » plutôt que « le lieu de droite ».
-- 🟣 Jardins de Désir, version adaptée au jeu simultané : « la première carte que tu joues ici gagne +2 ».
-- 🟣 👤 Une illustration par lieu (800 × 597), de ta main.
+- ✅ Autel du Silence : les cartes jouées ici perdent leurs effets, Révélation comprise (comme Mohini : une carte qui en repart reste muette).
+- ✅ Marché des Ombres : fin du tour 4, la plus faible de chaque joueur ici change de camp. Choix provisoire : elle garde tout (puissance, effets Continu) et joue pour son nouveau camp.
+- ✅ Le lieu « voisins » : codé sous le nom provisoire **La Fracture** (chaque carte jouée ici : −1 à toutes les cartes des lieux voisins, des deux côtés). 👤 Nom définitif à choisir.
+- ✅ Jardins de Désir : « la première carte que chaque joueur joue ici gagne +2 ».
+- 🟣 🛠️ Mesure d'équilibrage des quatre et test visuel en cours.
+- ✅ Une illustration par lieu (800 × 597), de ta main.
 
 ### 3.2 🟣 🛠️ Mots-clés de faction (option B : cartes sorties comprises)
 - 🟣 👤 Choisir, faction par faction, les cartes (sorties ou non) qui reçoivent le mot-clé. Je peux te proposer une première liste.

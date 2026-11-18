@@ -333,7 +333,11 @@ const LOCS = {
   faille:    {name:"La Faille", img:"images/lieux/faille.webp", fx:"Fin du tour 4 : détruit la carte la plus faible de chaque côté. Les cartes protégées y échappent."},
   archives:  {name:"Archives de Thot", img:"images/lieux/archives.webp", fx:"Quand tu joues une carte ici, pioche 1 carte."},
   cathedrale:{name:"Cathédrale d'Helvara", img:"images/lieux/cathedrale.webp", fx:"Les divinités observent : le côté avec moins de cartes ici gagne +3 de puissance."},
-  trone:     {name:"Le Trône de Tiamat", img:"images/lieux/trone.webp", fx:"Le trône change d'allégeance : jusqu'au tour 3, le côté avec moins de cartes ici gagne +2 de puissance ; dès le tour 4, le côté avec plus de cartes."}
+  trone:     {name:"Le Trône de Tiamat", img:"images/lieux/trone.webp", fx:"Le trône change d'allégeance : jusqu'au tour 3, le côté avec moins de cartes ici gagne +2 de puissance ; dès le tour 4, le côté avec plus de cartes."},
+  autel:     {name:"L'Autel du Silence", img:"images/lieux/autel.webp", fx:"Les cloches se taisent : les cartes jouées ici perdent leurs effets, Révélation comprise."},
+  jardins:   {name:"Les Jardins de Désir", img:"images/lieux/jardins.webp", fx:"La première carte que chaque joueur joue ici gagne +2 de puissance."},
+  fracture:  {name:"La Fracture", img:"images/lieux/fracture.webp", fx:"Chaque carte jouée ici fait perdre 1 de puissance à toutes les cartes des lieux voisins, des deux côtés."},
+  marche:    {name:"Le Marché des Ombres", img:"images/lieux/marche.webp", fx:"Fin du tour 4 : la carte la plus faible de chaque joueur ici change de camp."}
 };
 const FAC = {
   helvara:{c:"var(--helvara)",n:"Helvara"},
