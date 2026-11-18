@@ -20,13 +20,10 @@ Ce qui n'est pas fini vient en premier, dans l'ordre où il faut le traiter.
 
 Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantiers qui en dépendent.
 
-- 🟣 👤 **Le premier lieu à coder.** Je propose le Trône de Tiamat (+2 au joueur qui a le moins de cartes aux tours 1 à 3, puis au joueur qui en a le plus aux tours 4 à 6). *Débloque : le chantier 3.1.*
 - ✅ **Mots-clés de faction : option B** (décidé le 18 novembre). Ils vont aussi sur les cartes sorties. Il reste à choisir **lesquelles**, faction par faction (voir 3.2).
-- 🟣 👤 **Tentation (Désir)** : version automatique (recommandée : la carte choisit pour l'adversaire l'option qui lui fait le plus mal) ou choix au tour suivant.
 - 🟣 👤 **Serment « Intensifier »** : est-ce qu'il te plaît tel que décrit (choix secret au tour 3, ×2 ou ×3 sur le Serment du tour 5) ? Il arrive après la sortie, on a le temps.
-- 🟣 👤 **Le tutoriel** : ce qui t'a gêné pendant tes 25 parties de test, pour que je le reprenne au bon endroit.
-- 🟣 👤 **Prix suggéré sur itch.io** (minimum à 0 €). Par exemple 3 € ou 5 €, c'est toi qui choisis.
-- 🟣 👤 **Date de sortie.** Le plan du 16 novembre visait fin janvier 2027. Est-ce qu'on la garde ?
+- 🟣 👤 **Date de sortie** : avant janvier 2027, le plus tôt possible. À fixer quand les chantiers 3.1 à 3.4 auront une taille connue.
+- 🟣 👤 **Économie des CHF avec le Serment** : peur que les gains du Serment fassent finir la collection trop vite. Pistes : paquets +50 ou +75 CHF, ou plafonner les gains du Serment. Analyse chiffrée en cours.
 - 🟣 👤 **Les chiffres provisoires du Serment** (dans `OATH_CHF`, en tête de `js/moteur.js`) : à valider ou à changer d'après tes parties.
 
 | Sujet | Choix provisoire |
@@ -44,12 +41,10 @@ Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantier
 Tu as déjà fait beaucoup de tests (25 parties depuis hier). Ces points n'ont **pas encore été notés comme vérifiés** : si c'est déjà fait, dis-le-moi et je coche.
 
 - 🟣 👤 **Un vrai duel entre amis avec Serment, sur le vrai serveur.** Il n'a tourné que dans un faux salon de test.
-- 🟣 👤 Un Blitz complet avec Serment (testé seulement par scénarios automatiques).
-- 🟣 👤 Relire les cinq conseils de fin de partie et le texte de l'étape Serment du tutoriel.
+- 🟣 🛠️ **Recherche automatique d'adversaire en ligne** : « très foireuse » d'après toi. Diagnostic du code en cours ; il me faudra aussi ce que tu vois exactement (message, écran, combien de temps).
 - 🟣 👤 L'aperçu du lien sur Discord après publication (ajouter `?x=1` au lien si l'ancien aperçu reste).
-- 🟣 👤 Musique : jonction des boucles, passage à la musique de tension au tour 5, jingles de fin, curseurs de volume sur téléphone.
-- 🟣 👤 Le niveau de l'IA aux hauts rangs et la façon dont les rivaux jurent (probabilités jamais mesurées en vraies parties).
-- 🟣 👤 Les cartes holo sur un autre téléphone que le tien.
+- 🟣 👤 Musique : l'idée de la tension au tour 5 plaît, mais la gestion ou les morceaux pourraient être meilleurs. Mis de côté.
+- 🟣 👤 Cartes holo : elles marchent sur ton PC, **pas chez ton pote**. Il me faut son téléphone, son navigateur et une capture.
 
 ---
 
@@ -58,7 +53,7 @@ Tu as déjà fait beaucoup de tests (25 parties depuis hier). Ces points n'ont *
 Objectif : que le jeu soit différent de Snap dès la première partie, et sortir. Un chantier à la fois, terminé avant d'ouvrir le suivant.
 
 ### 3.1 🟣 🛠️ Lieux à état
-- 🟣 Trône de Tiamat (change de camp au tour 4)
+- ✅ Trône de Tiamat (change de camp au tour 4), avec ton illustration.
 - 🟣 Autel du Silence (aucun effet Révélation ni Continu ici)
 - 🟣 Marché des Ombres (au tour 4, échange la carte la plus faible de chaque joueur ici). À trancher : la carte échangée garde-t-elle son effet Continu ?
 - 🟣 Le lieu « voisins », ex-Faille d'Apsu : nouveau nom à trouver (« La Faille » existe déjà), et il affecte « les lieux voisins » plutôt que « le lieu de droite ».
@@ -70,7 +65,7 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 - 🟣 🛠️ Mesurer toute la faction avant et après : ajouter un mot-clé à des cartes sorties change tout le méta.
 - 🟣 **Lien** (Helvara) : +1 de puissance par autre carte Helvara ici, avec un plafond. À mesurer avec les Escaliers du Marché, qui donnent déjà +2 aux cartes Helvara.
 - 🟣 **Ère** (Primordial) : effet en plus si la carte est en jeu depuis 2 tours.
-- 🟣 **Tentation** (Désir) : version choisie.
+- 🟣 **Tentation** (Désir) : version automatique (la carte choisit pour l'adversaire l'option qui lui fait le plus mal).
 - 🟣 **Verdict** (Jugement) : détruit **une** carte adverse ici sous un seuil, en respectant les protections.
 - 🟣 👤 Les effets précis de chaque carte : c'est ta plume.
 - 🟣 🛠️ Chaque effet mesuré (outil d'équilibrage + `balance-reviewer`), l'IA apprend à les jouer, cercle des contres vérifié (aucun matchup au-dessus de 60 %).
@@ -83,7 +78,7 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 
 ### 3.4 🟣 🛠️ Accueil des nouveaux joueurs
 - 🟣 Partie rapide avec un deck prêté (parmi les 7 decks prêts) dès la première partie.
-- 🟣 Tutoriel repris selon tes retours.
+- 🟣 Tutoriel repris : le Serment n'est pas assez mis en avant alors que c'est la marque du jeu. Le rendre plus central et moins guidé.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
 
@@ -184,6 +179,14 @@ Ils te protègent, toi et tes joueurs. Les retirer, c'est risquer de casser quel
 ### Écran de partie (17 novembre)
 - ✅ Écran de partie fixe pour tous : le plateau ne change jamais de taille, tout ce qui est passager flotte en bulle.
 - ✅ Tutoriel adapté à l'écran fixe, bouton ± près de l'énergie.
+
+### Décisions du 18 novembre (soir)
+- ✅ Premier lieu : le Trône de Tiamat, codé avec ton illustration.
+- ✅ Tentation (Désir) : version automatique.
+- ✅ Prix itch.io : 0 €, avec une cagnotte façon « offre-moi un café » au lieu d'un prix suggéré.
+- ✅ Blitz avec Serment testé par toi : l'idée marche.
+- ✅ Niveau de l'IA : jugé bien meilleur par toi et ton pote, à revoir seulement si besoin.
+- ✅ Conseils de fin de partie réécrits avec tes cinq textes (FR et EN).
 
 ### Ce 18 novembre
 - ✅ Analyse compétitive relue et commentée partie par partie (`docs/analyse-competitive-avis-karina.md`).

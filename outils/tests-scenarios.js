@@ -1179,6 +1179,12 @@ async function inPage() {
     /* Nüwa */
     fresh(); S.turn = 3; { const a = put("p", 1, plain[0], 2), nu = card("nuwa"), was = S.locs[1].id; S.hand.p = [nu]; await resolveTurn([{ c: nu, li: 1 }], [], false);
       T("Nüwa : remplace le lieu par un autre (différent), les cartes restent", S.locs[1].id !== was && !!LOCS[S.locs[1].id] && S.board.p[1].includes(a) && S.board.p[1].includes(nu), `${was} → ${S.locs[1].id}`); }
+    /* Trône de Tiamat : +2 au côté avec moins de cartes (tours 1-3), puis avec plus de cartes (dès le tour 4) ; rien à égalité ni pour un côté vide */
+    fresh(); S.locs[0].id = "trone"; S.locs[0].rev = true; S.locs[0].stopped = false; { put("p", 0, plain[0], 3); put("e", 0, plain[0], 3); put("e", 0, plain[1], 3);
+      S.turn = 2; const p2 = total("p", 0), e2 = total("e", 0); S.turn = 4; const p4 = total("p", 0), e4 = total("e", 0);
+      T("Trône de Tiamat : tours 1-3, le côté avec moins de cartes gagne +2 ; dès le tour 4, celui avec plus", p2 === 5 && e2 === 6 && p4 === 3 && e4 === 8, `${p2}/${e2} puis ${p4}/${e4}`);
+      put("p", 0, plain[1], 3); S.turn = 2; const pe = total("p", 0), ee = total("e", 0); S.board.p[0] = []; const pv = total("p", 0), ev = total("e", 0);
+      T("Trône de Tiamat : rien à égalité, rien pour un côté vide", pe === 6 && ee === 6 && pv === 0 && ev === 6, `${pe}/${ee}, ${pv}/${ev}`); }
     /* Cerridwen */
     fresh(); S.turn = 3; { const a = card(byCost(1)), b = card(byCost(3)), want = card(byCost(2)), other = card(byCost(4)), ce = card("cerridwen"); const fill = [5, 5, 5, 5, 5].map(n => card(byCost(n) || byCost(4))); S.hand.p = [ce, a, b, ...fill]; S.deck.p = [other, want];
       await resolveTurn([{ c: ce, li: 0 }], [], false); T("Cerridwen : échange la carte de coût le plus faible de la main contre une carte du deck coûtant 1 de plus", S.hand.p.includes(want) && !S.hand.p.includes(a) && S.deck.p.includes(a) && S.hand.p.includes(b), S.hand.p.map(c => CARDS[c.id].cost).join()); }

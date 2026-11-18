@@ -856,11 +856,11 @@ function bilanOf(o){
     const mine=S.board.p.map(col=>col.filter(c=>CARDS[c.id]&&!CARDS[c.id].token).length), nm=mine.reduce((a,b)=>a+b,0);
     const emptyLost=o.rows.find((r,i)=>mine[i]===0&&r.w!=="p");
     let tip="";
-    if(o.res!=="win"&&emptyLost) tip=`Aucune de tes cartes à « ${emptyLost.n} ». Même une petite y change tout : pense à présenter quelque chose partout.`;
-    else if(waste.length>=2&&wsum>=3) tip=`Tu as laissé de l'énergie inutilisée alors que tu pouvais jouer (${wsum} au total, sur ${waste.length} tours). Elle ne se cumule pas : autant l'utiliser.`;
-    else if(o.res!=="win"&&nm>=4&&Math.max(...mine)/nm>=.75) tip="Presque toutes tes cartes étaient au même lieu. Il suffit d'en gagner 2 sur 3 : répartis-les.";
-    else if(o.res!=="win"&&lostR&&Math.abs(lostR.a-lostR.b)<=2) tip="Défaite de justesse : quelques points ont tout changé. Chaque carte compte, même la plus petite.";
-    else if(o.res!=="win") tip="Appui long sur une carte adverse pour lire son effet : mieux la connaître aide à la contrer.";
+    if(o.res!=="win"&&emptyLost) tip=`Tu as terminé sans carte à « ${emptyLost.n} ». Si l'un de tes deux autres lieux devient difficile à gagner, regarde si celui-ci peut servir de plan B.`;
+    else if(waste.length>=2&&wsum>=3) tip=`Il te restait ${wsum} d'énergie jouable sur ${waste.length} tours. L'énergie repart à zéro à chaque tour. Si une carte peut t'aider tout de suite, pense à la jouer.`;
+    else if(o.res!=="win"&&nm>=4&&Math.max(...mine)/nm>=.75) tip="Presque toutes tes cartes étaient au même lieu. Deux lieux suffisent pour gagner. Pense à garder de quoi te battre pour le deuxième.";
+    else if(o.res!=="win"&&lostR&&Math.abs(lostR.a-lostR.b)<=2) tip=`Tu as perdu « ${lostR.n} » de peu. Au dernier tour, regarde sur quel lieu ta dernière carte peut faire basculer le score.`;
+    else if(o.res!=="win") tip="Maintiens le doigt sur une carte adverse pour lire son effet. Tu pourras mieux anticiper ce qu'elle fait la prochaine fois.";
     return {line,best,tip};
   }catch(e){ return null; }
 }
