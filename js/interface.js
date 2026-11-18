@@ -629,7 +629,8 @@ function tutoHTML(){
     <p class="tb">Chaque duel se joue sur <b>3 lieux</b> et dure <b>6 tours</b>. Pour gagner, il faut avoir plus de puissance que l'adversaire sur <b>2 lieux sur 3</b>.</p>
     <ul class="tbl"><li><b>Énergie</b> : au tour N, tu as N énergie (1 au tour 1, 2 au tour 2…). Elle ne se cumule pas d'un tour à l'autre, sauf effet de carte.</li>
       <li><b>Lieux</b> : trois lieux tirés au hasard parmi ceux de l'univers d'Helvara, inspiré par le lore Helvara de Lausanne dans Le Sang de Tiamat. Chacun a sa règle, révélée aux tours 1, 2 et 3.</li>
-      <li><b>Cartes</b> : une <b>Révélation</b> se déclenche quand la carte est révélée, à la fin du tour ; un effet <b>Continu</b> agit tant que la carte reste en jeu.</li></ul>
+      <li><b>Cartes</b> : une <b>Révélation</b> se déclenche quand la carte est révélée, à la fin du tour ; un effet <b>Continu</b> agit tant que la carte reste en jeu.</li>
+      <li><b>⚖ Serment</b> : une fois par partie, jure sur un lieu. Gagne-le avec la partie et tu es récompensé ; perds-le et tu le paies. C'est la marque d'Helvara.</li></ul>
     <p class="tb">La partie guidée t'apprend tout en 5 minutes, carte par carte.${reward?" Dans les deux cas, tu reçois <b>100 CHF</b> pour ton premier deck.":""}</p>
     <button class="primary" data-act="tutoplay">Faire la partie guidée</button>
     <button class="ghost" data-act="tutodone">${reward?"Passer le tutoriel":"Fermer"}</button>
@@ -642,10 +643,10 @@ const TUT={
   steps:{
    1:{req:[["coursier",0]],t:"Tu as <b>1 énergie</b> au tour 1 : ton énergie est égale au numéro du tour, elle ne se cumule pas. Touche le <b>Coursier du Flon</b> (coût 1), puis la <b>Ruelle</b>. Termine ton tour : à la <b>Révélation</b>, l'effet de la carte se déclenche. Ici, il te fait piocher une carte."},
    2:{req:[["felix",1]],t:"Le <b>Lac Ouchy</b> vient d'apparaître. Chaque lieu a sa règle : ici, ta première carte laisse un Reflet de 2. Pose <b>Félix</b> au Lac Ouchy : ta prochaine carte coûtera 1 de moins. Tu as maintenant 2 énergie, même si tu n'avais pas tout dépensé au tour 1."},
-   3:{req:[["celeste",2],["passante",0]],t:"Céleste coûte 3, mais Félix et le <b>Sous-gare</b> la font passer à 1. Pose <b>Céleste</b> au Sous-gare, puis la <b>Passante</b> à la Ruelle. Tu peux jouer plusieurs cartes tant que tu as de l'énergie."},
-   4:{req:[["izzy",1]],t:"L'Agent de Thot adverse a <b>affaibli</b> Céleste : son chiffre est passé en rouge. Pose <b>Izzy</b> au Lac Ouchy : elle copie la puissance de la carte adverse la plus forte du lieu. Appui long sur une carte pour la voir en grand."},
-   5:{req:[["yarden",2]],oath:true,t:"Tu as des cartes dans les 3 lieux : <b>Yarden Weiss</b> gagne +4 de puissance en arrivant. Pose-la au Sous-gare.<br>Nouveau : le <b>Serment</b>. Touche <b>⚖ Serment</b>, choisis un lieu où tu mènes, puis <b>Je le jure</b>. En vraie partie, gagner ce lieu avec la partie rapporte, le perdre coûte. Ici, aucun enjeu."},
-   6:{req:[["colosse",1]],t:"Dernier tour. Pose le <b>Colosse du Léman</b> au Lac Ouchy. À la fin, celui qui mène sur 2 lieux sur 3 gagne."}
+   3:{req:[["celeste",2],["passante",0]],oath:true,t:"Pose <b>Céleste</b> au Sous-gare (Félix et le Sous-gare la font passer à 1), puis la <b>Passante</b> à la Ruelle.<br>Puis le moment clé : le <b>Serment</b>. Jure sur le lieu de ton choix. L'adversaire vient de jurer : jurer sur le même lieu que lui, c'est le <b>Serment croisé</b>, tout ou rien."},
+   4:{req:[],free:true,t:"À partir de maintenant, plus de consigne : joue ce que tu veux, où tu veux. Ton Serment se gagne avec le lieu et avec la partie. Idée : Izzy copie la puissance de la carte adverse la plus forte de son lieu."},
+   5:{req:[],free:true,t:"Tour 5. Idée : Yarden Weiss gagne +4 de puissance si tu as des cartes dans les 3 lieux. Le lieu de ton Serment est-il bien défendu ?"},
+   6:{req:[],free:true,t:"Dernier tour. Celui qui mène sur 2 lieux sur 3 gagne. Ta dernière carte peut faire basculer un lieu, et ton Serment avec."}
   }
 };
 function startTutorial(){
@@ -660,13 +661,20 @@ function startTutorial(){
   log("Partie guidée"); screen="play"; startTurn(); window.scrollTo(0,0);
 }
 const tutReq=()=>S&&S.tut&&TUT.steps[S.turn]?TUT.steps[S.turn].req:[];
+const tutFree=()=>!!(S&&S.tut&&TUT.steps[S.turn]&&TUT.steps[S.turn].free);   /* tours 4 à 6 : plus de carte ni de lieu imposés */
 const tutCards=()=>tutReq().every(([id,li])=>S.staged.some(x=>x.c.id===id&&x.li===li));
 const tutOath=()=>!(S&&S.tut&&TUT.steps[S.turn]&&TUT.steps[S.turn].oath)||S.oath!=null;
 const tutDone=()=>tutCards()&&tutOath();
+/* Fin de la partie guidée : ce que le Serment aurait rapporté ou coûté en partie classée (mêmes règles que oathSettle et le rang) */
+function tutOathText(o){
+  const x=o.oath, n=x.n, win=o.res==="win";
+  if(x.cross) return x.kept&&win?`Serment croisé tenu sur ${n}. En partie classée : +4 étoiles.`:!x.kept&&!win?`Serment croisé perdu sur ${n}. En partie classée : −4 étoiles.`:`Serment croisé sur ${n} : le lieu et la partie ne vont pas dans le même sens. En partie classée, rien de gagné ni de perdu.`;
+  return x.kept?(win?`Serment tenu sur ${n}. En partie classée, il t'aurait rapporté 2 étoiles.`:`Serment tenu sur ${n}, mais la partie est perdue : en partie classée, il ne t'aurait rien rapporté.`):`Serment rompu sur ${n}. En partie classée, il t'aurait coûté 1 étoile.`;
+}
 function tutBarHTML(){
   if(!S||!S.tut||S.over) return ""; const st=TUT.steps[S.turn]; if(!st) return "";
   const todo=tutReq().filter(([id,li])=>!S.staged.some(x=>x.c.id===id&&x.li===li)).map(([id,li])=>`<b>${CARDS[id].name}</b> (<i>${LOCS[S.locs[li].id].name}</i>`);
-  return `<div class="tutbar"><div class="eyebrow">Partie guidée · tour ${S.turn}/6</div><p>${st.t}</p>${tutDone()?`<p class="ok">C'est bon : touche <b>Fin du tour</b>.</p>`:tutCards()?`<p class="${S.nudge?"nudge":"ok"}">Prête maintenant ton <b>Serment</b> : touche <b>⚖ Serment</b>, choisis un lieu, puis <b>Je le jure</b>.</p>`:S.nudge?`<p class="nudge">Pas encore : pose d'abord ${todo.join("), puis ")}), puis touche <b>Fin du tour</b>.</p>`:""}</div>`;
+  return `<div class="tutbar"><div class="eyebrow">Partie guidée · tour ${S.turn}/6</div><p>${st.t}</p>${st.free?`<p class="ok">Quand tu as fini, touche <b>Fin du tour</b>.</p>`:tutDone()?`<p class="ok">C'est bon : touche <b>Fin du tour</b>.</p>`:tutCards()?`<p class="${S.nudge?"nudge":"ok"}">Prête maintenant ton <b>Serment</b> : touche <b>⚖ Serment</b>, choisis un lieu, puis <b>Je le jure</b>.</p>`:S.nudge?`<p class="nudge">Pas encore : pose d'abord ${todo.join("), puis ")}), puis touche <b>Fin du tour</b>.</p>`:""}</div>`;
 }
 function finishTuto(){
   const first=!P.tuto; tutoStep=-1; if(S&&S.tut){ S=null; }
@@ -881,7 +889,8 @@ function resultHTML(){
   const o=S.over; if(!o||o.closed||o.hold) return "";
   if(o.tut) return `<div class="veil"><div class="result" role="dialog" aria-label="Tutoriel terminé">
     <h2>${o.res==="win"?"Victoire !":"Partie terminée"}</h2>
-    <p class="tb">${o.res==="win"?`Tu remportes ${o.pw} lieux sur 3. `:""}Tu connais maintenant l'essentiel : l'énergie, les lieux, la révélation, les bonus en vert et les malus en rouge.</p>
+    <p class="tb">${o.res==="win"?`Tu remportes ${o.pw} lieux sur 3. `:""}Tu connais maintenant l'essentiel : l'énergie, les lieux, la révélation, les bonus en vert, les malus en rouge et le Serment.</p>
+    ${o.oath?`<p class="m oathres ${o.oath.kept?"kept":"broken"}">⚖ ${tutOathText(o)}</p>`:""}
     <div class="rows">${o.rows.map(r=>`<div class="row"><span>${r.n}</span><span><span style="color:var(--me)">${r.a}</span> · <span style="color:var(--foe)">${r.b}</span></span></div>`).join("")}</div>
     <button class="primary" data-act="tutodone">${!P.tuto?"Recevoir 100 CHF et aller à la boutique":"Terminer"}</button></div></div>`;
   const se=season(); const t=o.res==="win"?(se?SEASON[se].win:"Victoire"):o.res==="lose"?(se?SEASON[se].lose:"Défaite"):"Égalité";

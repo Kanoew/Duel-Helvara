@@ -265,7 +265,7 @@ const banned=c=>eid(c)==="reflet_noir"||((eid(c)==="nemesis"||eid(c)==="cronos"|
 /* Plume de Quetzalcoatl : elle occupe une case mais ne compte pas comme une place : la carte suivante la remplace */
 const slotsUsed=(s,li)=>S.board[s][li].filter(x=>eid(x)!=="plume").length;
 function canStage(c,li){
-  if(S&&S.tut){ if(!tutReq().some(([id,l])=>id===c.id&&l===li&&!S.staged.some(x=>eid(x.c)===id))) return false; }
+  if(S&&S.tut&&!tutFree()){ if(!tutReq().some(([id,l])=>id===c.id&&l===li&&!S.staged.some(x=>eid(x.c)===id))) return false; }
   if(!c||S.locs[li].locked||muted("p",li)) return false;
   if(banned(c)) return false;
   if(themisOn(li)&&stagedAt(li)-(S.swimP&&S.swimP.li===li?1:0)>=1) return false;
@@ -1165,7 +1165,9 @@ async function resolveTurn(mine, theirs, animate){
     if(to>2||!S.board[s][li].includes(c)||fated(c)||(c.captive&&captorLive(c.captive))||!S.locs[to].rev||S.locs[to].locked||S.board[s][to].length>=capOf(s,to)) continue;
     S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.board[s][to].push(c); flonHook(to,c); log(`Hélios passe vers ${LOCS[S.locs[to].id].name} (${who(s)})`); sfx("legend");
     for(const x of S.board[s][li]) if(x!==c&&live(x)&&SELFMOVE.has(eid(x))){ x.pow+=2; (x.mods=x.mods||[]).push({v:2,src:"Hélios"}); log(`Hélios · +2 à ${nm(x)} (${who(s)})`); } }
-  if(S.turn>=1&&S.turn<=5&&!S.rp&&!S.mp&&!S.tut) aiOath();   /* la fenêtre de chaque tempérament est dans aiOath */
+  if(S.turn>=1&&S.turn<=5&&!S.rp&&!S.mp&&!S.tut) aiOath();
+  /* Partie guidée : l'adversaire jure à la fin du tour 2, là où il mène le plus (Ruelle si égalité), pour que le joueur puisse relever son défi au tour 3 */
+  if(S.tut&&S.turn===2&&S.aiOath==null){ let li=0, m=-1e9; for(let i=0;i<3;i++) if(S.locs[i].rev){ const d=total("e",i)-total("p",i); if(d>m){ m=d; li=i; } } swearOath("e",li); }   /* la fenêtre de chaque tempérament est dans aiOath */
   if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
   /* L'Enfant sans École : à la fin de chaque tour sauf le sixième, elle retourne dans ta main et gagne +1 définitivement (main pleine : pas de retour, donc pas de gain : Jordan, 22 octobre) */
   if(S.turn<6) for(const {s,li,c,c0} of eot("enfant")) if(!(c0.captive&&captorLive(c0.captive))&&S.board[s][li].includes(c)){
@@ -1200,7 +1202,8 @@ function starsHTML(lv,st){
 }
 function finish(){
   if(S.tut){ let pw=0,ew=0; const rows=[]; S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); if(w==="p") pw++; else if(w==="e") ew++; rows.push({n:LOCS[L.id].name,a,b,w}); });
-    S.over={tut:true,res:pw>ew?"win":"lose",rows,pw,ew,pt:0,et:0,gain:0}; sfx(pw>ew?"win":"lose"); render(); return; }
+    const oath=S.oath!=null?{kept:leader(S.oath)==="p",cross:S.aiOath===S.oath,n:LOCS[S.locs[S.oath].id].name}:null;
+    S.over={tut:true,res:pw>ew?"win":"lose",rows,pw,ew,pt:0,et:0,gain:0,oath}; sfx(pw>ew?"win":"lose"); render(); return; }
   let pw=0,ew=0,pt=0,et=0; const rows=[];
   if(S.blitz){ S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); pt+=a; et+=b; if(w==="p") pw++; else if(w==="e") ew++; rows.push({n:LOCS[L.id].name,a,b,w,inv:nemInv(li)}); });
     const res=pw>ew?"win":ew>pw?"lose":pt>et?"win":et>pt?"lose":"draw"; const r=P.bz.run;
