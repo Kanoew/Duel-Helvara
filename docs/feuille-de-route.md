@@ -59,7 +59,7 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 - ✅ Marché des Ombres : fin du tour 4, la plus faible de chaque joueur ici change de camp. Choix provisoire : elle garde tout (puissance, effets Continu) et joue pour son nouveau camp.
 - ✅ Le lieu « voisins » : codé sous le nom provisoire **La Fracture** (la première carte de chaque joueur ici : −1 à toutes les cartes des lieux voisins, des deux côtés ; « chaque carte » changeait le vainqueur d'une partie sur quatre au milieu). 👤 Nom définitif à choisir.
 - ✅ Jardins de Désir : « la première carte que chaque joueur joue ici gagne +2 ».
-- 🟣 🛠️ Mesure d'équilibrage des quatre et test visuel en cours.
+- ✅ Mesurés (36 000 parties) et testés sur écran de téléphone. Autel : le deck prêt « Destruction » y perd 11 points (c'est le rôle du lieu, à confirmer par toi).
 - ✅ Une illustration par lieu (800 × 597), de ta main.
 
 ### 3.2 🟣 🛠️ Mots-clés de faction (option B : cartes sorties comprises)
@@ -106,6 +106,7 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 - 🟣 👤 Une annonce rien que pour elle : la deuxième occasion de faire parler du jeu.
 
 ### 4.2 🟣 Ensuite
+- 🟣 🛠️ Bandeau « Un joueur cherche un duel, l'affronter ? » à l'accueil, seulement si quelqu'un cherche (la file `mm_queue` le sait déjà). Hors classement : les parties se calculent sur chaque téléphone, un duel classé contre un humain ouvrirait la porte à la triche.
 - 🟣 🛠️ Cosmétiques gagnés en CHF : un dos de carte et un effet de victoire pour commencer, puis la boutique rotative (« l'échoppe du jour » étendue).
 - 🟣 👤 Art alternatif (le jeu gère déjà les variantes).
 - 🟣 🛠️ Classement saisonnier avec récompenses cosmétiques.
