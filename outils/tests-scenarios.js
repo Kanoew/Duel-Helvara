@@ -1356,7 +1356,24 @@ async function inPage() {
         T("Coups scellés : message traduit en anglais", /^Opponent's moves refused/.test(en), en);
         const lp = locPool(), d1 = await mpDeal("a1", "b2", lp, lp.slice().reverse()), d2 = await mpDeal("a1", "b2", lp.slice().reverse(), lp), d3 = await mpDeal("a1", "b3", lp, lp);
         T("Graine commune : même tirage quel que soit l'ordre des lieux reçus, et il change avec le nombre de l'invité", JSON.stringify(d1) === JSON.stringify(d2) && d1.locs.length === 3 && d1.locs.every(l => lp.includes(l)) && JSON.stringify(d1) !== JSON.stringify(d3), JSON.stringify([d1, d3]));
+        { const f = lp.find(x => !d1.locs.includes(x)), e1 = await mpDeal("a1", "b2", lp, lp, f, f), e2 = await mpDeal("a1", "b2", lp, lp, f, lp.find(x => x !== f)), e3 = await mpDeal("a1", "b2", lp, lp, f, null);
+          T("Lieu à l'honneur en duel : présent si les deux téléphones sont d'accord, jamais imposé par un seul", e1.locs.includes(f) && e1.locs.length === 3 && new Set(e1.locs).size === 3 && JSON.stringify(e2) === JSON.stringify(d1) && JSON.stringify(e3) === JSON.stringify(d1), JSON.stringify([f, e1, e2])); }
         T("Graine commune : un adversaire qui annonce seulement 3 lieux (pour les choisir) est refusé", lp.length > 5 && !mpPoolOk(lp.slice(0, 3)) && mpPoolOk(lp) && mpPoolOk(lp.slice(2)) && !mpPoolOk("x"), lp.length);
+        { const tom = (() => { const t = new Date(today() + "T12:00:00Z"); t.setUTCDate(t.getUTCDate() + 1); return t.toISOString().slice(0, 10); })();
+          const ok = POOL.filter(id => REL(id) && !CARDS[id].base && !ULof(id) && !POOL.some(x => x !== id && CARDS[x].base === id)).slice(0, 12);
+          const later = POOL.find(id => CARDS[id].rel && CARDS[id].rel > tom && !ULof(id)), soon = POOL.find(id => CARDS[id].rel === tom);
+          const vr = POOL.find(id => CARDS[id].base && REL(id) && REL(CARDS[id].base) && !ULof(id) && charOf(id) !== "yarden");
+          const fu = ULS.find(u => !u.fac && REL(u.id) && u.req.length), ul2 = ULS.filter(u => REL(u.id)).map(u => u.id).slice(0, 2);
+          const w = d => mpDeckWhy(d), sw = (d, id) => [id, ...d.filter(x => x !== id && charOf(x) !== charOf(id))].slice(0, 12);
+          T("Deck adverse : un deck permis passe", ok.length === 12 && w(ok) === "", w(ok));
+          T("Deck adverse : carte pas encore sortie refusée", later && /pas encore sortie$/.test(w(sw(ok, later))), later + " " + w(sw(ok, later)));
+          T("Deck adverse : carte qui sort demain acceptée (horloges décalées)", !soon || w(sw(ok, soon)) === "", soon + " " + (soon && w(sw(ok, soon))));
+          T("Deck adverse : deux versions du même personnage refusées", vr && /une seule version par personnage$/.test(w([vr, CARDS[vr].base, ...ok.filter(x => charOf(x) !== charOf(vr))].slice(0, 12))), vr);
+          T("Deck adverse : fusion sans ses deux personnages refusée", fu && /sans ses exigences$/.test(w(sw(ok.filter(x => !fu.req.some(r => [].concat(r).includes(x))), fu.id))), fu && fu.id);
+          T("Deck adverse : deux ultra-légendaires refusées", ul2.length === 2 && w([...ul2, ...ok].slice(0, 12)) === "plus d'une ultra-légendaire", ul2);
+          T("Deck adverse : forme invalide refusée", w(ok.slice(0, 11)) === "deck incomplet" && w([...ok.slice(0, 11), "pas_une_carte"]) === "deck incomplet" && w("x") === "deck incomplet", "");
+          const k = LANG; LANG = "en"; const e1 = trUI(MP_DECK_MSG(`${CARDS[later].name} pas encore sortie`)), e2 = trUI(MP_MYDECK_MSG("plus d'une ultra-légendaire")); LANG = k;
+          T("Deck adverse : messages traduits en anglais", /^Opponent's deck refused \(.+ not released yet\): game cancelled\.$/.test(e1) && /^Your deck can't play online \(more than one ultra-legendary\)/.test(e2), e1 + " | " + e2); }
         const en2 = (() => { const k = LANG; LANG = "en"; const t = trUI(MP_DEAL_MSG); LANG = k; return t; })(); T("Graine commune : message d'annulation traduit en anglais", /^The game's draw could not be verified/.test(en2), en2);
       } finally { roomC = null; mpPend = null; } }
     myMp = null;

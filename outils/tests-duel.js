@@ -33,7 +33,7 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     await pg.addInitScript(()=>{ window.__today="2026-12-31"; });
     await pg.exposeFunction("__send",m=>{ const o=pages[who==="A"?1:0]; return o&&o.evaluate(x=>window.__recv(x),m).catch(()=>{}); });
     await pg.goto(`http://127.0.0.1:${port}/index.html`); await pg.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object");
-    await pg.evaluate(n=>{ P.name=n; P.owned=POOL.slice(); const ok=POOL.filter(id=>!ULof(id)&&!CARDS[id].base); for(let i=ok.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ok[i],ok[j]]=[ok[j],ok[i]]; } P.deck=ok.slice(0,12); },"Joueur"+who);
+    await pg.evaluate(n=>{ P.name=n; P.owned=POOL.slice(); const ok=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base); for(let i=ok.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ok[i],ok[j]]=[ok[j],ok[i]]; } P.deck=ok.slice(0,12); },"Joueur"+who);
     pages.push(pg); }
   const [A,B]=pages; const st=pg=>pg.evaluate(()=>S&&S.mp?{turn:S.turn,busy:S.busy,over:S.over&&S.over.res,locked:S.mp.locked,bad:S.mp.bad||0}:null);
   const until=async(f,ms=60000)=>{ const t0=Date.now(); while(Date.now()-t0<ms){ if(await f()) return true; await new Promise(r=>setTimeout(r,100)); } return false; };
@@ -59,7 +59,7 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     const fin=pg=>pg.evaluate(()=>({res:S.over&&S.over.res,tot:[0,1,2].map(li=>[total("p",li),total("e",li)]),bad:S.mp.bad||0,log:S.log.filter(l=>/refus/.test(l))}));
     const a=await fin(A), b=await fin(B);
     await A.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; }); await B.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; });
-    for(const pg of [A,B]) await pg.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>!ULof(id)&&!CARDS[id].base).slice(0,12); });
+    for(const pg of [A,B]) await pg.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base).slice(0,12); });
     return {a,b,peek,cheat,deals};
   }
   const mirror=(a,b)=>a.tot.every((x,i)=>x[0]===b.tot[i][1]&&x[1]===b.tot[i][0]), opp={win:"lose",lose:"win",draw:"draw"};
@@ -75,8 +75,17 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     const refused=await until(()=>B.evaluate(()=>mpMsg===MP_DEAL_MSG),15000); await new Promise(r=>setTimeout(r,1500)); const bS=await st(B);
     T("Graine commune : hôte qui change son nombre après avoir vu celui de l'invité, partie refusée chez l'invité",refused&&!bS,JSON.stringify(bS));
     await A.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; location.reload(); }); await A.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object");
-    await A.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>!ULof(id)&&!CARDS[id].base).slice(0,12); });
+    await A.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base).slice(0,12); });
     await B.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; }); }
+  { /* invité tricheur : client modifié qui envoie un deck avec une carte pas encore sortie */
+    const bad=await B.evaluate(()=>{ const later=POOL.find(id=>CARDS[id].rel&&CARDS[id].rel>"2027-01-05"&&!ULof(id)); mpDeckWhy=()=>""; const keep=P.deck.slice(); P.deck=[later,...keep.filter(x=>x!==later)].slice(0,12); window.__keep=keep; return later; });
+    await A.evaluate(()=>mpCreate()); const code=await A.evaluate(()=>myMp.code); await B.evaluate(c=>mpJoinCode(c),code);
+    const refused=await until(()=>A.evaluate(()=>/^Deck adverse refusé \(.+ pas encore sortie\)/.test(mpMsg)),15000); await new Promise(r=>setTimeout(r,1500));
+    const started=[await st(A),await st(B)];
+    T("Deck adverse : carte pas encore sortie refusée par l'hôte, aucune partie ne démarre",refused&&!started[0]&&!started[1],JSON.stringify([bad,started]));
+    await B.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; location.reload(); }); await B.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object");
+    await B.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base).slice(0,12); });
+    await A.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; }); }
   { const r=await game(0,3); T("Reprise : rechargement en plein tour (coups scellés, pas encore révélés), la partie continue à l'identique",same(r)&&!r.a.bad&&!r.b.bad,JSON.stringify([r.a.res,r.b.res])); }
   { const r=await game(2,0); T("Tricheur : carte posée sans assez d'énergie, refusée et notée chez l'adversaire",r.a.bad===1&&r.a.log.some(l=>/^Coup adverse refusé : .+ \(énergie insuffisante\)$/.test(l)),JSON.stringify([r.cheat,r.a.log])); }
   let bad=0; for(const [n,ok,d] of res){ if(!ok) bad++; console.log(`${ok?"ok      ":"PAS OK  "} ${n}${ok?"":"  → "+d}`); }

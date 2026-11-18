@@ -150,7 +150,7 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.42", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.43", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Coups scellés (anti-triche, lot A) : mes coups du tour, envoyés d'abord sous forme d'empreinte. Ils restent ICI (jamais dans la présence)
@@ -173,11 +173,14 @@ function mpSaveAll(){ if(S&&S.mp) mpSaveSession({mp:myMp,oppNick:S.mp.oppNick,pe
    Lieux : tirés parmi les lieux sortis chez LES DEUX joueurs (lp), dans un ordre fixe. */
 const mpHex=a=>Array.from(a,x=>x.toString(16).padStart(2,"0")).join("");
 async function mpHash(t){ return new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t))); }
-async function mpDeal(rh,rg,lpH,lpG){
+/* Lieu à l'honneur (samedi) : chaque téléphone le calcule lui-même (ft) ; il n'est imposé que si les deux sont d'accord, donc personne ne peut le choisir */
+async function mpDeal(rh,rg,lpH,lpG,ftH,ftG){
   const b=await mpHash("helvara|"+rh+"|"+rg), u=i=>((b[i]<<24)|(b[i+1]<<16)|(b[i+2]<<8)|b[i+3])>>>0;
-  const r=mulberry(u(4)|0), pool=lpH.filter(x=>lpG.includes(x)&&LOCS[x]).sort();
-  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
-  return {seed:u(0)&0x7fffffff, locs:pool.slice(0,3)};
+  const r=mulberry(u(4)|0), mix=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+  const pool=mix(lpH.filter(x=>lpG.includes(x)&&LOCS[x]).sort());
+  let locs=pool.slice(0,3); const f=typeof ftH==="string"&&ftH===ftG&&pool.includes(ftH)?ftH:null;
+  if(f&&!locs.includes(f)) locs=mix([f,...locs.slice(0,2)]);
+  return {seed:u(0)&0x7fffffff, locs};
 }
 /* Lieux de l'autre : au plus 2 de mes lieux sortis peuvent lui manquer (horloges décalées le jour d'une sortie), sinon il essaie de choisir les lieux */
 function mpPoolOk(lp){ if(!Array.isArray(lp)||!lp.every(x=>typeof x==="string")) return false; const mine=locPool(), both=mine.filter(x=>lp.includes(x)); return both.length>=3&&mine.length-both.length<=2; }
@@ -203,10 +206,10 @@ function rtClose(kind){ rtTok[kind]++; const r=kind==="c"?roomC:roomQ; if(kind==
 function initRoom(){ roomTried=true; render(); }
 function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(roomC) roomC.presence({mp:myMp}).catch(()=>{}); }
 function mpClear(){ myMp=null; mpMsg=""; rtClose("c"); }
-function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck],lp:locPool()}; }
+function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck],lp:locPool(),ft:featureLoc()}; }
 const mpNewCode=()=>MP_PLACES[mpRandInt(MP_PLACES.length)]+"-"+Array.from({length:6},()=>MP_ALPHA[mpRandInt(MP_ALPHA.length)]).join("");
 async function mpCreate(given){
-  if(!rtReady()||!deckReady()||mpConn) return; myMp=null; mpMsg=""; mpConn=true; render();
+  if(!rtReady()||!deckReady()||mpConn) return; { const w=mpDeckWhy(P.deck); if(w){ mpMsg=MP_MYDECK_MSG(w); render(); return; } } myMp=null; mpMsg=""; mpConn=true; render();
   const code=given||mpNewCode();
   const r=await rtOpen("c","helvara-room-"+code); mpConn=false;
   if(!r){ mpMsg=RT_FAIL; render(); return; }
@@ -218,7 +221,7 @@ function mpJoin(){
   mpJoinCode(code);
 }
 async function mpJoinCode(code){
-  if(!rtReady()||!deckReady()||mpConn||!MP_CODE.test(code||"")) return false; mpMsg=""; myMp=null; mpConn=true; render();
+  if(!rtReady()||!deckReady()||mpConn||!MP_CODE.test(code||"")) return false; { const w=mpDeckWhy(P.deck); if(w){ mpMsg=MP_MYDECK_MSG(w); render(); return false; } } mpMsg=""; myMp=null; mpConn=true; render();
   const r=await rtOpen("c","helvara-room-"+code); mpConn=false;
   if(!r){ mpMsg=RT_FAIL; render(); return false; }
   mpPush(mpBase("guest",code)); sfx("click"); render(); return true;
@@ -265,7 +268,7 @@ async function mqSqlTick(me){
 }
 function mqPub(extra){ if(roomQ&&mq) roomQ.presence({q:{tok:mq.tok,ver:BUILD,at:mq.t0,...(extra||{})}}).catch(()=>{}); }
 async function mqStart(){
-  if(!rtReady()||!deckReady()||mq||myMp||mpConn) return;
+  if(!rtReady()||!deckReady()||mq||myMp||mpConn) return; { const w=mpDeckWhy(P.deck); if(w){ mpMsg=MP_MYDECK_MSG(w); render(); return; } }
   mpMsg=""; const me=mq={tok:mpTok(),t0:Date.now(),room:null,with:null,since:0,ready:false}; render();
   try{ mqDb=mqDb||await window.claude.use("db"); }catch(e){ mqDb=null; }
   if(mq!==me) return;
@@ -316,6 +319,20 @@ function mpOpp(){
 }
 function mpRoomFull(){ if(!roomC||!myMp||myMp.role!=="guest") return false; return roomC.peers().some(p=>!p.sameTab&&p.presence&&p.presence.mp&&p.presence.mp.code===myMp.code&&p.presence.mp.role==="host"&&p.presence.mp.oppTok&&p.presence.mp.oppTok!==myMp.tok); }
 const validDeck=d=>Array.isArray(d)&&d.length===12&&new Set(d).size===12&&d.every(id=>POOL.includes(id));
+/* Deck adverse (anti-triche, lot A) : mêmes règles que l'éditeur de deck. Cartes sorties (un jour de marge : horloges décalées le jour d'une sortie),
+   une seule version par personnage (Yarden et Yarden X Apsu exceptées, comme dans l'éditeur), une seule ultra-légendaire, et ses exigences (ulOk).
+   Ce qu'il possède ne peut pas être vérifié ici (lot B, serveur). Renvoie "" si le deck est permis, sinon la raison. */
+function mpDeckWhy(d){
+  if(!validDeck(d)) return "deck incomplet";
+  const t=new Date(today()+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+1); const tom=t.toISOString().slice(0,10);
+  const early=d.find(id=>CARDS[id].rel&&CARDS[id].rel>tom); if(early) return `${CARDS[early].name} pas encore sortie`;
+  const yd=["yarden","yarden_d"];
+  for(const a of d){ const b=d.find(x=>x!==a&&charOf(x)===charOf(a)&&!(yd.includes(x)&&yd.includes(a))); if(b) return `${CARDS[a].name} et ${CARDS[b].name} : une seule version par personnage`; }
+  const uls=d.filter(id=>ULof(id)); if(uls.length>1) return "plus d'une ultra-légendaire";
+  if(uls.length&&!ulOk(ULof(uls[0]),d)) return `${CARDS[uls[0]].name} sans ses exigences`;
+  return "";
+}
+const MP_DECK_MSG=w=>`Deck adverse refusé (${w}) : partie annulée.`, MP_MYDECK_MSG=w=>`Ton deck ne peut pas jouer en ligne (${w}). Corrige-le dans « Deck ».`;
 const safeNick=n=>(typeof n==="string"&&n.trim()?n.trim().slice(0,24):"Adversaire");
 function mpNewMatch(om){
   const g=(myMp.g||0)+1, r=mpTok()+mpTok(); mpSecret={g,r};
@@ -327,7 +344,7 @@ function mpHostDeal(om){
   const g=myMp.g, key=myMp.tok+"|"+g; if(mpDealing===key||!mpSecret||mpSecret.g!==g) return; mpDealing=key;
   if(!mpPoolOk(om.lp)){ mpMsg=MP_DEAL_MSG; render(); return; }
   mpPush({rh:mpSecret.r});
-  mpDeal(mpSecret.r,om.rg,myMp.lp,om.lp).then(d=>{ if(myMp&&myMp.g===g) mpStart(om,false,d); });
+  mpDeal(mpSecret.r,om.rg,myMp.lp,om.lp,myMp.ft,om.ft).then(d=>{ if(myMp&&myMp.g===g) mpStart(om,false,d); });
 }
 /* Invité : le nombre révélé par l'hôte doit correspondre à l'empreinte vue AVANT que je donne le mien */
 function mpGuestDeal(om){
@@ -335,7 +352,7 @@ function mpGuestDeal(om){
   if(!mpPoolOk(om.lp)){ mpMsg=MP_DEAL_MSG; render(); return; }
   mpHash(om.rh).then(h=>{
     if(mpHex(h)!==mpSeedSeen.hc){ mpMsg=MP_DEAL_MSG; render(); return; }
-    return mpDeal(om.rh,myMp.rg,om.lp,myMp.lp).then(d=>{ if(myMp&&myMp.g===g) mpStart(om,false,d); });
+    return mpDeal(om.rh,myMp.rg,om.lp,myMp.lp,om.ft,myMp.ft).then(d=>{ if(myMp&&myMp.g===g) mpStart(om,false,d); });
   });
 }
 function mpTick(){
@@ -344,6 +361,7 @@ function mpTick(){
   /* versions différentes : jamais de nouveau match (la partie se désynchroniserait) */
   if(om&&om.ver!==BUILD&&!(S&&S.mp&&S.mp.g===myMp.g&&myMp.g)){ if(mpMsg!==MP_VER_MSG){ mpMsg=MP_VER_MSG; } if(screen==="duel") render(); return; }
   const started=g=>!!(S&&S.mp&&S.mp.g===g&&!S.mp.resuming);
+  if(om&&validDeck(om.deck)&&!started(myMp.g)&&!(S&&S.mp&&S.mp.resuming)){ const w=mpDeckWhy(om.deck); if(w){ const m=MP_DECK_MSG(w); if(mpMsg!==m){ mpMsg=m; } if(screen==="duel") render(); return; } }
   if(myMp.role==="host"&&om&&validDeck(om.deck)){
     if(!myMp.g){ mpNewMatch(om); return; }
     if(S&&S.mp&&S.over&&myMp.again===myMp.g&&om.again===myMp.g){ mpNewMatch(om); return; }
@@ -475,7 +493,7 @@ function duelHTML(){
     </section>${onlineHTML()}${invite}`;
   }
   const o=mpOpp(), om=o&&o.presence.mp;
-  const status=mpMsg===MP_VER_MSG?esc(MP_VER_MSG):mq&&mq.room?"Adversaire trouvé, connexion au salon…":myMp.role==="host"?(om?`${esc(safeNick(om.nick))} arrive, la partie commence…`:"En attente d'un adversaire. Envoie-lui le code."):
+  const status=mpMsg?esc(mpMsg):mq&&mq.room?"Adversaire trouvé, connexion au salon…":myMp.role==="host"?(om?`${esc(safeNick(om.nick))} arrive, la partie commence…`:"En attente d'un adversaire. Envoie-lui le code."):
     mpRoomFull()?"Ce salon est déjà complet.":om?`Connecté à ${esc(safeNick(om.nick))}. La partie commence…`:"Salon introuvable pour l'instant. Vérifie le code, ou attends que ton ami le crée.";
   return `<section class="sec mpbox"><h2>Salon</h2>
     <div class="mpcode">${esc(myMp.code)}</div>
