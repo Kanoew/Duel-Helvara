@@ -10,6 +10,9 @@
 -- Données gardées : les deux identifiants de compte, la version du jeu, le résultat, la graine, les lieux et les coups,
 -- 15 jours (décision de Jordan du 18 novembre), pour pouvoir revoir une partie signalée. Effacées avec le compte.
 -- Aucun joueur ne lit cette table : seulement Jordan, depuis le SQL Editor (requêtes en bas du fichier).
+-- Le ménage des 15 jours tourne à chaque début de duel. Si personne n'a joué en ligne depuis longtemps, il peut rester des lignes
+-- plus anciennes en attendant : delete from public.duel_games where created_at < now() - interval '15 days';
+-- Un « conflict » n'est pas une preuve de triche (un adversaire peut en provoquer un exprès) : ne jamais sanctionner sur ce seul signal.
 
 -- 1. La table (aucun joueur n'y a accès directement : seulement par les deux fonctions) --------------------------------------
 create table if not exists public.duel_games (
@@ -57,6 +60,7 @@ begin
 
   insert into public.duel_games (room, g, ver) values (p_room, p_g, p_ver) on conflict (room, g) do nothing;
   select * into d from public.duel_games where room = p_room and g = p_g for update;
+  if not found then return jsonb_build_object('ok', false, 'reason', 'busy'); end if;
 
   if p_role = 'host' then
     if d.host is null and d.guest is distinct from uid then update public.duel_games set host = uid where id = d.id;

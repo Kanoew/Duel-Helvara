@@ -103,7 +103,7 @@ Ce sont des choix de jeu, pas des lois. Les appliquer, mais les signaler si une 
 | `cloud.js` + `config.js` | Supabase : sauvegarde, classement, duels en temps réel, connexion Google |
 | `vendor/supabase.js` | Bibliothèque Supabase en local (le CDN est bloqué) |
 | `README.md` | Présentation du jeu sur GitHub (français et anglais), lien de jeu et Discord |
-| `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor (avec `classement-securise.sql`, `classement-allege.sql`, `retours-stats.sql`, `stats-adversaire.sql`, `comptes-fantomes.sql`, `file-attente.sql` : file d'attente des duels en ligne) |
+| `supabase.sql`, `nettoyage.sql` | Scripts à coller dans Supabase → SQL Editor (avec `classement-securise.sql`, `classement-allege.sql`, `retours-stats.sql`, `stats-adversaire.sql`, `comptes-fantomes.sql`, `file-attente.sql` : file d'attente des duels en ligne, `duels-valides.sql` : résultat des duels validé par le serveur ; ces deux derniers après `retours-stats.sql`) |
 | `outils/equilibrage.js` | Outil d'équilibrage (IA contre IA avec le vrai moteur, hors du jeu). Il écrit `rapport-cartes.md` (complet) ou `rapport-cible.md` (`--cartes`) à la racine : **ces rapports ne sont plus versionnés** (`.gitignore`, supprimés le 14 octobre : périmés dès qu'une carte ou l'IA change, et régénérés en 10 à 50 s). Les anciennes versions restent dans l'historique git. |
 | `outils/tests-bac-a-sable.js` | Test du bac à sable (le vrai profil ne bouge jamais, aucun appel au compte) : `node outils/tests-bac-a-sable.js` |
 | `outils/tests-holo.js` | Test de l'effet holo (zoom, paquet, replis, destruction) : `node outils/tests-holo.js` |

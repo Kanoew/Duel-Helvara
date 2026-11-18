@@ -450,7 +450,7 @@ function oppPlays(plays){ const r=checkPlays("e",mapPlays("e",plays));
    (graine, lieux, coups des deux joueurs dans l'ordre hôte puis invité, puissances finales). Deux téléphones honnêtes produisent
    le même relevé : le serveur valide. Sinon, « conflict », et la partie ne comptera jamais (lot C). S.mp.srv : réponse du serveur. */
 async function mpDbGet(){ try{ mqDb=mqDb||await window.claude.use("db"); }catch(e){ mqDb=null; } return mqDb; }
-function mpEnter(){ if(!myMp||!S||!S.mp) return; const code=myMp.code, role=myMp.role, g=S.mp.g;
+function mpEnter(){ if(window.__wiped||!myMp||!S||!S.mp) return; const code=myMp.code, role=myMp.role, g=S.mp.g;
   mpDbGet().then(db=>{ if(db&&db.duelEnter) return db.duelEnter(code,g,role,BUILD); }).catch(()=>{}); }
 function mpTr(t,mine,theirs){ if(S&&S.mp){ (S.mp.tr=S.mp.tr||{})[t]=[mine||[],theirs||[]]; } }
 function mpRecord(){
@@ -458,7 +458,7 @@ function mpRecord(){
   return {v:BUILD, seed:S.mp.deal.seed, locs:S.mp.deal.locs, t:turns, fin:[0,1,2].map(li=>h?[total("p",li),total("e",li)]:[total("e",li),total("p",li)])};
 }
 async function mpReport(res){
-  if(!S||!S.mp||S.mp.reported||!myMp||!S.mp.deal) return;
+  if(window.__wiped||!S||!S.mp||S.mp.reported||!myMp||!S.mp.deal) return;
   const sRef=S, mp=S.mp, code=myMp.code, role=myMp.role, g=mp.g; mp.reported=true;
   const rec=mpRecord(); let hash; try{ hash=mpHex(await mpHash(JSON.stringify(rec))); }catch(e){ return; }
   const db=await mpDbGet(); if(!db||!db.duelReport) return;
