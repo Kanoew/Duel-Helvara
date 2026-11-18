@@ -57,7 +57,7 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 - ✅ Trône de Tiamat (change de camp au tour 4), avec ton illustration. Mesuré sur 12 000 parties : équilibré, plus discret que la Cathédrale. Le +2 des tours 1 à 3 ne compte jamais au décompte final : c'est un piège visuel.
 - ✅ Autel du Silence : les cartes jouées ici perdent leurs effets, Révélation comprise (comme Mohini : une carte qui en repart reste muette).
 - ✅ Marché des Ombres : fin du tour 4, la plus faible de chaque joueur ici change de camp. Choix provisoire : elle garde tout (puissance, effets Continu) et joue pour son nouveau camp.
-- ✅ Le lieu « voisins » : codé sous le nom provisoire **La Fracture** (chaque carte jouée ici : −1 à toutes les cartes des lieux voisins, des deux côtés). 👤 Nom définitif à choisir.
+- ✅ Le lieu « voisins » : codé sous le nom provisoire **La Fracture** (la première carte de chaque joueur ici : −1 à toutes les cartes des lieux voisins, des deux côtés ; « chaque carte » changeait le vainqueur d'une partie sur quatre au milieu). 👤 Nom définitif à choisir.
 - ✅ Jardins de Désir : « la première carte que chaque joueur joue ici gagne +2 ».
 - 🟣 🛠️ Mesure d'équilibrage des quatre et test visuel en cours.
 - ✅ Une illustration par lieu (800 × 597), de ta main.
