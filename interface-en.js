@@ -481,6 +481,8 @@
     [/^Connecté à (.+)\. La partie commence…$/, (m,a)=>`Connected to ${a}. The game is starting…`],
     [/^(.+) a quitté le salon$/, (m,a)=>`${a} left the room`],
     [/^Duel contre (.+)$/, (m,a)=>`Duel against ${a}`],
+    [/^Coups adverses refusés : ils ne correspondent pas à ceux annoncés$/, ()=>"Opponent's moves refused: they don't match the ones announced"],
+    [/^Ton navigateur ne peut pas sceller les coups \(connexion non sécurisée\)\.$/, ()=>"Your browser can't seal moves (insecure connection)."],
     [/^Coup adverse refusé : (.+) \((énergie insuffisante|plus de place|lieu fermé|interdite ce tour|Thémis|déplacement impossible)\)$/, (m,a,w)=>`Opponent's move refused: ${a} (${({"énergie insuffisante":"not enough energy","plus de place":"no room left","lieu fermé":"location closed","interdite ce tour":"not allowed this turn","Thémis":"Themis","déplacement impossible":"move not allowed"})[w]})`],
     /* blitz */
     [/^(\d) victoires? · IA (.+)$/, (m,n,t)=>`${n} ${s(n,"win")} · ${t} AI`],

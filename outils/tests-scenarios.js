@@ -1308,18 +1308,53 @@ async function inPage() {
     T("Duel : relever le Serment adverse (même lieu) = croisé", S.oath === 1 && S.aiOath === 1 && S.log.some(l => /^Serment croisé sur/.test(l)), "");
     fresh(); S.turn = 3; S.mp = mpStub(true); S.oath = 0; await resolveTurn(Object.assign([], { oath: 2 }), Object.assign([], { oath: 1 }), false);
     T("Duel : un Serment déjà prêté ne se remplace pas, et ne se compte pas deux fois", S.oath === 0 && S.aiOath === 1, `${S.oath} ${S.aiOath}`);
-    /* S6. Duel : envoi des coups et reprise après coupure */
-    fresh(); S.turn = 2; S.mp = mpStub(true); myMp = { hist: {}, role: "host", code: "TEST-AAAAAA" }; S.oathStage = 1; mpLock();
-    T("Duel : mpLock envoie le Serment avec les coups du tour", JSON.stringify(myMp.hist[2]) === JSON.stringify([[1, 0, "o"]]) && S.mp.locked === true, JSON.stringify(myMp.hist));
+    /* S6. Duel : envoi des coups (scellés) et reprise après coupure */
+    const sealed = async plays => { const salt = mpSalt(); return { plays, salt, seal: await mpSeal(plays, salt) }; };
+    const sealH = async h => { const o = { hist: h, salt: {}, seal: {} }; for (const k in h) { const x = await sealed(h[k]); o.salt[k] = x.salt; o.seal[k] = x.seal; } return o; };
+    fresh(); S.turn = 2; S.mp = mpStub(true); myMp = { hist: {}, role: "host", code: "TEST-AAAAAA" }; mpPend = null; S.oathStage = 1; mpLock(); await wait(50);
+    T("Duel : mpLock scelle le Serment avec les coups du tour (empreinte envoyée, coups gardés sur le téléphone)", mpPend && JSON.stringify(mpPend.plays) === JSON.stringify([[1, 0, "o"]]) && myMp.seal && myMp.seal[2] === mpPend.seal && !myMp.hist[2] && S.mp.locked === true, JSON.stringify(myMp));
     { const mk2 = host => { newGame(); quiet = true; S.tut = false; S.mp = mpStub(host); S.mp.replaying = true; };
       const hostHist = { 1: [[0, 0, "o"]], 2: [] }, guestHist = { 1: [], 2: [[0, 0, "o"]] };
-      mk2(true); myMp = { hist: hostHist, role: "host", code: "TEST-AAAAAA" }; await mpReplay({ hist: guestHist });
+      mk2(true); myMp = { hist: hostHist, role: "host", code: "TEST-AAAAAA" }; mpPend = null; await mpReplay(await sealH(guestHist));
       const logs = S.log.filter(l => /Serment/.test(l)).length;
       T("Reprise d'un duel : Serments rejoués une seule fois chacun (prêté puis croisé), rien compté", S.oath === 0 && S.aiOath === 0 && logs === 2 && S.turn === 3 && !P.oathK, `oath ${S.oath}/${S.aiOath}, journal ${logs}, tour ${S.turn}`);
-      mk2(false); myMp = { hist: guestHist, role: "guest", code: "TEST-AAAAAA" }; await mpReplay({ hist: hostHist });
+      mk2(false); myMp = { hist: guestHist, role: "guest", code: "TEST-AAAAAA" }; await mpReplay(await sealH(hostHist));
       T("Reprise d'un duel : même résultat vu de l'autre joueur", S.oath === 0 && S.aiOath === 0 && S.turn === 3, `oath ${S.oath}/${S.aiOath}, tour ${S.turn}`);
-      mk2(true); myMp = { hist: { 1: [[2, 0, "o"]] }, role: "host", code: "TEST-AAAAAA" }; await mpReplay({ hist: {} });
-      T("Reprise d'un duel : mon Serment envoyé mais pas encore résolu revient en attente, caché, sans être appliqué", S.oathStage === 2 && S.oath == null && S.mp.locked === true, `stage ${S.oathStage}, oath ${S.oath}`); }
+      mk2(true); myMp = { hist: hostHist, role: "host", code: "TEST-AAAAAA" }; { const om = await sealH(guestHist); om.hist = { 1: [], 2: [[1, 0, "o"]] }; await mpReplay(om); }
+      T("Reprise d'un duel : coups adverses modifiés après coup, refusés aussi à la reprise", S.oath === 0 && S.aiOath == null && S.mp.bad === 1 && S.log.some(l => /^Coups adverses refusés/.test(l)), `oath ${S.oath}/${S.aiOath}, refus ${S.mp.bad}`);
+      mk2(true); myMp = { hist: {}, seal: { 1: "x" }, role: "host", code: "TEST-AAAAAA" }; mpPend = { g: 1, t: 1, plays: [[2, 0, "o"]], salt: "s", seal: "x" }; await mpReplay({ hist: {} });
+      T("Reprise d'un duel : mon Serment scellé mais pas encore résolu revient en attente, caché, sans être appliqué", S.oathStage === 2 && S.oath == null && S.mp.locked === true && !myMp.hist[1], `stage ${S.oathStage}, oath ${S.oath}`); }
+    /* S6 bis. Coups scellés : un adversaire simulé, honnête puis tricheur */
+    { const p3 = plain.filter(id => CARDS[id].cost === 3), c1 = i => { const c = card(p3[i]); c.cheap = 2; return c; };
+      const flow = async cheat => {
+        fresh(); S.turn = 2; S.energy = S.energyE = 6; S.busy = false; S.over = null;
+        S.mp = { g: 1, meHost: true, oppNick: "Ami", locked: false, gone: false, replaying: false, seen: {} };
+        const a = c1(0), b = c1(1), z = c1(2); S.hand.e = [b, z];
+        const OM = { role: "guest", code: "TEST-AAAAAA", tok: "b", oppTok: "a", g: 1, hist: {}, seal: {}, salt: {} };
+        roomC = { peers: () => [{ presence: { mp: OM } }], presence: () => Promise.resolve() };
+        myMp = { role: "host", code: "TEST-AAAAAA", tok: "a", oppTok: "b", g: 1, hist: {}, seal: {}, salt: {} }; mpPend = null;
+        S.staged = [{ c: a, li: 0 }]; S.hand.p = []; mpLock(); await wait(50); mpTick();
+        const hidden = !!myMp.seal[2] && !myMp.hist[2] && !myMp.salt[2];
+        const honest = await sealed([[b.uid, 1]]); OM.seal[2] = honest.seal; mpTick();
+        const revealed = !!myMp.hist[2] && !!myMp.salt[2] && S.mp.oppLocked;
+        if (cheat === "change") { OM.hist[2] = [[z.uid, 2]]; OM.salt[2] = honest.salt; }
+        else if (cheat === "reseal") { const x = await sealed([[z.uid, 2]]); OM.seal[2] = x.seal; OM.hist[2] = x.plays; OM.salt[2] = x.salt; }
+        else { OM.hist[2] = honest.plays; OM.salt[2] = honest.salt; }
+        mpTick(); for (let k = 0; k < 300 && S.turn === 2; k++) await wait(50);
+        return { hidden, revealed, turn: S.turn, b: S.board.e[1].includes(b), z: S.board.e[2].includes(z), a: S.board.p[0].includes(a), bad: S.mp.bad || 0, refused: S.log.some(l => /^Coups adverses refusés/.test(l)) };
+      };
+      try {
+        const H = await flow("");
+        T("Coups scellés : mes coups restent cachés tant que l'adversaire n'a pas fini son tour", H.hidden, JSON.stringify(H));
+        T("Coups scellés : révélés dès que son empreinte arrive", H.revealed, JSON.stringify(H));
+        T("Coups scellés : adversaire honnête, le tour se joue normalement", H.turn === 3 && H.a && H.b && !H.z && H.bad === 0, JSON.stringify(H));
+        const C = await flow("change");
+        T("Coups scellés : coups changés après avoir vu les miens, refusés", C.turn === 3 && C.a && !C.b && !C.z && C.bad === 1 && C.refused, JSON.stringify(C));
+        const R = await flow("reseal");
+        T("Coups scellés : nouvelle empreinte publiée après avoir vu mes coups, refusée", R.turn === 3 && R.a && !R.b && !R.z && R.bad === 1 && R.refused, JSON.stringify(R));
+        const lg = LANG; LANG = "en"; const en = trUI("Coups adverses refusés : ils ne correspondent pas à ceux annoncés"); LANG = lg;
+        T("Coups scellés : message traduit en anglais", /^Opponent's moves refused/.test(en), en);
+      } finally { roomC = null; mpPend = null; } }
     myMp = null;
     /* S7. Fin de partie en duel : CHF, compteurs, quête */
     const endDuel = async (pw, ow, cross) => { fresh(); S.turn = 6; S.mp = mpStub(true); S.oath = ow; if (cross) S.aiOath = ow; setBoard(...pw); finish(); return S.over; };

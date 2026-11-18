@@ -150,14 +150,22 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.40", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.41", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
+/* Coups scellés (anti-triche, lot A) : mes coups du tour, envoyés d'abord sous forme d'empreinte. Ils restent ICI (jamais dans la présence)
+   jusqu'à ce que l'adversaire ait publié son empreinte : {g, t, plays, salt, seal}. */
+let mpPend=null;
 /* Jetons et codes de salon : crypto.getRandomValues (pas Math.random). Code = LIEU- + 6 caractères sans I, L, O ni 0/1 (31 symboles, tirage sans biais). */
 const MP_ALPHA="23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 function mpRandInt(max){ const lim=256-(256%max); for(;;){ const b=crypto.getRandomValues(new Uint8Array(1))[0]; if(b<lim) return b%max; } }
 const mpTok=()=>Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,"0")).join("");
 function mpSession(){ try{ const s=JSON.parse(localStorage.getItem(MP_KEY)); return s&&s.mp&&Date.now()-s.at<3*36e5?s:null; }catch(e){ return null; } }
+/* Empreinte SHA-256 des coups d'un tour, avec un sel aléatoire (sans lui, les quelques coups possibles se devineraient) */
+const mpSalt=()=>mpTok()+mpTok();
+async function mpSeal(plays,salt){ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(salt+"|"+JSON.stringify(plays))); return Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,"0")).join(""); }
+async function mpSealOk(plays,salt,seal){ if(!Array.isArray(plays)||typeof salt!=="string"||typeof seal!=="string") return false; try{ return await mpSeal(plays,salt)===seal; }catch(e){ return false; } }
+function mpSaveAll(){ if(S&&S.mp) mpSaveSession({mp:myMp,oppNick:S.mp.oppNick,pend:mpPend,seen:S.mp.seen||{}}); }
 function mpSaveSession(s){ try{ if(s){ s.at=Date.now(); localStorage.setItem(MP_KEY,JSON.stringify(s)); } else localStorage.removeItem(MP_KEY); }catch(e){} }
 /* Temps réel : plus de salon commun où tout le monde voit tout le monde. On ne se connecte que pour un duel :
    un canal par code de salon (« roomC », deux joueurs), et le canal de la file d'attente (« roomQ ») seulement
@@ -296,7 +304,7 @@ const safeNick=n=>(typeof n==="string"&&n.trim()?n.trim().slice(0,24):"Adversair
 function mpNewMatch(om){
   const g=(myMp.g||0)+1, seed=Math.floor(Math.random()*2147483647);
   const locs=pickLocs();
-  mpPush({g,seed,locs,oppTok:om.tok,hist:{},t:0,again:0});
+  mpPend=null; mpPush({g,seed,locs,oppTok:om.tok,hist:{},seal:{},salt:{},t:0,again:0});
   mpStart(om,false);
 }
 function mpTick(){
@@ -309,14 +317,14 @@ function mpTick(){
     if(S&&S.mp&&S.over&&myMp.again===myMp.g&&om.again===myMp.g){ mpNewMatch(om); return; }
   }
   if(myMp.role==="guest"&&om&&om.g&&om.oppTok===myMp.tok&&validDeck(om.deck)&&Array.isArray(om.locs)&&(!S||!S.mp||S.mp.g!==om.g)&&!(S&&S.mp&&S.mp.resuming)){
-    mpPush({g:om.g,hist:{},t:0,again:0}); mpStart(om,false); return;
+    mpPend=null; mpPush({g:om.g,hist:{},seal:{},salt:{},t:0,again:0}); mpStart(om,false); return;
   }
   if(S&&S.mp&&S.mp.resuming&&om&&om.g===myMp.g){ S.mp.resuming=false; mpStart(om,true); return; }
-  if(S&&S.mp){ S.mp.gone=!o; if(om){ S.mp.oppLocked=!!(om.hist&&om.hist[S.turn]); } mpTryResolve(); }
+  if(S&&S.mp){ S.mp.gone=!o; if(om){ S.mp.oppLocked=!!(om.seal&&om.seal[S.turn]); } mpTryResolve(); }
   if(screen==="duel"||screen==="play") render();
 }
 function mpStart(om,replay){
-  const meHost=myMp.role==="host", hostP=meHost?myMp:om, guestP=meHost?om:myMp;
+  const meHost=myMp.role==="host", hostP=meHost?myMp:om, guestP=meHost?om:myMp, seen0=replay&&S&&S.mp&&S.mp.seen||{};
   if(!validDeck(hostP.deck)||!validDeck(guestP.deck)||!Array.isArray(hostP.locs)||!hostP.locs.every(l=>LOCS[l])) return;
   RNG=mulberry(hostP.seed|0); uidN=0;
   const hostDeck=gShuffle(hostP.deck.map(mk)), guestDeck=gShuffle(guestP.deck.map(mk));
@@ -326,12 +334,12 @@ function mpStart(om,replay){
     deck:{p:meHost?hostDeck:guestDeck, e:meHost?guestDeck:hostDeck},
     staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
     log:[], sel:null, info:null, busy:false, over:null,
-    mp:{g:myMp.g, meHost, oppNick:safeNick(om.nick), oppAv:POOL.includes(om.av)?om.av:null, locked:false, gone:false, replaying:!!replay}};
+    mp:{g:myMp.g, meHost, oppNick:safeNick(om.nick), oppAv:POOL.includes(om.av)?om.av:null, locked:false, gone:false, replaying:!!replay, seen:seen0}};
   for(let i=0;i<3;i++){ draw(meHost?"p":"e"); draw(meHost?"e":"p"); }
   quiet=!!replay;
   log(`Duel contre ${S.mp.oppNick}`);
   screen="play"; startTurn();
-  mpSaveSession({mp:myMp,oppNick:S.mp.oppNick});
+  if(!replay) mpPend=null; mpSaveAll();
   if(replay) mpReplay(om); else { sfx("loc"); render(); window.scrollTo(0,0); }
 }
 function mapPlays(side,plays){ const out=[]; if(!Array.isArray(plays)) return out;
@@ -347,37 +355,59 @@ function oppPlays(plays){ const r=checkPlays("e",mapPlays("e",plays));
   for(const [n,w] of r.bad) log(`Coup adverse refusé : ${n} (${BAD_WHY[w]})`);
   if(r.bad.length&&S.mp) S.mp.bad=(S.mp.bad||0)+r.bad.length;
   return r.plays; }
+/* Coups révélés qui ne correspondent pas à l'empreinte publiée avant : tous refusés (il les a changés après avoir vu les miens) */
+function oppSealed(plays,ok){ if(ok) return oppPlays(plays); log("Coups adverses refusés : ils ne correspondent pas à ceux annoncés"); if(S.mp) S.mp.bad=(S.mp.bad||0)+1; return []; }
 async function mpReplay(om){
   while(S&&S.mp&&!S.over){
-    const mine=myMp.hist&&myMp.hist[S.turn], theirs=om.hist&&om.hist[S.turn];
-    if(mine&&theirs){ await resolveTurn(mapPlays("p",mine), oppPlays(theirs), false); continue; }
-    if(mine){ const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.swimP=st.swim||null; S.oathStage=st.oath!=null?st.oath:null; S.mp.locked=true; }
+    const t=S.turn, done=myMp.hist&&myMp.hist[t], pend=mpPend&&mpPend.g===S.mp.g&&mpPend.t===t?mpPend:null, theirs=om.hist&&om.hist[t];
+    if(done&&theirs){ const ok=await mpSealOk(theirs,om.salt&&om.salt[t],(S.mp.seen&&S.mp.seen[t])||(om.seal&&om.seal[t]));
+      await resolveTurn(mapPlays("p",done), oppSealed(theirs,ok), false); continue; }
+    const mine=done||(pend&&pend.plays);
+    if(mine){ const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.swimP=st.swim||null; S.oathStage=st.oath!=null?st.oath:null; S.mp.locked=true;
+      if(pend&&!done&&!(myMp.seal&&myMp.seal[t])) mpSealPush(pend); }   /* coupure entre le verrouillage et l'envoi de l'empreinte */
     break;
   }
   if(S&&S.mp){ S.mp.replaying=false; }
   quiet=false; render(); mpTick();
 }
+/* Fin du tour en duel : 1) j'envoie l'empreinte de mes coups ; 2) quand l'adversaire a envoyé la sienne, je révèle mes coups et le sel ;
+   3) quand il a révélé les siens, je vérifie qu'ils correspondent à l'empreinte VUE AVANT de révéler les miens (S.mp.seen), puis le tour se joue. */
 function mpLock(){
   if(!S.mp||S.mp.locked||S.busy||S.over) return;
-  const hist=Object.assign({},myMp.hist||{}); hist[S.turn]=S.staged.map(x=>[x.c.uid,x.li]); if(S.swimP) hist[S.turn].push([S.swimP.c.uid,S.swimP.li,"s"]);
-  if(S.oathStage!=null) hist[S.turn].push([S.oathStage,0,"o"]);   /* Serment caché : il voyage avec les coups du tour */
-  S.mp.locked=true; mpPush({t:S.turn,hist}); mpSaveSession({mp:myMp,oppNick:S.mp.oppNick});
-  render(); mpTryResolve();
+  const plays=S.staged.map(x=>[x.c.uid,x.li]); if(S.swimP) plays.push([S.swimP.c.uid,S.swimP.li,"s"]);
+  if(S.oathStage!=null) plays.push([S.oathStage,0,"o"]);   /* Serment caché : il voyage avec les coups du tour */
+  S.mp.locked=true; mpPend={g:S.mp.g,t:S.turn,plays,salt:mpSalt()}; mpSaveAll();
+  render(); mpSealPush(mpPend);
+}
+function mpSealPush(pend){
+  mpSeal(pend.plays,pend.salt).then(h=>{ if(mpPend!==pend||!myMp) return; pend.seal=h; mpPush({t:pend.t,seal:Object.assign({},myMp.seal||{},{[pend.t]:h})}); mpSaveAll(); mpTryResolve(); })
+    .catch(()=>{ if(mpPend!==pend) return; mpPend=null; if(S&&S.mp){ S.mp.locked=false; mpMsg="Ton navigateur ne peut pas sceller les coups (connexion non sécurisée)."; render(); } });
 }
 function mpTryResolve(){
-  if(!S||!S.mp||!S.mp.locked||S.busy||S.over||S.mp.replaying) return;
-  const o=mpOpp(); if(!o) return; const om=o.presence.mp;
-  if(om.g!==S.mp.g||!om.hist||!om.hist[S.turn]) return;
-  S.mp.locked=false; S.mp.oppLocked=false;
-  const mineP=S.staged.slice(); if(S.swimP) mineP.swim=S.swimP; if(S.oathStage!=null) mineP.oath=S.oathStage;
-  resolveTurn(mineP, oppPlays(om.hist[S.turn]), true);
+  if(!S||!S.mp||!S.mp.locked||S.busy||S.over||S.mp.replaying||S.mp.checking) return;
+  const o=mpOpp(); if(!o) return; const om=o.presence.mp, t=S.turn;
+  if(om.g!==S.mp.g) return;
+  const theirSeal=om.seal&&om.seal[t]; if(typeof theirSeal!=="string") return;   /* il n'a pas encore fini son tour */
+  if(!(myMp.hist&&myMp.hist[t])){
+    if(!mpPend||mpPend.g!==S.mp.g||mpPend.t!==t||!mpPend.seal) return;
+    S.mp.seen=Object.assign({},S.mp.seen,{[t]:(S.mp.seen&&S.mp.seen[t])||theirSeal});   /* son empreinte, notée AVANT de montrer mes coups */
+    mpSaveAll(); mpPush({hist:Object.assign({},myMp.hist||{},{[t]:mpPend.plays}),salt:Object.assign({},myMp.salt||{},{[t]:mpPend.salt})}); mpSaveAll();
+  }
+  const th=om.hist&&om.hist[t], ts=om.salt&&om.salt[t]; if(!th||!ts) return;
+  const sRef=S; S.mp.checking=true;
+  mpSealOk(th,ts,S.mp.seen[t]).then(ok=>{
+    if(S!==sRef) return; S.mp.checking=false; if(S.turn!==t||!S.mp.locked||S.busy||S.over) return;
+    S.mp.locked=false; S.mp.oppLocked=false;
+    const mineP=S.staged.slice(); if(S.swimP) mineP.swim=S.swimP; if(S.oathStage!=null) mineP.oath=S.oathStage;
+    resolveTurn(mineP, oppSealed(th,ok), true);
+  });
 }
 async function mpResume(){
   const s=mpSession(); if(!s||!rtReady()||mpConn||!MP_CODE.test(s.mp.code||"")) return; mpConn=true; mpMsg=""; render();
   const r=await rtOpen("c","helvara-room-"+s.mp.code); mpConn=false;
   if(!r){ mpMsg=RT_FAIL; render(); return; }
-  myMp=null; mpPush(s.mp);
-  S={mp:{resuming:true,g:s.mp.g,oppNick:s.oppNick}, over:null};
+  myMp=null; mpPush(s.mp); mpPend=s.pend&&s.pend.g===s.mp.g?s.pend:null;
+  S={mp:{resuming:true,g:s.mp.g,oppNick:s.oppNick,seen:s.seen&&typeof s.seen==="object"?s.seen:{}}, over:null};
   screen="duel"; render(); mpTick();
 }
 function onlineHTML(){
