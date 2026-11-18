@@ -203,7 +203,44 @@ async function rtOpen(kind,name){
   return r;
 }
 function rtClose(kind){ rtTok[kind]++; const r=kind==="c"?roomC:roomQ; if(kind==="c") roomC=null; else roomQ=null; if(r&&r.leave) r.leave(); }
-function initRoom(){ roomTried=true; render(); }
+function initRoom(){ roomTried=true; render(); lobOpen(); }
+/* ======= Présence en direct (anti-triche, lot B) =======
+   Chaque jeu ouvert ET visible rejoint « helvara-lobby » (cloud.js : aucun identifiant de compte, un jeton tiré au hasard) et n'y publie
+   que {v: version, s: état} : 0 libre (menus), 1 cherche un adversaire, 2 en partie. Quitté dès que la page passe en arrière-plan.
+   Au-delà de LOB_MAX jeux présents, on n'y reste pas : « Jouer » part alors directement contre l'IA (limite de connexions de Supabase). */
+const LOB_MAX=150, LOB_WAIT=15000;
+let lob=null, lobConn=false, lobFull=false, lobSent=-1, lobSeen="";
+const lobState=()=>mq?1:(S&&!S.over&&!S.rp&&screen==="play")?2:0;
+async function lobOpen(){
+  if(lob||lobConn||lobFull||!rtReady()||document.hidden) return; lobConn=true;
+  let r=null; try{ r=await window.claude.use("lobby"); }catch(e){ r=null; } lobConn=false;
+  if(!r) return;
+  if(document.hidden||lob){ if(r.leave) r.leave(); return; }
+  lob=r; lobSent=-1;
+  r.onPeers(()=>{ if(lob!==r) return;
+    if(r.peers().length>LOB_MAX){ lobFull=true; lobClose(); return; }
+    const k=lobFree()+"|"+lobSeeking(); if(k!==lobSeen){ lobSeen=k; if(screen==="home") render(); } }, ()=>{ if(lob===r) lobClose(); });
+  lobSync();
+}
+function lobClose(){ const r=lob; lob=null; lobSent=-1; lobSeen=""; if(r&&r.leave) r.leave(); }
+function lobSync(){ if(!lob) return; const s=lobState(); if(s===lobSent) return; lobSent=s; lob.presence({v:BUILD,s}).catch(()=>{}); }
+const lobOthers=()=>lob?lob.peers().filter(p=>!p.sameTab&&p.presence&&p.presence.v===BUILD):[];
+const lobFree=()=>lobOthers().filter(p=>p.presence.s!==2).length;
+const lobSeeking=()=>lobOthers().filter(p=>p.presence.s===1).length;
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) lobClose(); else lobOpen(); });
+/* « Jouer » (lot B) : si un autre joueur de même version est libre, on le cherche au plus LOB_WAIT ms (la file d'attente habituelle),
+   sinon partie contre l'IA tout de suite. Appariement trouvé : un peu de marge pour entrer dans le salon. Renvoie false = jouer contre l'IA. */
+function playSeek(){
+  if(!lob||!lobFree()||!rtReady()||!deckReady()||myMp||mq||mpConn||mpDeckWhy(P.deck)) return false;
+  mqStart(); if(!mq) return false;
+  const me=mq; me.jouer=true; me.until=Date.now()+LOB_WAIT;
+  me.jt=setInterval(()=>{ if(mq!==me&&!(me.room&&myMp&&!(S&&S.mp))){ clearInterval(me.jt); return; }
+    if(S&&S.mp&&!S.over){ clearInterval(me.jt); return; }   /* le duel a commencé */
+    if(Date.now()>=me.until+(me.room?12000:0)) playAI(me); else if(sheet==="play") render(); },1000);
+  return true;
+}
+function playStop(me){ clearInterval(me.jt); if(mq===me) mqStop(""); if(myMp&&!(S&&S.mp)) mpClear(); }
+function playAI(me){ playStop(me); sheet=null; newGame(); window.scrollTo(0,0); }
 function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(roomC) roomC.presence({mp:myMp}).catch(()=>{}); }
 function mpClear(){ myMp=null; mpMsg=""; rtClose("c"); }
 function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck],lp:locPool(),ft:featureLoc()}; }
@@ -390,7 +427,7 @@ function mpStart(om,replay,deal){
     mp:{g:myMp.g, meHost, oppNick:safeNick(om.nick), oppAv:POOL.includes(om.av)?om.av:null, locked:false, gone:false, replaying:!!replay, seen:seen0, deal:{seed:deal.seed|0,locs:deal.locs.slice()}}};
   for(let i=0;i<3;i++){ draw(meHost?"p":"e"); draw(meHost?"e":"p"); }
   quiet=!!replay;
-  log(`Duel contre ${S.mp.oppNick}`);
+  log(`Duel contre ${S.mp.oppNick}`); sheet=null; if(mq) mqStop("");   /* la recherche est finie dès que le duel commence */
   screen="play"; startTurn();
   if(!replay) mpPend=null; mpSaveAll();
   if(replay) mpReplay(om); else { sfx("loc"); render(); window.scrollTo(0,0); }

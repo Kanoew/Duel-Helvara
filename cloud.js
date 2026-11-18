@@ -159,9 +159,10 @@
   };
 
   /* ---------- Salon des duels (présence en temps réel) ---------- */
-  async function makeRoom(name){
+  /* anon : salon de présence (lobby) où l'on ne publie AUCUN identifiant de compte, seulement un jeton tiré au hasard à chaque connexion */
+  async function makeRoom(name, anon){
     const s = await sessionP;
-    const uid = s && s.user ? s.user.id : null;
+    const uid = !anon && s && s.user ? s.user.id : null;
     const key = "t" + Math.random().toString(36).slice(2, 10);
     const ch = sb.channel(name, { config:{ presence:{ key } } });
     let state = {}, list = [], onPeers = null, onErr = null, joined = false, errTimer = null;
@@ -203,6 +204,8 @@
       if(name === "user") return (await sessionP) ? { id: async () => ((await sessionP) || {}).user?.id || null } : null;
       /* « room:<nom du canal> » : un canal de présence à part (salon avec code, file d'attente). Le jeu l'ouvre seulement
          quand il en a besoin, et le ferme avec leave(). */
+      /* « lobby » (lot B) : présence de tous les jeux ouverts, sans identifiant de compte ; sert seulement à savoir si un adversaire humain est disponible */
+      if(name === "lobby") return (await sessionP) ? makeRoom("helvara-lobby", true).catch(() => null) : null;
       if(typeof name === "string" && name.startsWith("room:") && /^[A-Za-z0-9_-]{3,64}$/.test(name.slice(5))) return makeRoom("helvara-" + name.slice(5).replace(/^helvara-/, "")).catch(() => null);
       return null;
     }
