@@ -1202,12 +1202,12 @@ async function inPage() {
     fresh(); S.locs[1].id = "jardins"; { const a = card(plain[0]), b = card(plain[1]), e1 = card(plain[2]); const pa = a.pow, pb = b.pow, pe = e1.pow; S.hand.p = [a]; S.hand.e = [e1]; S.turn = 2;
       await resolveTurn([{ c: a, li: 1 }], [{ c: e1, li: 1 }], false); S.hand.p = [b]; S.turn = 3; await resolveTurn([{ c: b, li: 1 }], [], false);
       T("Jardins de Désir : +2 à la première carte de chaque joueur, pas à la suivante", a.pow === pa + 2 && e1.pow === pe + 2 && b.pow === pb, `${a.pow - pa} ${e1.pow - pe} ${b.pow - pb}`); }
-    /* La Fracture (lieu du milieu) : −1 à toutes les cartes révélées des deux lieux voisins, des deux côtés */
-    fresh(); S.locs[1].id = "fracture"; { const x0 = put("p", 0, plain[0], 4), y0 = put("e", 0, plain[0], 4), x2 = put("e", 2, plain[0], 4), here = put("e", 1, plain[0], 4); const f = card(plain[1]); S.hand.p = [f]; S.turn = 3;
+    /* Les Eaux d'Apsu (lieu du milieu) : −1 à toutes les cartes révélées des deux lieux voisins, des deux côtés */
+    fresh(); S.locs[1].id = "eaux"; { const x0 = put("p", 0, plain[0], 4), y0 = put("e", 0, plain[0], 4), x2 = put("e", 2, plain[0], 4), here = put("e", 1, plain[0], 4); const f = card(plain[1]); S.hand.p = [f]; S.turn = 3;
       await resolveTurn([{ c: f, li: 1 }], [], false);
-      T("La Fracture : −1 aux cartes des lieux voisins des deux côtés, rien ici", x0.pow === 3 && y0.pow === 3 && x2.pow === 3 && here.pow === 4, `${x0.pow} ${y0.pow} ${x2.pow} ${here.pow}`);
+      T("Les Eaux d'Apsu : −1 aux cartes des lieux voisins des deux côtés, rien ici", x0.pow === 3 && y0.pow === 3 && x2.pow === 3 && here.pow === 4, `${x0.pow} ${y0.pow} ${x2.pow} ${here.pow}`);
       const f2 = card(plain[2]); S.hand.p = [f2]; S.turn = 4; await resolveTurn([{ c: f2, li: 1 }], [], false);
-      T("La Fracture : seulement la première carte de chaque joueur", x0.pow === 3 && x2.pow === 3, `${x0.pow} ${x2.pow}`); }
+      T("Les Eaux d'Apsu : seulement la première carte de chaque joueur", x0.pow === 3 && x2.pow === 3, `${x0.pow} ${x2.pow}`); }
     /* Le Marché des Ombres : fin du tour 4, la plus faible de chaque joueur ici change de camp */
     fresh(); S.locs[2].id = "marche"; { const a = put("p", 2, plain[0], 1), a2 = put("p", 2, plain[1], 5), b = put("e", 2, plain[0], 2), b2 = put("e", 2, plain[1], 6); S.turn = 3; await resolveTurn([], [], false);
       const t3 = S.board.p[2].includes(a); S.turn = 4; await resolveTurn([], [], false);

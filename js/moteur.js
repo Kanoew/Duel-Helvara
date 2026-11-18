@@ -499,11 +499,11 @@ function reveal(s,li,c){
   if(eid(c)!=="anahita") S.lastAny=eid(c);   /* Anahita copie la dernière carte révélée, des deux côtés */
   /* Jardins de Désir : +2 à la première carte que chaque joueur joue ici (une fois par partie) */
   if(locIs(li,"jardins")){ S.jard=S.jard||{p:[0,0,0],e:[0,0,0]}; if(!S.jard[s][li]&&S.board[s][li].includes(c)){ S.jard[s][li]=1; c.pow+=2; (c.mods=c.mods||[]).push({v:2,src:"Jardins de Désir"}); log(`Les Jardins de Désir · ${nm(c)} +2 (${who(s)})`); sfx("buff"); } }
-  /* La Fracture : la première carte que chaque joueur joue ici fait perdre 1 à toutes les cartes révélées des lieux voisins, des deux côtés (protections respectées).
+  /* Les Eaux d'Apsu (ex-Faille d'Apsu) : la première carte que chaque joueur joue ici fait perdre 1 à toutes les cartes révélées des lieux voisins, des deux côtés (protections respectées).
      Une fois par joueur et par partie (mesure du 18 novembre : à chaque carte, elle changeait le vainqueur d'une partie sur quatre au milieu) */
-  if(locIs(li,"fracture")&&!(S.frac&&S.frac[s][li])&&S.board[s][li].includes(c)){ S.frac=S.frac||{p:[0,0,0],e:[0,0,0]}; S.frac[s][li]=1; let n=0; const prev=SRC; SRC={s,cost:CARDS[c.id].cost};
-    try{ for(const i of [li-1,li+1]) if(i>=0&&i<3) for(const side of [s,opp(s)]) for(const x of S.board[side][i].slice()) if(x.rev&&!(side!==s&&untargetable(s,side,x))&&weaken(side,i,x,1)){ (x.mods=x.mods||[]).push({v:-1,src:"La Fracture"}); n++; } } finally { SRC=prev; }
-    if(n){ log(`La Fracture · −1 à ${n} carte${n>1?"s":""} des lieux voisins (${who(s)})`); sfx("debuff"); } }
+  if(locIs(li,"eaux")&&!(S.frac&&S.frac[s][li])&&S.board[s][li].includes(c)){ S.frac=S.frac||{p:[0,0,0],e:[0,0,0]}; S.frac[s][li]=1; let n=0; const prev=SRC; SRC={s,cost:CARDS[c.id].cost};
+    try{ for(const i of [li-1,li+1]) if(i>=0&&i<3) for(const side of [s,opp(s)]) for(const x of S.board[side][i].slice()) if(x.rev&&!(side!==s&&untargetable(s,side,x))&&weaken(side,i,x,1)){ (x.mods=x.mods||[]).push({v:-1,src:"Les Eaux d'Apsu"}); n++; } } finally { SRC=prev; }
+    if(n){ log(`Les Eaux d'Apsu · −1 à ${n} carte${n>1?"s":""} des lieux voisins (${who(s)})`); sfx("debuff"); } }
   if(!isAph(c)) (S.lastRev=S.lastRev||{p:null,e:null})[s]=c;   /* Aphrodite rejoue la dernière Révélation du tour */
   /* La Source : les Révélations de tes autres cartes Helvara jouées dans son lieu se déclenchent deux fois (si elle est déjà en jeu, révélée et sans effets annulés) */
   if(CARDS[c.id].fac==="helvara"&&eid(c)!=="source"&&replayable(c)&&S.board[s][li].some(x=>x!==c&&eid(x)==="source"&&live(x))){
@@ -844,7 +844,7 @@ function aiPlan(me="e",tierOv){
     if(locIs(li,"cirque")&&S.turn<4) pow+=d.pow<=2?2:-2;
     if(locIs(li,"sauvabelin")&&DESTROYERS.has(c.id)) adj-=4;
     if(locIs(li,"jardins")&&!(S.jard&&S.jard[me][li])&&!ctx.pend[li]) pow+=2;
-    if(locIs(li,"fracture")&&!(S.frac&&S.frac[me][li])&&!ctx.pend[li]) for(const i of [li-1,li+1]) if(i>=0&&i<3){ pow-=S.board[me][i].filter(x=>x.rev).length*.8; hit+=S.board[op][i].filter(x=>x.rev).length*.8; }
+    if(locIs(li,"eaux")&&!(S.frac&&S.frac[me][li])&&!ctx.pend[li]) for(const i of [li-1,li+1]) if(i>=0&&i<3){ pow-=S.board[me][i].filter(x=>x.rev).length*.8; hit+=S.board[op][i].filter(x=>x.rev).length*.8; }
     if(locIs(li,"marche")&&S.turn<=4&&mates>0) pow-=Math.min(2,CARDS[c.id].pow*.2);
     if(locIs(li,"trone")){ const m=mates; if(S.turn>=4){ if(m<=foes&&m+1>foes) pow+=2; } else if(m<foes&&m+1>=foes) pow-=1; }   /* Trône : passer devant en nombre de cartes dès le tour 4 */
     if((c.id==="hermes"||c.id==="susanoo")&&[0,1,2].some(i=>i!==li&&locIs(i,"flon"))) pow+=1;

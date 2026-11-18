@@ -342,7 +342,7 @@ const FX=(()=>{
     l_trone:  {loc:[["rays",{col:"185,140,255",n:3}],["flicker",{col:"170,120,255",y:.6}]]},
     l_autel:  {loc:[["rings",{col:"200,200,215",n:3}],["smoke",{col:"150,155,175"}]]},
     l_jardins:{loc:[["sparkle",{col:"200,40,70",n:14}],["flicker",{col:"255,190,110",y:.4}]]},
-    l_fracture:{loc:[["flicker",{col:"70,220,200",y:.55}],["burst",{col:["70,220,200","150,240,230","210,250,245"],n:16}]]},
+    l_eaux:   {loc:[["flicker",{col:"70,220,200",y:.55}],["burst",{col:["70,220,200","150,240,230","210,250,245"],n:16}]]},
     l_marche: {loc:[["smoke",{col:"80,95,100"}],["flicker",{col:"255,190,110",y:.5}]]},
     /* épiques : une brève gerbe d'étincelles sur le lieu, à la couleur de la faction (moins d'une seconde) */
     epic_helvara:   {loc:[["sparkle",{col:"255,215,140",n:11}],["rings",{col:"255,215,140",n:1}]]},

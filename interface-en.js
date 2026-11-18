@@ -542,7 +542,7 @@
     [/^Médée · −2 à (.+) \((.+)\)$/, (m,a,w)=>`Medea · −2 to ${a} (${who(w)})`],
     [/^L'Autel du Silence · (.+) perd ses effets \((.+)\)$/, (m,a,w)=>`Altar of Silence · ${a} loses its effects (${who(w)})`],
     [/^Les Jardins de Désir · (.+) \+2 \((.+)\)$/, (m,a,w)=>`Gardens of Desire · ${a} +2 (${who(w)})`],
-    [/^La Fracture · −1 à (\d+) cartes? des lieux voisins \((.+)\)$/, (m,n,w)=>`The Fracture · −1 to ${n} card${n>1?"s":""} at the neighbouring locations (${who(w)})`],
+    [/^Les Eaux d'Apsu · −1 à (\d+) cartes? des lieux voisins \((.+)\)$/, (m,n,w)=>`The Waters of Apsu · −1 to ${n} card${n>1?"s":""} at the neighbouring locations (${who(w)})`],
     [/^Le Marché des Ombres · (.+) et (.+) changent de camp$/, (m,a,b)=>`Shadow Market · ${a} and ${b} switch sides`],
     [/^Le Cirque mélange les puissances de (\d+) cartes$/, (m,n)=>`The Circus shuffles the power of ${n} cards`],
     [/^La Faille détruit (.+) \((.+)\)$/, (m,a,w)=>`The Rift destroys ${a} (${who(w)})`],
