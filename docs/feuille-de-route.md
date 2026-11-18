@@ -92,7 +92,8 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 🛠️ **Lot A, duels honnêtes** (sans SQL) :
   - ✅ coups adverses interdits refusés (18 novembre, `alpha-0.40`) ;
   - ✅ coups scellés (18 novembre, `alpha-0.41`) ;
-  - 🟣 graine commune, deck adverse vérifié ;
+  - ✅ graine commune (18 novembre, `alpha-0.42`) ;
+  - 🟣 deck adverse vérifié ;
   - 🟣 👤 un duel en ligne entre deux téléphones avec la nouvelle version.
 - 🟣 🛠️ **Lot B, « Jouer » contre un humain ou l'IA** : attente de 15 s seulement si quelqu'un est en ligne, sinon IA tout de suite ; résultat envoyé par les deux joueurs et validé par le serveur. 👤 SQL à valider.
 - 🟣 🛠️ **Lot C, classement** : étoiles des duels en ligne seulement sur résultat validé, plafonds de `board_submit` revus. 👤 SQL à valider.

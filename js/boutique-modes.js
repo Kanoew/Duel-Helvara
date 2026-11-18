@@ -150,12 +150,14 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.41", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.42", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Coups scellés (anti-triche, lot A) : mes coups du tour, envoyés d'abord sous forme d'empreinte. Ils restent ICI (jamais dans la présence)
    jusqu'à ce que l'adversaire ait publié son empreinte : {g, t, plays, salt, seal}. */
 let mpPend=null;
+/* Graine commune : mon nombre secret de l'hôte (jamais dans la présence avant la révélation), l'empreinte vue par l'invité, le match en cours de tirage */
+let mpSecret=null, mpSeedSeen=null, mpDealing="";   /* mpDealing : « mon jeton|match », le numéro de match repart à 1 dans chaque salon */
 /* Jetons et codes de salon : crypto.getRandomValues (pas Math.random). Code = LIEU- + 6 caractères sans I, L, O ni 0/1 (31 symboles, tirage sans biais). */
 const MP_ALPHA="23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 function mpRandInt(max){ const lim=256-(256%max); for(;;){ const b=crypto.getRandomValues(new Uint8Array(1))[0]; if(b<lim) return b%max; } }
@@ -165,7 +167,21 @@ function mpSession(){ try{ const s=JSON.parse(localStorage.getItem(MP_KEY)); ret
 const mpSalt=()=>mpTok()+mpTok();
 async function mpSeal(plays,salt){ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(salt+"|"+JSON.stringify(plays))); return Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,"0")).join(""); }
 async function mpSealOk(plays,salt,seal){ if(!Array.isArray(plays)||typeof salt!=="string"||typeof seal!=="string") return false; try{ return await mpSeal(plays,salt)===seal; }catch(e){ return false; } }
-function mpSaveAll(){ if(S&&S.mp) mpSaveSession({mp:myMp,oppNick:S.mp.oppNick,pend:mpPend,seen:S.mp.seen||{}}); }
+function mpSaveAll(){ if(S&&S.mp) mpSaveSession({mp:myMp,oppNick:S.mp.oppNick,pend:mpPend,seen:S.mp.seen||{},deal:S.mp.deal||null}); }
+/* Graine commune (anti-triche, lot A) : l'hôte publie l'empreinte de son nombre (hc), l'invité répond avec le sien (rg), l'hôte révèle (rh).
+   La graine de la partie et les trois lieux sortent de l'empreinte des deux nombres : personne ne peut les choisir.
+   Lieux : tirés parmi les lieux sortis chez LES DEUX joueurs (lp), dans un ordre fixe. */
+const mpHex=a=>Array.from(a,x=>x.toString(16).padStart(2,"0")).join("");
+async function mpHash(t){ return new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t))); }
+async function mpDeal(rh,rg,lpH,lpG){
+  const b=await mpHash("helvara|"+rh+"|"+rg), u=i=>((b[i]<<24)|(b[i+1]<<16)|(b[i+2]<<8)|b[i+3])>>>0;
+  const r=mulberry(u(4)|0), pool=lpH.filter(x=>lpG.includes(x)&&LOCS[x]).sort();
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  return {seed:u(0)&0x7fffffff, locs:pool.slice(0,3)};
+}
+/* Lieux de l'autre : au plus 2 de mes lieux sortis peuvent lui manquer (horloges décalées le jour d'une sortie), sinon il essaie de choisir les lieux */
+function mpPoolOk(lp){ if(!Array.isArray(lp)||!lp.every(x=>typeof x==="string")) return false; const mine=locPool(), both=mine.filter(x=>lp.includes(x)); return both.length>=3&&mine.length-both.length<=2; }
+const MP_DEAL_MSG="Le tirage de la partie n'a pas pu être vérifié : partie annulée. Recrée un salon.";
 function mpSaveSession(s){ try{ if(s){ s.at=Date.now(); localStorage.setItem(MP_KEY,JSON.stringify(s)); } else localStorage.removeItem(MP_KEY); }catch(e){} }
 /* Temps réel : plus de salon commun où tout le monde voit tout le monde. On ne se connecte que pour un duel :
    un canal par code de salon (« roomC », deux joueurs), et le canal de la file d'attente (« roomQ ») seulement
@@ -187,7 +203,7 @@ function rtClose(kind){ rtTok[kind]++; const r=kind==="c"?roomC:roomQ; if(kind==
 function initRoom(){ roomTried=true; render(); }
 function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(roomC) roomC.presence({mp:myMp}).catch(()=>{}); }
 function mpClear(){ myMp=null; mpMsg=""; rtClose("c"); }
-function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck]}; }
+function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck],lp:locPool()}; }
 const mpNewCode=()=>MP_PLACES[mpRandInt(MP_PLACES.length)]+"-"+Array.from({length:6},()=>MP_ALPHA[mpRandInt(MP_ALPHA.length)]).join("");
 async function mpCreate(given){
   if(!rtReady()||!deckReady()||mpConn) return; myMp=null; mpMsg=""; mpConn=true; render();
@@ -302,39 +318,58 @@ function mpRoomFull(){ if(!roomC||!myMp||myMp.role!=="guest") return false; retu
 const validDeck=d=>Array.isArray(d)&&d.length===12&&new Set(d).size===12&&d.every(id=>POOL.includes(id));
 const safeNick=n=>(typeof n==="string"&&n.trim()?n.trim().slice(0,24):"Adversaire");
 function mpNewMatch(om){
-  const g=(myMp.g||0)+1, seed=Math.floor(Math.random()*2147483647);
-  const locs=pickLocs();
-  mpPend=null; mpPush({g,seed,locs,oppTok:om.tok,hist:{},seal:{},salt:{},t:0,again:0});
-  mpStart(om,false);
+  const g=(myMp.g||0)+1, r=mpTok()+mpTok(); mpSecret={g,r};
+  mpPend=null; mpPush({g,hc:null,rh:null,oppTok:om.tok,hist:{},seal:{},salt:{},t:0,again:0});
+  mpHash(r).then(h=>{ if(mpSecret&&mpSecret.g===g&&myMp&&myMp.g===g){ mpPush({hc:mpHex(h)}); mpTick(); } });
+}
+/* Hôte : l'invité a donné son nombre, je révèle le mien et la partie commence */
+function mpHostDeal(om){
+  const g=myMp.g, key=myMp.tok+"|"+g; if(mpDealing===key||!mpSecret||mpSecret.g!==g) return; mpDealing=key;
+  if(!mpPoolOk(om.lp)){ mpMsg=MP_DEAL_MSG; render(); return; }
+  mpPush({rh:mpSecret.r});
+  mpDeal(mpSecret.r,om.rg,myMp.lp,om.lp).then(d=>{ if(myMp&&myMp.g===g) mpStart(om,false,d); });
+}
+/* Invité : le nombre révélé par l'hôte doit correspondre à l'empreinte vue AVANT que je donne le mien */
+function mpGuestDeal(om){
+  const g=om.g, key=myMp.tok+"|"+g; if(mpDealing===key||!mpSeedSeen||mpSeedSeen.g!==g) return; mpDealing=key;
+  if(!mpPoolOk(om.lp)){ mpMsg=MP_DEAL_MSG; render(); return; }
+  mpHash(om.rh).then(h=>{
+    if(mpHex(h)!==mpSeedSeen.hc){ mpMsg=MP_DEAL_MSG; render(); return; }
+    return mpDeal(om.rh,myMp.rg,om.lp,myMp.lp).then(d=>{ if(myMp&&myMp.g===g) mpStart(om,false,d); });
+  });
 }
 function mpTick(){
   if(!myMp){ if(screen==="duel") render(); return; }
   const o=mpOpp(), om=o&&o.presence.mp;
   /* versions différentes : jamais de nouveau match (la partie se désynchroniserait) */
   if(om&&om.ver!==BUILD&&!(S&&S.mp&&S.mp.g===myMp.g&&myMp.g)){ if(mpMsg!==MP_VER_MSG){ mpMsg=MP_VER_MSG; } if(screen==="duel") render(); return; }
+  const started=g=>!!(S&&S.mp&&S.mp.g===g&&!S.mp.resuming);
   if(myMp.role==="host"&&om&&validDeck(om.deck)){
     if(!myMp.g){ mpNewMatch(om); return; }
     if(S&&S.mp&&S.over&&myMp.again===myMp.g&&om.again===myMp.g){ mpNewMatch(om); return; }
+    if(!started(myMp.g)&&!(S&&S.mp&&S.mp.resuming)&&typeof myMp.hc==="string"&&om.g===myMp.g&&typeof om.rg==="string"){ mpHostDeal(om); return; }
   }
-  if(myMp.role==="guest"&&om&&om.g&&om.oppTok===myMp.tok&&validDeck(om.deck)&&Array.isArray(om.locs)&&(!S||!S.mp||S.mp.g!==om.g)&&!(S&&S.mp&&S.mp.resuming)){
-    mpPend=null; mpPush({g:om.g,hist:{},seal:{},salt:{},t:0,again:0}); mpStart(om,false); return;
+  if(myMp.role==="guest"&&om&&om.g&&om.oppTok===myMp.tok&&validDeck(om.deck)&&!started(om.g)&&!(S&&S.mp&&S.mp.resuming)){
+    if(myMp.g!==om.g&&typeof om.hc==="string"){   /* l'hôte a publié son empreinte : je la note, puis je donne mon nombre */
+      mpSeedSeen={g:om.g,hc:om.hc}; mpPend=null; mpPush({g:om.g,rg:mpTok()+mpTok(),hist:{},seal:{},salt:{},t:0,again:0}); return; }
+    if(myMp.g===om.g&&typeof om.rh==="string"){ mpGuestDeal(om); return; }
   }
-  if(S&&S.mp&&S.mp.resuming&&om&&om.g===myMp.g){ S.mp.resuming=false; mpStart(om,true); return; }
+  if(S&&S.mp&&S.mp.resuming&&om&&om.g===myMp.g){ S.mp.resuming=false; if(S.mp.deal) mpStart(om,true,S.mp.deal); else { mpMsg="Ce duel ne peut pas être repris."; mpSaveSession(null); render(); } return; }
   if(S&&S.mp){ S.mp.gone=!o; if(om){ S.mp.oppLocked=!!(om.seal&&om.seal[S.turn]); } mpTryResolve(); }
   if(screen==="duel"||screen==="play") render();
 }
-function mpStart(om,replay){
+function mpStart(om,replay,deal){
   const meHost=myMp.role==="host", hostP=meHost?myMp:om, guestP=meHost?om:myMp, seen0=replay&&S&&S.mp&&S.mp.seen||{};
-  if(!validDeck(hostP.deck)||!validDeck(guestP.deck)||!Array.isArray(hostP.locs)||!hostP.locs.every(l=>LOCS[l])) return;
-  RNG=mulberry(hostP.seed|0); uidN=0;
+  if(!deal||!validDeck(hostP.deck)||!validDeck(guestP.deck)||!Array.isArray(deal.locs)||deal.locs.length!==3||!deal.locs.every(l=>LOCS[l])) return;
+  RNG=mulberry(deal.seed|0); uidN=0;
   const hostDeck=gShuffle(hostP.deck.map(mk)), guestDeck=gShuffle(guestP.deck.map(mk));
   S={turn:0, energy:0, energyE:0, bonus:{p:0,e:0}, destroyed:0,
-    locs:hostP.locs.map(id=>({id,rev:false,stopped:false,locked:false})),
+    locs:deal.locs.map(id=>({id,rev:false,stopped:false,locked:false})),
     board:{p:[[],[],[]],e:[[],[],[]]}, hand:{p:[],e:[]},
     deck:{p:meHost?hostDeck:guestDeck, e:meHost?guestDeck:hostDeck},
     staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
     log:[], sel:null, info:null, busy:false, over:null,
-    mp:{g:myMp.g, meHost, oppNick:safeNick(om.nick), oppAv:POOL.includes(om.av)?om.av:null, locked:false, gone:false, replaying:!!replay, seen:seen0}};
+    mp:{g:myMp.g, meHost, oppNick:safeNick(om.nick), oppAv:POOL.includes(om.av)?om.av:null, locked:false, gone:false, replaying:!!replay, seen:seen0, deal:{seed:deal.seed|0,locs:deal.locs.slice()}}};
   for(let i=0;i<3;i++){ draw(meHost?"p":"e"); draw(meHost?"e":"p"); }
   quiet=!!replay;
   log(`Duel contre ${S.mp.oppNick}`);
@@ -407,7 +442,7 @@ async function mpResume(){
   const r=await rtOpen("c","helvara-room-"+s.mp.code); mpConn=false;
   if(!r){ mpMsg=RT_FAIL; render(); return; }
   myMp=null; mpPush(s.mp); mpPend=s.pend&&s.pend.g===s.mp.g?s.pend:null;
-  S={mp:{resuming:true,g:s.mp.g,oppNick:s.oppNick,seen:s.seen&&typeof s.seen==="object"?s.seen:{}}, over:null};
+  S={mp:{resuming:true,g:s.mp.g,oppNick:s.oppNick,deal:s.deal&&Array.isArray(s.deal.locs)?s.deal:null,seen:s.seen&&typeof s.seen==="object"?s.seen:{}}, over:null};
   screen="duel"; render(); mpTick();
 }
 function onlineHTML(){

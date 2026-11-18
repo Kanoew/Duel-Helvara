@@ -2,7 +2,7 @@
 /* Duel d'Helvara : un vrai duel en ligne entre deux navigateurs séparés (deux profils), sans réseau. Environ 2 minutes.
    Usage : node outils/tests-duel.js          (code de sortie 1 si un test échoue)
    Le salon Supabase est remplacé par un salon simulé (cloud.js factice) : les messages passent par Node, dans l'ordre, avec 20 à 220 ms de délai.
-   Vérifie : coups scellés (aucun joueur ne voit les coups de l'autre avant d'avoir fini), parties identiques des deux côtés,
+   Vérifie : graine commune (même tirage chez les deux, hôte tricheur refusé, revanche), coups scellés (aucun joueur ne voit les coups de l'autre avant d'avoir fini), parties identiques des deux côtés,
    reprise après rechargement en plein tour, et refus d'un coup tricheur (carte posée sans assez d'énergie). */
 const fs=require("fs"),path=require("path"),http=require("http");
 const ROOT=path.resolve(__dirname,"..");
@@ -32,35 +32,51 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     await pg.route("**/cloud.js*",r=>r.fulfill({contentType:"text/javascript",body:FAKE}));
     await pg.addInitScript(()=>{ window.__today="2026-12-31"; });
     await pg.exposeFunction("__send",m=>{ const o=pages[who==="A"?1:0]; return o&&o.evaluate(x=>window.__recv(x),m).catch(()=>{}); });
-    await pg.goto(`http://127.0.0.1:${port}/index.html`); await pg.waitForFunction(()=>typeof mpCreate==="function"&&typeof P==="object");
+    await pg.goto(`http://127.0.0.1:${port}/index.html`); await pg.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object");
     await pg.evaluate(n=>{ P.name=n; P.owned=POOL.slice(); const ok=POOL.filter(id=>!ULof(id)&&!CARDS[id].base); for(let i=ok.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ok[i],ok[j]]=[ok[j],ok[i]]; } P.deck=ok.slice(0,12); },"Joueur"+who);
     pages.push(pg); }
   const [A,B]=pages; const st=pg=>pg.evaluate(()=>S&&S.mp?{turn:S.turn,busy:S.busy,over:S.over&&S.over.res,locked:S.mp.locked,bad:S.mp.bad||0}:null);
   const until=async(f,ms=60000)=>{ const t0=Date.now(); while(Date.now()-t0<ms){ if(await f()) return true; await new Promise(r=>setTimeout(r,100)); } return false; };
-  async function game(cheatTurn,reloadTurn){
+  const deal=pg=>pg.evaluate(()=>S&&S.mp&&JSON.stringify(S.mp.deal));
+  async function game(cheatTurn,reloadTurn,rematch){
     await A.evaluate(()=>mpCreate()); const code=await A.evaluate(()=>myMp.code); await B.evaluate(c=>mpJoinCode(c),code);
     if(!await until(async()=>{ const a=await st(A), b=await st(B); return a&&b&&a.turn===1&&b.turn===1&&!a.busy&&!b.busy; })) throw new Error("le duel ne démarre pas");
+    const deals=[[await deal(A),await deal(B)]];
     let peek=[], cheat=null;
+    for(let m=0;m<(rematch?2:1);m++){
+    if(m===1){ for(const pg of [A,B]) await pg.evaluate(()=>{ S.mp.wantAgain=true; mpPush({again:myMp.g}); mpTick(); });   /* revanche dans le même salon */
+      if(!await until(async()=>{ const a=await st(A), b=await st(B); return a&&b&&a.turn===1&&b.turn===1&&!a.over&&!b.over&&!a.busy&&!b.busy; })) throw new Error("la revanche ne démarre pas");
+      deals.push([await deal(A),await deal(B)]); }
     for(let t=1;t<=6;t++){
       await B.evaluate(STAGE, t===cheatTurn); if(t===cheatTurn) cheat=await B.evaluate(()=>window.__cheat);
       await until(async()=>(await A.evaluate(()=>S.mp.oppLocked)),10000);
-      if(t===reloadTurn){ await B.reload(); await A.evaluate(()=>window.__drop()); await B.waitForFunction(()=>typeof mpResume==="function"&&typeof P==="object"); await B.evaluate(()=>{ if(!(S&&S.mp)) mpResume(); });
+      if(t===reloadTurn){ await B.reload(); await A.evaluate(()=>window.__drop()); await B.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object"); await B.evaluate(()=>{ if(!(S&&S.mp)) mpResume(); });
         if(!await until(async()=>{ const b=await st(B); return b&&b.turn===t&&b.locked&&!b.busy; },20000)) throw new Error("reprise ratée "+JSON.stringify(await st(B))); }
       peek.push(await A.evaluate(t=>{ const o=mpOpp(); return !!(o&&o.presence.mp.hist&&o.presence.mp.hist[t]); },t));   /* A voit-il les coups de B avant d'avoir fini ? */
       await A.evaluate(STAGE,false);
       if(!await until(async()=>{ const a=await st(A), b=await st(B); return a&&b&&!a.busy&&!b.busy&&((a.turn>t&&b.turn>t)||(a.over&&b.over)); },90000)) throw new Error("tour "+t+" bloqué "+JSON.stringify([await st(A),await st(B)]));
-    }
+    } }
     const fin=pg=>pg.evaluate(()=>({res:S.over&&S.over.res,tot:[0,1,2].map(li=>[total("p",li),total("e",li)]),bad:S.mp.bad||0,log:S.log.filter(l=>/refus/.test(l))}));
     const a=await fin(A), b=await fin(B);
     await A.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; }); await B.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; });
     for(const pg of [A,B]) await pg.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>!ULof(id)&&!CARDS[id].base).slice(0,12); });
-    return {a,b,peek,cheat};
+    return {a,b,peek,cheat,deals};
   }
   const mirror=(a,b)=>a.tot.every((x,i)=>x[0]===b.tot[i][1]&&x[1]===b.tot[i][0]), opp={win:"lose",lose:"win",draw:"draw"};
   const res=[]; const T=(n,ok,d)=>res.push([n,!!ok,d]);
   const same=(r)=>mirror(r.a,r.b)&&opp[r.a.res]===r.b.res;
   { const r=await game(0,0); T("Duel honnête : même partie sur les deux téléphones, aucun refus",same(r)&&!r.a.bad&&!r.b.bad,JSON.stringify([r.a.res,r.b.res,r.a.bad,r.b.bad]));
     T("Coups scellés : aucun joueur ne voit les coups de l'autre avant d'avoir fini son tour",!r.peek.some(Boolean),JSON.stringify(r.peek)); }
+  { const r=await game(0,0,true); T("Revanche dans le même salon : nouvelle partie, nouveau tirage, identique des deux côtés",same(r)&&r.deals.length===2&&r.deals.every(([x,y])=>x&&x===y)&&r.deals[0][0]!==r.deals[1][0],JSON.stringify(r.deals));
+    T("Graine commune : même graine et mêmes lieux chez les deux joueurs",r.deals[0][0]===r.deals[0][1],JSON.stringify(r.deals[0])); }
+  { /* hôte tricheur : il révèle un autre nombre que celui annoncé (pour choisir sa graine après avoir vu celui de l'invité) */
+    await A.evaluate(()=>{ const f=mpHostDeal; mpHostDeal=om=>{ if(mpSecret) mpSecret.r="triche"+mpSecret.r.slice(6); return f(om); }; });
+    await A.evaluate(()=>mpCreate()); const code=await A.evaluate(()=>myMp.code); await B.evaluate(c=>mpJoinCode(c),code);
+    const refused=await until(()=>B.evaluate(()=>mpMsg===MP_DEAL_MSG),15000); await new Promise(r=>setTimeout(r,1500)); const bS=await st(B);
+    T("Graine commune : hôte qui change son nombre après avoir vu celui de l'invité, partie refusée chez l'invité",refused&&!bS,JSON.stringify(bS));
+    await A.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; location.reload(); }); await A.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object");
+    await A.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>!ULof(id)&&!CARDS[id].base).slice(0,12); });
+    await B.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; }); }
   { const r=await game(0,3); T("Reprise : rechargement en plein tour (coups scellés, pas encore révélés), la partie continue à l'identique",same(r)&&!r.a.bad&&!r.b.bad,JSON.stringify([r.a.res,r.b.res])); }
   { const r=await game(2,0); T("Tricheur : carte posée sans assez d'énergie, refusée et notée chez l'adversaire",r.a.bad===1&&r.a.log.some(l=>/^Coup adverse refusé : .+ \(énergie insuffisante\)$/.test(l)),JSON.stringify([r.cheat,r.a.log])); }
   let bad=0; for(const [n,ok,d] of res){ if(!ok) bad++; console.log(`${ok?"ok      ":"PAS OK  "} ${n}${ok?"":"  → "+d}`); }

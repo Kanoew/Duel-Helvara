@@ -1354,6 +1354,10 @@ async function inPage() {
         T("Coups scellés : nouvelle empreinte publiée après avoir vu mes coups, refusée", R.turn === 3 && R.a && !R.b && !R.z && R.bad === 1 && R.refused, JSON.stringify(R));
         const lg = LANG; LANG = "en"; const en = trUI("Coups adverses refusés : ils ne correspondent pas à ceux annoncés"); LANG = lg;
         T("Coups scellés : message traduit en anglais", /^Opponent's moves refused/.test(en), en);
+        const lp = locPool(), d1 = await mpDeal("a1", "b2", lp, lp.slice().reverse()), d2 = await mpDeal("a1", "b2", lp.slice().reverse(), lp), d3 = await mpDeal("a1", "b3", lp, lp);
+        T("Graine commune : même tirage quel que soit l'ordre des lieux reçus, et il change avec le nombre de l'invité", JSON.stringify(d1) === JSON.stringify(d2) && d1.locs.length === 3 && d1.locs.every(l => lp.includes(l)) && JSON.stringify(d1) !== JSON.stringify(d3), JSON.stringify([d1, d3]));
+        T("Graine commune : un adversaire qui annonce seulement 3 lieux (pour les choisir) est refusé", lp.length > 5 && !mpPoolOk(lp.slice(0, 3)) && mpPoolOk(lp) && mpPoolOk(lp.slice(2)) && !mpPoolOk("x"), lp.length);
+        const en2 = (() => { const k = LANG; LANG = "en"; const t = trUI(MP_DEAL_MSG); LANG = k; return t; })(); T("Graine commune : message d'annulation traduit en anglais", /^The game's draw could not be verified/.test(en2), en2);
       } finally { roomC = null; mpPend = null; } }
     myMp = null;
     /* S7. Fin de partie en duel : CHF, compteurs, quête */
