@@ -29,7 +29,8 @@ Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantier
 | Sujet | Choix provisoire |
 |---|---|
 | Duel entre amis | tenu +30 CHF, rompu −15, croisé +60 / −30 (jamais sous 0) |
-| Blitz | tenu +50 CHF sur le gain en cours, rompu −50, croisé ±100 |
+| Blitz | tenu +25 CHF sur le gain en cours, rompu −25, croisé ±50 (18 novembre) |
+| Plafond | 150 CHF de gains de Serment par jour, duel et Blitz ensemble (18 novembre) |
 | « Tenu » au profil et pour la quête | lieu gagné, même si la partie est perdue |
 | « Tenu » pour les CHF | lieu **et** partie gagnés |
 | Serment prêté au tour 5 en duel | ne peut pas être relevé |
@@ -41,7 +42,7 @@ Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantier
 Tu as déjà fait beaucoup de tests (25 parties depuis hier). Ces points n'ont **pas encore été notés comme vérifiés** : si c'est déjà fait, dis-le-moi et je coche.
 
 - 🟣 👤 **Un vrai duel entre amis avec Serment, sur le vrai serveur.** Il n'a tourné que dans un faux salon de test.
-- 🟣 👤 **Recherche automatique d'adversaire en ligne** : réécrite (18 novembre). La base fait l'appariement (un seul arbitre, `file-attente.sql`, relu par `db-guard`), les téléphones en veille sortent seuls de la file au bout de 20 s. Testé à deux onglets avec une base simulée. **À faire par toi** : coller `file-attente.sql` dans Supabase, puis un vrai essai à deux téléphones. Tant que le SQL n'est pas lancé, l'ancienne file reste active.
+- 🟣 👤 **Recherche automatique d'adversaire en ligne** : réécrite (18 novembre). La base fait l'appariement (un seul arbitre, `file-attente.sql`, relu par `db-guard`), les téléphones en veille sortent seuls de la file au bout de 20 s. Testé à deux onglets avec une base simulée. `file-attente.sql` lancé dans Supabase et vérifié le 18 novembre. **À faire par toi** : un vrai essai à deux téléphones après la mise en ligne.
 - ✅ Aperçu du lien sur Discord vérifié par toi (avec et sans `?x=1`).
 - 🟣 👤 Musique : l'idée de la tension au tour 5 plaît, mais la gestion ou les morceaux pourraient être meilleurs. Mis de côté.
 - 🟣 👤 Cartes holo : correctes sur Sony Xperia 10 IV ; sur Xiaomi Redmi Note 14 ouvert **dans Messenger**, carte noire ou par morceaux (manque de mémoire graphique du navigateur intégré). Correctif du 18 novembre : holo allégé dans les navigateurs intégrés et sur les téléphones à 4 Go ou moins, petites cartes holo arrêtées sous le zoom. **À refaire tester** par ton pote, dans Messenger puis dans Chrome.
