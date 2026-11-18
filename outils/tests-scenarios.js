@@ -1461,6 +1461,66 @@ async function inPage() {
       S.aiOath = 2; const pl1 = aiPlan("e", 6).map(x => x.li); T("Rivaux : l'IA tient compte de son lieu juré (bonus de placement)", pl1.every(l => l === 2) || pl1.filter(l => l === 2).length >= pl0.filter(l => l === 2).length, pl0 + " / " + pl1); S.aiOath = null; }
     S = null; }
 
+  /* ===== Anti-triche, lot A : coups adverses interdits refusés (checkPlays), coups honnêtes toujours acceptés ===== */
+  { const p3 = plain.filter(id => CARDS[id].cost === 3), cc = (cost, i) => { const c = card(p3[i]); c.cheap = 3 - cost; return c; };   /* cartes sans effet de coût 3, rendues moins chères */
+    const chk = (list, extra) => checkPlays("e", Object.assign(list.map(([c, li]) => ({ c, li })), extra || {}));
+    const setup = (t, en) => { fresh(); S.turn = t; S.energyE = en; S.board.e = [[], [], []]; S.board.p = [[], [], []]; };
+    { setup(3, 3); const a = cc(2, 0), b = cc(2, 1); S.hand.e = [a, b]; const r = chk([[a, 0], [b, 1]]);
+      T("Anti-triche : coup sans assez d'énergie refusé (2 + 2 avec 3 d'énergie)", r.plays.length === 1 && r.plays[0].c === a && r.bad.length === 1 && r.bad[0][1] === "energy", JSON.stringify(r.bad)); }
+    { setup(3, 3); const big = cc(3, 0), x = cc(1, 0), y = cc(2, 0); S.hand.e = [big, x, y]; S.energyE = 3; const r = chk([[x, 0], [big, 0], [y, 1]]);
+      T("Anti-triche : un coup refusé n'empêche pas les suivants (1, puis 3 refusé, puis 2)", r.plays.map(p => p.c).join() === [x, y].join() && r.bad.length === 1, JSON.stringify(r.bad)); }
+    { setup(3, 6); for (let i = 0; i < 4; i++) put("e", 0, plain[i], 1); const a = cc(1, 0); S.hand.e = [a]; const r = chk([[a, 0]]);
+      T("Anti-triche : carte posée dans un lieu plein refusée", !r.plays.length && r.bad[0][1] === "room", JSON.stringify(r.bad)); }
+    { setup(3, 6); S.locs[1].locked = true; const a = cc(1, 0); S.hand.e = [a]; const r = chk([[a, 1]]);
+      T("Anti-triche : carte posée sur un lieu verrouillé refusée", !r.plays.length && r.bad[0][1] === "locked", JSON.stringify(r.bad)); }
+    { setup(3, 6); S.mute = [{ s: "e", li: 2, t: 3 }]; const a = cc(1, 0); S.hand.e = [a]; const r = chk([[a, 2]]); const r2 = chk([[a, 1]]);
+      T("Anti-triche : lieu réduit au silence pour lui refusé, les autres lieux restent ouverts", !r.plays.length && r.bad[0][1] === "locked" && r2.plays.length === 1, JSON.stringify(r.bad)); }
+    { setup(6, 12); const n = card("nemesis"); S.hand.e = [n]; const r = chk([[n, 0]]);
+      T("Anti-triche : Nemesis au tour 6 refusée (même avec de l'énergie gardée)", !r.plays.length && r.bad[0][1] === "banned", JSON.stringify(r.bad)); }
+    { setup(3, 6); const th = put("e", 2, "themis"); th.arr = 2; const a = cc(1, 0), b = cc(1, 1); S.hand.e = [a, b]; const r = chk([[a, 2], [b, 2]]);
+      T("Anti-triche : Thémis, une seule carte par tour dans son lieu", r.plays.length === 1 && r.bad[0][1] === "themis", JSON.stringify(r.bad)); }
+    { setup(3, 6); for (let i = 0; i < 4; i++) put("p", 0, plain[i], 1); const h = card("herakles"); S.hand.e = [h]; const r = chk([[h, 0]]); const r2 = chk([[h, 1]]);
+      T("Anti-triche : Héraklès refusé là où je n'ai plus de place, accepté ailleurs", !r.plays.length && r.bad[0][1] === "room" && r2.plays.length === 1, JSON.stringify(r.bad)); }
+    { setup(3, 6); const w = put("e", 0, "nageuse_lac"); w.arr = 3; const r = chk([], { swim: { c: w, li: 1, from: 0 } }); w.arr = 2; const r2 = chk([], { swim: { c: w, li: 1, from: 0 } });
+      T("Anti-triche : Nageuse arrivée ce tour-ci, traversée refusée ; arrivée avant, acceptée", !r.plays.swim && r.bad[0][1] === "move" && r2.plays.swim && !r2.bad.length, JSON.stringify([r.bad, r2.bad])); }
+    { setup(3, 3); S.mp = { g: 1, meHost: true, oppNick: "Ami", locked: false, gone: false, replaying: false }; S.energy = 3; const a = cc(2, 0), b = cc(2, 1); S.hand.e = [a, b]; S.hand.p = [];
+      await resolveTurn([], oppPlays([[a.uid, 0], [b.uid, 1]]), false);
+      T("Anti-triche (duel) : coup refusé noté au journal, compté (S.mp.bad), la carte reste en main adverse", S.board.e[1].length === 0 && S.board.e[0].includes(a) && S.hand.e.includes(b) && S.mp.bad === 1 && S.log.some(l => /^Coup adverse refusé : .+ \(énergie insuffisante\)$/.test(l)), `${S.mp.bad} ${S.log.slice(-3).join(" | ")}`);
+      const lg = LANG; LANG = "en"; const en = trUI("Coup adverse refusé : Zeus (plus de place)"); LANG = lg; T("Anti-triche : message traduit en anglais", en === "Opponent's move refused: Zeus (no room left)", en); }
+    /* Nageuse : annuler la traversée rend en main la carte posée dans la place qu'elle libérait */
+    { setup(3, 6); S.energy = 6; S.staged = []; S.swimP = null; S.busy = false; for (let i = 0; i < 3; i++) put("p", 0, plain[i], 1); const w = put("p", 0, "nageuse_lac"); w.arr = 1;
+      const a = cc(1, 0); S.hand.p = [a]; const moved = swimTo(1), st = canStage(a, 0); if (st) { S.hand.p = []; S.staged.push({ c: a, li: 0 }); } swimUndo();
+      T("Nageuse : annuler la traversée rend la carte posée à sa place", moved && st && S.staged.length === 0 && S.hand.p.includes(a) && !S.swimP, `${moved} ${st} ${S.staged.length}`); S.mp = null; }
+    /* Parties complètes : le joueur pose comme dans l'interface (canStage, retraits, Nageuse et annulation), l'adversaire est l'IA ; rien ne doit être refusé.
+       (Les coups de l'IA ne sont pas vérifiés : elle compte Tezcatlipoca posé le même tour comme absorbant, l'interface non. Sans effet en duel.) */
+    { const pool = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)), sp = ["ulya", "ereshkigal_n", "nergal", "herakles", "themis", "nemesis", "nageuse_lac", "tezcatlipoca", "vesta", "dagda", "isis", "promethee", "cronos", "plume"].filter(id => CARDS[id]);
+      const rnd = n => Math.floor(Math.random() * n), pick = (a, n) => { const c = a.slice(), o = []; while (o.length < n && c.length) o.push(c.splice(rnd(c.length), 1)[0]); return o; };
+      const keepDeck = window.aiDeck; let falseP = [], nP = 0, nSw = 0, games = 0;
+      try {
+        for (let g = 0; g < 80; g++) {
+          const dp = [...new Set([...pick(sp, 6), ...pick(pool, 12)])].slice(0, 12), de = [...new Set([...pick(sp, 6), ...pick(pool, 12)])].slice(0, 12);
+          P.owned = Object.keys(CARDS).filter(id => !CARDS[id].token); P.deck = dp; window.aiDeck = () => ({ deck: de, fac: "helvara" });
+          newGame(); quiet = true; S.tut = false; games++;
+          for (let t = 1; t <= 6 && !S.over; t++) {
+            S.staged = []; S.swimP = null; S.busy = false;
+            const swim = () => { if (S.swimP || Math.random() < .4) return; if (!swimmer()) return; const ls = [0, 1, 2].filter(swimOk); if (ls.length) swimTo(ls[rnd(ls.length)]); };
+            swim();
+            for (let k = 0; k < 10; k++) { const c = S.hand.p[rnd(S.hand.p.length)], li = rnd(3); if (!c || !canStage(c, li)) continue;
+              const fx = (c.id === "ulya" || c.id === "ereshkigal_n") ? costFor("p", c.id, li, S.staged.length === 0) : null; S.hand.p = S.hand.p.filter(x => x !== c); S.staged.push(fx != null ? { c, li, fixed: fx } : { c, li }); }
+            if (S.staged.length && Math.random() < .25) { const x = S.staged.splice(rnd(S.staged.length), 1)[0]; S.hand.p.push(x.c); }
+            if (S.swimP && Math.random() < .25) swimUndo();
+            swim();
+            const mine = S.staged.slice(); if (S.swimP) { mine.swim = S.swimP; nSw++; } nP += mine.length;
+            const h = S.hand.p; S.hand.p = [...h, ...mine.map(x => x.c)]; const r = checkPlays("p", mine); S.hand.p = h;
+            if (r.bad.length || r.plays.length !== mine.length || !!r.plays.swim !== !!mine.swim) falseP.push(`t${t} ${JSON.stringify(r.bad)}`);
+            const theirs = aiPlan("e", 3);
+            await resolveTurn(mine, theirs, false);
+          }
+        }
+      } finally { window.aiDeck = keepDeck; }
+      T("Anti-triche : coups honnêtes joués comme dans l'interface (80 parties) jamais refusés", games === 80 && nP > 300 && !falseP.length, `${nP} cartes, ${nSw} traversées ; ${falseP.slice(0, 3).join(" | ")}`); }
+    S = null; }
+
   return res;
 }
 

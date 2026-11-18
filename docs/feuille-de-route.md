@@ -89,7 +89,10 @@ Les cinq lieux sont codés avec tes illustrations, mesurés sur 48 000 parties s
 
 ### 3.4 bis 🟣 🛠️ Duel en ligne classé et anti-triche (avant la sortie, décidé le 18 novembre)
 Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
-- 🟣 🛠️ **Lot A, duels honnêtes** (sans SQL) : coups adverses interdits refusés, coups scellés, graine commune, deck adverse vérifié.
+- 🟣 🛠️ **Lot A, duels honnêtes** (sans SQL) :
+  - ✅ coups adverses interdits refusés (18 novembre, `alpha-0.40`) ;
+  - 🟣 coups scellés, graine commune, deck adverse vérifié ;
+  - 🟣 👤 un duel en ligne entre deux téléphones avec la nouvelle version.
 - 🟣 🛠️ **Lot B, « Jouer » contre un humain ou l'IA** : attente de 15 s seulement si quelqu'un est en ligne, sinon IA tout de suite ; résultat envoyé par les deux joueurs et validé par le serveur. 👤 SQL à valider.
 - 🟣 🛠️ **Lot C, classement** : étoiles des duels en ligne seulement sur résultat validé, plafonds de `board_submit` revus. 👤 SQL à valider.
 - ✅ Le classé en ligne : **un seul classement** pour la sortie (étoiles contre l'IA, plafonnées par le serveur, et contre les humains, sur résultat validé). Un classement « en ligne » séparé viendra plus tard (4.2).

@@ -48,7 +48,7 @@ Ton plan commence par l'économie. Je propose de commencer par ce qui touche **l
 
 ### Avant la sortie
 - **Lot A, duels honnêtes (sans SQL)** :
-  - le client honnête refuse tout coup adverse interdit (énergie, places, lieu verrouillé, carte du tour 6) ;
+  - ✅ le client honnête refuse tout coup adverse interdit (énergie, places, lieu verrouillé, carte du tour 6) : fait le 18 novembre (`checkPlays`, `oppPlays`, `alpha-0.40`) ;
   - coups **scellés** : chacun publie d'abord une empreinte de ses coups, puis les coups eux-mêmes une fois que les deux ont validé ;
   - graine **commune** : chaque joueur apporte la moitié du hasard, personne ne peut choisir sa graine ;
   - deck adverse vérifié : cartes sorties, fusions avec leurs deux personnages.
@@ -61,7 +61,7 @@ Ton plan commence par l'économie. Je propose de commencer par ce qui touche **l
   - réserve de départ réduite et plafonds par jour revus.
 
 ### Notes techniques pour le lot A (point de départ de la prochaine séance)
-- Coups adverses : ils arrivent par `mapPlays("e", …)` (`js/boutique-modes.js`), qui ne vérifie que « carte en main » et « lieu 0 à 2 ». Ajouter une vérification qui rejoue, dans l'ordre, les mêmes règles que `canStage` (`js/moteur.js`) mais pour le camp adverse : lieu verrouillé ou muet, `banned`, Thémis, places (Héraklès, Tezcatlipoca), coût cumulé ≤ `S.energyE` avec les mêmes réductions (`costOf`, première carte, Jugement). Un coup refusé est ignoré et noté au journal ; les deux téléphones divergent alors, et le lot B ne comptera pas la partie.
+- ✅ (fait, voir `docs/historique-equilibrage.md`) Coups adverses : ils arrivent par `mapPlays("e", …)` (`js/boutique-modes.js`), qui ne vérifie que « carte en main » et « lieu 0 à 2 ». Ajouter une vérification qui rejoue, dans l'ordre, les mêmes règles que `canStage` (`js/moteur.js`) mais pour le camp adverse : lieu verrouillé ou muet, `banned`, Thémis, places (Héraklès, Tezcatlipoca), coût cumulé ≤ `S.energyE` avec les mêmes réductions (`costOf`, première carte, Jugement). Un coup refusé est ignoré et noté au journal ; les deux téléphones divergent alors, et le lot B ne comptera pas la partie.
 - Coups scellés : `mpLock` publie aujourd'hui `hist[tour]` en clair dans la présence. Publier d'abord une empreinte (`crypto.subtle.digest("SHA-256", coups + sel)`), puis les coups et le sel quand les deux empreintes sont là ; vérifier l'empreinte avant `resolveTurn`. Attention à la reprise de partie (`mpResume`, `mpReplay`) qui relit `hist`.
 - Graine commune : `mpNewMatch` (hôte) tire seul la graine et les lieux. Faire : l'hôte publie l'empreinte de son nombre ; l'invité répond avec le sien ; l'hôte révèle ; graine = empreinte des deux. Les lieux sont tirés de cette graine dans la liste `locPool()` ; l'invité vérifie que la liste envoyée est bien la sienne.
 - Deck adverse : `validDeck` ne vérifie que la forme. Ajouter : cartes sorties (`rel`), `ulOk` pour les fusions, une seule ultra-légendaire.

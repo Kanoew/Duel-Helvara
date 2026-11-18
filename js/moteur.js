@@ -243,6 +243,9 @@ function swimWhy(){ if(S.swimP||S.busy||S.over) return ""; const c=S.board.p.fla
   if(c.arr!=null&&c.arr>=S.turn) return "dès le prochain tour"; if(c.swimT===S.turn) return "déjà traversée ce tour"; if(fated(c)||c.captive) return "immobilisée";
   return [0,1,2].some(swimOk)?"":"aucun lieu possible"; }
 function swimTo(li){ const w=swimmer(); if(!w||!swimOk(li)) return false; S.swimP={c:w.c,li,from:w.li}; S.swimSel=false; return true; }
+/* Annuler la traversée : les cartes posées grâce à elle (place libérée, Thémis) reviennent en main. Sinon le plateau dépasserait ses places
+   et, en duel, l'adversaire refuserait ce coup (checkPlays). */
+function swimUndo(){ S.swimP=null; const all=S.staged; S.staged=[]; for(const x of all){ if(canStage(x.c,x.li)) S.staged.push(x); else S.hand.p.push(x.c); } }
 const live=(c)=>c.rev&&!c.neg;
 /* Anahita : identité dont la carte copie l'effet (c.cp), sinon la sienne. Tous les effets Continu et Révélation lisent eid(c) */
 const eid=c=>c.cp||c.id;
@@ -272,6 +275,34 @@ function canStage(c,li){
   if(eid(c)==="herakles"){ if(slotsUsed("e",li)>=capOf("e",li)) return false; }   /* Héraklès : seulement là où l'adversaire a de la place (il passe de son côté) */
   else if(!tezAt("p",li)&&slotsUsed("p",li)+stagedAt(li)>=capOf("p",li)) return false;   /* Tezcatlipoca : les cartes jouées ici sont absorbées, elles ne prennent pas de place */
   return used()+costOf("p",c,li,S.staged.length===0,jugFirst(S.staged,S.staged.length))<=S.energy;
+}
+/* Duel en ligne (anti-triche, lot A) : les coups reçus de l'adversaire sont revérifiés avec les règles de canStage et de swimOk, pour SON camp.
+   list : sortie de mapPlays (cartes dans l'ordre où il les a posées, .swim, .oath ; le Serment est déjà vérifié par swearOath).
+   Un coup interdit est retiré, les suivants sont vérifiés sans lui. Renvoie {plays, bad} (bad : [nom, raison] pour le journal).
+   Jamais plus sévère que le client honnête : Ulya et Ereshkigal sont recalculées avec la main la plus favorable au joueur (cartes retirées puis remises comprises). */
+function checkPlays(s,list){
+  const o=opp(s), en=s==="e"?S.energyE:S.energy, ok=[], bad=[], hand0=S.hand[s];
+  let sw=null; const w=list.swim;
+  if(w){ const c=w.c, from=S.board[s].findIndex(col=>col.includes(c)), li=w.li;
+    if(from>=0&&live(c)&&eid(c)==="nageuse_lac"&&(c.arr==null||c.arr<S.turn)&&c.swimT!==S.turn&&!fated(c)&&!c.captive
+      &&li!==from&&S.locs[li].rev&&!S.locs[li].locked&&leader(li)!==s&&slotsUsed(s,li)<capOf(s,li)) sw={c,li,from};
+    else bad.push([CARDS[c.id].name,"move"]); }
+  const at=li=>ok.filter(x=>x.li===li&&eid(x.c)!=="herakles").length+(sw?(sw.li===li?1:0)-(sw.from===li?1:0):0);   /* = stagedAt, pour ce camp */
+  const sum=()=>ok.reduce((a,x,i)=>a+(x.fixed!=null?x.fixed:costOf(s,x.c,x.li,i===0,jugFirst(ok,i))),0);
+  try{
+    for(const {c,li} of list){ let why=null;
+      S.hand[s]=hand0.filter(h=>!ok.some(x=>x.c===h));   /* la main au moment où il a posé cette carte (Ulya, Ereshkigal) */
+      if(S.locs[li].locked||muted(s,li)) why="locked";
+      else if(banned(c)) why="banned";
+      else if(themisOn(li)&&at(li)-(sw&&sw.li===li?1:0)>=1) why="themis";
+      else if(eid(c)==="herakles"?slotsUsed(o,li)>=capOf(o,li):(!tezAt(s,li)&&slotsUsed(s,li)+at(li)>=capOf(s,li))) why="room";
+      else if(sum()+costOf(s,c,li,ok.length===0,jugFirst(ok,ok.length))>en) why="energy";
+      if(why){ bad.push([CARDS[c.id].name,why]); continue; }
+      const fx=(c.id==="ulya"||c.id==="ereshkigal_n")?costFor(s,c.id,li,ok.length===0):null;   /* comme interface.js : coût figé à la pose */
+      ok.push(fx!=null?{c,li,fixed:fx}:{c,li}); }
+  } finally { S.hand[s]=hand0; }
+  if(sw) ok.swim=sw; if(list.oath!=null) ok.oath=list.oath;
+  return {plays:ok,bad};
 }
 /* Ananké, Fatalité : en fin de partie (S.final, après toutes les révélations et fins de tour du tour 6), sa puissance devient la puissance totale adverse ici +1.
    Deux Ananké face à face : la seconde compte pour 1 dans le calcul de la première (garde ANK, pas de boucle). */

@@ -1377,8 +1377,8 @@ document.addEventListener("click", e=>{
   if(act==="oathok"){ if(oathOK()&&oathFree()&&S.oathPick!=null){ const li=S.oathPick; S.oathPick=null; S.oathMode=false; if(S.mp){ S.oathStage=li; sfx("select"); } else swearOath("p",li); } render(); return; }
   if(act==="mull"){ if(S.turn===1&&!S.mp&&!S.tut&&!S.mull&&!S.staged.length){ const n=S.hand.p.length; S.deck.p=shuffle([...S.deck.p,...S.hand.p]); S.hand.p=[]; if(S.rec) S.rec.dp=S.deck.p.map(c=>c.id); for(let i=0;i<n;i++) draw("p"); S.mull=true; S.sel=null; log("Main changée"); sfx("pack"); } render(); return; }
   if(act==="hand"){ const uid=+el.dataset.uid; S.sel=S.sel===uid?null:uid; S.info=null; S.modsOpen=false; sfx("select"); render(); return; }
-  if(act==="swim"){ if(S.swimP){ S.swimP=null; sfx("undo"); } else S.swimSel=!S.swimSel; S.sel=null; S.info=null; render(); return; }
-  if(act==="unstage"){ e.stopPropagation(); const uid=+el.dataset.uid; if(S.swimP&&S.swimP.c.uid===uid){ S.swimP=null; sfx("undo"); render(); return; } const x=S.staged.find(s=>s.c.uid===uid);
+  if(act==="swim"){ if(S.swimP){ swimUndo(); sfx("undo"); } else S.swimSel=!S.swimSel; S.sel=null; S.info=null; render(); return; }
+  if(act==="unstage"){ e.stopPropagation(); const uid=+el.dataset.uid; if(S.swimP&&S.swimP.c.uid===uid){ swimUndo(); sfx("undo"); render(); return; } const x=S.staged.find(s=>s.c.uid===uid);
     if(x){ S.staged=S.staged.filter(s=>s!==x); S.hand.p.push(x.c); sfx("undo"); } render(); return; }
   if(act==="inspect"){ e.stopPropagation(); S.sel=null; gz="c"+el.dataset.uid; sfx("select"); render(); return; }
   if(act==="stage"){ const li=+el.dataset.li;

@@ -150,7 +150,7 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.39", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.40", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Jetons et codes de salon : crypto.getRandomValues (pas Math.random). Code = LIEU- + 6 caractères sans I, L, O ni 0/1 (31 symboles, tirage sans biais). */
@@ -340,10 +340,17 @@ function mapPlays(side,plays){ const out=[]; if(!Array.isArray(plays)) return ou
     if(pl[2]==="s"){ for(let f=0;f<3;f++){ const c=S.board[side][f].find(x=>x.uid===uid); if(c&&li>=0&&li<3) out.swim={c,li:li|0,from:f}; } continue; }   /* Nageuse du Lac : [uid, lieu, "s"] */
     const c=S.hand[side].find(x=>x.uid===uid);
     if(c&&li>=0&&li<3&&!out.some(x=>x.c===c)) out.push({c,li:li|0}); } return out; }
+/* Coups de l'adversaire : revérifiés avec les règles du jeu (checkPlays) ; un coup interdit est ignoré et noté au journal.
+   S.mp.bad compte les refus : les deux téléphones divergent alors, et la partie ne devra pas compter (lot B). */
+const BAD_WHY={energy:"énergie insuffisante",room:"plus de place",locked:"lieu fermé",banned:"interdite ce tour",themis:"Thémis",move:"déplacement impossible"};
+function oppPlays(plays){ const r=checkPlays("e",mapPlays("e",plays));
+  for(const [n,w] of r.bad) log(`Coup adverse refusé : ${n} (${BAD_WHY[w]})`);
+  if(r.bad.length&&S.mp) S.mp.bad=(S.mp.bad||0)+r.bad.length;
+  return r.plays; }
 async function mpReplay(om){
   while(S&&S.mp&&!S.over){
     const mine=myMp.hist&&myMp.hist[S.turn], theirs=om.hist&&om.hist[S.turn];
-    if(mine&&theirs){ await resolveTurn(mapPlays("p",mine), mapPlays("e",theirs), false); continue; }
+    if(mine&&theirs){ await resolveTurn(mapPlays("p",mine), oppPlays(theirs), false); continue; }
     if(mine){ const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.swimP=st.swim||null; S.oathStage=st.oath!=null?st.oath:null; S.mp.locked=true; }
     break;
   }
@@ -363,7 +370,7 @@ function mpTryResolve(){
   if(om.g!==S.mp.g||!om.hist||!om.hist[S.turn]) return;
   S.mp.locked=false; S.mp.oppLocked=false;
   const mineP=S.staged.slice(); if(S.swimP) mineP.swim=S.swimP; if(S.oathStage!=null) mineP.oath=S.oathStage;
-  resolveTurn(mineP, mapPlays("e",om.hist[S.turn]), true);
+  resolveTurn(mineP, oppPlays(om.hist[S.turn]), true);
 }
 async function mpResume(){
   const s=mpSession(); if(!s||!rtReady()||mpConn||!MP_CODE.test(s.mp.code||"")) return; mpConn=true; mpMsg=""; render();

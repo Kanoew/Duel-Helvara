@@ -481,6 +481,7 @@
     [/^Connecté à (.+)\. La partie commence…$/, (m,a)=>`Connected to ${a}. The game is starting…`],
     [/^(.+) a quitté le salon$/, (m,a)=>`${a} left the room`],
     [/^Duel contre (.+)$/, (m,a)=>`Duel against ${a}`],
+    [/^Coup adverse refusé : (.+) \((énergie insuffisante|plus de place|lieu fermé|interdite ce tour|Thémis|déplacement impossible)\)$/, (m,a,w)=>`Opponent's move refused: ${a} (${({"énergie insuffisante":"not enough energy","plus de place":"no room left","lieu fermé":"location closed","interdite ce tour":"not allowed this turn","Thémis":"Themis","déplacement impossible":"move not allowed"})[w]})`],
     /* blitz */
     [/^(\d) victoires? · IA (.+)$/, (m,n,t)=>`${n} ${s(n,"win")} · ${t} AI`],
     [/^Lancer un Blitz · (\d+) CHF$/, (m,p)=>`Start a Blitz · ${p} CHF`],
