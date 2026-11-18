@@ -97,7 +97,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
   - 🟣 👤 un duel en ligne entre deux téléphones avec la nouvelle version.
 - 🟣 🛠️ **Lot B, « Jouer » contre un humain ou l'IA** :
   - ✅ présence en direct anonyme ; « Jouer » attend 15 s seulement si quelqu'un est libre, sinon IA tout de suite (18 novembre) ;
-  - 🟣 résultat envoyé par les deux joueurs et validé par le serveur, parties gardées 30 jours (décidé le 18 novembre). 👤 SQL à valider.
+  - 🛠️ résultat envoyé par les deux joueurs et validé par le serveur, parties gardées 15 jours (décidé le 18 novembre) : codé (`alpha-0.44`). 🟣 👤 coller `duels-valides.sql` dans Supabase après relecture `db-guard`.
 - 🟣 🛠️ **Lot C, classement** : étoiles des duels en ligne seulement sur résultat validé, plafonds de `board_submit` revus. 👤 SQL à valider.
 - ✅ Le classé en ligne : **un seul classement** pour la sortie (étoiles contre l'IA, plafonnées par le serveur, et contre les humains, sur résultat validé). Un classement « en ligne » séparé viendra plus tard (4.2).
 

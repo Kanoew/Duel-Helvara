@@ -1260,6 +1260,7 @@ function finish(){
     const chf0=P.chf; P.chf=Math.max(0,P.chf+gain+oathStake("duel",oth,res)); const od=P.chf-chf0-gain;   /* Serment : jamais sous 0 */
     pushHist("Duel",res,S.mp.oppNick,pw,ew,{gain}); save(); mpSaveSession(null);
     S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,qDone,mp:true,oath:oth?{kept:oth.kept,cross:oth.cross,d:od}:null};
+    if(typeof mpReport==="function") mpReport(res);   /* lot B : résultat et relevé envoyés au serveur, qui les compare à ceux de l'adversaire */
     endCine(S.over); endMusic(res); setTimeout(()=>sfx("coin"),700);
     render(); return;
   }

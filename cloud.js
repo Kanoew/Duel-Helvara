@@ -138,6 +138,18 @@
       return r.data;
     },
     async mmLeave(){ await sb.rpc("mm_leave"); },
+    /* Duels validés par le serveur (duels-valides.sql) : inscription au début, résultat et empreinte de la partie à la fin.
+       Tant que le SQL n'est pas lancé, la fonction manque : le jeu ignore l'erreur et le duel se joue comme avant. */
+    async duelEnter(room, g, role, ver){
+      const r = await sb.rpc("duel_enter", { p_room:room, p_g:g, p_role:role, p_ver:ver });
+      if(r.error) throw fail(r.error);
+      return r.data;
+    },
+    async duelReport(room, g, role, res, hash, rec){
+      const r = await sb.rpc("duel_report", { p_room:room, p_g:g, p_role:role, p_res:res, p_hash:hash, p_rec:rec });
+      if(r.error) throw fail(r.error);
+      return r.data;
+    },
     async stats(mode, result, plays, opp){
       let r = await sb.rpc("stats_submit", { p_mode:mode, p_result:result, p_plays:plays, p_opp:opp === "humain" ? "humain" : "ia" });
       /* stats-adversaire.sql pas encore lancé dans Supabase : l'ancienne fonction (sans adversaire) */

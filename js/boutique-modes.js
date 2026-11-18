@@ -150,7 +150,7 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.43", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.44", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Coups scellés (anti-triche, lot A) : mes coups du tour, envoyés d'abord sous forme d'empreinte. Ils restent ICI (jamais dans la présence)
@@ -429,7 +429,7 @@ function mpStart(om,replay,deal){
   quiet=!!replay;
   log(`Duel contre ${S.mp.oppNick}`); sheet=null; if(mq) mqStop("");   /* la recherche est finie dès que le duel commence */
   screen="play"; startTurn();
-  if(!replay) mpPend=null; mpSaveAll();
+  if(!replay) mpPend=null; mpSaveAll(); mpEnter();
   if(replay) mpReplay(om); else { sfx("loc"); render(); window.scrollTo(0,0); }
 }
 function mapPlays(side,plays){ const out=[]; if(!Array.isArray(plays)) return out;
@@ -445,13 +445,34 @@ function oppPlays(plays){ const r=checkPlays("e",mapPlays("e",plays));
   for(const [n,w] of r.bad) log(`Coup adverse refusé : ${n} (${BAD_WHY[w]})`);
   if(r.bad.length&&S.mp) S.mp.bad=(S.mp.bad||0)+r.bad.length;
   return r.plays; }
+/* ======= Résultat validé par le serveur (anti-triche, lot B, duels-valides.sql) =======
+   Au début du match, chacun s'inscrit (hôte ou invité) ; à la fin, chacun envoie son résultat et l'empreinte du relevé de la partie
+   (graine, lieux, coups des deux joueurs dans l'ordre hôte puis invité, puissances finales). Deux téléphones honnêtes produisent
+   le même relevé : le serveur valide. Sinon, « conflict », et la partie ne comptera jamais (lot C). S.mp.srv : réponse du serveur. */
+async function mpDbGet(){ try{ mqDb=mqDb||await window.claude.use("db"); }catch(e){ mqDb=null; } return mqDb; }
+function mpEnter(){ if(!myMp||!S||!S.mp) return; const code=myMp.code, role=myMp.role, g=S.mp.g;
+  mpDbGet().then(db=>{ if(db&&db.duelEnter) return db.duelEnter(code,g,role,BUILD); }).catch(()=>{}); }
+function mpTr(t,mine,theirs){ if(S&&S.mp){ (S.mp.tr=S.mp.tr||{})[t]=[mine||[],theirs||[]]; } }
+function mpRecord(){
+  const h=S.mp.meHost, tr=S.mp.tr||{}, turns=Object.keys(tr).sort((a,b)=>a-b).map(t=>h?tr[t]:[tr[t][1],tr[t][0]]);
+  return {v:BUILD, seed:S.mp.deal.seed, locs:S.mp.deal.locs, t:turns, fin:[0,1,2].map(li=>h?[total("p",li),total("e",li)]:[total("e",li),total("p",li)])};
+}
+async function mpReport(res){
+  if(!S||!S.mp||S.mp.reported||!myMp||!S.mp.deal) return;
+  const sRef=S, mp=S.mp, code=myMp.code, role=myMp.role, g=mp.g; mp.reported=true;
+  const rec=mpRecord(); let hash; try{ hash=mpHex(await mpHash(JSON.stringify(rec))); }catch(e){ return; }
+  const db=await mpDbGet(); if(!db||!db.duelReport) return;
+  const send=async()=>{ try{ const r=await db.duelReport(code,g,role,res,hash,rec); if(r&&r.status){ mp.srv=r.status; if(S===sRef) render(); } return r; }catch(e){ return null; } };
+  let r=await send();
+  for(let i=0;i<5&&r&&r.status==="open"&&S===sRef;i++){ await new Promise(ok=>setTimeout(ok,6000)); r=await send(); }   /* l'autre n'a pas encore envoyé : on relit la décision */
+}
 /* Coups révélés qui ne correspondent pas à l'empreinte publiée avant : tous refusés (il les a changés après avoir vu les miens) */
 function oppSealed(plays,ok){ if(ok) return oppPlays(plays); log("Coups adverses refusés : ils ne correspondent pas à ceux annoncés"); if(S.mp) S.mp.bad=(S.mp.bad||0)+1; return []; }
 async function mpReplay(om){
   while(S&&S.mp&&!S.over){
     const t=S.turn, done=myMp.hist&&myMp.hist[t], pend=mpPend&&mpPend.g===S.mp.g&&mpPend.t===t?mpPend:null, theirs=om.hist&&om.hist[t];
     if(done&&theirs){ const ok=await mpSealOk(theirs,om.salt&&om.salt[t],(S.mp.seen&&S.mp.seen[t])||(om.seal&&om.seal[t]));
-      await resolveTurn(mapPlays("p",done), oppSealed(theirs,ok), false); continue; }
+      mpTr(t,done,theirs); await resolveTurn(mapPlays("p",done), oppSealed(theirs,ok), false); continue; }
     const mine=done||(pend&&pend.plays);
     if(mine){ const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.swimP=st.swim||null; S.oathStage=st.oath!=null?st.oath:null; S.mp.locked=true;
       if(pend&&!done&&!(myMp.seal&&myMp.seal[t])) mpSealPush(pend); }   /* coupure entre le verrouillage et l'envoi de l'empreinte */
@@ -489,7 +510,7 @@ function mpTryResolve(){
     if(S!==sRef) return; S.mp.checking=false; if(S.turn!==t||!S.mp.locked||S.busy||S.over) return;
     S.mp.locked=false; S.mp.oppLocked=false;
     const mineP=S.staged.slice(); if(S.swimP) mineP.swim=S.swimP; if(S.oathStage!=null) mineP.oath=S.oathStage;
-    resolveTurn(mineP, oppSealed(th,ok), true);
+    mpTr(t,myMp.hist[t],th); resolveTurn(mineP, oppSealed(th,ok), true);
   });
 }
 async function mpResume(){
