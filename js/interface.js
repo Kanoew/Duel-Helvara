@@ -252,7 +252,7 @@ let majOpen=false;
 function majHTML(){
   const m=MAJ[0]; if(!m||screen==="play"||!P.tuto||(!majOpen&&P.maj===m.id)) return "";
   return `<div class="veil"><div class="result majpop" role="dialog" aria-label="Notes de mise à jour">
-    <div class="eyebrow"><span>Notes de mise à jour</span> · <span>${m.date}</span></div><h2>Équilibrage</h2>
+    <div class="eyebrow"><span>Notes de mise à jour</span> · <span>${m.date}</span></div><h2>${m.t||"Équilibrage"}</h2>
     <ul class="majlist">${m.items.map(t=>`<li>${t}</li>`).join("")}</ul>
     <button class="primary" data-act="majok">Compris</button></div></div>`;
 }
