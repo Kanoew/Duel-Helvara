@@ -87,6 +87,13 @@ Les cinq lieux sont codés avec tes illustrations, mesurés sur 48 000 parties s
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
 
+### 3.4 bis 🟣 🛠️ Duel en ligne classé et anti-triche (avant la sortie, décidé le 18 novembre)
+Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
+- 🟣 🛠️ **Lot A, duels honnêtes** (sans SQL) : coups adverses interdits refusés, coups scellés, graine commune, deck adverse vérifié.
+- 🟣 🛠️ **Lot B, « Jouer » contre un humain ou l'IA** : attente de 15 s seulement si quelqu'un est en ligne, sinon IA tout de suite ; résultat envoyé par les deux joueurs et validé par le serveur. 👤 SQL à valider.
+- 🟣 🛠️ **Lot C, classement** : étoiles des duels en ligne seulement sur résultat validé, plafonds de `board_submit` revus. 👤 SQL à valider.
+- 🟣 👤 Le classé en ligne : comment il se mélange au classé contre l'IA (voir la question dans la session du 18 novembre).
+
 ### 3.5 🟣 Préparer la sortie (en parallèle, sans rien publier)
 - 🟣 👤🛠️ Page itch.io en brouillon : textes FR et EN, captures, prix 0 € et cagnotte.
 - 🟣 🛠️ Séquences de jeu enregistrées pour le trailer de 30 secondes. 👤 Toi : le montage.
