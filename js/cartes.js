@@ -332,7 +332,8 @@ const LOCS = {
   encheres:  {name:"Le Bureau des enchères", img:"images/lieux/encheres.webp", fx:"Les cartes jouées ici coûtent 1 de plus et ont +2 de puissance.", rel:"2026-10-12"},
   faille:    {name:"La Faille", img:"images/lieux/faille.webp", fx:"Fin du tour 4 : détruit la carte la plus faible de chaque côté. Les cartes protégées y échappent."},
   archives:  {name:"Archives de Thot", img:"images/lieux/archives.webp", fx:"Quand tu joues une carte ici, pioche 1 carte."},
-  cathedrale:{name:"Cathédrale d'Helvara", img:"images/lieux/cathedrale.webp", fx:"Les divinités observent : le côté avec moins de cartes ici gagne +3 de puissance."}
+  cathedrale:{name:"Cathédrale d'Helvara", img:"images/lieux/cathedrale.webp", fx:"Les divinités observent : le côté avec moins de cartes ici gagne +3 de puissance."},
+  trone:     {name:"Le Trône de Tiamat", img:"images/lieux/trone.webp", fx:"Le trône change d'allégeance : jusqu'au tour 3, le côté avec moins de cartes ici gagne +2 de puissance ; dès le tour 4, le côté avec plus de cartes."}
 };
 const FAC = {
   helvara:{c:"var(--helvara)",n:"Helvara"},

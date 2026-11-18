@@ -5,7 +5,8 @@ const pickRand=a=>a[Math.floor(Math.random()*a.length)];
 let RNG=Math.random; const rnd=()=>RNG();
 /* Serment hors partie classée : enjeux en CHF. VALEURS PROVISOIRES (à valider par Jordan). Tenu = lieu ET partie gagnés ; rompu = lieu perdu (ou égalité sans Morrigan). Le solde de CHF ne passe jamais sous 0.
    Duel : appliqué au solde. Blitz : ajouté au gain du Blitz en cours (jamais sous 0). Le Serment croisé vaut le double. */
-const OATH_CHF={ duel:{kept:30,broken:15,crossKept:60,crossBroken:30}, blitz:{kept:50,broken:50,crossKept:100,crossBroken:100} };
+const OATH_CHF={ duel:{kept:30,broken:15,crossKept:60,crossBroken:30}, blitz:{kept:25,broken:25,crossKept:50,crossBroken:50} };
+const OATH_DAY_CAP=150;   /* gains de Serment (CHF) au plus par jour, duel et Blitz ensemble ; les pertes ne sont pas plafonnées */
 /* Rivaux nommés (axe 2 du plan d'action) : l'adversaire de la partie contre l'IA. Chaque rival a un tempérament SIGNATURE ; à chaque partie, le tempérament réel est tiré
    (RIVAL_MOOD_SIG de chances d'avoir le signature, le reste réparti à parts égales sur les trois autres) et reste CACHÉ : seule la phrase du serment le trahit.
    Tempéraments : allin = jure tôt et fort ; bluff = jure pour tromper ; prudent = ne jure que s'il mène nettement et tard ; zele = jure presque à chaque partie.
@@ -164,7 +165,9 @@ function oathSettle(){
 /* CHF du Serment hors classé (duel, Blitz) : positif si tenu et partie gagnée, négatif si rompu, 0 sinon */
 function oathStake(mode,o,res){
   if(!o) return 0; const t=OATH_CHF[mode];
-  return o.kept?(res==="win"?(o.cross?t.crossKept:t.kept):0):-(o.cross?t.crossBroken:t.broken);
+  let v=o.kept?(res==="win"?(o.cross?t.crossKept:t.kept):0):-(o.cross?t.crossBroken:t.broken);
+  if(v>0){ const d=today(); if(!P.od||P.od.d!==d) P.od={d,g:0}; v=Math.min(v,Math.max(0,OATH_DAY_CAP-P.od.g)); if(!window.__wiped) P.od.g+=v; }
+  return v;
 }
 function pilesHTML(){ if(S.tut) return ""; piles(); const D=S.discardPile, G=S.graveyard;
   const np=D.p.length+G.p.length, ne=D.e.length+G.e.length;
@@ -329,6 +332,7 @@ function total(s,li){
   let t=S.board[s][li].reduce((a,c)=>a+(charmOf(c)===o?0:cardPow(s,li,c)),0)+S.board[o][li].reduce((a,c)=>a+(charmOf(c)===s?cardPow(o,li,c):0),0);
   for(const i of [li-1,li+1]) if(i>=0&&i<3) t+=2*S.board[s][i].filter(c=>live(c)&&eid(c)==="graffeur").length;
   if(locIs(li,"cathedrale")){ const a=S.board[s][li].filter(c=>c.rev).length, b=S.board[opp(s)][li].filter(c=>c.rev).length; if(a>0&&a<b) t+=3; }
+  if(locIs(li,"trone")){ const a=S.board[s][li].filter(c=>c.rev).length, b=S.board[opp(s)][li].filter(c=>c.rev).length; if(S.turn<=3?(a>0&&a<b):a>b) t+=2; }   /* Trône de Tiamat : le moins de cartes aux tours 1-3, le plus dès le tour 4 */
   return t;
 }
 function leader(li){
@@ -830,6 +834,7 @@ function aiPlan(me="e",tierOv){
     if(c.id==="messagere"&&diff>0) pow+=3;
     if(locIs(li,"cirque")&&S.turn<4) pow+=d.pow<=2?2:-2;
     if(locIs(li,"sauvabelin")&&DESTROYERS.has(c.id)) adj-=4;
+    if(locIs(li,"trone")){ const m=mates; if(S.turn>=4){ if(m<=foes&&m+1>foes) pow+=2; } else if(m<foes&&m+1>=foes) pow-=1; }   /* Trône : passer devant en nombre de cartes dès le tour 4 */
     if((c.id==="hermes"||c.id==="susanoo")&&[0,1,2].some(i=>i!==li&&locIs(i,"flon"))) pow+=1;
     if(c.id==="vritra") adj+=diff<0?4:-2;
     if(c.id==="maeve"&&diff<0) pow+=3;

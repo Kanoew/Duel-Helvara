@@ -339,6 +339,7 @@ const FX=(()=>{
     l_faille: {loc:[["flicker",{col:"255,80,60",y:.5}],["burst",{col:["255,80,60","255,160,90","255,230,190"],n:20}]]},
     l_archives:{loc:[["burst",{col:["230,210,170","245,235,210"],up:true,n:22}],["flicker",{col:"240,210,150"}]]},
     l_cathedrale:{loc:[["rays",{col:"235,235,255",n:4}],["rings",{col:GOLD,n:2}]]},
+    l_trone:  {loc:[["rays",{col:"185,140,255",n:3}],["flicker",{col:"170,120,255",y:.6}]]},
     /* épiques : une brève gerbe d'étincelles sur le lieu, à la couleur de la faction (moins d'une seconde) */
     epic_helvara:   {loc:[["sparkle",{col:"255,215,140",n:11}],["rings",{col:"255,215,140",n:1}]]},
     epic_primordial:{loc:[["sparkle",{col:"255,150,100",n:11}],["rings",{col:"255,150,100",n:1}]]},

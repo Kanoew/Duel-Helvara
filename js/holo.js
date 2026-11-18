@@ -8,6 +8,9 @@ const HOLO_TEST = {};
 const HOLO_TESTON = /[?&]holo=test\b/.test(location.search);
 const HOLO_MOD = (document.currentScript && document.currentScript.dataset.mod) || "js/holo-card.js";
 const holoDir = id => (HOLO_TESTON && HOLO_TEST[id]) || HOLO[id] || null;
+/* Navigateurs intégrés (Messenger, Instagram, WebView Android) et téléphones à 4 Go ou moins : peu de mémoire graphique.
+   Le holo y passe en qualité réduite, 30 images par seconde (Redmi Note 14 dans Messenger, 18 novembre : carte noire ou par morceaux sinon). */
+const HOLO_WEAK = /FBAN|FBAV|FB_IAB|Messenger|Instagram|; wv\)|Line\/|Snapchat/i.test(navigator.userAgent) || (navigator.deviceMemory > 0 && navigator.deviceMemory <= 4);
 let holoModP = null;
 const holoLoad = () => holoModP || (holoModP = import(new URL(HOLO_MOD, document.baseURI).href).catch(e => { holoModP = null; throw e; }));
 /* Monte l'effet dans `slot` (l'image fixe y reste tant que l'effet n'est pas prêt, puis la classe holo-on la cache).
@@ -20,7 +23,7 @@ function holoMount(slot, id, opts) {
     try {
       const mod = await holoLoad(); if (h.dead) return;
       el = document.createElement("div"); el.className = "holohost"; h.slot.appendChild(el);
-      const card = await mod.HoloCard.load(el, "images/holo/" + dir + "/manifest.json", Object.assign({ radius: 12 }, opts && { ...opts, overlay: undefined }));
+      const card = await mod.HoloCard.load(el, "images/holo/" + dir + "/manifest.json", Object.assign({ radius: 12 }, HOLO_WEAK ? { quality: "low", maxFps: 30 } : null, opts && { ...opts, overlay: undefined }));
       if (h.dead) { card.destroy(); el.remove(); return; }
       h.card = card; h.el = el;
       if (opts && opts.overlay) { const hc = el.querySelector(".hc-card"); if (hc) { const i = document.createElement("i"); i.className = "cadre"; i.style.backgroundImage = "url('images/cadres/" + opts.overlay + ".webp')"; i.setAttribute("aria-hidden", "true"); hc.appendChild(i); } }

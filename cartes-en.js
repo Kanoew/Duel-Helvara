@@ -271,6 +271,7 @@ window.HELVARA_EN = {
     sauvabelin:{n:"Sauvabelin", fx:"The forest protects everyone: no card can be destroyed here."},
     flon:{n:"The Flon", fx:"Cards that arrive here by moving get +2 Power."},
     escaliers:{n:"The Market Stairs", fx:"Helvara cards have +2 Power here."},
-    cathedrale:{n:"Helvara Cathedral", fx:"The gods are watching: the side with fewer cards here gets +3 Power."}
+    cathedrale:{n:"Helvara Cathedral", fx:"The gods are watching: the side with fewer cards here gets +3 Power."},
+    trone:{n:"Throne of Tiamat", fx:"The throne shifts allegiance: until turn 3, the side with fewer cards here gets +2 Power; from turn 4, the side with more cards."}
   }
 };
