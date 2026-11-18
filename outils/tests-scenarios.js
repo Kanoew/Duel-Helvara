@@ -21,7 +21,7 @@ async function inPage() {
   const plain = Object.keys(CARDS).filter(id => !CARDS[id].token && !CARDS[id].fx && !ULof(id) && CARDS[id].pow <= 3 && !CARDS[id].base);   /* cartes sans effet : puissance fixée à la main */
   const fresh = () => {
     P.owned = Object.keys(CARDS).filter(id => !CARDS[id].token); P.deck = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)).slice(0, 12); P.lv = 30;
-    newGame(); quiet = true; S.tut = false; S.turn = 3; S.locs.forEach(L => { L.rev = true; L.id = "tour"; });
+    newGame(); quiet = true; P.od = null; S.tut = false; S.turn = 3; S.locs.forEach(L => { L.rev = true; L.id = "tour"; });
     for (const s of ["p", "e"]) S.board[s] = [[], [], []]; S.hand = { p: [], e: [] }; S.discardPile = { p: [], e: [] }; S.graveyard = { p: [], e: [] }; S.discarded = 0; S.destroyed = 0;
   };
   const put = (s, li, id, pow) => { const c = mk(id); c.rev = true; if (pow != null) c.pow = pow; S.board[s][li].push(c); return c; };
@@ -1185,6 +1185,14 @@ async function inPage() {
       T("Trône de Tiamat : tours 1-3, le côté avec moins de cartes gagne +2 ; dès le tour 4, celui avec plus", p2 === 5 && e2 === 6 && p4 === 3 && e4 === 8, `${p2}/${e2} puis ${p4}/${e4}`);
       put("p", 0, plain[1], 3); S.turn = 2; const pe = total("p", 0), ee = total("e", 0); S.board.p[0] = []; const pv = total("p", 0), ev = total("e", 0);
       T("Trône de Tiamat : rien à égalité, rien pour un côté vide", pe === 6 && ee === 6 && pv === 0 && ev === 6, `${pe}/${ee}, ${pv}/${ev}`); }
+    /* Plafond du jour des gains de Serment (150 CHF, duel et Blitz ensemble), pertes non plafonnées */
+    { fresh(); P.od = { d: today(), g: 130 }; const o = { kept: true, cross: true }; const a = oathStake("duel", o, "win"), b = oathStake("blitz", o, "win"), c = oathStake("duel", { kept: false, cross: true }, "win");
+      T("Serment : gains plafonnés à 150 CHF par jour, pertes intactes", a === 20 && b === 0 && c === -OATH_CHF.duel.crossBroken && P.od.g === 150, `${a} ${b} ${c} ${P.od.g}`);
+      P.od = { d: "2000-01-01", g: 150 }; T("Serment : le plafond repart à zéro le lendemain", oathStake("duel", { kept: true, cross: false }, "win") === OATH_CHF.duel.kept, ""); }
+    /* Trône de Tiamat + Céleste : sa Révélation (+3) est acquise et ne bouge plus quand le trône change d'allégeance au tour 4 */
+    fresh(); S.locs[0].id = "trone"; { put("e", 0, plain[0], 3); put("e", 0, plain[1], 3); const ce = card("celeste"); S.hand.p = [ce]; S.turn = 3; await resolveTurn([{ c: ce, li: 0 }], [], false);
+      const p3 = ce.pow; S.turn = 4; const p4 = cardPow("p", 0, ce);
+      T("Trône de Tiamat : la Révélation de Céleste reste acquise après le tour 4", p3 === 6 && p4 === 6, `${p3} puis ${p4}`); }
     /* Cerridwen */
     fresh(); S.turn = 3; { const a = card(byCost(1)), b = card(byCost(3)), want = card(byCost(2)), other = card(byCost(4)), ce = card("cerridwen"); const fill = [5, 5, 5, 5, 5].map(n => card(byCost(n) || byCost(4))); S.hand.p = [ce, a, b, ...fill]; S.deck.p = [other, want];
       await resolveTurn([{ c: ce, li: 0 }], [], false); T("Cerridwen : échange la carte de coût le plus faible de la main contre une carte du deck coûtant 1 de plus", S.hand.p.includes(want) && !S.hand.p.includes(a) && S.deck.p.includes(a) && S.hand.p.includes(b), S.hand.p.map(c => CARDS[c.id].cost).join()); }
@@ -1313,16 +1321,16 @@ async function inPage() {
     const endBlitz = (pw, ow, wins, cross) => { fresh(); S.turn = 6; S.blitz = true; S.oath = ow; if (cross) S.aiOath = ow; setBoard(...pw); P.bz = { day: "", used: false, run: { deck: [], opts: [], wins, over: false, gain: 0 } }; finish(); return { ov: S.over, r: P.bz.run }; };
     P.oathK = P.oathB = P.oathS = P.oathMax = 0; kept.calls.length = 0;
     { P.chf = 100; const { ov, r } = endBlitz([5, 5, 1, 1, 1, 5], 0, 0);
-      T("Blitz : Serment tenu = +50 CHF ajoutés au gain (1 victoire = 75 + 50)", r.wins === 1 && r.oath === OATH_CHF.blitz.kept && bzHeld(r) === BZ.gain[1] + 50 && !r.over, `${r.wins} ${r.oath}`);
-      T("Blitz : compteurs du profil et quête comptent aussi", P.oathK === 1 && kept.calls.includes("oath") && ov.oath.d === 50, `${P.oathK} ${kept.calls}`); }
+      T("Blitz : Serment tenu = +25 CHF ajoutés au gain (1 victoire = 75 + 25)", r.wins === 1 && r.oath === OATH_CHF.blitz.kept && bzHeld(r) === BZ.gain[1] + 25 && !r.over, `${r.wins} ${r.oath}`);
+      T("Blitz : compteurs du profil et quête comptent aussi", P.oathK === 1 && kept.calls.includes("oath") && ov.oath.d === 25, `${P.oathK} ${kept.calls}`); }
     { P.chf = 100; const { ov, r } = endBlitz([5, 5, 1, 1, 1, 5], 2, 1);
-      T("Blitz : Serment rompu = −50 CHF sur le gain, même en gagnant le match (2 victoires = 150 − 50)", r.wins === 2 && bzHeld(r) === 100 && r.oath === -50, `${r.wins} ${r.oath}`); }
+      T("Blitz : Serment rompu = −25 CHF sur le gain, même en gagnant le match (2 victoires = 150 − 25)", r.wins === 2 && bzHeld(r) === 125 && r.oath === -25, `${r.wins} ${r.oath}`); }
     { P.chf = 100; const { r } = endBlitz([1, 1, 5, 5, 5, 1], 0, 0);
       T("Blitz : défaite avec Serment rompu sur 0 victoire : gain 0, jamais négatif, CHF intacts", r.over && r.gain === 0 && P.chf === 100, `${r.gain} ${P.chf}`); }
     { P.chf = 100; const { r } = endBlitz([1, 1, 5, 5, 5, 1], 0, 2);
-      T("Blitz : défaite avec Serment rompu après 2 victoires : 150 − 50 = 100 CHF versés", r.over && r.gain === 100 && P.chf === 200, `${r.gain} ${P.chf}`); }
+      T("Blitz : défaite avec Serment rompu après 2 victoires : 150 − 25 = 125 CHF versés", r.over && r.gain === 125 && P.chf === 225, `${r.gain} ${P.chf}`); }
     { P.chf = 100; const { r } = endBlitz([5, 5, 1, 1, 1, 5], 0, 0, true);
-      T("Blitz : Serment croisé tenu = +100", r.oath === OATH_CHF.blitz.crossKept, `${r.oath}`); }
+      T("Blitz : Serment croisé tenu = +50", r.oath === OATH_CHF.blitz.crossKept, `${r.oath}`); }
     { P.chf = 100; P.oathK = 0; const { ov, r } = endBlitz([3, 3, 3, 3, 3, 3], 0, 1);
       T("Blitz : une égalité se rejoue, le Serment n'est ni compté ni payé", ov.res === "draw" && !r.oath && P.oathK === 0 && ov.oath === null && r.wins === 1, `${ov.res} ${r.oath}`); }
     /* S9. Partie guidée */

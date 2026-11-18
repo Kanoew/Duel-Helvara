@@ -51,9 +51,10 @@ const hasHoloTile=id=>CARDS[id].r==="U"&&!!holoDir(id);
 const tileHolo=(id,key,r,hi)=>hasHoloTile(id)?`<i class="holotile" data-hid="${id}" data-hk="${key}"${r?` data-r="${r}"`:""}${hi?' data-q="hi"':""} aria-hidden="true"></i>`:"";
 const HOLO_TILES=new Map();
 function holoTilesDetach(){ for(const v of HOLO_TILES.values()) if(v.h&&v.h.el) v.h.el.remove(); }
-function holoTilesAttach(root){
+function holoTilesAttach(root,frozen){
   const live=new Set();
-  root.querySelectorAll(".holotile").forEach(t=>{
+  /* une carte holo en grand : les petites cartes holo (cachées sous le voile) sont arrêtées pour laisser la mémoire graphique au grand format */
+  if(!frozen) root.querySelectorAll(".holotile").forEach(t=>{
     const k=t.dataset.hk, id=t.dataset.hid, v=HOLO_TILES.get(k); live.add(k);
     if(v&&v.id===id&&v.h) holoMove(v.h,t);
     else{ if(v) holoKill(v.h); HOLO_TILES.set(k,{id,h:holoMount(t,id,Object.assign({idle:true,radius:+t.dataset.r||6},t.dataset.q==="hi"?{}:{quality:"low",maxFps:30}))}); }
@@ -725,7 +726,7 @@ function rulesHTML(){
   ${acc("serment","Le Serment",`<ol class="rules">
         <li><b>Le Serment</b> : une fois par partie, jusqu'au tour 5, tu peux jurer sur un lieu révélé (partie classée, Blitz, duel entre amis ; sans enjeu dans la partie guidée). En partie classée, si tu le remportes avec la partie, tu gagnes 2 étoiles, série comprise. Si tu le perds (ou en cas d'égalité sans Morrigan), tu perds 1 étoile de plus, même si tu gagnes la partie.</li>
         <li><b>Serment adverse</b> : l'adversaire peut lui aussi jurer sur un lieu, entre les tours 2 et 4. Tu peux relever le défi en jurant sur le même lieu : c'est le <b>Serment croisé</b>. Lieu et partie gagnés : +4 étoiles, série comprise. Lieu et partie perdus : −4 étoiles (jamais sous le plancher du palier). Lieu gagné mais partie perdue, ou l'inverse : 0.</li>
-        <li><b>Serment en duel et au Blitz</b> : pas d'étoiles, des CHF (valeurs provisoires). Lieu et partie gagnés : +${OATH_CHF.duel.kept} CHF en duel, +${OATH_CHF.blitz.kept} CHF sur ton gain au Blitz. Lieu perdu : −${OATH_CHF.duel.broken} CHF en duel, −${OATH_CHF.blitz.broken} CHF au Blitz, jamais sous 0. Serment croisé : ${OATH_CHF.duel.crossKept} CHF en duel, ${OATH_CHF.blitz.crossKept} CHF au Blitz (perdu : −${OATH_CHF.duel.crossBroken} et −${OATH_CHF.blitz.crossBroken}). En duel, ton Serment reste caché à l'adversaire pendant le tour : il est révélé à la fin du tour, en même temps que les cartes, et tu peux relever le sien au tour suivant.</li>
+        <li><b>Serment en duel et au Blitz</b> : pas d'étoiles, des CHF (valeurs provisoires). Lieu et partie gagnés : +${OATH_CHF.duel.kept} CHF en duel, +${OATH_CHF.blitz.kept} CHF sur ton gain au Blitz. Lieu perdu : −${OATH_CHF.duel.broken} CHF en duel, −${OATH_CHF.blitz.broken} CHF au Blitz, jamais sous 0. Serment croisé : ${OATH_CHF.duel.crossKept} CHF en duel, ${OATH_CHF.blitz.crossKept} CHF au Blitz (perdu : −${OATH_CHF.duel.crossBroken} et −${OATH_CHF.blitz.crossBroken}). Gains de Serment : ${OATH_DAY_CAP} CHF au plus par jour. En duel, ton Serment reste caché à l'adversaire pendant le tour : il est révélé à la fin du tour, en même temps que les cartes, et tu peux relever le sien au tour suivant.</li>
       </ol>`)}
   ${acc("decks","Decks, ultra-légendaires et fusions",`<ol class="rules">
         <li><b>Une seule version par personnage</b> dans un deck (par exemple Nyx ou Nyx, Guerrière d'Halloween). Seule exception : la Dragonification de Yarden peut côtoyer Yarden Weiss.</li>
@@ -872,7 +873,8 @@ function bilanHTML(o){
 /* Serment en duel ou au Blitz : ce qu'il a rapporté ou coûté en CHF */
 function oathChfHTML(o){
   const x=o.oath, c=x.cross?"Serment croisé ":"Serment ", fin=o.blitz?" sur ton gain du Blitz":"", ok=x.kept, lost=x.cross?"perdu":"rompu";
-  const t=ok?(o.res==="win"?`${c}tenu : +${x.d} CHF${fin}`:`${c}tenu, mais la partie est perdue`):x.d<0?`${c}${lost} : −${-x.d} CHF${fin}`:`${c}${lost} : aucun CHF perdu`;
+  const full=OATH_CHF[o.blitz?"blitz":"duel"][x.cross?"crossKept":"kept"], cap=x.d<full?" (plafond du jour atteint)":"";
+  const t=ok?(o.res==="win"?`${c}tenu : +${x.d} CHF${fin}${cap}`:`${c}tenu, mais la partie est perdue`):x.d<0?`${c}${lost} : −${-x.d} CHF${fin}`:`${c}${lost} : aucun CHF perdu`;
   return `<div class="m oathres ${ok?"kept":"broken"}" style="text-align:center">⚖ ${t}</div>`;
 }
 function resultHTML(){
@@ -1038,7 +1040,7 @@ function render(){
   const bigId=bigCardId(), holoKeep=zoomHolo&&zoomHolo.id===bigId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
   holoTilesDetach();
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+precHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
-  holoTilesAttach(app);
+  holoTilesAttach(app,!!(bigId&&holoDir(bigId)));
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
   else if(screen==="home") holoPrefetch(fanIds()); /* accueil : les cartes holo de la vitrine (celle du centre et celles qui viennent de tourner) */
   else if(screen==="play") holoPrefetch(P.deck); /* en partie : seulement la carte holo de ton deck (le reste se charge à la demande) */
