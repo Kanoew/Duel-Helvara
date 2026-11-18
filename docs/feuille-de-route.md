@@ -23,7 +23,7 @@ Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantier
 - ✅ **Mots-clés de faction : option B** (décidé le 18 novembre). Ils vont aussi sur les cartes sorties. Il reste à choisir **lesquelles**, faction par faction (voir 3.2).
 - 🟣 👤 **Serment « Intensifier »** : est-ce qu'il te plaît tel que décrit (choix secret au tour 3, ×2 ou ×3 sur le Serment du tour 5) ? Il arrive après la sortie, on a le temps.
 - 🟣 👤 **Date de sortie** : avant janvier 2027, le plus tôt possible. À fixer quand les chantiers 3.1 à 3.4 auront une taille connue.
-- 🟣 👤 **Économie des CHF avec le Serment** : peur que les gains du Serment fassent finir la collection trop vite. Analyse du 18 novembre : le Serment ajoute environ +12 % de revenu (rien contre l'IA). Paquets +50 / +75 = collection 34 à 51 % plus chère pour tout le monde. **Ma proposition** : prix des paquets inchangés, Serment du Blitz ramené à ±25 (croisé ±50), plafond de +150 CHF de Serment par jour (coupe aussi la triche entre amis), puis mesurer après la sortie.
+- ✅ **Économie des CHF** (18 novembre) : prix des paquets inchangés ; Serment du Blitz ramené à ±25 (croisé ±50) ; gains de Serment plafonnés à 150 CHF par jour (duel et Blitz ensemble).
 - 🟣 👤 **Les chiffres provisoires du Serment** (dans `OATH_CHF`, en tête de `js/moteur.js`) : à valider ou à changer d'après tes parties.
 
 | Sujet | Choix provisoire |
@@ -41,10 +41,10 @@ Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantier
 Tu as déjà fait beaucoup de tests (25 parties depuis hier). Ces points n'ont **pas encore été notés comme vérifiés** : si c'est déjà fait, dis-le-moi et je coche.
 
 - 🟣 👤 **Un vrai duel entre amis avec Serment, sur le vrai serveur.** Il n'a tourné que dans un faux salon de test.
-- 🟣 🛠️ **Recherche automatique d'adversaire en ligne** : « très foireuse » d'après toi. Diagnostic du code (18 novembre) : chaque téléphone décide seul de son adversaire avec une liste qui diffère d'un téléphone à l'autre, et les téléphones en veille restent visibles comme « fantômes ». Remède durable : une file d'attente dans Supabase avec un seul arbitre (SQL à valider par toi, relu par `db-guard`). Rustines possibles avant : se retirer de la file à la mise en veille, se réinscrire après une reconnexion, ignorer les joueurs muets depuis 10 s.
-- 🟣 👤 L'aperçu du lien sur Discord après publication (ajouter `?x=1` au lien si l'ancien aperçu reste).
+- 🟣 👤 **Recherche automatique d'adversaire en ligne** : réécrite (18 novembre). La base fait l'appariement (un seul arbitre, `file-attente.sql`, relu par `db-guard`), les téléphones en veille sortent seuls de la file au bout de 20 s. Testé à deux onglets avec une base simulée. **À faire par toi** : coller `file-attente.sql` dans Supabase, puis un vrai essai à deux téléphones. Tant que le SQL n'est pas lancé, l'ancienne file reste active.
+- ✅ Aperçu du lien sur Discord vérifié par toi (avec et sans `?x=1`).
 - 🟣 👤 Musique : l'idée de la tension au tour 5 plaît, mais la gestion ou les morceaux pourraient être meilleurs. Mis de côté.
-- 🟣 👤 Cartes holo : elles marchent sur ton PC, **pas chez ton pote**. Il me faut son téléphone, son navigateur et une capture.
+- 🟣 👤 Cartes holo : correctes sur Sony Xperia 10 IV ; sur Xiaomi Redmi Note 14 ouvert **dans Messenger**, carte noire ou par morceaux (manque de mémoire graphique du navigateur intégré). Correctif du 18 novembre : holo allégé dans les navigateurs intégrés et sur les téléphones à 4 Go ou moins, petites cartes holo arrêtées sous le zoom. **À refaire tester** par ton pote, dans Messenger puis dans Chrome.
 
 ---
 

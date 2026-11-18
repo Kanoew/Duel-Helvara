@@ -180,9 +180,10 @@ function initRoom(){ roomTried=true; render(); }
 function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(roomC) roomC.presence({mp:myMp}).catch(()=>{}); }
 function mpClear(){ myMp=null; mpMsg=""; rtClose("c"); }
 function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck]}; }
-async function mpCreate(){
+const mpNewCode=()=>MP_PLACES[mpRandInt(MP_PLACES.length)]+"-"+Array.from({length:6},()=>MP_ALPHA[mpRandInt(MP_ALPHA.length)]).join("");
+async function mpCreate(given){
   if(!rtReady()||!deckReady()||mpConn) return; myMp=null; mpMsg=""; mpConn=true; render();
-  const code=MP_PLACES[mpRandInt(MP_PLACES.length)]+"-"+Array.from({length:6},()=>MP_ALPHA[mpRandInt(MP_ALPHA.length)]).join("");
+  const code=given||mpNewCode();
   const r=await rtOpen("c","helvara-room-"+code); mpConn=false;
   if(!r){ mpMsg=RT_FAIL; render(); return; }
   mpPush(mpBase("host",code)); sfx("click"); render();
@@ -205,11 +206,49 @@ async function mpJoinCode(code){
    crée un salon normal (mpCreate) et publie q.room et q.with ; l'autre voit q.with = son jeton et rejoint ce code
    (mpJoinCode). Ensuite tout se passe comme un salon avec code. 90 s sans adversaire : la recherche s'arrête. */
 const MQ_WAIT=90000, MQ_STALE=15000;
-let mq=null; /* {tok, t0, timer, room, with, since} */
+let mq=null; /* {tok, t0, timer, room, with, since} ; sql:true = file d'attente dans la base (file-attente.sql) */
+/* File d'attente dans la base (18 novembre) : la base apparie (un seul arbitre, voir file-attente.sql). Le jeu l'appelle toutes les 3 s environ.
+   Trouvé : l'hôte crée le salon avec le code qu'il a proposé, l'invité le rejoint ; 15 s sans voir l'autre dans le salon : on se remet à chercher.
+   Tant que file-attente.sql n'est pas lancé dans Supabase (fonction absente), l'ancienne file par présence (plus bas) prend le relais. */
+let mqDb=null;
+async function mqSqlStart(me){
+  me.sql=true; me.code=mpNewCode(); me.ready=true;
+  me.timer=setTimeout(()=>{ if(mq===me&&!me.room) mqStop("Personne en recherche pour l'instant. Invite un ami avec un code de salon."); },MQ_WAIT);
+  sfx("click"); render(); mqSqlTick(me);
+}
+async function mqSqlTick(me){
+  if(mq!==me) return;
+  const next=()=>{ if(mq===me){ clearTimeout(me.iv); me.iv=setTimeout(()=>mqSqlTick(me),2600+Math.random()*800); } };   /* léger décalage : deux téléphones ne frappent pas en même temps */
+  if(me.room){
+    if(myMp&&myMp.g){ mqStop(""); return; }
+    if(mpOpp()){ next(); return; }   /* l'autre est là : la partie va commencer (mpTick) */
+    if(Date.now()-me.since<MQ_STALE){ next(); return; }
+    mpClear(); me.room=null; me.code=mpNewCode(); clearTimeout(me.timer);   /* l'autre n'est jamais venu : on recommence à chercher */
+    me.timer=setTimeout(()=>{ if(mq===me&&!me.room) mqStop("Personne en recherche pour l'instant. Invite un ami avec un code de salon."); },MQ_WAIT);
+  }
+  let res=null;
+  try{ res=await mqDb.mmSeek(BUILD,me.code); }
+  catch(e){ if(mq!==me) return; if(e&&e.code==="PGRST202"){ me.sql=false; mqPresenceStart(me); return; } next(); return; }   /* SQL pas encore lancé : ancienne file */
+  if(mq!==me) return;
+  if(res&&res.ok&&res.room&&MP_CODE.test(res.room)){
+    me.room=res.room; me.since=Date.now(); me.role=res.role;
+    const ok=res.role==="host"?(await mpCreate(res.room),!!myMp):await mpJoinCode(res.room);
+    if(mq!==me) return; if(!ok){ me.since=0; }   /* salon injoignable : on se remet à chercher au prochain passage */
+    render(); next(); return;
+  }
+  if(res&&res.ok){ me.waiting=res.waiting|0; me.verWarn=!me.waiting&&!!res.other_ver; if(screen==="duel") render(); }
+  next();
+}
 function mqPub(extra){ if(roomQ&&mq) roomQ.presence({q:{tok:mq.tok,ver:BUILD,at:mq.t0,...(extra||{})}}).catch(()=>{}); }
 async function mqStart(){
   if(!rtReady()||!deckReady()||mq||myMp||mpConn) return;
   mpMsg=""; const me=mq={tok:mpTok(),t0:Date.now(),room:null,with:null,since:0,ready:false}; render();
+  try{ mqDb=mqDb||await window.claude.use("db"); }catch(e){ mqDb=null; }
+  if(mq!==me) return;
+  if(mqDb&&mqDb.mmSeek) return mqSqlStart(me);
+  return mqPresenceStart(me);
+}
+async function mqPresenceStart(me){
   const r=await rtOpen("q","helvara-queue");
   if(mq!==me) return; /* annulé pendant la connexion */
   if(!r){ mq=null; mpMsg=RT_FAIL; render(); return; }
@@ -217,11 +256,11 @@ async function mqStart(){
   me.timer=setTimeout(()=>{ if(mq===me&&!me.room) mqStop("Personne en recherche pour l'instant. Invite un ami avec un code de salon."); },MQ_WAIT);
   me.iv=setInterval(mqTick,2000); mqPub(); sfx("click"); render(); mqTick();
 }
-function mqStop(msg){ if(mq){ clearTimeout(mq.timer); clearInterval(mq.iv); } mq=null; rtClose("q"); if(msg!==undefined) mpMsg=msg; if(screen==="duel") render(); }
+function mqStop(msg){ if(mq){ clearTimeout(mq.timer); clearInterval(mq.iv); clearTimeout(mq.iv); if(mq.sql&&!mq.room&&mqDb) mqDb.mmLeave().catch(()=>{}); } mq=null; rtClose("q"); if(msg!==undefined) mpMsg=msg; if(screen==="duel") render(); }
 const mqOthers=()=>roomQ?roomQ.peers().filter(p=>!p.sameTab&&!p.isMe&&p.presence&&p.presence.q&&typeof p.presence.q.tok==="string"):[];
 const mqOnline=()=>roomQ?new Set(roomQ.peers().map((p,i)=>p.by||"k"+i)).size:0;
 function mqTick(){
-  if(!mq||!mq.ready) return;
+  if(!mq||!mq.ready||mq.sql) return;
   /* je suis l'hôte d'un appariement : la partie a commencé, ou l'autre ne vient pas */
   if(mq.room){
     if(myMp&&myMp.g){ mqStop(""); return; }
@@ -337,7 +376,7 @@ async function mpResume(){
 function onlineHTML(){
   const banner=`<p class="notice">Alpha : les parties en ligne sont en test, des bugs et des remises à zéro sont possibles.</p>`;
   if(mq) return `<section class="sec mpbox"><h2>En ligne (Alpha)</h2>${banner}
-    <p><span>Recherche d'un adversaire…</span> <span class="hint">${mqOnline()} joueur${mqOnline()>1?"s":""} en recherche</span></p>
+    <p><span>Recherche d'un adversaire…</span> ${(n=>`<span class="hint">${n} joueur${n>1?"s":""} en recherche</span>`)(mq.sql?(mq.waiting||0)+1:mqOnline())}</p>
     ${mq.verWarn?`<p style="color:var(--warm)">${esc(MP_VER_MSG)}</p>`:""}
     <button class="ghost" data-act="mqcancel">Annuler</button></section>`;
   return `<section class="sec mpbox"><h2>En ligne (Alpha)</h2>${banner}
@@ -372,3 +411,6 @@ function duelHTML(){
     <div class="row2"><button class="ghost" data-act="mpcopy">Copier le code</button><button class="ghost" data-act="mpcancel">Quitter le salon</button></div>
   </section>${invite}`;
 }
+
+/* page fermée ou quittée pendant une recherche : on sort de la file tout de suite (sinon la base attend 20 s) */
+addEventListener("pagehide",()=>{ if(mq&&mq.sql&&!mq.room&&mqDb) mqDb.mmLeave().catch(()=>{}); });

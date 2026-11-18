@@ -131,6 +131,13 @@
       const r = await sb.rpc("feedback_submit", { p_kind:kind, p_card:card || null, p_mode:mode || null, p_build:build || null });
       if(r.error) throw fail(r.error);
     },
+    /* File d'attente des duels en ligne (file-attente.sql) : un seul arbitre dans la base. Erreur PGRST202 = fonction absente (SQL pas encore lancé). */
+    async mmSeek(ver, room){
+      const r = await sb.rpc("mm_seek", { p_ver:ver, p_room:room });
+      if(r.error) throw fail(r.error);
+      return r.data;
+    },
+    async mmLeave(){ await sb.rpc("mm_leave"); },
     async stats(mode, result, plays, opp){
       let r = await sb.rpc("stats_submit", { p_mode:mode, p_result:result, p_plays:plays, p_opp:opp === "humain" ? "humain" : "ia" });
       /* stats-adversaire.sql pas encore lancé dans Supabase : l'ancienne fonction (sans adversaire) */
