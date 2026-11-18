@@ -188,7 +188,7 @@ const MP_DEAL_MSG="Le tirage de la partie n'a pas pu être vérifié : partie an
 function mpSaveSession(s){ try{ if(s){ s.at=Date.now(); localStorage.setItem(MP_KEY,JSON.stringify(s)); } else localStorage.removeItem(MP_KEY); }catch(e){} }
 /* Temps réel : plus de salon commun où tout le monde voit tout le monde. On ne se connecte que pour un duel :
    un canal par code de salon (« roomC », deux joueurs), et le canal de la file d'attente (« roomQ ») seulement
-   pendant une recherche. Un joueur qui joue contre l'IA n'ouvre aucune connexion en direct. */
+   pendant une recherche. Seule autre connexion : la présence anonyme « helvara-lobby » (plus bas, lot B), tant que le jeu est visible. */
 const rtReady=()=>!!(window.claude&&window.claude.use), rtTok={c:0,q:0}, MP_CODE=/^[A-Z]+-(?:\d{4}|[2-9A-HJKMNP-Z]{6})$/;   /* nouveau format (6 caractères) et ancien (4 chiffres : une reprise de session déjà enregistrée continue de marcher) */
 const RT_FAIL="Le salon en direct est injoignable pour l'instant. Vérifie ta connexion internet, puis réessaie.";
 async function rtOpen(kind,name){
@@ -227,7 +227,7 @@ function lobSync(){ if(!lob) return; const s=lobState(); if(s===lobSent) return;
 const lobOthers=()=>lob?lob.peers().filter(p=>!p.sameTab&&p.presence&&p.presence.v===BUILD):[];
 const lobFree=()=>lobOthers().filter(p=>p.presence.s!==2).length;
 const lobSeeking=()=>lobOthers().filter(p=>p.presence.s===1).length;
-document.addEventListener("visibilitychange",()=>{ if(document.hidden) lobClose(); else lobOpen(); });
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) lobClose(); else { lobFull=false; lobOpen(); } });   /* canal plein (ou rempli par un tricheur) : on réessaie au retour au premier plan */
 /* « Jouer » (lot B) : si un autre joueur de même version est libre, on le cherche au plus LOB_WAIT ms (la file d'attente habituelle),
    sinon partie contre l'IA tout de suite. Appariement trouvé : un peu de marge pour entrer dans le salon. Renvoie false = jouer contre l'IA. */
 function playSeek(){

@@ -1046,7 +1046,7 @@ function render(){
   if(screen==="codex") screen="deck"; /* Deck et Collection ne font plus qu'un */
   const body = screen==="play"?gameHTML():screen==="profile"?profileHTML():screen==="deck"?deckHTML():screen==="shop"?shopHTML():screen==="codex"?codexHTML():screen==="rules"?rulesHTML():screen==="duel"?duelHTML():screen==="blitz"?blitzHTML():screen==="board"?boardHTML():screen==="hist"?histHTML():homeHTML();
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
-  /* le code de salon en cours de saisie survit aux redessins (le salon commun en provoque à chaque arrivée ou départ) */
+  /* le code de salon en cours de saisie survit aux redessins (le salon de duel en provoque à chaque arrivée ou départ ; la présence anonyme seulement quand le nombre de joueurs libres ou en recherche change) */
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
   /* effet holo du zoom : détaché pendant le redessin puis remis dans le nouveau conteneur ; détruit si le zoom est fermé ou change de carte */
   const bigId=bigCardId(), holoKeep=zoomHolo&&zoomHolo.id===bigId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
