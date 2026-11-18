@@ -1,36 +1,38 @@
 # Duel d'Helvara : feuille de route
 
-> Écrite le 18 novembre 2026 par Karina. Elle rassemble en un seul endroit :
+> Écrite le 18 novembre 2026 par Karina, mise à jour le soir même. Elle rassemble en un seul endroit :
 > l'analyse compétitive du 17 novembre et mon avis (`docs/analyse-competitive-avis-karina.md`),
 > le plan d'action du 16 novembre (`docs/plan-action.md`) et les questions encore ouvertes (`docs/calendrier-et-en-attente.md`).
 > En cas d'écart avec le code, **le code fait foi**.
 
 ## Comment lire ce fichier
 
-- 🟣 **Pas fini** : c'est là qu'il faut regarder.
-- ✅ **Fait** : rangé tout en bas, pour mémoire.
+- ✅ **Fait** (en vert) : terminé, gardé pour mémoire.
+- 🟣 **À faire** : il reste quelque chose, toujours d'actualité.
 - 👤 **Toi** : une décision ou un test que toi seul peux faire.
 - 🛠️ **Moi** : du code que je fais quand tu donnes le go.
 
-Ce qui n'est pas fini vient en premier, dans l'ordre où il faut le traiter.
+Les parties gardent leur ordre d'origine. Un titre en ✅ veut dire que toute la partie est faite.
 
 ---
 
 ## 1. 🟣 Tes décisions, celles qui débloquent tout le reste
 
-Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantiers qui en dépendent.
+- ✅ **Le premier lieu** : le Trône de Tiamat (puis les quatre autres, voir 3.1).
+- ✅ **Mots-clés de faction : option B**. Ils vont aussi sur les cartes sorties. Il reste à choisir **lesquelles**, faction par faction (voir 3.2).
+- ✅ **Tentation (Désir)** : version automatique (la carte choisit pour l'adversaire l'option qui lui fait le plus mal).
+- ✅ **Le tutoriel** : ce qui gêne, c'est que le Serment n'est pas assez mis en avant alors que c'est la marque du jeu. À rendre plus central et moins guidé (voir 3.4).
+- ✅ **Prix itch.io** : 0 €, avec une cagnotte façon « offre-moi un café ».
+- ✅ **Économie des CHF** : prix des paquets inchangés ; Serment du Blitz ramené à ±25 (croisé ±50) ; gains de Serment plafonnés à 150 CHF par jour.
+- ✅ **Les chiffres du Serment** : validés (tableau ci-dessous).
+- 🟣 👤 **Date de sortie** : avant janvier 2027, le plus tôt possible. À fixer quand les chantiers 3.2 à 3.4 auront une taille connue.
+- 🟣 👤 **Serment « Intensifier »** (choix secret au tour 3, ×2 ou ×3 sur le Serment du tour 5) : il arrive avec le Voile, après la sortie. Rien à décider avant.
 
-- ✅ **Mots-clés de faction : option B** (décidé le 18 novembre). Ils vont aussi sur les cartes sorties. Il reste à choisir **lesquelles**, faction par faction (voir 3.2).
-- 🟣 👤 **Serment « Intensifier »** : est-ce qu'il te plaît tel que décrit (choix secret au tour 3, ×2 ou ×3 sur le Serment du tour 5) ? Il arrive après la sortie, on a le temps.
-- 🟣 👤 **Date de sortie** : avant janvier 2027, le plus tôt possible. À fixer quand les chantiers 3.1 à 3.4 auront une taille connue.
-- ✅ **Économie des CHF** (18 novembre) : prix des paquets inchangés ; Serment du Blitz ramené à ±25 (croisé ±50) ; gains de Serment plafonnés à 150 CHF par jour (duel et Blitz ensemble).
-- 🟣 👤 **Les chiffres provisoires du Serment** (dans `OATH_CHF`, en tête de `js/moteur.js`) : à valider ou à changer d'après tes parties.
-
-| Sujet | Choix provisoire |
+| Sujet | Valeur |
 |---|---|
 | Duel entre amis | tenu +30 CHF, rompu −15, croisé +60 / −30 (jamais sous 0) |
-| Blitz | tenu +25 CHF sur le gain en cours, rompu −25, croisé ±50 (18 novembre) |
-| Plafond | 150 CHF de gains de Serment par jour, duel et Blitz ensemble (18 novembre) |
+| Blitz | tenu +25 CHF sur le gain en cours, rompu −25, croisé ±50 |
+| Plafond | 150 CHF de gains de Serment par jour, duel et Blitz ensemble (les pertes ne sont pas plafonnées) |
 | « Tenu » au profil et pour la quête | lieu gagné, même si la partie est perdue |
 | « Tenu » pour les CHF | lieu **et** partie gagnés |
 | Serment prêté au tour 5 en duel | ne peut pas être relevé |
@@ -39,13 +41,15 @@ Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantier
 
 ## 2. 🟣 Ce qu'il reste à vérifier en jouant
 
-Tu as déjà fait beaucoup de tests (25 parties depuis hier). Ces points n'ont **pas encore été notés comme vérifiés** : si c'est déjà fait, dis-le-moi et je coche.
-
-- 🟣 👤 **Un vrai duel entre amis avec Serment, sur le vrai serveur.** Il n'a tourné que dans un faux salon de test.
-- 🟣 👤 **Recherche automatique d'adversaire en ligne** : réécrite (18 novembre). La base fait l'appariement (un seul arbitre, `file-attente.sql`, relu par `db-guard`), les téléphones en veille sortent seuls de la file au bout de 20 s. Testé à deux onglets avec une base simulée. `file-attente.sql` lancé dans Supabase et vérifié le 18 novembre. **À faire par toi** : un vrai essai à deux téléphones après la mise en ligne.
-- ✅ Aperçu du lien sur Discord vérifié par toi (avec et sans `?x=1`).
-- 🟣 👤 Musique : l'idée de la tension au tour 5 plaît, mais la gestion ou les morceaux pourraient être meilleurs. Mis de côté.
-- 🟣 👤 Cartes holo : correctes sur Sony Xperia 10 IV ; sur Xiaomi Redmi Note 14 ouvert **dans Messenger**, carte noire ou par morceaux (manque de mémoire graphique du navigateur intégré). Correctif du 18 novembre : holo allégé dans les navigateurs intégrés et sur les téléphones à 4 Go ou moins, petites cartes holo arrêtées sous le zoom. **À refaire tester** par ton pote, dans Messenger puis dans Chrome.
+- ✅ Duels entre amis sur le vrai serveur : 3 parties, rapides et fonctionnelles.
+- ✅ Recherche automatique d'adversaire : réécrite avec une file d'attente dans la base (`file-attente.sql`, lancé dans Supabase et vérifié), testée par toi sur deux navigateurs.
+- ✅ Blitz complet avec Serment : testé par toi, l'idée marche.
+- ✅ Conseils de fin de partie : réécrits avec tes cinq textes (FR et EN).
+- ✅ Aperçu du lien sur Discord : vérifié par toi (avec et sans `?x=1`).
+- ✅ Niveau de l'IA : jugé bien meilleur par toi et ton pote. À revoir seulement si besoin.
+- ✅ Cartes holo : correctes sur Sony Xperia 10 IV et sur Xiaomi Redmi Note 14 dans Chrome. Dans Messenger, un correctif est en place mais n'a pas été retesté.
+- 🟣 👤 Un duel en ligne sur les cinq nouveaux lieux (ils n'ont été joués que contre l'IA).
+- 🟣 👤 Musique : mise de côté, et loin. Tu veux d'abord y réfléchir à fond.
 
 ---
 
@@ -53,20 +57,20 @@ Tu as déjà fait beaucoup de tests (25 parties depuis hier). Ces points n'ont *
 
 Objectif : que le jeu soit différent de Snap dès la première partie, et sortir. Un chantier à la fois, terminé avant d'ouvrir le suivant.
 
-### 3.1 🟣 🛠️ Lieux à état
-- ✅ Trône de Tiamat (change de camp au tour 4), avec ton illustration. Mesuré sur 12 000 parties : équilibré, plus discret que la Cathédrale. Le +2 des tours 1 à 3 ne compte jamais au décompte final : c'est un piège visuel.
-- 🟣 Autel du Silence (aucun effet Révélation ni Continu ici)
-- 🟣 Marché des Ombres (au tour 4, échange la carte la plus faible de chaque joueur ici). À trancher : la carte échangée garde-t-elle son effet Continu ?
-- 🟣 Le lieu « voisins », ex-Faille d'Apsu : nouveau nom à trouver (« La Faille » existe déjà), et il affecte « les lieux voisins » plutôt que « le lieu de droite ».
-- 🟣 Jardins de Désir, version adaptée au jeu simultané : « la première carte que tu joues ici gagne +2 ».
-- 🟣 👤 Une illustration par lieu (800 × 597), de ta main.
+### 3.1 ✅ Lieux à état
+Les cinq lieux sont codés avec tes illustrations, mesurés sur 48 000 parties simulées et testés sur écran de téléphone. Détail pour les joueurs : `docs/patch-note-2026-11-18.md`.
+- ✅ **Le Trône de Tiamat** : jusqu'au tour 3, +2 au côté qui a moins de cartes ici ; dès le tour 4, au côté qui en a plus. Seul le décompte final compte : les trois premiers tours servent de piège. Les Révélations déjà jouées (Céleste…) restent acquises.
+- ✅ **L'Autel du Silence** : les cartes jouées ici perdent leurs effets, Révélation comprise. Il punit les decks à effets (« Destruction » y perd 11 points, et Yarden X Apsu y perd tout son intérêt) : c'est voulu, à revoir dans le temps.
+- ✅ **Les Jardins de Désir** : la première carte que chaque joueur joue ici gagne +2.
+- ✅ **Les Eaux d'Apsu** (ex-Faille d'Apsu) : la première carte de chaque joueur ici fait perdre 1 à toutes les cartes des lieux voisins, des deux côtés. « Chaque carte » était trop lourd (le vainqueur changeait dans une partie sur quatre).
+- ✅ **Le Marché des Ombres** : fin du tour 4, la plus faible de chaque joueur ici change de camp. Elle garde tout, effets compris, et joue pour son nouveau camp.
 
 ### 3.2 🟣 🛠️ Mots-clés de faction (option B : cartes sorties comprises)
 - 🟣 👤 Choisir, faction par faction, les cartes (sorties ou non) qui reçoivent le mot-clé. Je peux te proposer une première liste.
 - 🟣 🛠️ Mesurer toute la faction avant et après : ajouter un mot-clé à des cartes sorties change tout le méta.
 - 🟣 **Lien** (Helvara) : +1 de puissance par autre carte Helvara ici, avec un plafond. À mesurer avec les Escaliers du Marché, qui donnent déjà +2 aux cartes Helvara.
 - 🟣 **Ère** (Primordial) : effet en plus si la carte est en jeu depuis 2 tours.
-- 🟣 **Tentation** (Désir) : version automatique (la carte choisit pour l'adversaire l'option qui lui fait le plus mal).
+- 🟣 **Tentation** (Désir) : version automatique, décidée.
 - 🟣 **Verdict** (Jugement) : détruit **une** carte adverse ici sous un seuil, en respectant les protections.
 - 🟣 👤 Les effets précis de chaque carte : c'est ta plume.
 - 🟣 🛠️ Chaque effet mesuré (outil d'équilibrage + `balance-reviewer`), l'IA apprend à les jouer, cercle des contres vérifié (aucun matchup au-dessus de 60 %).
@@ -78,18 +82,18 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 - 🟣 👤 L'histoire de la Chronique et les portraits des quatre rivaux (provisoires aujourd'hui : Set, Lilith, Anubis, Joanna).
 
 ### 3.4 🟣 🛠️ Accueil des nouveaux joueurs
+- 🟣 **Tutoriel centré sur le Serment, moins guidé** : faisable dès maintenant. Proposition dans la session du 18 novembre, en attente de ton go.
 - 🟣 Partie rapide avec un deck prêté (parmi les 7 decks prêts) dès la première partie.
-- 🟣 Tutoriel repris : le Serment n'est pas assez mis en avant alors que c'est la marque du jeu. Le rendre plus central et moins guidé.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
 
 ### 3.5 🟣 Préparer la sortie (en parallèle, sans rien publier)
-- 🟣 👤🛠️ Page itch.io en brouillon : textes FR et EN, captures, prix libre.
+- 🟣 👤🛠️ Page itch.io en brouillon : textes FR et EN, captures, prix 0 € et cagnotte.
 - 🟣 🛠️ Séquences de jeu enregistrées pour le trailer de 30 secondes. 👤 Toi : le montage.
 - 🟣 👤 Devlog r/gamedev (le seul post possible avant la sortie).
-- 🟣 👤 **Droits sur les illustrations** : relire les conditions de l'outil qui les a générées avant d'activer un prix. Un avis rapide d'un pro serait utile.
+- 🟣 👤 **Droits sur les illustrations** : relire les conditions de l'outil qui les a générées avant d'activer la cagnotte. Un avis rapide d'un pro serait utile.
 - 🟣 🛠️ Bouton de partage (victoire, carte tirée).
-- 🟣 Ne **jamais** écrire « open source » : le jeu est « Tous droits réservés » (fichier `LICENSE`), et c'est très bien comme ça.
+- ✅ Licence : « Tous droits réservés » (fichier `LICENSE`). Ne **jamais** écrire « open source ».
 
 ### 3.6 🟣 La sortie
 - 🟣 👤 Le même jour : itch.io, Reddit (règles de chaque subreddit lues avant), thread X, Discord.
@@ -106,7 +110,7 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 
 ### 4.2 🟣 Ensuite
 - 🟣 🛠️ Cosmétiques gagnés en CHF : un dos de carte et un effet de victoire pour commencer, puis la boutique rotative (« l'échoppe du jour » étendue).
-- 🟣 👤 Art alternatif (le jeu gère déjà les variantes).
+- 🟣 👤 Art alternatif (le jeu gère déjà les variantes, et elles peuvent recevoir `vfx` ou holo).
 - 🟣 🛠️ Classement saisonnier avec récompenses cosmétiques.
 - 🟣 👤 Tournoi sur Discord avec les duels entre amis, IndieDB, vidéo YouTube, petits streamers.
 - 🟣 🛠️ Chronique 2 (cartes temporaires et handicaps entre les matchs).
@@ -119,7 +123,7 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 - 🟣 Battle Pass premium, badge supporter dans le jeu (en attendant : un rôle Discord donné à la main).
 - 🟣 Mode spectateur, tournoi dans le jeu, émotes.
 - 🟣 Nouvelles langues, selon d'où viennent les joueurs.
-- 🟣 Abandonner ou garder la file d'attente en direct (à revoir après un vrai duel sur le serveur).
+- ✅ File d'attente en direct : remplacée par la file dans la base (18 novembre).
 
 ---
 
@@ -131,32 +135,26 @@ Objectif : que le jeu soit différent de Snap dès la première partie, et sorti
 - 🟣 👤 Noms à confirmer : `reflet_noir` (à renommer), « L'Enfant sans École ».
 - 🟣 👤 Questions du 22 octobre : formulation « univers d'Helvara, inspiré de Lausanne » dans le tutoriel, La Source (50 parties avec 8 cartes Helvara ?), nuance de Vesta, cartes holo sans coût ni nom affichés.
 - 🟣 👤 Marduk, Ymir, Nammu : ultra-légendaires de faction ou pas ?
-- 🟣 👤 Raccourcir les textes de lieux les plus longs.
+- 🟣 👤 Raccourcir les textes de lieux les plus longs (le Trône et les Eaux d'Apsu sont les nouveaux plus longs).
 - 🟣 👤 Gel des nouvelles cartes jusqu'au lot de mars (hors mots-clés et Serment) : toujours d'actualité ?
 
 ---
 
-## 6. `CLAUDE.md` retravaillé le 18 novembre
+## 6. ✅ `CLAUDE.md` retravaillé
 
-Ton intuition est juste : une partie du fichier freine. Mais il mélange deux choses très différentes, et il ne faut pas les traiter pareil.
+### 6.1 ✅ Les garde-fous, gardés tels quels
+- ✅ Aucun secret ni adresse e-mail personnelle dans le dépôt.
+- ✅ Pas de `push --force`, pas de réécriture de l'historique.
+- ✅ Supabase : lecture seule d'abord, toute écriture validée par toi (c'est la base en direct, avec les vrais joueurs).
+- ✅ `gPick` / `gShuffle` pour le hasard, `BUILD` à changer, `node outils/versions.js` et les tests après chaque modification.
+- ✅ CSP, aucun site tiers au chargement, service worker sans Supabase, pseudos échappés.
 
-### 6.1 Les garde-fous, à garder tels quels
-Ils te protègent, toi et tes joueurs. Les retirer, c'est risquer de casser quelque chose qu'on ne peut pas réparer.
-- Aucun secret ni adresse e-mail personnelle dans le dépôt.
-- Pas de `push --force`, pas de réécriture de l'historique.
-- Supabase : lecture seule d'abord, toute écriture validée par toi (c'est la base en direct, avec les vrais joueurs).
-- `gPick` / `gShuffle` pour le hasard, `BUILD` à changer, `node outils/versions.js` et les tests après chaque modification.
-- CSP, aucun site tiers au chargement, service worker sans Supabase, pseudos échappés.
-
-### 6.2 Les décisions de design, revues le 18 novembre
+### 6.2 ✅ Les décisions de design, revues le 18 novembre
 - ✅ **« Sous 100 decks, ne rien décider »** : assouplie. Correction légère d'une carte sortie possible sur simulation (écart au-delà de ±8 points) ; grosse refonte = stats réelles croisées avec la simulation.
-- ✅ **Cartes sorties et mots-clés** : option B. Les mots-clés peuvent aussi aller sur les cartes sorties, chaque vague mesurée avant publication.
-- ✅ **`vfx` et holo** : ouverts aux variantes d'art alternatif, quelle que soit leur rareté. Les cartes de base gardent la règle.
-- ✅ **Publication** : on travaille sur une branche. Push sur `main` ou PR **seulement si Jordan le demande** ; sinon, il ouvre la PR et fusionne lui-même.
-- ✅ `CLAUDE.md` réécrit : « Garde-fous » (permanents) séparés des « Décisions de design » (modifiables par Jordan), lien vers cette feuille de route.
-
-### 6.3 Ce qui reste
-- 🟣 👤 Fusionner `CLAUDE.md` et ces documents sur `main` (PR à ouvrir par toi), puis démarrer une nouvelle session.
+- ✅ **Cartes sorties et mots-clés** : option B, chaque vague mesurée avant publication.
+- ✅ **`vfx` et holo** : ouverts aux variantes d'art alternatif, quelle que soit leur rareté.
+- ✅ **Publication** : on travaille sur une branche. Push sur `main` ou PR **seulement si tu le demandes** ; sinon, tu ouvres la PR et fusionnes toi-même.
+- ✅ `CLAUDE.md` réécrit (garde-fous séparés des décisions de design, lien vers ce fichier) et fusionné sur `main`.
 
 ---
 
@@ -181,16 +179,12 @@ Ils te protègent, toi et tes joueurs. Les retirer, c'est risquer de casser quel
 - ✅ Écran de partie fixe pour tous : le plateau ne change jamais de taille, tout ce qui est passager flotte en bulle.
 - ✅ Tutoriel adapté à l'écran fixe, bouton ± près de l'énergie.
 
-### Décisions du 18 novembre (soir)
-- ✅ Premier lieu : le Trône de Tiamat, codé avec ton illustration.
-- ✅ Tentation (Désir) : version automatique.
-- ✅ Prix itch.io : 0 €, avec une cagnotte façon « offre-moi un café » au lieu d'un prix suggéré.
-- ✅ Blitz avec Serment testé par toi : l'idée marche.
-- ✅ Niveau de l'IA : jugé bien meilleur par toi et ton pote, à revoir seulement si besoin.
-- ✅ Conseils de fin de partie réécrits avec tes cinq textes (FR et EN).
-
-### Ce 18 novembre
+### 18 novembre
 - ✅ Analyse compétitive relue et commentée partie par partie (`docs/analyse-competitive-avis-karina.md`).
-- ✅ Licence vérifiée : « Tous droits réservés » existe déjà (`LICENSE`), à garder.
-- ✅ Prix minimum itch.io décidé sur le principe : 0 € avec prix suggéré.
+- ✅ Cinq lieux à état : Trône de Tiamat, Autel du Silence, Jardins de Désir, Eaux d'Apsu, Marché des Ombres.
+- ✅ Serment rééquilibré (Blitz ±25, plafond de 150 CHF par jour).
+- ✅ Recherche d'adversaire en ligne refaite avec la file d'attente dans la base, pages de confidentialité FR et EN à jour.
+- ✅ Holo allégé dans les navigateurs intégrés et sur les petits téléphones.
+- ✅ Conseils de fin de partie réécrits.
+- ✅ Patch note joueurs : `docs/patch-note-2026-11-18.md`.
 - ✅ Le Voile fixé comme priorité n°1 après la sortie, Chronique 1 réduite à 3 matchs.

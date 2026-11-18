@@ -340,6 +340,10 @@ const FX=(()=>{
     l_archives:{loc:[["burst",{col:["230,210,170","245,235,210"],up:true,n:22}],["flicker",{col:"240,210,150"}]]},
     l_cathedrale:{loc:[["rays",{col:"235,235,255",n:4}],["rings",{col:GOLD,n:2}]]},
     l_trone:  {loc:[["rays",{col:"185,140,255",n:3}],["flicker",{col:"170,120,255",y:.6}]]},
+    l_autel:  {loc:[["rings",{col:"200,200,215",n:3}],["smoke",{col:"150,155,175"}]]},
+    l_jardins:{loc:[["sparkle",{col:"200,40,70",n:14}],["flicker",{col:"255,190,110",y:.4}]]},
+    l_eaux:   {loc:[["flicker",{col:"70,220,200",y:.55}],["burst",{col:["70,220,200","150,240,230","210,250,245"],n:16}]]},
+    l_marche: {loc:[["smoke",{col:"80,95,100"}],["flicker",{col:"255,190,110",y:.5}]]},
     /* épiques : une brève gerbe d'étincelles sur le lieu, à la couleur de la faction (moins d'une seconde) */
     epic_helvara:   {loc:[["sparkle",{col:"255,215,140",n:11}],["rings",{col:"255,215,140",n:1}]]},
     epic_primordial:{loc:[["sparkle",{col:"255,150,100",n:11}],["rings",{col:"255,150,100",n:1}]]},
