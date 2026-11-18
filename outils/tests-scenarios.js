@@ -1308,18 +1308,74 @@ async function inPage() {
     T("Duel : relever le Serment adverse (même lieu) = croisé", S.oath === 1 && S.aiOath === 1 && S.log.some(l => /^Serment croisé sur/.test(l)), "");
     fresh(); S.turn = 3; S.mp = mpStub(true); S.oath = 0; await resolveTurn(Object.assign([], { oath: 2 }), Object.assign([], { oath: 1 }), false);
     T("Duel : un Serment déjà prêté ne se remplace pas, et ne se compte pas deux fois", S.oath === 0 && S.aiOath === 1, `${S.oath} ${S.aiOath}`);
-    /* S6. Duel : envoi des coups et reprise après coupure */
-    fresh(); S.turn = 2; S.mp = mpStub(true); myMp = { hist: {}, role: "host", code: "TEST-AAAAAA" }; S.oathStage = 1; mpLock();
-    T("Duel : mpLock envoie le Serment avec les coups du tour", JSON.stringify(myMp.hist[2]) === JSON.stringify([[1, 0, "o"]]) && S.mp.locked === true, JSON.stringify(myMp.hist));
+    /* S6. Duel : envoi des coups (scellés) et reprise après coupure */
+    const sealed = async plays => { const salt = mpSalt(); return { plays, salt, seal: await mpSeal(plays, salt) }; };
+    const sealH = async h => { const o = { hist: h, salt: {}, seal: {} }; for (const k in h) { const x = await sealed(h[k]); o.salt[k] = x.salt; o.seal[k] = x.seal; } return o; };
+    fresh(); S.turn = 2; S.mp = mpStub(true); myMp = { hist: {}, role: "host", code: "TEST-AAAAAA" }; mpPend = null; S.oathStage = 1; mpLock(); await wait(50);
+    T("Duel : mpLock scelle le Serment avec les coups du tour (empreinte envoyée, coups gardés sur le téléphone)", mpPend && JSON.stringify(mpPend.plays) === JSON.stringify([[1, 0, "o"]]) && myMp.seal && myMp.seal[2] === mpPend.seal && !myMp.hist[2] && S.mp.locked === true, JSON.stringify(myMp));
     { const mk2 = host => { newGame(); quiet = true; S.tut = false; S.mp = mpStub(host); S.mp.replaying = true; };
       const hostHist = { 1: [[0, 0, "o"]], 2: [] }, guestHist = { 1: [], 2: [[0, 0, "o"]] };
-      mk2(true); myMp = { hist: hostHist, role: "host", code: "TEST-AAAAAA" }; await mpReplay({ hist: guestHist });
+      mk2(true); myMp = { hist: hostHist, role: "host", code: "TEST-AAAAAA" }; mpPend = null; await mpReplay(await sealH(guestHist));
       const logs = S.log.filter(l => /Serment/.test(l)).length;
       T("Reprise d'un duel : Serments rejoués une seule fois chacun (prêté puis croisé), rien compté", S.oath === 0 && S.aiOath === 0 && logs === 2 && S.turn === 3 && !P.oathK, `oath ${S.oath}/${S.aiOath}, journal ${logs}, tour ${S.turn}`);
-      mk2(false); myMp = { hist: guestHist, role: "guest", code: "TEST-AAAAAA" }; await mpReplay({ hist: hostHist });
+      mk2(false); myMp = { hist: guestHist, role: "guest", code: "TEST-AAAAAA" }; await mpReplay(await sealH(hostHist));
       T("Reprise d'un duel : même résultat vu de l'autre joueur", S.oath === 0 && S.aiOath === 0 && S.turn === 3, `oath ${S.oath}/${S.aiOath}, tour ${S.turn}`);
-      mk2(true); myMp = { hist: { 1: [[2, 0, "o"]] }, role: "host", code: "TEST-AAAAAA" }; await mpReplay({ hist: {} });
-      T("Reprise d'un duel : mon Serment envoyé mais pas encore résolu revient en attente, caché, sans être appliqué", S.oathStage === 2 && S.oath == null && S.mp.locked === true, `stage ${S.oathStage}, oath ${S.oath}`); }
+      mk2(true); myMp = { hist: hostHist, role: "host", code: "TEST-AAAAAA" }; { const om = await sealH(guestHist); om.hist = { 1: [], 2: [[1, 0, "o"]] }; await mpReplay(om); }
+      T("Reprise d'un duel : coups adverses modifiés après coup, refusés aussi à la reprise", S.oath === 0 && S.aiOath == null && S.mp.bad === 1 && S.log.some(l => /^Coups adverses refusés/.test(l)), `oath ${S.oath}/${S.aiOath}, refus ${S.mp.bad}`);
+      mk2(true); myMp = { hist: {}, seal: { 1: "x" }, role: "host", code: "TEST-AAAAAA" }; mpPend = { g: 1, t: 1, plays: [[2, 0, "o"]], salt: "s", seal: "x" }; await mpReplay({ hist: {} });
+      T("Reprise d'un duel : mon Serment scellé mais pas encore résolu revient en attente, caché, sans être appliqué", S.oathStage === 2 && S.oath == null && S.mp.locked === true && !myMp.hist[1], `stage ${S.oathStage}, oath ${S.oath}`); }
+    /* S6 bis. Coups scellés : un adversaire simulé, honnête puis tricheur */
+    { const p3 = plain.filter(id => CARDS[id].cost === 3), c1 = i => { const c = card(p3[i]); c.cheap = 2; return c; };
+      const flow = async cheat => {
+        fresh(); S.turn = 2; S.energy = S.energyE = 6; S.busy = false; S.over = null;
+        S.mp = { g: 1, meHost: true, oppNick: "Ami", locked: false, gone: false, replaying: false, seen: {} };
+        const a = c1(0), b = c1(1), z = c1(2); S.hand.e = [b, z];
+        const OM = { role: "guest", code: "TEST-AAAAAA", tok: "b", oppTok: "a", g: 1, hist: {}, seal: {}, salt: {} };
+        roomC = { peers: () => [{ presence: { mp: OM } }], presence: () => Promise.resolve() };
+        myMp = { role: "host", code: "TEST-AAAAAA", tok: "a", oppTok: "b", g: 1, hist: {}, seal: {}, salt: {} }; mpPend = null;
+        S.staged = [{ c: a, li: 0 }]; S.hand.p = []; mpLock(); await wait(50); mpTick();
+        const hidden = !!myMp.seal[2] && !myMp.hist[2] && !myMp.salt[2];
+        const honest = await sealed([[b.uid, 1]]); OM.seal[2] = honest.seal; mpTick();
+        const revealed = !!myMp.hist[2] && !!myMp.salt[2] && S.mp.oppLocked;
+        if (cheat === "change") { OM.hist[2] = [[z.uid, 2]]; OM.salt[2] = honest.salt; }
+        else if (cheat === "reseal") { const x = await sealed([[z.uid, 2]]); OM.seal[2] = x.seal; OM.hist[2] = x.plays; OM.salt[2] = x.salt; }
+        else { OM.hist[2] = honest.plays; OM.salt[2] = honest.salt; }
+        mpTick(); for (let k = 0; k < 300 && S.turn === 2; k++) await wait(50);
+        return { hidden, revealed, turn: S.turn, b: S.board.e[1].includes(b), z: S.board.e[2].includes(z), a: S.board.p[0].includes(a), bad: S.mp.bad || 0, refused: S.log.some(l => /^Coups adverses refusés/.test(l)) };
+      };
+      try {
+        const H = await flow("");
+        T("Coups scellés : mes coups restent cachés tant que l'adversaire n'a pas fini son tour", H.hidden, JSON.stringify(H));
+        T("Coups scellés : révélés dès que son empreinte arrive", H.revealed, JSON.stringify(H));
+        T("Coups scellés : adversaire honnête, le tour se joue normalement", H.turn === 3 && H.a && H.b && !H.z && H.bad === 0, JSON.stringify(H));
+        const C = await flow("change");
+        T("Coups scellés : coups changés après avoir vu les miens, refusés", C.turn === 3 && C.a && !C.b && !C.z && C.bad === 1 && C.refused, JSON.stringify(C));
+        const R = await flow("reseal");
+        T("Coups scellés : nouvelle empreinte publiée après avoir vu mes coups, refusée", R.turn === 3 && R.a && !R.b && !R.z && R.bad === 1 && R.refused, JSON.stringify(R));
+        const lg = LANG; LANG = "en"; const en = trUI("Coups adverses refusés : ils ne correspondent pas à ceux annoncés"); LANG = lg;
+        T("Coups scellés : message traduit en anglais", /^Opponent's moves refused/.test(en), en);
+        const lp = locPool(), d1 = await mpDeal("a1", "b2", lp, lp.slice().reverse()), d2 = await mpDeal("a1", "b2", lp.slice().reverse(), lp), d3 = await mpDeal("a1", "b3", lp, lp);
+        T("Graine commune : même tirage quel que soit l'ordre des lieux reçus, et il change avec le nombre de l'invité", JSON.stringify(d1) === JSON.stringify(d2) && d1.locs.length === 3 && d1.locs.every(l => lp.includes(l)) && JSON.stringify(d1) !== JSON.stringify(d3), JSON.stringify([d1, d3]));
+        { const f = lp.find(x => !d1.locs.includes(x)), e1 = await mpDeal("a1", "b2", lp, lp, f, f), e2 = await mpDeal("a1", "b2", lp, lp, f, lp.find(x => x !== f)), e3 = await mpDeal("a1", "b2", lp, lp, f, null);
+          T("Lieu à l'honneur en duel : présent si les deux téléphones sont d'accord, jamais imposé par un seul", e1.locs.includes(f) && e1.locs.length === 3 && new Set(e1.locs).size === 3 && JSON.stringify(e2) === JSON.stringify(d1) && JSON.stringify(e3) === JSON.stringify(d1), JSON.stringify([f, e1, e2])); }
+        T("Graine commune : un adversaire qui annonce seulement 3 lieux (pour les choisir) est refusé", lp.length > 5 && !mpPoolOk(lp.slice(0, 3)) && mpPoolOk(lp) && mpPoolOk(lp.slice(2)) && !mpPoolOk("x"), lp.length);
+        { const tom = (() => { const t = new Date(today() + "T12:00:00Z"); t.setUTCDate(t.getUTCDate() + 1); return t.toISOString().slice(0, 10); })();
+          const ok = POOL.filter(id => REL(id) && !CARDS[id].base && !ULof(id) && !POOL.some(x => x !== id && CARDS[x].base === id)).slice(0, 12);
+          const later = POOL.find(id => CARDS[id].rel && CARDS[id].rel > tom && !ULof(id)), soon = POOL.find(id => CARDS[id].rel === tom);
+          const vr = POOL.find(id => CARDS[id].base && REL(id) && REL(CARDS[id].base) && !ULof(id) && charOf(id) !== "yarden");
+          const fu = ULS.find(u => !u.fac && REL(u.id) && u.req.length), ul2 = ULS.filter(u => REL(u.id)).map(u => u.id).slice(0, 2);
+          const w = d => mpDeckWhy(d), sw = (d, id) => [id, ...d.filter(x => x !== id && charOf(x) !== charOf(id))].slice(0, 12);
+          T("Deck adverse : un deck permis passe", ok.length === 12 && w(ok) === "", w(ok));
+          T("Deck adverse : carte pas encore sortie refusée", later && /pas encore sortie$/.test(w(sw(ok, later))), later + " " + w(sw(ok, later)));
+          T("Deck adverse : carte qui sort demain acceptée (horloges décalées)", !soon || w(sw(ok, soon)) === "", soon + " " + (soon && w(sw(ok, soon))));
+          T("Deck adverse : deux versions du même personnage refusées", vr && /une seule version par personnage$/.test(w([vr, CARDS[vr].base, ...ok.filter(x => charOf(x) !== charOf(vr))].slice(0, 12))), vr);
+          T("Deck adverse : fusion sans ses deux personnages refusée", fu && /sans ses exigences$/.test(w(sw(ok.filter(x => !fu.req.some(r => [].concat(r).includes(x))), fu.id))), fu && fu.id);
+          T("Deck adverse : deux ultra-légendaires refusées", ul2.length === 2 && w([...ul2, ...ok].slice(0, 12)) === "plus d'une ultra-légendaire", ul2);
+          T("Deck adverse : forme invalide refusée", w(ok.slice(0, 11)) === "deck incomplet" && w([...ok.slice(0, 11), "pas_une_carte"]) === "deck incomplet" && w("x") === "deck incomplet", "");
+          const k = LANG; LANG = "en"; const e1 = trUI(MP_DECK_MSG(`${CARDS[later].name} pas encore sortie`)), e2 = trUI(MP_MYDECK_MSG("plus d'une ultra-légendaire")); LANG = k;
+          T("Deck adverse : messages traduits en anglais", /^Opponent's deck refused \(.+ not released yet\): game cancelled\.$/.test(e1) && /^Your deck can't play online \(more than one ultra-legendary\)/.test(e2), e1 + " | " + e2); }
+        const en2 = (() => { const k = LANG; LANG = "en"; const t = trUI(MP_DEAL_MSG); LANG = k; return t; })(); T("Graine commune : message d'annulation traduit en anglais", /^The game's draw could not be verified/.test(en2), en2);
+      } finally { roomC = null; mpPend = null; } }
     myMp = null;
     /* S7. Fin de partie en duel : CHF, compteurs, quête */
     const endDuel = async (pw, ow, cross) => { fresh(); S.turn = 6; S.mp = mpStub(true); S.oath = ow; if (cross) S.aiOath = ow; setBoard(...pw); finish(); return S.over; };
@@ -1459,6 +1515,66 @@ async function inPage() {
     /* l'IA défend son serment : léger bonus pour jouer sur le lieu juré */
     { fresh(); S.turn = 2; S.locs.forEach(L => L.rev = true); S.energyE = 2; const a = card(plain[0], 2), b = card(plain[1], 2); S.hand.e = [a, b]; S.aiOath = null; const pl0 = aiPlan("e", 6).map(x => x.li);
       S.aiOath = 2; const pl1 = aiPlan("e", 6).map(x => x.li); T("Rivaux : l'IA tient compte de son lieu juré (bonus de placement)", pl1.every(l => l === 2) || pl1.filter(l => l === 2).length >= pl0.filter(l => l === 2).length, pl0 + " / " + pl1); S.aiOath = null; }
+    S = null; }
+
+  /* ===== Anti-triche, lot A : coups adverses interdits refusés (checkPlays), coups honnêtes toujours acceptés ===== */
+  { const p3 = plain.filter(id => CARDS[id].cost === 3), cc = (cost, i) => { const c = card(p3[i]); c.cheap = 3 - cost; return c; };   /* cartes sans effet de coût 3, rendues moins chères */
+    const chk = (list, extra) => checkPlays("e", Object.assign(list.map(([c, li]) => ({ c, li })), extra || {}));
+    const setup = (t, en) => { fresh(); S.turn = t; S.energyE = en; S.board.e = [[], [], []]; S.board.p = [[], [], []]; };
+    { setup(3, 3); const a = cc(2, 0), b = cc(2, 1); S.hand.e = [a, b]; const r = chk([[a, 0], [b, 1]]);
+      T("Anti-triche : coup sans assez d'énergie refusé (2 + 2 avec 3 d'énergie)", r.plays.length === 1 && r.plays[0].c === a && r.bad.length === 1 && r.bad[0][1] === "energy", JSON.stringify(r.bad)); }
+    { setup(3, 3); const big = cc(3, 0), x = cc(1, 0), y = cc(2, 0); S.hand.e = [big, x, y]; S.energyE = 3; const r = chk([[x, 0], [big, 0], [y, 1]]);
+      T("Anti-triche : un coup refusé n'empêche pas les suivants (1, puis 3 refusé, puis 2)", r.plays.map(p => p.c).join() === [x, y].join() && r.bad.length === 1, JSON.stringify(r.bad)); }
+    { setup(3, 6); for (let i = 0; i < 4; i++) put("e", 0, plain[i], 1); const a = cc(1, 0); S.hand.e = [a]; const r = chk([[a, 0]]);
+      T("Anti-triche : carte posée dans un lieu plein refusée", !r.plays.length && r.bad[0][1] === "room", JSON.stringify(r.bad)); }
+    { setup(3, 6); S.locs[1].locked = true; const a = cc(1, 0); S.hand.e = [a]; const r = chk([[a, 1]]);
+      T("Anti-triche : carte posée sur un lieu verrouillé refusée", !r.plays.length && r.bad[0][1] === "locked", JSON.stringify(r.bad)); }
+    { setup(3, 6); S.mute = [{ s: "e", li: 2, t: 3 }]; const a = cc(1, 0); S.hand.e = [a]; const r = chk([[a, 2]]); const r2 = chk([[a, 1]]);
+      T("Anti-triche : lieu réduit au silence pour lui refusé, les autres lieux restent ouverts", !r.plays.length && r.bad[0][1] === "locked" && r2.plays.length === 1, JSON.stringify(r.bad)); }
+    { setup(6, 12); const n = card("nemesis"); S.hand.e = [n]; const r = chk([[n, 0]]);
+      T("Anti-triche : Nemesis au tour 6 refusée (même avec de l'énergie gardée)", !r.plays.length && r.bad[0][1] === "banned", JSON.stringify(r.bad)); }
+    { setup(3, 6); const th = put("e", 2, "themis"); th.arr = 2; const a = cc(1, 0), b = cc(1, 1); S.hand.e = [a, b]; const r = chk([[a, 2], [b, 2]]);
+      T("Anti-triche : Thémis, une seule carte par tour dans son lieu", r.plays.length === 1 && r.bad[0][1] === "themis", JSON.stringify(r.bad)); }
+    { setup(3, 6); for (let i = 0; i < 4; i++) put("p", 0, plain[i], 1); const h = card("herakles"); S.hand.e = [h]; const r = chk([[h, 0]]); const r2 = chk([[h, 1]]);
+      T("Anti-triche : Héraklès refusé là où je n'ai plus de place, accepté ailleurs", !r.plays.length && r.bad[0][1] === "room" && r2.plays.length === 1, JSON.stringify(r.bad)); }
+    { setup(3, 6); const w = put("e", 0, "nageuse_lac"); w.arr = 3; const r = chk([], { swim: { c: w, li: 1, from: 0 } }); w.arr = 2; const r2 = chk([], { swim: { c: w, li: 1, from: 0 } });
+      T("Anti-triche : Nageuse arrivée ce tour-ci, traversée refusée ; arrivée avant, acceptée", !r.plays.swim && r.bad[0][1] === "move" && r2.plays.swim && !r2.bad.length, JSON.stringify([r.bad, r2.bad])); }
+    { setup(3, 3); S.mp = { g: 1, meHost: true, oppNick: "Ami", locked: false, gone: false, replaying: false }; S.energy = 3; const a = cc(2, 0), b = cc(2, 1); S.hand.e = [a, b]; S.hand.p = [];
+      await resolveTurn([], oppPlays([[a.uid, 0], [b.uid, 1]]), false);
+      T("Anti-triche (duel) : coup refusé noté au journal, compté (S.mp.bad), la carte reste en main adverse", S.board.e[1].length === 0 && S.board.e[0].includes(a) && S.hand.e.includes(b) && S.mp.bad === 1 && S.log.some(l => /^Coup adverse refusé : .+ \(énergie insuffisante\)$/.test(l)), `${S.mp.bad} ${S.log.slice(-3).join(" | ")}`);
+      const lg = LANG; LANG = "en"; const en = trUI("Coup adverse refusé : Zeus (plus de place)"); LANG = lg; T("Anti-triche : message traduit en anglais", en === "Opponent's move refused: Zeus (no room left)", en); }
+    /* Nageuse : annuler la traversée rend en main la carte posée dans la place qu'elle libérait */
+    { setup(3, 6); S.energy = 6; S.staged = []; S.swimP = null; S.busy = false; for (let i = 0; i < 3; i++) put("p", 0, plain[i], 1); const w = put("p", 0, "nageuse_lac"); w.arr = 1;
+      const a = cc(1, 0); S.hand.p = [a]; const moved = swimTo(1), st = canStage(a, 0); if (st) { S.hand.p = []; S.staged.push({ c: a, li: 0 }); } swimUndo();
+      T("Nageuse : annuler la traversée rend la carte posée à sa place", moved && st && S.staged.length === 0 && S.hand.p.includes(a) && !S.swimP, `${moved} ${st} ${S.staged.length}`); S.mp = null; }
+    /* Parties complètes : le joueur pose comme dans l'interface (canStage, retraits, Nageuse et annulation), l'adversaire est l'IA ; rien ne doit être refusé.
+       (Les coups de l'IA ne sont pas vérifiés : elle compte Tezcatlipoca posé le même tour comme absorbant, l'interface non. Sans effet en duel.) */
+    { const pool = Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)), sp = ["ulya", "ereshkigal_n", "nergal", "herakles", "themis", "nemesis", "nageuse_lac", "tezcatlipoca", "vesta", "dagda", "isis", "promethee", "cronos", "plume"].filter(id => CARDS[id]);
+      const rnd = n => Math.floor(Math.random() * n), pick = (a, n) => { const c = a.slice(), o = []; while (o.length < n && c.length) o.push(c.splice(rnd(c.length), 1)[0]); return o; };
+      const keepDeck = window.aiDeck; let falseP = [], nP = 0, nSw = 0, games = 0;
+      try {
+        for (let g = 0; g < 80; g++) {
+          const dp = [...new Set([...pick(sp, 6), ...pick(pool, 12)])].slice(0, 12), de = [...new Set([...pick(sp, 6), ...pick(pool, 12)])].slice(0, 12);
+          P.owned = Object.keys(CARDS).filter(id => !CARDS[id].token); P.deck = dp; window.aiDeck = () => ({ deck: de, fac: "helvara" });
+          newGame(); quiet = true; S.tut = false; games++;
+          for (let t = 1; t <= 6 && !S.over; t++) {
+            S.staged = []; S.swimP = null; S.busy = false;
+            const swim = () => { if (S.swimP || Math.random() < .4) return; if (!swimmer()) return; const ls = [0, 1, 2].filter(swimOk); if (ls.length) swimTo(ls[rnd(ls.length)]); };
+            swim();
+            for (let k = 0; k < 10; k++) { const c = S.hand.p[rnd(S.hand.p.length)], li = rnd(3); if (!c || !canStage(c, li)) continue;
+              const fx = (c.id === "ulya" || c.id === "ereshkigal_n") ? costFor("p", c.id, li, S.staged.length === 0) : null; S.hand.p = S.hand.p.filter(x => x !== c); S.staged.push(fx != null ? { c, li, fixed: fx } : { c, li }); }
+            if (S.staged.length && Math.random() < .25) { const x = S.staged.splice(rnd(S.staged.length), 1)[0]; S.hand.p.push(x.c); }
+            if (S.swimP && Math.random() < .25) swimUndo();
+            swim();
+            const mine = S.staged.slice(); if (S.swimP) { mine.swim = S.swimP; nSw++; } nP += mine.length;
+            const h = S.hand.p; S.hand.p = [...h, ...mine.map(x => x.c)]; const r = checkPlays("p", mine); S.hand.p = h;
+            if (r.bad.length || r.plays.length !== mine.length || !!r.plays.swim !== !!mine.swim) falseP.push(`t${t} ${JSON.stringify(r.bad)}`);
+            const theirs = aiPlan("e", 3);
+            await resolveTurn(mine, theirs, false);
+          }
+        }
+      } finally { window.aiDeck = keepDeck; }
+      T("Anti-triche : coups honnêtes joués comme dans l'interface (80 parties) jamais refusés", games === 80 && nP > 300 && !falseP.length, `${nP} cartes, ${nSw} traversées ; ${falseP.slice(0, 3).join(" | ")}`); }
     S = null; }
 
   return res;

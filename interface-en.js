@@ -123,6 +123,13 @@
     [/^empoisonne (.+)$/, (m,a)=>`poisons ${a}`],
     [/^(.+) perd ses effets$/, (m,a)=>`${a} loses its effects`]
   ];
+  /* raisons de mpDeckWhy (boutique-modes.js) ; les noms de cartes restent tels quels, comme ailleurs dans le journal */
+  function deckWhyEN(w){ let m;
+    if(w==="deck incomplet") return "incomplete deck"; if(w==="plus d'une ultra-légendaire") return "more than one ultra-legendary";
+    if((m=w.match(/^(.+) pas encore sortie$/))) return `${m[1]} not released yet`;
+    if((m=w.match(/^(.+) et (.+) : une seule version par personnage$/))) return `${m[1]} and ${m[2]}: only one version per character`;
+    if((m=w.match(/^(.+) sans ses exigences$/))) return `${m[1]} without its requirements`;
+    return w; }
   function note(t){
     for(const [re,f] of NOTES){ const m=t.match(re); if(m) return f(...m); }
     const i=t.lastIndexOf(", ");                                       /* « A, B » : on traduit chaque moitié */
@@ -481,6 +488,13 @@
     [/^Connecté à (.+)\. La partie commence…$/, (m,a)=>`Connected to ${a}. The game is starting…`],
     [/^(.+) a quitté le salon$/, (m,a)=>`${a} left the room`],
     [/^Duel contre (.+)$/, (m,a)=>`Duel against ${a}`],
+    [/^Deck adverse refusé \((.+)\) : partie annulée\.$/, (m,w)=>`Opponent's deck refused (${deckWhyEN(w)}): game cancelled.`],
+    [/^Ton deck ne peut pas jouer en ligne \((.+)\)\. Corrige-le dans « Deck »\.$/, (m,w)=>`Your deck can't play online (${deckWhyEN(w)}). Fix it in "Deck".`],
+    [/^Le tirage de la partie n'a pas pu être vérifié : partie annulée\. Recrée un salon\.$/, ()=>"The game's draw could not be verified: game cancelled. Create a new room."],
+    [/^Ce duel ne peut pas être repris\.$/, ()=>"This duel can't be resumed."],
+    [/^Coups adverses refusés : ils ne correspondent pas à ceux annoncés$/, ()=>"Opponent's moves refused: they don't match the ones announced"],
+    [/^Ton navigateur ne peut pas sceller les coups \(connexion non sécurisée\)\.$/, ()=>"Your browser can't seal moves (insecure connection)."],
+    [/^Coup adverse refusé : (.+) \((énergie insuffisante|plus de place|lieu fermé|interdite ce tour|Thémis|déplacement impossible)\)$/, (m,a,w)=>`Opponent's move refused: ${a} (${({"énergie insuffisante":"not enough energy","plus de place":"no room left","lieu fermé":"location closed","interdite ce tour":"not allowed this turn","Thémis":"Themis","déplacement impossible":"move not allowed"})[w]})`],
     /* blitz */
     [/^(\d) victoires? · IA (.+)$/, (m,n,t)=>`${n} ${s(n,"win")} · ${t} AI`],
     [/^Lancer un Blitz · (\d+) CHF$/, (m,p)=>`Start a Blitz · ${p} CHF`],
