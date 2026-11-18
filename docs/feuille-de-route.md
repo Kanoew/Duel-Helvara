@@ -21,7 +21,7 @@ Les parties gardent leur ordre d'origine. Un titre en ✅ veut dire que toute la
 - ✅ **Le premier lieu** : le Trône de Tiamat (puis les quatre autres, voir 3.1).
 - ✅ **Mots-clés de faction : option B**. Ils vont aussi sur les cartes sorties. Il reste à choisir **lesquelles**, faction par faction (voir 3.2).
 - ✅ **Tentation (Désir)** : version automatique (la carte choisit pour l'adversaire l'option qui lui fait le plus mal).
-- ✅ **Le tutoriel** : ce qui gêne, c'est que le Serment n'est pas assez mis en avant alors que c'est la marque du jeu. À rendre plus central et moins guidé (voir 3.4).
+- ✅ **Le tutoriel** : le Serment n'était pas assez mis en avant. Refait le 18 novembre (voir 3.4).
 - ✅ **Prix itch.io** : 0 €, avec une cagnotte façon « offre-moi un café ».
 - ✅ **Économie des CHF** : prix des paquets inchangés ; Serment du Blitz ramené à ±25 (croisé ±50) ; gains de Serment plafonnés à 150 CHF par jour.
 - ✅ **Les chiffres du Serment** : validés (tableau ci-dessous).
@@ -82,10 +82,17 @@ Les cinq lieux sont codés avec tes illustrations, mesurés sur 48 000 parties s
 - 🟣 👤 L'histoire de la Chronique et les portraits des quatre rivaux (provisoires aujourd'hui : Set, Lilith, Anubis, Joanna).
 
 ### 3.4 🟣 🛠️ Accueil des nouveaux joueurs
-- 🟣 **Tutoriel centré sur le Serment, moins guidé** : faisable dès maintenant. Proposition dans la session du 18 novembre, en attente de ton go.
+- ✅ **Tutoriel centré sur le Serment, moins guidé** : le Serment présenté dès l'accueil ; l'adversaire jure à la fin du tour 2 ; au tour 3, tu jures où tu veux ou tu relèves son défi (Serment croisé) ; tours 4 à 6 libres, avec des indices ; à la fin, ce que ton Serment aurait valu en partie classée. 👤 À essayer sur ton téléphone.
 - 🟣 Partie rapide avec un deck prêté (parmi les 7 decks prêts) dès la première partie.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
+
+### 3.4 bis 🟣 🛠️ Duel en ligne classé et anti-triche (avant la sortie, décidé le 18 novembre)
+Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
+- 🟣 🛠️ **Lot A, duels honnêtes** (sans SQL) : coups adverses interdits refusés, coups scellés, graine commune, deck adverse vérifié.
+- 🟣 🛠️ **Lot B, « Jouer » contre un humain ou l'IA** : attente de 15 s seulement si quelqu'un est en ligne, sinon IA tout de suite ; résultat envoyé par les deux joueurs et validé par le serveur. 👤 SQL à valider.
+- 🟣 🛠️ **Lot C, classement** : étoiles des duels en ligne seulement sur résultat validé, plafonds de `board_submit` revus. 👤 SQL à valider.
+- ✅ Le classé en ligne : **un seul classement** pour la sortie (étoiles contre l'IA, plafonnées par le serveur, et contre les humains, sur résultat validé). Un classement « en ligne » séparé viendra plus tard (4.2).
 
 ### 3.5 🟣 Préparer la sortie (en parallèle, sans rien publier)
 - 🟣 👤🛠️ Page itch.io en brouillon : textes FR et EN, captures, prix 0 € et cagnotte.
@@ -109,6 +116,7 @@ Les cinq lieux sont codés avec tes illustrations, mesurés sur 48 000 parties s
 - 🟣 👤 Une annonce rien que pour elle : la deuxième occasion de faire parler du jeu.
 
 ### 4.2 🟣 Ensuite
+- 🟣 🛠️ Classement « en ligne » séparé : seuls les duels contre des humains, validés par le serveur, y comptent.
 - 🟣 🛠️ Cosmétiques gagnés en CHF : un dos de carte et un effet de victoire pour commencer, puis la boutique rotative (« l'échoppe du jour » étendue).
 - 🟣 👤 Art alternatif (le jeu gère déjà les variantes, et elles peuvent recevoir `vfx` ou holo).
 - 🟣 🛠️ Classement saisonnier avec récompenses cosmétiques.

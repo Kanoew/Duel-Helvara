@@ -1354,12 +1354,16 @@ async function inPage() {
     { P.chf = 100; P.oathK = 0; const { ov, r } = endBlitz([3, 3, 3, 3, 3, 3], 0, 1);
       T("Blitz : une égalité se rejoue, le Serment n'est ni compté ni payé", ov.res === "draw" && !r.oath && P.oathK === 0 && ov.oath === null && r.wins === 1, `${ov.res} ${r.oath}`); }
     /* S9. Partie guidée */
-    { P.oathK = 4; startTutorial(); S.turn = 5; const wasOK = oathOK();
-      const c1 = card("yarden"); S.staged = [{ c: c1, li: 2 }];
-      T("Partie guidée : le Serment est possible, l'étape 5 l'exige en plus de la carte", wasOK && tutCards() && !tutDone(), `cartes ${tutCards()}, fini ${tutDone()}`);
+    { P.oathK = 4; startTutorial(); S.turn = 3; S.locs.forEach(L => L.rev = true); const wasOK = oathOK();
+      S.staged = [{ c: card("celeste"), li: 2 }, { c: card("passante"), li: 0 }];
+      T("Partie guidée : le Serment est possible, l'étape 3 l'exige en plus des cartes", wasOK && tutCards() && !tutDone(), `cartes ${tutCards()}, fini ${tutDone()}`);
       T("Partie guidée : Serment prêté sans enjeu, étape validée", swearOath("p", 0) && tutDone() && oathStakeText(false).includes("aucun enjeu"), "");
       T("Partie guidée : le Serment ne touche ni profil ni quête", oathSettle() === null && P.oathK === 4 && S.aiOath == null, "");
-      S.oath = null; { const keep = Math.random; Math.random = () => 0.0; for (let t = 2; t <= 4; t++) { S.turn = t; aiOath(); } Math.random = keep; } T("Partie guidée : l'IA ne jure jamais", S.aiOath == null, ""); }
+      S.oath = null; { const keep = Math.random; Math.random = () => 0.0; for (let t = 2; t <= 4; t++) { S.turn = t; aiOath(); } Math.random = keep; } T("Partie guidée : l'IA ne jure jamais par hasard", S.aiOath == null, ""); }
+    { startTutorial(); S.locs[0].rev = S.locs[1].rev = true; S.turn = 2; S.staged = []; await resolveTurn([], [], false);
+      T("Partie guidée : l'adversaire jure à la fin du tour 2 (défi à relever au tour 3)", S.aiOath != null && S.locs[S.aiOath].rev, `${S.aiOath}`);
+      S.turn = 4; S.staged = []; const any = S.hand.p[0]; T("Partie guidée : tours 4 à 6 libres (carte et lieu au choix)", tutFree() && !!any && [0, 1, 2].some(li => canStage(any, li)) && tutDone(), "");
+      S.oath = S.aiOath; S.turn = 6; finish(); T("Partie guidée : la fin indique le Serment (croisé) et ce qu'il aurait valu", !!S.over.oath && S.over.oath.cross && tutOathText(S.over).includes("partie classée"), JSON.stringify(S.over.oath)); }
     /* S10. Profil */
     { const f = freshProfile(); T("Profil : les compteurs du Serment existent à 0 dans un profil neuf", f.oathK === 0 && f.oathB === 0 && f.oathS === 0 && f.oathMax === 0, "");
       const c = clean({ oathK: 5, oathB: -3, oathS: "x", oathMax: 7.9 }); T("Profil : nettoyage des compteurs (négatif, texte → 0, entier)", c.oathK === 5 && c.oathB === 0 && c.oathS === 0 && c.oathMax === 7, JSON.stringify([c.oathK, c.oathB, c.oathS, c.oathMax]));
