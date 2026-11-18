@@ -154,8 +154,13 @@ Les histoires de succès indie prouvent que le marché est réceptif :
 | **Coût serveur** | Massif | Massif | Massif | N/A (physique) | **~0$ (GitHub Pages)** |
 | **Code source** | Fermé | Fermé | Fermé | N/A | **Open source** |
 
-> [!NOTE]
-> 🔵 **Karina — Info, une ligne à regarder.** Le tableau est juste. Une seule ligne demande réflexion : **« Code source : open source »**. Si un jour tu veux vendre le jeu, n'importe qui peut aujourd'hui copier le dépôt et le republier. Ce n'est pas grave pour l'instant, mais avant de vendre, il faudra choisir une licence (par exemple : code lisible mais pas réutilisable commercialement, illustrations et lore protégés). On en reparle à l'étape « vente », pas avant.
+> [!CAUTION]
+> 🔴 **Karina — Correction (18 novembre, après relecture) : le jeu n'est PAS open source, et c'est très bien comme ça.**
+> - Le dépôt a déjà un fichier `LICENSE` : **« Tous droits réservés »** pour le code, l'univers, les personnages, les textes, les illustrations et les musiques. Le README le dit aussi, en français et en anglais. Mon premier avis disait qu'il fallait « choisir une licence » : c'était faux, elle existe déjà. Pardon.
+> - « Code visible » n'est pas « open source ». Le code se lit sur GitHub, mais personne n'a le droit de le copier ni de le redistribuer sans ton accord écrit. C'est la protection la plus forte possible.
+> - 🔴 **Ne pas passer en AGPL + CC BY-NC-SA**, même si ça a été proposé. L'AGPL **autorise** n'importe qui à copier le jeu, à le republier et même à le **vendre**, à la seule condition de publier son code. Et la CC BY-NC-SA autorise à redistribuer tes illustrations et ton lore gratuitement. Pour un jeu que tu veux vendre, ces deux licences **retirent** de la protection au lieu d'en ajouter.
+> - **Dans le tableau**, la ligne « Code source » devient donc : **« Visible, tous droits réservés »**. Et l'argument marketing « open source » (partie 6) devient **« transparent : le code se lit sur GitHub »**.
+> - Ce qui reste à vérifier avant de vendre : les crédits des illustrations (`credits.html`) et les conditions d'utilisation de l'outil qui les a générées, pour être sûr que tu as le droit de vendre un jeu qui les contient. Je ne suis pas juriste : pour la vente, un avis rapide d'un pro ne serait pas du luxe.
 
 ---
 
@@ -329,7 +334,7 @@ La direction c'est pas de fuir la comparaison. C'est de la retourner en argument
 
 > [!WARNING]
 > 🟠 **Karina — Les arguments, oui. Le pitch, pas tel quel.**
-> - Les quatre arguments (zéro P2W, communautaire, lore original, code ouvert) : 🟢 on les met partout.
+> - Les quatre arguments (zéro P2W, communautaire, lore original, code transparent) : 🟢 on les met partout. Attention : on écrit « code visible sur GitHub », **jamais « open source »**, parce qu'il ne l'est pas (voir partie 3).
 > - Le pitch « Tu aimais Snap avant qu'ils le ruinent ? » : 🔴 je le déconseille en titre, pour deux raisons. D'abord, mettre le nom du concurrent en tête, c'est se présenter soi-même comme sa copie : le joueur retient « Snap », pas « Helvara ». Ensuite, « Marvel Snap » est une marque déposée : l'utiliser comme accroche de pub d'un produit payant, c'est s'exposer pour rien.
 > - **Ce que je propose** : le pitch parle d'Helvara, et la comparaison vient en deuxième ligne, sans attaque. Par exemple : *« Duel d'Helvara : trois lieux, six tours, et un Serment qui peut tout renverser. Aucune carte à acheter. »* Puis, dans le texte : *« Si tu as aimé les jeux de cartes à lieux, tu es chez toi. »* Les gens qui connaissent feront le lien tout seuls, et c'est plus fort quand ce sont eux qui le font.
 
@@ -351,7 +356,8 @@ Le système d'oath/serment avec mise de CHF existe déjà dans le code. C'est le
 - Crée un mind-game à mi-partie que Snap n'a jamais eu (le Snap/Retreat est binaire et externe)
 
 > [!WARNING]
-> 🟠 **Karina — Bonne idée, à greffer sur le Serment actuel, pas à mettre à sa place.**
+> 🟠 **Karina — Bonne idée, à greffer sur le Serment actuel, pas à mettre à sa place. Et APRÈS la sortie (mise à jour du 18 novembre).**
+> - Avant la sortie, on a déjà les lieux à état, les mots-clés et la Chronique 1. Ajouter une refonte du Serment par-dessus, c'est trois chantiers moteur en même temps et une sortie qui glisse. Le Serment actuel marche, tu l'as joué : il sort tel quel, et « Intensifier » devient la grosse mise à jour juste après, avec le Voile.
 > - Tu as joué le Serment actuel et il marche : on ne le jette pas. Aujourd'hui, on jure sur **un lieu** au tour 5, en secret, et c'est révélé en fin de tour.
 > - **Ma proposition** : on ajoute « Intensifier » comme **deuxième temps** du Serment. Au tour 3, choix secret : intensifier ou non. Puis au tour 5, le Serment sur un lieu, comme maintenant. Les deux joueurs ont intensifié ? Les gains et les pertes du Serment triplent. Un seul ? Ils doublent pour lui.
 > - **« Se retirer, verrouiller les gains »** : 🔴 je l'enlève. Dans une partie normale, il n'y a pas de gains en cours à verrouiller au tour 3 (ça n'existe que dans le Blitz). Ça ferait une règle qui ne veut rien dire dans la moitié des modes.
@@ -367,7 +373,8 @@ Le système d'oath/serment avec mise de CHF existe déjà dans le code. C'est le
 - Snap n'a jamais eu de bluff *dans* le gameplay — juste le Snap/Retreat qui est un mécanisme externe au plateau
 
 > [!WARNING]
-> 🟠 **Karina — Oui, c'est une vraie idée de jeu. Mais c'est le plus gros chantier du fichier, donc il passe après les lieux et les mots-clés.**
+> 🟠 **Karina — Oui, c'est l'idée la plus originale du fichier. C'est le plus gros chantier, donc il ne retarde pas la sortie, mais c'est la PRIORITÉ N°1 juste après (mise à jour du 18 novembre).**
+> - Le Voile, c'est ce qui fera parler du jeu une deuxième fois. Il devient la tête d'affiche de la première grosse mise à jour après itch.io (avec le Serment « Intensifier »), avec sa propre annonce. Il n'est plus mélangé avec Google Play et le nom de domaine.
 > - Pourquoi c'est lourd : une carte face cachée jusqu'à la fin, ça touche le moteur partout. Les effets qui visent « la carte la plus forte ici », les destructions, les déplacements, la puissance d'un lieu affichée en direct, l'IA (qui ne doit **pas** tricher en lisant la carte cachée), et les duels en ligne (le joueur adverse ne doit rien voir).
 > - Il faut aussi trancher des questions de règles avant de coder : une carte face cachée a-t-elle encore son effet Révélation ? Peut-on la détruire ? La puissance affichée du lieu la compte-t-elle ? Je te les poserai le moment venu.
 > - **Ma proposition** : on le prototype d'abord **contre l'IA seulement**, on le joue, et s'il est aussi fun qu'il en a l'air, on l'ouvre aux duels en ligne.
@@ -536,6 +543,8 @@ Certaines locations apparaissent en **paires liées** :
 
 > [!TIP]
 > 🟢 **Karina — On le fait. C'est le meilleur argument pour que les gens restent après itch.io.** C'est aussi ton « chemin à travers Lausanne » du plan du 16 novembre : les deux idées n'en font qu'une.
+>
+> 🔴 **Mais pas en 5 matchs pour la première (mise à jour du 18 novembre).** Cinq duels, un boss à règles spéciales, un deck persistant, des cartes temporaires et des handicaps entre les matchs : c'est trop pour un premier arc, et c'est ce qui ferait glisser la sortie. **Chronique 1 = 3 matchs** : un adversaire de faction, un adversaire avec un avantage, un boss. Deck persistant et titre, oui. Cartes temporaires et handicaps entre les matchs : on les garde pour la Chronique 2, quand on aura vu comment les joueurs vivent la première.
 > - **Matchs 1 à 3, deck persistant, carte temporaire, titre, CHF** : 🟢 faisables avec ce qui existe (rivaux, decks, moteur).
 > - **Boss en 8 tours** : 🟢 faisable, mais à tester avec soin : l'énergie va jusqu'à 8, et plusieurs effets disent « tour 6 » en dur (les cartes qui verrouillent un lieu, les expirations du tour 6). Je vérifierai chaque cas.
 > - **4 lieux au lieu de 3** : 🔴 pas pour la première Chronique. Tout l'écran de partie est construit pour 3 lieux, et ta décision dit que le plateau ne change jamais de taille. Sur un téléphone, un quatrième lieu écraserait tout. On garde « restriction de faction » pour le match 4, c'est aussi fort et ça ne coûte rien.
@@ -553,6 +562,12 @@ Certaines locations apparaissent en **paires liées** :
 > 3. **Enfin** : les mêmes cosmétiques **achetables en vrai argent**. Ça demande un prestataire de paiement (Stripe, Paddle ou itch.io), des pages légales et de confidentialité mises à jour en français et en anglais, la CSP, et un suivi des achats dans Supabase (relu par `db-guard`, validé par toi).
 >
 > Aller directement à l'étape 3, c'est des semaines de travail avant de vendre quoi que ce soit. L'étape 1 te permet de vendre **dès la sortie**.
+>
+> **Le prix minimum sur itch.io (décision ajoutée le 18 novembre) : je recommande 0 €, avec un prix suggéré.**
+> - Le jeu est **déjà gratuit** sur `kanoew.github.io`. Un minimum à 1 € sur itch.io, alors que le même jeu est gratuit à une adresse publique, c'est incohérent : les gens trouveront le lien gratuit, et ceux qui ont payé se sentiront pris pour des pigeons.
+> - Pour dire « ça vaut quelque chose », le bon levier n'est pas le minimum, c'est le **prix suggéré** qu'itch.io propose d'afficher. 0 € de minimum + un prix suggéré (par exemple 3 € ou 5 €, c'est à toi de choisir) dit : « c'est gratuit, et si tu aimes, voilà ce que ça vaut ».
+> - Un minimum payant n'a de sens que le jour où le jeu n'est **plus** gratuit ailleurs (par exemple une version complète réservée à itch.io). Ce n'est pas le cas aujourd'hui.
+> - **À trancher par toi** : le montant du prix suggéré.
 
 ### 10.1 Packs cosmétiques thématiques
 
@@ -720,30 +735,33 @@ Le moteur est construit. Maintenant il faut construire la route.
 |---|---|
 | 🟢 On le fait | la grande majorité |
 | 🟠 On le fait, autrement ou plus tard | une douzaine |
-| 🔴 Non, ou pas maintenant | 6 petites choses : le pitch « Snap » en titre, « Se retirer » dans le Serment, 4 lieux dans la Chronique 1, les émotes, l'espagnol et le portugais, le tweet « J'ai pris la mécanique de Marvel Snap » |
+| 🔴 Non, ou pas maintenant | le pitch « Snap » en titre, « Se retirer » dans le Serment, 4 lieux dans la Chronique 1, les émotes, l'espagnol et le portugais, le tweet « J'ai pris la mécanique de Marvel Snap », **et depuis le 18 novembre : l'AGPL, une Chronique 1 en 5 matchs, une refonte du Serment avant la sortie** |
 
-Je ne bloque aucun axe. Les 🔴 sont des détails, pas des directions.
+Je ne bloque aucun axe. Les 🔴 coupent ce qui ferait glisser la sortie ou affaiblirait le jeu, pas les directions.
 
-### L'ordre que je propose
+### L'ordre que je propose (mis à jour le 18 novembre)
 
-**Avant la sortie sur itch.io (objectif : être différent de Snap dès la première partie)**
+**Avant la sortie sur itch.io (objectif : être différent de Snap dès la première partie, et sortir)**
 
 1. 🟢 **Lieux à état** : Trône de Tiamat, Autel du Silence, Marché des Ombres, le lieu « voisins » (ex-Faille d'Apsu), Jardins version simultanée
 2. 🟢 **Mots-clés de faction** (Lien, Ère, Tentation automatique, Verdict) sur les 45 cartes sans effet, *si tu choisis l'option A*
-3. 🟠 **Serment « Intensifier »** au tour 3 + paliers Bronze / Argent / Or
-4. 🟢 **Chronique 1** (5 duels, boss, titre, CHF)
-5. 🟢 **Partie rapide avec un deck prêté** pour les nouveaux joueurs, ouverture de paquet plus spectaculaire
-6. 🟢 **Page itch.io en prix libre**, préparée en brouillon pendant les étapes 1 à 5, plus le trailer de 30 secondes et le devlog r/gamedev
+3. 🟢 **Chronique 1 en 3 matchs** (faction, avantage, boss ; deck persistant, titre, CHF)
+4. 🟢 **Partie rapide avec un deck prêté** pour les nouveaux joueurs, ouverture de paquet plus spectaculaire
+5. 🟢 **Page itch.io en prix libre (minimum 0 €, prix suggéré)**, préparée en brouillon pendant les étapes 1 à 4, plus le trailer de 30 secondes et le devlog r/gamedev. Vérification des droits sur les illustrations avant d'activer le prix.
 
 **La sortie**
 
-7. 🟢 Publication itch.io + Reddit + thread X + Discord, le même jour
+6. 🟢 Publication itch.io + Reddit + thread X + Discord, le même jour
 
-**Après la sortie**
+**Première grosse mise à jour (priorité n°1 après la sortie)**
+
+7. 🟢 **Le Voile** (d'abord contre l'IA, puis en ligne) + **Serment « Intensifier »** + paliers Bronze / Argent / Or, annoncés ensemble : c'est la deuxième occasion de faire parler du jeu
+
+**Ensuite**
 
 8. 🟢 Cosmétiques en CHF (un dos de carte, un effet de victoire), boutique rotative, art alternatif
-9. 🟢 Classement saisonnier, tournoi Discord, IndieDB, YouTube, streamers
-10. 🟠 Le Voile (d'abord contre l'IA), Google Play, nom de domaine
+9. 🟢 Classement saisonnier, tournoi Discord, IndieDB, YouTube, streamers, Chronique 2
+10. 🟠 Google Play, nom de domaine
 11. 🟠 Vente dans le jeu en vrai argent, Battle Pass premium, badge supporter
 12. 🟠 Spectateur, tournoi dans le jeu, nouvelles langues : quand il y aura assez de joueurs
 
@@ -753,4 +771,5 @@ Je ne bloque aucun axe. Les 🔴 sont des détails, pas des directions.
 2. **Tentation** : version automatique (recommandée) ou choix au tour suivant ?
 3. **Serment « Intensifier »** : est-ce qu'il te parle tel que je le décris en 7.1, ou tu veux autre chose ?
 4. **Ce qui coince dans le tutoriel** d'après tes tests, pour que je le refasse au bon endroit.
-5. **Le premier lieu** : je propose le Trône de Tiamat. Tu me dis go et j'attaque.
+5. **Le prix suggéré** sur itch.io (minimum à 0 €).
+6. **Le premier lieu** : je propose le Trône de Tiamat. Tu me dis go et j'attaque.
