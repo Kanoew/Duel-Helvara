@@ -184,6 +184,7 @@
     "Tour 5. Idée : Yarden Weiss gagne +4 de puissance si tu as des cartes dans les 3 lieux. Le lieu de ton Serment est-il bien défendu ?":"Turn 5. Tip: Yarden Weiss gets +4 Power if you have cards at all 3 locations. Is your Oath location well defended?",
     "Dernier tour. Celui qui mène sur 2 lieux sur 3 gagne. Ta dernière carte peut faire basculer un lieu, et ton Serment avec.":"Last turn. Whoever leads at 2 locations out of 3 wins. Your last card can tip a location, and your Oath with it.",
     "Quand tu as fini, touche":"When you're done, tap",
+    "Pose":"Play", ": touche":": tap", "Coursier du Flon":"Flon Courier", "Passante":"Ouchy Passer-by", "Ruelle":"Alley", "Lac Ouchy":"Lake Ouchy",
     "Recevoir 100 CHF et aller à la boutique":"Get 100 CHF and go to the shop", "Tutoriel terminé":"Tutorial complete",
     /* profil */
     "Joueur d'Helvara":"Player of Helvara", "Changer de nom":"Change name", "Changer d'avatar":"Change avatar", "Ton nom":"Your name",

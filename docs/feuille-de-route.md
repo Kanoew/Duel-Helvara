@@ -21,7 +21,7 @@ Les parties gardent leur ordre d'origine. Un titre en ✅ veut dire que toute la
 - ✅ **Le premier lieu** : le Trône de Tiamat (puis les quatre autres, voir 3.1).
 - ✅ **Mots-clés de faction : option B**. Ils vont aussi sur les cartes sorties. Il reste à choisir **lesquelles**, faction par faction (voir 3.2).
 - ✅ **Tentation (Désir)** : version automatique (la carte choisit pour l'adversaire l'option qui lui fait le plus mal).
-- ✅ **Le tutoriel** : ce qui gêne, c'est que le Serment n'est pas assez mis en avant alors que c'est la marque du jeu. À rendre plus central et moins guidé (voir 3.4).
+- ✅ **Le tutoriel** : le Serment n'était pas assez mis en avant. Refait le 18 novembre (voir 3.4).
 - ✅ **Prix itch.io** : 0 €, avec une cagnotte façon « offre-moi un café ».
 - ✅ **Économie des CHF** : prix des paquets inchangés ; Serment du Blitz ramené à ±25 (croisé ±50) ; gains de Serment plafonnés à 150 CHF par jour.
 - ✅ **Les chiffres du Serment** : validés (tableau ci-dessous).
@@ -82,7 +82,7 @@ Les cinq lieux sont codés avec tes illustrations, mesurés sur 48 000 parties s
 - 🟣 👤 L'histoire de la Chronique et les portraits des quatre rivaux (provisoires aujourd'hui : Set, Lilith, Anubis, Joanna).
 
 ### 3.4 🟣 🛠️ Accueil des nouveaux joueurs
-- 🟣 **Tutoriel centré sur le Serment, moins guidé** : faisable dès maintenant. Proposition dans la session du 18 novembre, en attente de ton go.
+- ✅ **Tutoriel centré sur le Serment, moins guidé** : le Serment présenté dès l'accueil ; l'adversaire jure à la fin du tour 2 ; au tour 3, tu jures où tu veux ou tu relèves son défi (Serment croisé) ; tours 4 à 6 libres, avec des indices ; à la fin, ce que ton Serment aurait valu en partie classée. 👤 À essayer sur ton téléphone.
 - 🟣 Partie rapide avec un deck prêté (parmi les 7 decks prêts) dès la première partie.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
