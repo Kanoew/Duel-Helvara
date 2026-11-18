@@ -38,6 +38,10 @@
 ### Ce qui protège déjà
 Aucune écriture directe sur `board`, `card_stats`, `feedback`, `mm_queue` ; identité toujours tirée de la connexion ; limiteurs de rythme ; pseudos nettoyés ; tailles plafonnées.
 
+## 2 bis. Décision du 18 novembre
+
+**Un seul classement à la sortie** : étoiles contre l'IA (plafonnées par le serveur, invérifiables sans arbitre) et contre les humains (seulement sur résultat validé, lot B). Un classement « en ligne » séparé, uniquement humain, viendra après la sortie.
+
 ## 3. Le plan réordonné
 
 Ton plan commence par l'économie. Je propose de commencer par ce qui touche **les autres joueurs**, parce que le jeu n'a ni argent réel ni échange de cartes : un tricheur qui se donne 1 million de CHF ne gâche que sa propre partie. Le classement et les duels, eux, gâchent celle des autres.
@@ -55,6 +59,13 @@ Ton plan commence par l'économie. Je propose de commencer par ce qui touche **l
   - les étoiles d'un duel en ligne ne passent que par un résultat validé (lot B) ;
   - `board_submit` reste plafonné pour les parties contre l'IA (impossible à vérifier sans arbitre serveur) ;
   - réserve de départ réduite et plafonds par jour revus.
+
+### Notes techniques pour le lot A (point de départ de la prochaine séance)
+- Coups adverses : ils arrivent par `mapPlays("e", …)` (`js/boutique-modes.js`), qui ne vérifie que « carte en main » et « lieu 0 à 2 ». Ajouter une vérification qui rejoue, dans l'ordre, les mêmes règles que `canStage` (`js/moteur.js`) mais pour le camp adverse : lieu verrouillé ou muet, `banned`, Thémis, places (Héraklès, Tezcatlipoca), coût cumulé ≤ `S.energyE` avec les mêmes réductions (`costOf`, première carte, Jugement). Un coup refusé est ignoré et noté au journal ; les deux téléphones divergent alors, et le lot B ne comptera pas la partie.
+- Coups scellés : `mpLock` publie aujourd'hui `hist[tour]` en clair dans la présence. Publier d'abord une empreinte (`crypto.subtle.digest("SHA-256", coups + sel)`), puis les coups et le sel quand les deux empreintes sont là ; vérifier l'empreinte avant `resolveTurn`. Attention à la reprise de partie (`mpResume`, `mpReplay`) qui relit `hist`.
+- Graine commune : `mpNewMatch` (hôte) tire seul la graine et les lieux. Faire : l'hôte publie l'empreinte de son nombre ; l'invité répond avec le sien ; l'hôte révèle ; graine = empreinte des deux. Les lieux sont tirés de cette graine dans la liste `locPool()` ; l'invité vérifie que la liste envoyée est bien la sienne.
+- Deck adverse : `validDeck` ne vérifie que la forme. Ajouter : cartes sorties (`rel`), `ulOk` pour les fusions, une seule ultra-légendaire.
+- Changer `BUILD` (le protocole change : deux versions ne doivent jamais se rencontrer). Tester à deux onglets avec le faux salon (script de la séance du 18 novembre : salon et base simulés), plus un client « tricheur » qui envoie un coup sans énergie.
 
 ### Après la sortie
 - **Économie côté serveur** (ton étape 1) : achats de paquets, quêtes, ultra-légendaires et CHF décidés par le serveur. Indispensable **avant** toute vente en vrai argent ou tout échange entre joueurs.

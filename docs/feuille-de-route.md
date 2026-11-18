@@ -92,7 +92,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 🛠️ **Lot A, duels honnêtes** (sans SQL) : coups adverses interdits refusés, coups scellés, graine commune, deck adverse vérifié.
 - 🟣 🛠️ **Lot B, « Jouer » contre un humain ou l'IA** : attente de 15 s seulement si quelqu'un est en ligne, sinon IA tout de suite ; résultat envoyé par les deux joueurs et validé par le serveur. 👤 SQL à valider.
 - 🟣 🛠️ **Lot C, classement** : étoiles des duels en ligne seulement sur résultat validé, plafonds de `board_submit` revus. 👤 SQL à valider.
-- 🟣 👤 Le classé en ligne : comment il se mélange au classé contre l'IA (voir la question dans la session du 18 novembre).
+- ✅ Le classé en ligne : **un seul classement** pour la sortie (étoiles contre l'IA, plafonnées par le serveur, et contre les humains, sur résultat validé). Un classement « en ligne » séparé viendra plus tard (4.2).
 
 ### 3.5 🟣 Préparer la sortie (en parallèle, sans rien publier)
 - 🟣 👤🛠️ Page itch.io en brouillon : textes FR et EN, captures, prix 0 € et cagnotte.
@@ -116,6 +116,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 👤 Une annonce rien que pour elle : la deuxième occasion de faire parler du jeu.
 
 ### 4.2 🟣 Ensuite
+- 🟣 🛠️ Classement « en ligne » séparé : seuls les duels contre des humains, validés par le serveur, y comptent.
 - 🟣 🛠️ Cosmétiques gagnés en CHF : un dos de carte et un effet de victoire pour commencer, puis la boutique rotative (« l'échoppe du jour » étendue).
 - 🟣 👤 Art alternatif (le jeu gère déjà les variantes, et elles peuvent recevoir `vfx` ou holo).
 - 🟣 🛠️ Classement saisonnier avec récompenses cosmétiques.
