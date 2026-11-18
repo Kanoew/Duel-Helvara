@@ -5,41 +5,63 @@ Univers et lore : ceux de Jordan (pseudo GitHub **Kanoew**). Tiamat est une pré
 Réponses en **français**.
 
 - Site : https://kanoew.github.io/Duel-Helvara/
-- Dépôt : `Kanoew/Duel-Helvara`, branche `main`. Chaque push sur `main` redéploie GitHub Pages en 1 à 2 minutes.
+- Dépôt : `Kanoew/Duel-Helvara`. Le site est publié depuis `main` (voir « Publier »).
 
 ---
 
-## Règles à respecter absolument
+## Où on en est
 
-- **Ne jamais écrire d'adresse e-mail personnelle** dans le dépôt, les commits ou le code. Les commits utilisent l'adresse noreply déjà réglée : `git config user.email` doit afficher `333710536+Kanoew@users.noreply.github.com`. Sinon, la régler avant tout commit.
+- **`docs/feuille-de-route.md`** : tout ce qui reste à faire (🟣) puis ce qui est fait (✅), les décisions qui attendent Jordan et l'ordre des chantiers jusqu'à la sortie sur itch.io. **À lire au début de chaque session de travail.**
+- Le détail des arguments : `docs/analyse-competitive-avis-karina.md`.
+
+---
+
+## Garde-fous (permanents, ne jamais les assouplir)
+
+Ils protègent Jordan, ses joueurs et la base en direct.
+
+- **Ne jamais écrire d'adresse e-mail personnelle** dans le dépôt, les commits ou le code. Les commits utilisent l'adresse noreply : `git config user.email` doit afficher `333710536+Kanoew@users.noreply.github.com` (et `user.name` : `Kanoew`). Sinon, la régler avant tout commit.
 - **Aucun secret dans le dépôt.** Le code secret Google OAuth reste uniquement dans Supabase. La clé de `config.js` est une clé *publishable* : elle peut rester publique.
 - **Pas de nom ou d'identifiant de modèle d'IA** dans les commits ni dans le code, donc **aucune ligne `Co-Authored-By` ni `Claude-Session`** dans les messages de commit, même si l'outil le propose.
-- Messages de commit en français.
-- **Pour changer un effet, modifier en priorité une carte pas encore sortie.**
 - Ne jamais réécrire l'historique ni faire de `push --force` sans accord explicite.
-- **Si un déploiement Pages reste bloqué**, ne pas utiliser « Re-run ». Pousser un commit vide (`git commit --allow-empty -m "Relance de la publication GitHub Pages"`), ce qui crée un nouveau run.
+- **Supabase** : le projet du jeu est la base en direct (pas de projet de test). Lecture seule d'abord ; toute écriture ou migration est présentée à Jordan et validée avant d'être appliquée.
+- **Aléatoire** : tout tirage qui influence une partie passe par `gPick` / `gShuffle`, jamais `Math.random` (les duels en ligne partagent le même tirage). Seuls les effets purement visuels ont leur aléatoire propre.
+- **`BUILD`** : à changer à chaque modification qui touche au déroulement d'une partie (deux versions différentes ne jouent jamais ensemble).
+- **Licence** : le jeu est « Tous droits réservés » (`LICENSE`). Ne jamais le présenter comme « open source » ni proposer une licence libre (AGPL, MIT, Creative Commons…) sans demande explicite de Jordan.
+
+## Publier (décision de Jordan du 18 novembre)
+
+- **On travaille sur une branche.** Commit en français, puis push sur la branche de travail de la session.
+- **Pousser sur `main` ou ouvrir une PR : seulement si Jordan le demande explicitement.** Sinon, c'est lui qui ouvre la PR et fusionne.
+- Chaque push sur `main` redéploie le site en 1 à 2 minutes : rien n'y arrive sans tests passés.
+- **Si un déploiement Pages reste bloqué** (et seulement si Jordan a demandé la publication) : ne pas utiliser « Re-run ». Pousser un commit vide (`git commit --allow-empty -m "Relance de la publication GitHub Pages"`), ce qui crée un nouveau run.
 
 ## Façon de travailler avec Jordan
 
 - Jordan prépare souvent les changements dans une autre session (brainstorm) et les apporte sous forme de fichier `.md` : le lire, vérifier qu'il est cohérent avec le code (et le dire s'il ne l'est pas), puis l'appliquer.
-- Publier directement sur `main` est la pratique habituelle, sauf si le fichier demande d'attendre sa validation.
-- Toujours tester avant de publier, et lui envoyer des captures quand il s'agit de visuel. Il teste ensuite sur son téléphone (Android, navigateur Brave) et renvoie des captures.
+- **Jordan teste beaucoup sans toujours l'écrire.** Une case non cochée dans un document ne veut pas dire « pas testé » : lui demander avant de supposer.
+- Toujours tester avant de livrer, et lui envoyer des captures quand il s'agit de visuel. Il teste ensuite sur son téléphone (Android, navigateur Brave) et renvoie des captures.
 - Jordan n'est pas développeur : réponses claires, sans jargon, et dire franchement ce qui n'a pas été vérifié.
+- Un chantier à la fois, terminé avant d'ouvrir le suivant (ordre dans `docs/feuille-de-route.md`).
 
-## Décisions de design figées (ne pas y revenir sans l'accord de Jordan)
+## Décisions de design (Jordan peut les changer à tout moment)
 
-- **Retoucher une carte** : modifier en priorité une carte pas encore sortie. Une carte **déjà sortie** n'est corrigée que si les statistiques réelles des joueurs (`card_stats`, `v_taux_victoire_cartes`) confirment l'écart vu en simulation ; une simulation seule ne suffit pas (15 octobre).
-- **Seuils d'équilibrage** (14 octobre) : corriger au-delà de ±8 points d'écart (victoire en deck moins la moyenne des cartes), surveiller entre ±6 et ±8, sinon attendre les données réelles. Sous 100 decks, la marge d'erreur dépasse ±10 points : ne rien décider sur ces chiffres.
+Ce sont des choix de jeu, pas des lois. Les appliquer, mais les signaler si une demande les contredit, plutôt que bloquer.
+
+- **Retoucher une carte, équilibrage** (assoupli le 18 novembre) :
+  - Seuils : corriger au-delà de ±8 points d'écart (victoire en deck moins la moyenne des cartes), surveiller entre ±6 et ±8.
+  - Carte **pas encore sortie** : la simulation suffit.
+  - Carte **déjà sortie**, correction **légère** (±1 de coût ou de puissance, ou un chiffre de l'effet) : la simulation suffit si l'écart dépasse ±8 points.
+  - Carte **déjà sortie**, **grosse refonte** de l'effet : il faut les statistiques réelles (`card_stats`, `v_taux_victoire_cartes`). Sous 100 decks, leur marge d'erreur dépasse ±10 points : les croiser avec la simulation.
+- **Mots-clés de faction** (Lien, Ère, Tentation, Verdict ; décision du 18 novembre, option B) : ils peuvent être ajoutés **aussi aux cartes déjà sorties**. Chaque vague de mots-clés est mesurée avec l'outil d'équilibrage et `balance-reviewer` avant publication, et l'IA apprend à les jouer. Tentation et toute mécanique nouvelle doivent marcher en jeu **simultané** (aucun choix qui interrompt le tour en duel en ligne).
 - **Cartes qui verrouillent un lieu** (Nemesis, Cronos, Ananké) : jamais jouables au tour 6 (`banned()`, même avec l'énergie gardée par Prométhée).
 - **Ultra-légendaires de faction** : elles se **gagnent en jouant** (Journal des factions), pas dans les paquets : 50 parties avec au moins 8 cartes de la faction. Une **seconde** par faction au plus, à 150 parties au total (jamais deux secondes dans la même faction). Une seule ultra-légendaire par deck. Date de sortie : le **15** du mois s'il n'y a pas d'événement, le **1er** s'il y en a un ; annonce 5 jours avant (`soon`). Exception décidée par Jordan : Nike de la Saint-Valentin sort le 14 février (quête dès le 1er).
-- **Fusions** (ultra-légendaires) : elles **sortent des paquets**, plus par collection. La règle de deck ne change pas : une fusion exige toujours ses deux personnages dans le deck (`ulOk`). Une fusion saisonnière n'existe que dans le paquet d'édition de sa saison. Taux par paquet : 100 CHF 1 %, 200 CHF 2 %, 300 CHF 4 %, éditions 5 % ; garantie à la 10e ouverture d'un paquet à 300 CHF.
-- **Écran de partie fixe** (17 novembre, validé par Jordan) : le plateau ne change jamais de taille pendant une partie ; tout ce qui est passager flotte en bulle par-dessus le haut du plateau. Le tutoriel aussi (ses consignes flottent en tête) ; seul le replay garde l'ancien affichage.
-- **Effets visuels** : `vfx` réservé aux légendaires et ultra-légendaires ; effet holo 2.5D réservé aux ultra-légendaires de faction **et à leurs variantes de fête** (Nike V, Ananké Fileuse du Douzième Coup, Ananké Fil Rouge : décision de Jordan du 24 octobre ; les dossiers `images/holo/` viennent de sa session).
+- **Fusions** (ultra-légendaires) : elles **sortent des paquets**, plus par collection. Une fusion exige toujours ses deux personnages dans le deck (`ulOk`). Une fusion saisonnière n'existe que dans le paquet d'édition de sa saison. Taux par paquet : 100 CHF 1 %, 200 CHF 2 %, 300 CHF 4 %, éditions 5 % ; garantie à la 10e ouverture d'un paquet à 300 CHF.
+- **Écran de partie fixe** (17 novembre) : le plateau ne change jamais de taille pendant une partie ; tout ce qui est passager flotte en bulle par-dessus le haut du plateau. Le tutoriel aussi (ses consignes flottent en tête) ; seul le replay garde l'ancien affichage.
+- **Effets visuels** (ouverts le 18 novembre) : sur les cartes de base, `vfx` reste réservé aux légendaires et ultra-légendaires, et l'effet holo 2.5D aux ultra-légendaires de faction et à leurs variantes de fête (Nike V, Ananké Fileuse du Douzième Coup, Ananké Fil Rouge). **Les variantes d'art alternatif (cosmétiques) peuvent recevoir `vfx` ou holo quelle que soit leur rareté.**
 - **Textes d'effets** (FR et EN) : « +N de puissance » **sans sujet** = la carte elle-même ; on nomme le bénéficiaire seulement pour une **autre** carte. Une perte s'écrit « perd N de puissance ».
-- **Expirations au tour 6** (26 octobre) : tout effet ou jeton qui devrait expirer « à la fin du tour suivant » alors que ce tour suivant est le tour 6 expire **après** le décompte final (donc ne disparaît jamais). Vaut pour le Clone de Sun Wukong, Méduse et Konohanasakuya-Hime (accord de Jordan, 26 octobre).
-- **Aléatoire** : tout tirage qui influence une partie passe par `gPick` / `gShuffle`, jamais `Math.random` (les duels en ligne partagent le même tirage). Seuls les effets purement visuels ont leur aléatoire propre.
-- **`BUILD`** : à changer à chaque modification qui touche au déroulement d'une partie (deux versions différentes ne jouent jamais ensemble).
-- **Supabase** : le projet du jeu est la base en direct (pas de projet de test). Lecture seule d'abord ; toute écriture ou migration est présentée à Jordan et validée avant d'être appliquée.
+- **Expirations au tour 6** (26 octobre) : tout effet ou jeton qui devrait expirer « à la fin du tour suivant » alors que ce tour suivant est le tour 6 expire **après** le décompte final (donc ne disparaît jamais). Vaut pour le Clone de Sun Wukong, Méduse et Konohanasakuya-Hime.
+- Messages de commit en français.
 
 ## Pièges et interdits (rappel court : le détail est dans `docs/reference-technique.md`)
 
@@ -157,7 +179,7 @@ Autres réglages selon le type de carte :
 
 - Tester dans Chromium avec Playwright (préinstallé, voir plus bas). Simuler une date avec `window.__today='2026-11-20'` dans un `addInitScript`.
 - Vérifier l'effet, puis lancer quelques parties complètes (aucune erreur dans la console).
-- `node outils/versions.js` (empreintes des fichiers), puis commit en français, puis `git push origin main`.
+- `node outils/versions.js` (empreintes des fichiers), puis commit en français, puis push sur la branche de travail (sur `main` seulement si Jordan le demande, voir « Publier »).
 - Vérifier le déploiement : `gh api "repos/Kanoew/Duel-Helvara/actions/runs?per_page=1"`.
 
 ---
@@ -180,10 +202,11 @@ Trois relecteurs. Ils **rapportent à Jordan, ils ne modifient rien** dans le d�
 
 ## Entretenir ce fichier
 
-Ce fichier est lu en entier à chaque session : il doit rester **court** (objectif : moins de 250 lignes). Y mettre seulement ce qui est vrai **en permanence** : règles, décisions figées, procédures, pièges.
+Ce fichier est lu en entier à chaque session : il doit rester **court** (objectif : moins de 250 lignes). Y mettre seulement ce qui est vrai **en permanence** : garde-fous, décisions de design, procédures, pièges.
 
 - Les décisions datées, mesures avant/après, compteurs de tests et numéros de `BUILD` vont dans `docs/historique-equilibrage.md`, **pas ici**.
-- Une règle devenue permanente rejoint « Décisions de design figées » ; on supprime alors son ancienne mention datée.
+- Une règle devenue permanente rejoint « Décisions de design » (ou « Garde-fous » si elle protège les joueurs, la base ou le dépôt) ; on supprime alors son ancienne mention datée.
+- Quand une décision de design change, mettre à jour la ligne et sa date ici, et cocher la case correspondante de `docs/feuille-de-route.md`.
 - Une nouvelle zone technique à documenter va dans `docs/reference-technique.md`.
 - L'état actuel d'une carte (coût, puissance, effet, dates) est dans `js/cartes.js` : en cas d'écart avec un document, **le code fait foi**.
 
