@@ -23,7 +23,7 @@ Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantier
 - ✅ **Mots-clés de faction : option B** (décidé le 18 novembre). Ils vont aussi sur les cartes sorties. Il reste à choisir **lesquelles**, faction par faction (voir 3.2).
 - 🟣 👤 **Serment « Intensifier »** : est-ce qu'il te plaît tel que décrit (choix secret au tour 3, ×2 ou ×3 sur le Serment du tour 5) ? Il arrive après la sortie, on a le temps.
 - 🟣 👤 **Date de sortie** : avant janvier 2027, le plus tôt possible. À fixer quand les chantiers 3.1 à 3.4 auront une taille connue.
-- 🟣 👤 **Économie des CHF avec le Serment** : peur que les gains du Serment fassent finir la collection trop vite. Pistes : paquets +50 ou +75 CHF, ou plafonner les gains du Serment. Analyse chiffrée en cours.
+- 🟣 👤 **Économie des CHF avec le Serment** : peur que les gains du Serment fassent finir la collection trop vite. Analyse du 18 novembre : le Serment ajoute environ +12 % de revenu (rien contre l'IA). Paquets +50 / +75 = collection 34 à 51 % plus chère pour tout le monde. **Ma proposition** : prix des paquets inchangés, Serment du Blitz ramené à ±25 (croisé ±50), plafond de +150 CHF de Serment par jour (coupe aussi la triche entre amis), puis mesurer après la sortie.
 - 🟣 👤 **Les chiffres provisoires du Serment** (dans `OATH_CHF`, en tête de `js/moteur.js`) : à valider ou à changer d'après tes parties.
 
 | Sujet | Choix provisoire |
@@ -41,7 +41,7 @@ Tant que ces points ne sont pas tranchés, je ne peux pas commencer les chantier
 Tu as déjà fait beaucoup de tests (25 parties depuis hier). Ces points n'ont **pas encore été notés comme vérifiés** : si c'est déjà fait, dis-le-moi et je coche.
 
 - 🟣 👤 **Un vrai duel entre amis avec Serment, sur le vrai serveur.** Il n'a tourné que dans un faux salon de test.
-- 🟣 🛠️ **Recherche automatique d'adversaire en ligne** : « très foireuse » d'après toi. Diagnostic du code en cours ; il me faudra aussi ce que tu vois exactement (message, écran, combien de temps).
+- 🟣 🛠️ **Recherche automatique d'adversaire en ligne** : « très foireuse » d'après toi. Diagnostic du code (18 novembre) : chaque téléphone décide seul de son adversaire avec une liste qui diffère d'un téléphone à l'autre, et les téléphones en veille restent visibles comme « fantômes ». Remède durable : une file d'attente dans Supabase avec un seul arbitre (SQL à valider par toi, relu par `db-guard`). Rustines possibles avant : se retirer de la file à la mise en veille, se réinscrire après une reconnexion, ignorer les joueurs muets depuis 10 s.
 - 🟣 👤 L'aperçu du lien sur Discord après publication (ajouter `?x=1` au lien si l'ancien aperçu reste).
 - 🟣 👤 Musique : l'idée de la tension au tour 5 plaît, mais la gestion ou les morceaux pourraient être meilleurs. Mis de côté.
 - 🟣 👤 Cartes holo : elles marchent sur ton PC, **pas chez ton pote**. Il me faut son téléphone, son navigateur et une capture.
@@ -53,7 +53,7 @@ Tu as déjà fait beaucoup de tests (25 parties depuis hier). Ces points n'ont *
 Objectif : que le jeu soit différent de Snap dès la première partie, et sortir. Un chantier à la fois, terminé avant d'ouvrir le suivant.
 
 ### 3.1 🟣 🛠️ Lieux à état
-- ✅ Trône de Tiamat (change de camp au tour 4), avec ton illustration.
+- ✅ Trône de Tiamat (change de camp au tour 4), avec ton illustration. Mesuré sur 12 000 parties : équilibré, plus discret que la Cathédrale. Le +2 des tours 1 à 3 ne compte jamais au décompte final : c'est un piège visuel.
 - 🟣 Autel du Silence (aucun effet Révélation ni Continu ici)
 - 🟣 Marché des Ombres (au tour 4, échange la carte la plus faible de chaque joueur ici). À trancher : la carte échangée garde-t-elle son effet Continu ?
 - 🟣 Le lieu « voisins », ex-Faille d'Apsu : nouveau nom à trouver (« La Faille » existe déjà), et il affecte « les lieux voisins » plutôt que « le lieu de droite ».
