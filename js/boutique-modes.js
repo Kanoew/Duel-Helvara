@@ -457,7 +457,9 @@ function mpEnter(){ if(window.__wiped||!myMp||!S||!S.mp) return; const code=myMp
 function mpTr(t,mine,theirs){ if(S&&S.mp){ (S.mp.tr=S.mp.tr||{})[t]=[mine||[],theirs||[]]; } }
 function mpRecord(){
   const h=S.mp.meHost, tr=S.mp.tr||{}, turns=Object.keys(tr).sort((a,b)=>a-b).map(t=>h?tr[t]:[tr[t][1],tr[t][0]]);
-  return {v:BUILD, seed:S.mp.deal.seed, locs:S.mp.deal.locs, t:turns, fin:[0,1,2].map(li=>h?[total("p",li),total("e",li)]:[total("e",li),total("p",li)])};
+  /* bad : coups adverses refusés vus par CE téléphone. Deux joueurs honnêtes ont 0 ; un coup refusé rend les relevés différents (désaccord),
+     même s'il n'a rien changé aux puissances finales */
+  return {v:BUILD, seed:S.mp.deal.seed, locs:S.mp.deal.locs, t:turns, bad:S.mp.bad||0, fin:[0,1,2].map(li=>h?[total("p",li),total("e",li)]:[total("e",li),total("p",li)])};
 }
 async function mpReport(res){
   if(window.__wiped||!S||!S.mp||S.mp.reported||!myMp||!S.mp.deal) return;
