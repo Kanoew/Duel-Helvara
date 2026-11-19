@@ -219,7 +219,7 @@ async function lobOpen(){
   lob=r; lobSent=-1;
   r.onPeers(()=>{ if(lob!==r) return;
     if(r.peers().length>LOB_MAX){ lobFull=true; lobClose(); return; }
-    const k=lobFree()+"|"+lobSeeking(); if(k!==lobSeen){ lobSeen=k; if(screen==="home") render(); } }, ()=>{ if(lob===r) lobClose(); });
+    const k=lobOthers().length+"|"+lobFree()+"|"+lobSeeking(); if(k!==lobSeen){ lobSeen=k; if(screen==="home") render(); } }, ()=>{ if(lob===r) lobClose(); });
   lobSync();
 }
 function lobClose(){ const r=lob; lob=null; lobSent=-1; lobSeen=""; if(r&&r.leave) r.leave(); }

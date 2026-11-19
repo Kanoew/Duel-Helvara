@@ -320,6 +320,9 @@ function playSheetHTML(){
     :`<div class="qcard duelcard bzcard modelock" role="group" aria-disabled="true"><span class="t">${ico("lock")} Blitz</span><span class="m">${blitzLockText()}</span></div>`;
   return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div>${rival}${friend}${bz}</section>`;
 }
+/* Joueurs en ligne (présence anonyme du lot B) : jeux ouverts et visibles de même version, toi compris. Rien si la présence est indisponible. */
+function lobCountHTML(){ if(!lob) return ""; const n=lobOthers().length+1;
+  return `<div class="lobcount" title="Jeux ouverts en ce moment, toi compris"><i aria-hidden="true"></i>${n} en ligne</div>`; }
 function homeHTML(){
   const inGame=S && !S.over && !S.blitz && !S.rp;
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
@@ -329,6 +332,7 @@ function homeHTML(){
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
   <button class="play" data-act="${inGame?"resume":"sheet"}" ${inGame?"":'data-s="play" aria-haspopup="dialog"'}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>
   ${inGame?`<button class="ghost small modemore" data-act="sheet" data-s="play" aria-haspopup="dialog">Autres façons de jouer</button>`:""}
+  ${lobCountHTML()}
   ${homeNotes()}
   ${seasonBarHTML()}
   ${featureHTML()}
