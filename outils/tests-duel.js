@@ -17,7 +17,24 @@ const FAKE=`(function(){ const rooms={}; window.__recv=m=>{ const r=rooms[m.name
       presence(patch){ state=Object.assign({},state,patch); send("state"); setTimeout(()=>room.rebuild(),0); return Promise.resolve(); },
       peers(){ return room.list; }, dropAll(){ others={}; room.rebuild(); }, onPeers(c){ cb=c; if(room.list.length) c(); }, leave(){ cb=null; send("leave"); delete rooms[name]; } };
     rooms[name]=room; send("hello"); return room; }
-  window.claude={ async use(n){ return typeof n==="string"&&n.startsWith("room:")?makeRoom(n.slice(5)):null; } }; })();`;
+  window.claude={ async use(n){ if(n==="lobby") return makeRoom("lobby"); if(n==="db") return {mmSeek:(v,r)=>window.__mm(v,r), mmLeave:()=>window.__mmLeave(), duelEnter:(r,g,ro,v)=>window.__dEnter(r,g,ro,v), duelReport:(r,g,ro,res,h,rec)=>window.__dReport(r,g,ro,res,h,rec)};
+    return typeof n==="string"&&n.startsWith("room:")?makeRoom(n.slice(5)):null; } }; })();`;
+/* File d'attente de la base simulée : mêmes règles que mm_seek (file-attente.sql) */
+const MM={};
+function mmSeek(who,ver,room){ const now=Date.now(); for(const k in MM) if(now-MM[k].seen>20000) delete MM[k];
+  const mine=MM[who]; if(mine&&mine.room){ delete MM[who]; return {ok:true,room:mine.room,role:"guest"}; }
+  if(!mine) MM[who]={ver,joined:now,seen:now,room:null}; else { mine.seen=now; mine.ver=ver; }
+  const foe=Object.keys(MM).filter(k=>k!==who&&MM[k].ver===ver&&!MM[k].room&&now-MM[k].seen<8000).sort((a,b)=>MM[a].joined-MM[b].joined)[0];
+  if(foe){ MM[foe].room=room; MM[foe].seen=now; delete MM[who]; return {ok:true,room,role:"host"}; }
+  return {ok:true,room:null,waiting:Object.keys(MM).filter(k=>k!==who&&MM[k].ver===ver).length,other_ver:false}; }
+/* Duels validés simulés : mêmes règles que duel_enter / duel_report (duels-valides.sql) ; « who » joue le rôle du compte */
+const DG={};
+function dEnter(who,room,g,role){ const k=room+"|"+g, d=DG[k]=DG[k]||{host:null,guest:null,status:"open"}; const o=role==="host"?"guest":"host";
+  if(d[role]==null&&d[o]!==who){ d[role]=who; return {ok:true}; } return d[role]===who?{ok:true}:{ok:false,reason:"taken"}; }
+function dReport(who,room,g,role,res,hash){ const d=DG[room+"|"+g]; if(!d) return {ok:false,reason:"unknown"}; if(d[role]!==who) return {ok:false,reason:"not_player"};
+  const r=role[0]; if(d.status!=="open"||d[r+"res"]) return {ok:true,status:d.status}; d[r+"res"]=res; d[r+"hash"]=hash; const o=role==="host"?"g":"h";
+  if(!d[o+"res"]) return {ok:true,status:"open"}; const m={win:"lose",lose:"win",draw:"draw"}[res];
+  d.status=d[o+"res"]===m&&d[o+"hash"]===hash?"valid":"conflict"; return {ok:true,status:d.status}; }
 const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; window.__cheat=c&&{id:c.id,cost:CARDS[c.id].cost,en:S.energy}; if(c){ S.hand.p=S.hand.p.filter(x=>x!==c); S.staged.push({c,li:0}); } }
   else for(let k=0;k<10;k++){ const c=S.hand.p[Math.floor(Math.random()*S.hand.p.length)], li=Math.floor(Math.random()*3); if(!c||!canStage(c,li)) continue;
     const fx=(c.id==="ulya"||c.id==="ereshkigal_n")?costFor("p",c.id,li,S.staged.length===0):null; S.hand.p=S.hand.p.filter(x=>x!==c); S.staged.push(fx!=null?{c,li,fixed:fx}:{c,li}); }
@@ -31,9 +48,11 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     await pg.route("**/vendor/supabase.js*",r=>r.fulfill({contentType:"text/javascript",body:"window.supabase=undefined"}));
     await pg.route("**/cloud.js*",r=>r.fulfill({contentType:"text/javascript",body:FAKE}));
     await pg.addInitScript(()=>{ window.__today="2026-12-31"; });
+    await pg.exposeFunction("__dEnter",(r,g,ro)=>dEnter(who,r,g,ro)); await pg.exposeFunction("__dReport",(r,g,ro,res,h)=>dReport(who,r,g,ro,res,h));
+    await pg.exposeFunction("__mm",(v,r)=>mmSeek(who,v,r)); await pg.exposeFunction("__mmLeave",()=>{ delete MM[who]; });
     await pg.exposeFunction("__send",m=>{ const o=pages[who==="A"?1:0]; return o&&o.evaluate(x=>window.__recv(x),m).catch(()=>{}); });
     await pg.goto(`http://127.0.0.1:${port}/index.html`); await pg.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object");
-    await pg.evaluate(n=>{ P.name=n; P.owned=POOL.slice(); const ok=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base); for(let i=ok.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ok[i],ok[j]]=[ok[j],ok[i]]; } P.deck=ok.slice(0,12); },"Joueur"+who);
+    await pg.evaluate(n=>{ P.name=n; P.tuto=true; P.owned=POOL.slice(); const ok=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base); for(let i=ok.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ok[i],ok[j]]=[ok[j],ok[i]]; } P.deck=ok.slice(0,12); },"Joueur"+who);
     pages.push(pg); }
   const [A,B]=pages; const st=pg=>pg.evaluate(()=>S&&S.mp?{turn:S.turn,busy:S.busy,over:S.over&&S.over.res,locked:S.mp.locked,bad:S.mp.bad||0}:null);
   const until=async(f,ms=60000)=>{ const t0=Date.now(); while(Date.now()-t0<ms){ if(await f()) return true; await new Promise(r=>setTimeout(r,100)); } return false; };
@@ -56,7 +75,8 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
       await A.evaluate(STAGE,false);
       if(!await until(async()=>{ const a=await st(A), b=await st(B); return a&&b&&!a.busy&&!b.busy&&((a.turn>t&&b.turn>t)||(a.over&&b.over)); },90000)) throw new Error("tour "+t+" bloqué "+JSON.stringify([await st(A),await st(B)]));
     } }
-    const fin=pg=>pg.evaluate(()=>({res:S.over&&S.over.res,tot:[0,1,2].map(li=>[total("p",li),total("e",li)]),bad:S.mp.bad||0,log:S.log.filter(l=>/refus/.test(l))}));
+    await until(async()=>{ const x=await A.evaluate(()=>S.mp.srv), y=await B.evaluate(()=>S.mp.srv); return x&&y&&x!=="open"&&y!=="open"; },25000);
+    const fin=pg=>pg.evaluate(()=>({srv:S.mp.srv,res:S.over&&S.over.res,tot:[0,1,2].map(li=>[total("p",li),total("e",li)]),bad:S.mp.bad||0,log:S.log.filter(l=>/refus/.test(l))}));
     const a=await fin(A), b=await fin(B);
     await A.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; }); await B.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; });
     for(const pg of [A,B]) await pg.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base).slice(0,12); });
@@ -65,9 +85,34 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
   const mirror=(a,b)=>a.tot.every((x,i)=>x[0]===b.tot[i][1]&&x[1]===b.tot[i][0]), opp={win:"lose",lose:"win",draw:"draw"};
   const res=[]; const T=(n,ok,d)=>res.push([n,!!ok,d]);
   const same=(r)=>mirror(r.a,r.b)&&opp[r.a.res]===r.b.res;
+  /* ===== Lot B : « Jouer » cherche un humain 15 s s'il y en a un de libre, sinon l'IA tout de suite ===== */
+  { const home=pg=>pg.evaluate(()=>{ if(S&&S.mp) mpClear(); mpSaveSession(null); S=null; sheet=null; screen="home"; render(); });
+    const play=async pg=>{ await pg.evaluate(()=>{ sheet="play"; render(); }); await pg.evaluate(()=>document.querySelector('.sheet [data-act="play"]').click()); };
+    const mode=pg=>pg.evaluate(()=>S&&!S.over?(S.mp?"humain":"ia"):(mq&&mq.jouer?"recherche":"rien"));
+    await home(A); await home(B);
+    const seen=await until(()=>A.evaluate(()=>lobFree()===1),10000);
+    T("Présence : chaque jeu voit l'autre joueur libre, sans identifiant de compte",seen&&await A.evaluate(()=>lob.peers().every(p=>p.by==null||p.sameTab||!/^[0-9a-f-]{36}$/.test(p.by))),"");
+    await play(A); const searching=await mode(A)==="recherche", sheetTxt=await A.evaluate(()=>document.querySelector(".modesheet")?.textContent||"");
+    const banner=await until(()=>B.evaluate(()=>/Un joueur cherche un adversaire/.test(homeNotes())),5000);
+    T("Jouer : un joueur libre en ligne, la recherche démarre avec un compte à rebours",searching&&/Recherche d'un adversaire… \d+ s/.test(sheetTxt),sheetTxt);
+    T("Jouer : l'autre joueur voit « Un joueur cherche un adversaire » à l'accueil",banner,"");
+    await play(B);
+    const met=await until(async()=>(await mode(A))==="humain"&&(await mode(B))==="humain",20000);
+    T("Jouer : les deux appuient sur Jouer, ils se retrouvent en duel (pas contre l'IA)",met&&await A.evaluate(()=>JSON.stringify(S.mp.deal))===await B.evaluate(()=>JSON.stringify(S.mp.deal)),JSON.stringify([await mode(A),await mode(B)]));
+    await home(A); await home(B); await until(()=>A.evaluate(()=>lobFree()===1),10000);
+    const t0=Date.now(); await play(A); const ai=await until(async()=>(await mode(A))==="ia",25000), waited=Date.now()-t0;
+    T("Jouer : l'autre est en ligne mais ne joue pas, l'IA après 15 s d'attente",ai&&waited>=14000&&waited<20000,waited+" ms");
+    await home(A); await until(()=>A.evaluate(()=>lobFree()===1),10000);
+    await play(A); await new Promise(r=>setTimeout(r,800)); await A.evaluate(()=>document.querySelector('[data-act="seekai"]').click()); const now=await mode(A), left=Object.keys(MM).length;
+    T("Jouer : « Jouer contre l'IA maintenant » arrête la recherche et lance l'IA",now==="ia"&&left===0,now+" "+left);
+    await home(A); await B.evaluate(()=>{ lobFull=true; lobClose(); }); await until(()=>A.evaluate(()=>lobFree()===0),10000);
+    const t1=Date.now(); await play(A); const ai2=(await mode(A))==="ia";
+    T("Jouer : personne d'autre en ligne, partie contre l'IA tout de suite",ai2&&Date.now()-t1<2000,(await mode(A))+" "+(Date.now()-t1)+" ms");
+    await home(A); await B.evaluate(()=>{ lobFull=false; lobOpen(); }); await until(()=>A.evaluate(()=>lobFree()===1),10000); }
   { const r=await game(0,0); T("Duel honnête : même partie sur les deux téléphones, aucun refus",same(r)&&!r.a.bad&&!r.b.bad,JSON.stringify([r.a.res,r.b.res,r.a.bad,r.b.bad]));
+    T("Résultat validé : partie honnête validée par le serveur chez les deux joueurs",r.a.srv==="valid"&&r.b.srv==="valid",JSON.stringify([r.a.srv,r.b.srv]));
     T("Coups scellés : aucun joueur ne voit les coups de l'autre avant d'avoir fini son tour",!r.peek.some(Boolean),JSON.stringify(r.peek)); }
-  { const r=await game(0,0,true); T("Revanche dans le même salon : nouvelle partie, nouveau tirage, identique des deux côtés",same(r)&&r.deals.length===2&&r.deals.every(([x,y])=>x&&x===y)&&r.deals[0][0]!==r.deals[1][0],JSON.stringify(r.deals));
+  { const r=await game(0,0,true); T("Revanche dans le même salon : nouvelle partie, nouveau tirage, identique des deux côtés, validée",same(r)&&r.a.srv==="valid"&&r.deals.length===2&&r.deals.every(([x,y])=>x&&x===y)&&r.deals[0][0]!==r.deals[1][0],JSON.stringify(r.deals));
     T("Graine commune : même graine et mêmes lieux chez les deux joueurs",r.deals[0][0]===r.deals[0][1],JSON.stringify(r.deals[0])); }
   { /* hôte tricheur : il révèle un autre nombre que celui annoncé (pour choisir sa graine après avoir vu celui de l'invité) */
     await A.evaluate(()=>{ const f=mpHostDeal; mpHostDeal=om=>{ if(mpSecret) mpSecret.r="triche"+mpSecret.r.slice(6); return f(om); }; });
@@ -86,8 +131,10 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     await B.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; location.reload(); }); await B.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object");
     await B.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base).slice(0,12); });
     await A.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; }); }
-  { const r=await game(0,3); T("Reprise : rechargement en plein tour (coups scellés, pas encore révélés), la partie continue à l'identique",same(r)&&!r.a.bad&&!r.b.bad,JSON.stringify([r.a.res,r.b.res])); }
-  { const r=await game(2,0); T("Tricheur : carte posée sans assez d'énergie, refusée et notée chez l'adversaire",r.a.bad===1&&r.a.log.some(l=>/^Coup adverse refusé : .+ \(énergie insuffisante\)$/.test(l)),JSON.stringify([r.cheat,r.a.log])); }
+  { const r=await game(0,3); T("Reprise : rechargement en plein tour (coups scellés, pas encore révélés), la partie continue à l'identique",same(r)&&!r.a.bad&&!r.b.bad,JSON.stringify([r.a.res,r.b.res]));
+    T("Résultat validé : aussi après un rechargement en plein tour",r.a.srv==="valid"&&r.b.srv==="valid",JSON.stringify([r.a.srv,r.b.srv])); }
+  { const r=await game(2,0); T("Tricheur : carte posée sans assez d'énergie, refusée et notée chez l'adversaire",r.a.bad===1&&r.a.log.some(l=>/^Coup adverse refusé : .+ \(énergie insuffisante\)$/.test(l)),JSON.stringify([r.cheat,r.a.log]));
+    T("Résultat validé : partie avec un coup tricheur en désaccord, jamais validée",r.a.srv==="conflict"&&r.b.srv==="conflict",JSON.stringify([r.a.srv,r.b.srv])); }
   let bad=0; for(const [n,ok,d] of res){ if(!ok) bad++; console.log(`${ok?"ok      ":"PAS OK  "} ${n}${ok?"":"  → "+d}`); }
   if(errs.length){ bad++; console.log("PAS OK   erreurs de la page : "+errs.slice(0,3).join(" | ")); }
   console.log(`\n${res.length-bad} sur ${res.length} tests valides.`);

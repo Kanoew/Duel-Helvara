@@ -138,6 +138,18 @@
       return r.data;
     },
     async mmLeave(){ await sb.rpc("mm_leave"); },
+    /* Duels validés par le serveur (duels-valides.sql) : inscription au début, résultat et empreinte de la partie à la fin.
+       Tant que le SQL n'est pas lancé, la fonction manque : le jeu ignore l'erreur et le duel se joue comme avant. */
+    async duelEnter(room, g, role, ver){
+      const r = await sb.rpc("duel_enter", { p_room:room, p_g:g, p_role:role, p_ver:ver });
+      if(r.error) throw fail(r.error);
+      return r.data;
+    },
+    async duelReport(room, g, role, res, hash, rec){
+      const r = await sb.rpc("duel_report", { p_room:room, p_g:g, p_role:role, p_res:res, p_hash:hash, p_rec:rec });
+      if(r.error) throw fail(r.error);
+      return r.data;
+    },
     async stats(mode, result, plays, opp){
       let r = await sb.rpc("stats_submit", { p_mode:mode, p_result:result, p_plays:plays, p_opp:opp === "humain" ? "humain" : "ia" });
       /* stats-adversaire.sql pas encore lancé dans Supabase : l'ancienne fonction (sans adversaire) */
@@ -159,9 +171,10 @@
   };
 
   /* ---------- Salon des duels (présence en temps réel) ---------- */
-  async function makeRoom(name){
+  /* anon : salon de présence (lobby) où l'on ne publie AUCUN identifiant de compte, seulement un jeton tiré au hasard à chaque connexion */
+  async function makeRoom(name, anon){
     const s = await sessionP;
-    const uid = s && s.user ? s.user.id : null;
+    const uid = !anon && s && s.user ? s.user.id : null;
     const key = "t" + Math.random().toString(36).slice(2, 10);
     const ch = sb.channel(name, { config:{ presence:{ key } } });
     let state = {}, list = [], onPeers = null, onErr = null, joined = false, errTimer = null;
@@ -203,6 +216,8 @@
       if(name === "user") return (await sessionP) ? { id: async () => ((await sessionP) || {}).user?.id || null } : null;
       /* « room:<nom du canal> » : un canal de présence à part (salon avec code, file d'attente). Le jeu l'ouvre seulement
          quand il en a besoin, et le ferme avec leave(). */
+      /* « lobby » (lot B) : présence de tous les jeux ouverts, sans identifiant de compte ; sert seulement à savoir si un adversaire humain est disponible */
+      if(name === "lobby") return (await sessionP) ? makeRoom("helvara-lobby", true).catch(() => null) : null;
       if(typeof name === "string" && name.startsWith("room:") && /^[A-Za-z0-9_-]{3,64}$/.test(name.slice(5))) return makeRoom("helvara-" + name.slice(5).replace(/^helvara-/, "")).catch(() => null);
       return null;
     }

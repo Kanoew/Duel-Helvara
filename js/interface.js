@@ -305,12 +305,15 @@ function noticeHTML(){
 const duelLive=()=>!!(S&&S.mp&&!S.over);
 function homeNotes(){
   const n=[]; if(duelLive()) n.push(`Duel en cours contre ${esc(S.mp.oppNick)}`); else if(mpSession()) n.push("Un duel peut être repris");
+  if(!mq&&!duelLive()&&lobSeeking()) n.push("Un joueur cherche un adversaire : appuie sur Jouer");
   if(blitzRun()) n.push(`Blitz en cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`);
   return n.length?`<div class="hint playhint modenotes" role="status">${n.map(t=>`<span>${t}</span>`).join("")}</div>`:"";
 }
 function playSheetHTML(){
+  if(mq&&mq.jouer){ const left=Math.max(0,Math.ceil((mq.until-Date.now())/1000));
+    return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div><p class="hint" role="status">${mq.room?"Adversaire trouvé, connexion au salon…":`Recherche d'un adversaire… ${left} s`}</p><button class="primary" data-act="seekai">Jouer contre l'IA maintenant</button></section>`; }
   const ready=deckReady(), inG=!!(S&&!S.over&&!S.blitz&&!S.rp&&!S.mp), rec=P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:"";
-  const rival=`<button class="qcard duelcard modemain" data-act="${inG?"resume":"play"}" ${ready||inG?"":"disabled"}><span class="t">Contre un rival</span><span class="m">${inG?"Partie en cours : la reprendre":ready?"Partie classée contre l'IA":"Il te faut un deck de 12 cartes"}</span></button>`;
+  const rival=`<button class="qcard duelcard modemain" data-act="${inG?"resume":"play"}" ${ready||inG?"":"disabled"}><span class="t">Contre un rival</span><span class="m">${inG?"Partie en cours : la reprendre":ready?(lobFree()?"Un joueur en ligne : un humain d'abord, sinon l'IA":"Partie classée contre l'IA"):"Il te faut un deck de 12 cartes"}</span></button>`;
   const friend=`<button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Défier un ami</span><span class="m">${duelLive()?`En cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon"}${rec}</span></button>`;
   const bz=blitzOpen()
     ?`<button class="qcard duelcard bzcard" data-act="go" data-to="blitz"><span class="t">Blitz</span><span class="m">${blitzRun()?`En cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`:bzFree()?"Partie gratuite du jour":`Gratuit dans ${hoursToReset()} h`}</span></button>`
@@ -905,6 +908,7 @@ function resultHTML(){
     <div class="rows sc3"><div class="row rh" aria-hidden="true"><span>Lieu</span><span class="c me">Toi</span><span class="c foe"${o.mp?` title="${esc(S.mp.oppNick)}"`:""}>${o.mp?esc(S.mp.oppNick):esc(foeName())}</span></div>${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span class="c me${r.w==="p"?" w":""}">${r.a}</span><span class="c foe${r.w==="e"?" w":""}">${r.b}</span></div>`).join("")}</div>
     ${bilanHTML(o)}
     ${fbHTML(o)}
+    ${o.mp&&S.mp.srv?`<p class="hint" role="status">${S.mp.srv==="valid"?"✓ Résultat validé par le serveur":S.mp.srv==="conflict"?"⚠ Résultats différents entre les deux joueurs : partie non validée":"Résultat envoyé, en attente de l'adversaire…"}</p>`:""}
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
     <div class="row2"><button class="ghost" data-act="mpquit">Quitter le salon</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.blitz?`<button class="primary" data-act="go" data-to="blitz">${o.ended?"Voir le bilan":"Continuer le Blitz"}</button><div class="row2"><button class="ghost" data-act="close">Voir le plateau</button></div>`:`<button class="primary" data-act="play">Rejouer</button>
     <div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`}
@@ -1043,11 +1047,12 @@ function render(){
   if(screen==="codex") screen="deck"; /* Deck et Collection ne font plus qu'un */
   const body = screen==="play"?gameHTML():screen==="profile"?profileHTML():screen==="deck"?deckHTML():screen==="shop"?shopHTML():screen==="codex"?codexHTML():screen==="rules"?rulesHTML():screen==="duel"?duelHTML():screen==="blitz"?blitzHTML():screen==="board"?boardHTML():screen==="hist"?histHTML():homeHTML();
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
-  /* le code de salon en cours de saisie survit aux redessins (le salon commun en provoque à chaque arrivée ou départ) */
+  /* le code de salon en cours de saisie survit aux redessins (le salon de duel en provoque à chaque arrivée ou départ ; la présence anonyme seulement quand le nombre de joueurs libres ou en recherche change) */
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
   /* effet holo du zoom : détaché pendant le redessin puis remis dans le nouveau conteneur ; détruit si le zoom est fermé ou change de carte */
   const bigId=bigCardId(), holoKeep=zoomHolo&&zoomHolo.id===bigId&&zoomHolo.el?zoomHolo.el:null; if(holoKeep) holoKeep.remove(); else{ holoKill(zoomHolo); zoomHolo=null; }
   holoTilesDetach();
+  lobSync();
   app.innerHTML = header()+body+dockHTML()+sheetHTML()+tutoHTML()+avPickHTML()+zoomHTML()+fanPickHTML()+filtHTML()+precHTML()+(tutoStep<0&&!packOpen?(ulHTML()||majHTML()):"");
   holoTilesAttach(app,!!(bigId&&holoDir(bigId)));
   if(screen==="deck") holoPrefetch(); /* l'effet holo des cartes en grand est prêt avant qu'on les ouvre */
@@ -1259,7 +1264,8 @@ document.addEventListener("click", e=>{
   ac(); bgmArmed=true;
   switch(act){
     case "sheet": sheet=sheet===el.dataset.s?null:el.dataset.s; sfx("click"); render(); return;
-    case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; sheet=null; render(); return;
+    case "sheetclose": if(el.classList.contains("veil")&&e.target.closest(".sheet")) return; if(mq&&mq.jouer) playStop(mq); sheet=null; render(); return;
+    case "seekai": if(mq&&mq.jouer) playAI(mq); else { sheet=null; render(); } return;
     case "sheetin": case "holoin": return;
     case "notedismiss": { const t=[seasonNote,dailyNote,migratedNote].filter(Boolean)[+el.dataset.t]; if(t) notesGone.add(t); sfx("click"); render(); return; }
     case "logtoggle": if(S){ logOpen=!logOpen; sfx("click"); render(); } return;
@@ -1269,7 +1275,7 @@ document.addEventListener("click", e=>{
     case "rpnext": if(S&&S.rp&&!S.busy) rpStep().then(()=>{ render(); }); return;
     case "rpauto": if(S&&S.rp){ S.rp.auto=!S.rp.auto; sfx("click"); render(); if(S.rp.auto) rpAuto(); } return;
     case "rpquit": S=null; screen="hist"; sfx("click"); render(); window.scrollTo(0,0); return;
-    case "play": sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
+    case "play": if(playSeek()){ sfx("click"); render(); return; } sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": sheet=null; screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
     case "cancelname": editName=false; render(); return;

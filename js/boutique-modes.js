@@ -150,7 +150,7 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.43", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.44", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Coups scellés (anti-triche, lot A) : mes coups du tour, envoyés d'abord sous forme d'empreinte. Ils restent ICI (jamais dans la présence)
@@ -188,7 +188,7 @@ const MP_DEAL_MSG="Le tirage de la partie n'a pas pu être vérifié : partie an
 function mpSaveSession(s){ try{ if(s){ s.at=Date.now(); localStorage.setItem(MP_KEY,JSON.stringify(s)); } else localStorage.removeItem(MP_KEY); }catch(e){} }
 /* Temps réel : plus de salon commun où tout le monde voit tout le monde. On ne se connecte que pour un duel :
    un canal par code de salon (« roomC », deux joueurs), et le canal de la file d'attente (« roomQ ») seulement
-   pendant une recherche. Un joueur qui joue contre l'IA n'ouvre aucune connexion en direct. */
+   pendant une recherche. Seule autre connexion : la présence anonyme « helvara-lobby » (plus bas, lot B), tant que le jeu est visible. */
 const rtReady=()=>!!(window.claude&&window.claude.use), rtTok={c:0,q:0}, MP_CODE=/^[A-Z]+-(?:\d{4}|[2-9A-HJKMNP-Z]{6})$/;   /* nouveau format (6 caractères) et ancien (4 chiffres : une reprise de session déjà enregistrée continue de marcher) */
 const RT_FAIL="Le salon en direct est injoignable pour l'instant. Vérifie ta connexion internet, puis réessaie.";
 async function rtOpen(kind,name){
@@ -203,7 +203,44 @@ async function rtOpen(kind,name){
   return r;
 }
 function rtClose(kind){ rtTok[kind]++; const r=kind==="c"?roomC:roomQ; if(kind==="c") roomC=null; else roomQ=null; if(r&&r.leave) r.leave(); }
-function initRoom(){ roomTried=true; render(); }
+function initRoom(){ roomTried=true; render(); lobOpen(); }
+/* ======= Présence en direct (anti-triche, lot B) =======
+   Chaque jeu ouvert ET visible rejoint « helvara-lobby » (cloud.js : aucun identifiant de compte, un jeton tiré au hasard) et n'y publie
+   que {v: version, s: état} : 0 libre (menus), 1 cherche un adversaire, 2 en partie. Quitté dès que la page passe en arrière-plan.
+   Au-delà de LOB_MAX jeux présents, on n'y reste pas : « Jouer » part alors directement contre l'IA (limite de connexions de Supabase). */
+const LOB_MAX=150, LOB_WAIT=15000;
+let lob=null, lobConn=false, lobFull=false, lobSent=-1, lobSeen="";
+const lobState=()=>mq?1:(S&&!S.over&&!S.rp&&screen==="play")?2:0;
+async function lobOpen(){
+  if(lob||lobConn||lobFull||!rtReady()||document.hidden) return; lobConn=true;
+  let r=null; try{ r=await window.claude.use("lobby"); }catch(e){ r=null; } lobConn=false;
+  if(!r) return;
+  if(document.hidden||lob){ if(r.leave) r.leave(); return; }
+  lob=r; lobSent=-1;
+  r.onPeers(()=>{ if(lob!==r) return;
+    if(r.peers().length>LOB_MAX){ lobFull=true; lobClose(); return; }
+    const k=lobFree()+"|"+lobSeeking(); if(k!==lobSeen){ lobSeen=k; if(screen==="home") render(); } }, ()=>{ if(lob===r) lobClose(); });
+  lobSync();
+}
+function lobClose(){ const r=lob; lob=null; lobSent=-1; lobSeen=""; if(r&&r.leave) r.leave(); }
+function lobSync(){ if(!lob) return; const s=lobState(); if(s===lobSent) return; lobSent=s; lob.presence({v:BUILD,s}).catch(()=>{}); }
+const lobOthers=()=>lob?lob.peers().filter(p=>!p.sameTab&&p.presence&&p.presence.v===BUILD):[];
+const lobFree=()=>lobOthers().filter(p=>p.presence.s!==2).length;
+const lobSeeking=()=>lobOthers().filter(p=>p.presence.s===1).length;
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) lobClose(); else { lobFull=false; lobOpen(); } });   /* canal plein (ou rempli par un tricheur) : on réessaie au retour au premier plan */
+/* « Jouer » (lot B) : si un autre joueur de même version est libre, on le cherche au plus LOB_WAIT ms (la file d'attente habituelle),
+   sinon partie contre l'IA tout de suite. Appariement trouvé : un peu de marge pour entrer dans le salon. Renvoie false = jouer contre l'IA. */
+function playSeek(){
+  if(!lob||!lobFree()||!rtReady()||!deckReady()||myMp||mq||mpConn||mpDeckWhy(P.deck)) return false;
+  mqStart(); if(!mq) return false;
+  const me=mq; me.jouer=true; me.until=Date.now()+LOB_WAIT;
+  me.jt=setInterval(()=>{ if(mq!==me&&!(me.room&&myMp&&!(S&&S.mp))){ clearInterval(me.jt); return; }
+    if(S&&S.mp&&!S.over){ clearInterval(me.jt); return; }   /* le duel a commencé */
+    if(Date.now()>=me.until+(me.room?12000:0)) playAI(me); else if(sheet==="play") render(); },1000);
+  return true;
+}
+function playStop(me){ clearInterval(me.jt); if(mq===me) mqStop(""); if(myMp&&!(S&&S.mp)) mpClear(); }
+function playAI(me){ playStop(me); sheet=null; newGame(); window.scrollTo(0,0); }
 function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(roomC) roomC.presence({mp:myMp}).catch(()=>{}); }
 function mpClear(){ myMp=null; mpMsg=""; rtClose("c"); }
 function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck],lp:locPool(),ft:featureLoc()}; }
@@ -390,9 +427,9 @@ function mpStart(om,replay,deal){
     mp:{g:myMp.g, meHost, oppNick:safeNick(om.nick), oppAv:POOL.includes(om.av)?om.av:null, locked:false, gone:false, replaying:!!replay, seen:seen0, deal:{seed:deal.seed|0,locs:deal.locs.slice()}}};
   for(let i=0;i<3;i++){ draw(meHost?"p":"e"); draw(meHost?"e":"p"); }
   quiet=!!replay;
-  log(`Duel contre ${S.mp.oppNick}`);
+  log(`Duel contre ${S.mp.oppNick}`); sheet=null; if(mq) mqStop("");   /* la recherche est finie dès que le duel commence */
   screen="play"; startTurn();
-  if(!replay) mpPend=null; mpSaveAll();
+  if(!replay) mpPend=null; mpSaveAll(); mpEnter();
   if(replay) mpReplay(om); else { sfx("loc"); render(); window.scrollTo(0,0); }
 }
 function mapPlays(side,plays){ const out=[]; if(!Array.isArray(plays)) return out;
@@ -408,13 +445,34 @@ function oppPlays(plays){ const r=checkPlays("e",mapPlays("e",plays));
   for(const [n,w] of r.bad) log(`Coup adverse refusé : ${n} (${BAD_WHY[w]})`);
   if(r.bad.length&&S.mp) S.mp.bad=(S.mp.bad||0)+r.bad.length;
   return r.plays; }
+/* ======= Résultat validé par le serveur (anti-triche, lot B, duels-valides.sql) =======
+   Au début du match, chacun s'inscrit (hôte ou invité) ; à la fin, chacun envoie son résultat et l'empreinte du relevé de la partie
+   (graine, lieux, coups des deux joueurs dans l'ordre hôte puis invité, puissances finales). Deux téléphones honnêtes produisent
+   le même relevé : le serveur valide. Sinon, « conflict », et la partie ne comptera jamais (lot C). S.mp.srv : réponse du serveur. */
+async function mpDbGet(){ try{ mqDb=mqDb||await window.claude.use("db"); }catch(e){ mqDb=null; } return mqDb; }
+function mpEnter(){ if(window.__wiped||!myMp||!S||!S.mp) return; const code=myMp.code, role=myMp.role, g=S.mp.g;
+  mpDbGet().then(db=>{ if(db&&db.duelEnter) return db.duelEnter(code,g,role,BUILD); }).catch(()=>{}); }
+function mpTr(t,mine,theirs){ if(S&&S.mp){ (S.mp.tr=S.mp.tr||{})[t]=[mine||[],theirs||[]]; } }
+function mpRecord(){
+  const h=S.mp.meHost, tr=S.mp.tr||{}, turns=Object.keys(tr).sort((a,b)=>a-b).map(t=>h?tr[t]:[tr[t][1],tr[t][0]]);
+  return {v:BUILD, seed:S.mp.deal.seed, locs:S.mp.deal.locs, t:turns, fin:[0,1,2].map(li=>h?[total("p",li),total("e",li)]:[total("e",li),total("p",li)])};
+}
+async function mpReport(res){
+  if(window.__wiped||!S||!S.mp||S.mp.reported||!myMp||!S.mp.deal) return;
+  const sRef=S, mp=S.mp, code=myMp.code, role=myMp.role, g=mp.g; mp.reported=true;
+  const rec=mpRecord(); let hash; try{ hash=mpHex(await mpHash(JSON.stringify(rec))); }catch(e){ return; }
+  const db=await mpDbGet(); if(!db||!db.duelReport) return;
+  const send=async()=>{ try{ const r=await db.duelReport(code,g,role,res,hash,rec); if(r&&r.status){ mp.srv=r.status; if(S===sRef) render(); } return r; }catch(e){ return null; } };
+  let r=await send();
+  for(let i=0;i<5&&r&&r.status==="open"&&S===sRef;i++){ await new Promise(ok=>setTimeout(ok,6000)); r=await send(); }   /* l'autre n'a pas encore envoyé : on relit la décision */
+}
 /* Coups révélés qui ne correspondent pas à l'empreinte publiée avant : tous refusés (il les a changés après avoir vu les miens) */
 function oppSealed(plays,ok){ if(ok) return oppPlays(plays); log("Coups adverses refusés : ils ne correspondent pas à ceux annoncés"); if(S.mp) S.mp.bad=(S.mp.bad||0)+1; return []; }
 async function mpReplay(om){
   while(S&&S.mp&&!S.over){
     const t=S.turn, done=myMp.hist&&myMp.hist[t], pend=mpPend&&mpPend.g===S.mp.g&&mpPend.t===t?mpPend:null, theirs=om.hist&&om.hist[t];
     if(done&&theirs){ const ok=await mpSealOk(theirs,om.salt&&om.salt[t],(S.mp.seen&&S.mp.seen[t])||(om.seal&&om.seal[t]));
-      await resolveTurn(mapPlays("p",done), oppSealed(theirs,ok), false); continue; }
+      mpTr(t,done,theirs); await resolveTurn(mapPlays("p",done), oppSealed(theirs,ok), false); continue; }
     const mine=done||(pend&&pend.plays);
     if(mine){ const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.swimP=st.swim||null; S.oathStage=st.oath!=null?st.oath:null; S.mp.locked=true;
       if(pend&&!done&&!(myMp.seal&&myMp.seal[t])) mpSealPush(pend); }   /* coupure entre le verrouillage et l'envoi de l'empreinte */
@@ -452,7 +510,7 @@ function mpTryResolve(){
     if(S!==sRef) return; S.mp.checking=false; if(S.turn!==t||!S.mp.locked||S.busy||S.over) return;
     S.mp.locked=false; S.mp.oppLocked=false;
     const mineP=S.staged.slice(); if(S.swimP) mineP.swim=S.swimP; if(S.oathStage!=null) mineP.oath=S.oathStage;
-    resolveTurn(mineP, oppSealed(th,ok), true);
+    mpTr(t,myMp.hist[t],th); resolveTurn(mineP, oppSealed(th,ok), true);
   });
 }
 async function mpResume(){

@@ -28,17 +28,19 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid 
 <tr><td><b>If you sign in with Google</b>: your e-mail address and your Google account ID.</td><td>To find your game again on another device.</td><td>Only you. Your address is never shown to other players. The game does not receive your contacts, your Drive or your e-mails.</td></tr>
 <tr><td><b>Your feedback</b> (optional): 👍, 👎 or "a card seemed unfair" at the end of a game, with the card you pick, the game mode (AI, Blitz, duel), the game version and the date.</td><td>To spot unbalanced cards and improve the game.</td><td>The developer only. No account ID or nickname is stored with it.</td></tr>
 <tr><td><b>Card statistics</b>: at the end of a game against the AI, a Blitz or a duel (not the tutorial), for each card you played: its name, the location where you played it, the game result (win, loss or draw), the mode, the type of opponent (human or AI, with nothing about who they are) and the day. This data is added to counters.</td><td>To balance the cards.</td><td>The developer only. It is linked to no account or nickname, so it cannot be traced back or deleted one entry at a time.</td></tr>
+<tr><td><b>Your online duels</b>: for each duel against another player, both your account identifiers, the game version, the result each of you reported, and the game record (draw seed, locations, cards played each turn, final power).</td><td>Check that both players saw the same game before counting it, and be able to review a game reported for cheating.</td><td>The developer only. Kept <b>15 days</b>, then deleted; also deleted with your account.</td></tr>
 </table>
-<p>To prevent abuse, a technical counter tied to your account keeps only the time of your latest submissions (feedback, statistics, leaderboard, opponent search): it does not contain what you sent and disappears with your account.</p>
+<p>To prevent abuse, a technical counter tied to your account keeps only the time of your latest submissions (feedback, statistics, leaderboard, opponent search, online duels): it does not contain what you sent and disappears with your account.</p>
 <p>The game uses no advertising cookies and no analytics. Choose a nickname that does not identify you: it is public.</p>
 
 <h2>The live lobby</h2>
-<p>Duels use live channels, opened only when you create or join a room, or look for an opponent (never when you play against the AI or look at the leaderboard). A room with a code is a channel shared by its two players; the other players present see your account ID and, for the length of the match, your nickname, avatar, deck and room code. During an opponent search, the database keeps only your account ID, the game version and two timestamps; nobody else can see them. This row is deleted as soon as you are matched or cancel, otherwise at the next search by any player, and it disappears with your account. If this service is unavailable, the search uses a shared channel where other searching players see your account ID, a random token and the game version. Your rank and stats are not broadcast there. Matches have no chat: no free text is exchanged.</p>
+<p>While the game is open and visible on screen, it joins a presence channel shared by all players, to know whether a human opponent is available when you tap “Play”. It publishes <b>no account identifier</b> there: only a token drawn at random on each connection, the game version and your state (free, searching or in a game). The game leaves this channel as soon as it goes to the background, and the game keeps nothing from it. As with any connection, the service hosting it (Supabase) sees your IP address and session; other players only see the token. Duels themselves use live channels opened only when you create or join a room, or look for an opponent. A room with a code is a channel shared by its two players; the other players present see your account ID and, for the length of the match, your nickname, avatar, deck and room code. During an opponent search, the database keeps only your account ID, the game version and two timestamps; nobody else can see them. This row is deleted as soon as you are matched or cancel, otherwise at the next search by any player, and it disappears with your account. If this service is unavailable, the search uses a shared channel where other searching players see your account ID, a random token and the game version. Your rank and stats are not broadcast there. Matches have no chat: no free text is exchanged.</p>
 
 <h2>For how long</h2>
 <ul>
   <li>Anonymous account (no Google): deleted after 12 months without signing in, or after 14 days without signing in if it has not finished a single game.</li>
   <li>Google account: kept until you delete it, and deleted after 24 months without signing in.</li>
+  <li>Online duels: deleted 15 days after the game.</li>
   <li>In every case you can delete your account whenever you want (see below).</li>
   <li>The copy kept in your browser stays until you clear the site's data.</li>
 </ul>
@@ -59,8 +61,8 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid 
 
 <h2>Your rights: see, export, delete</h2>
 <ul>
-  <li><b>Export</b>: in the game, Settings → "Export my data" downloads your progress as a file.</li>
-  <li><b>Delete</b>: in the game, Settings → "Delete my account" erases your account, your progress and your leaderboard entry, immediately and for good.</li>
+  <li><b>Export</b>: in the game, Settings → "Export my data" downloads your progress as a file. Your online duels (kept 15 days) are not included: to get a copy, write to the address below.</li>
+  <li><b>Delete</b>: in the game, Settings → "Delete my account" erases your account, your progress, your leaderboard entry and your online duels, immediately and for good.</li>
   <li><b>Correct</b>: you can change your nickname and avatar at any time in Profile.</li>
   <li><b>Any other request</b> (access, objection, reporting another player's nickname): write to <a href="mailto:Kanoekayak57@gmail.com">Kanoekayak57@gmail.com</a>, or open a request on <a href="https://github.com/Kanoew/Duel-Helvara/issues">the project page</a> without including personal data.</li>
 </ul>
