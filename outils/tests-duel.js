@@ -57,6 +57,7 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
   const [A,B]=pages; const st=pg=>pg.evaluate(()=>S&&S.mp?{turn:S.turn,busy:S.busy,over:S.over&&S.over.res,locked:S.mp.locked,bad:S.mp.bad||0}:null);
   const until=async(f,ms=60000)=>{ const t0=Date.now(); while(Date.now()-t0<ms){ if(await f()) return true; await new Promise(r=>setTimeout(r,100)); } return false; };
   const deal=pg=>pg.evaluate(()=>S&&S.mp&&JSON.stringify(S.mp.deal));
+  let resumeBtn="";
   async function game(cheatTurn,reloadTurn,rematch){
     await A.evaluate(()=>mpCreate()); const code=await A.evaluate(()=>myMp.code); await B.evaluate(c=>mpJoinCode(c),code);
     if(!await until(async()=>{ const a=await st(A), b=await st(B); return a&&b&&a.turn===1&&b.turn===1&&!a.busy&&!b.busy; })) throw new Error("le duel ne démarre pas");
@@ -69,7 +70,7 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     for(let t=1;t<=6;t++){
       await B.evaluate(STAGE, t===cheatTurn); if(t===cheatTurn) cheat=await B.evaluate(()=>window.__cheat);
       await until(async()=>(await A.evaluate(()=>S.mp.oppLocked)),10000);
-      if(t===reloadTurn){ await B.reload(); await A.evaluate(()=>window.__drop()); await B.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object"); await B.evaluate(()=>{ if(!(S&&S.mp)) mpResume(); });
+      if(t===reloadTurn){ await B.reload(); await A.evaluate(()=>window.__drop()); await B.waitForFunction(()=>document.readyState==="complete"&&typeof render==="function"&&typeof P==="object"); resumeBtn=await B.evaluate(()=>{ if(S&&S.mp) return "déjà repris"; screen="home"; render(); const b=document.querySelector('button.play[data-act="mpresume"]'); if(!b) return "absent"; b.click(); return b.textContent; });
         if(!await until(async()=>{ const b=await st(B); return b&&b.turn===t&&b.locked&&!b.busy; },20000)) throw new Error("reprise ratée "+JSON.stringify(await st(B))); }
       peek.push(await A.evaluate(t=>{ const o=mpOpp(); return !!(o&&o.presence.mp.hist&&o.presence.mp.hist[t]); },t));   /* A voit-il les coups de B avant d'avoir fini ? */
       await A.evaluate(STAGE,false);
@@ -132,6 +133,7 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     await B.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base).slice(0,12); });
     await A.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; }); }
   { const r=await game(0,3); T("Reprise : rechargement en plein tour (coups scellés, pas encore révélés), la partie continue à l'identique",same(r)&&!r.a.bad&&!r.b.bad,JSON.stringify([r.a.res,r.b.res]));
+    T("Reprise : après rechargement, le gros bouton de l'accueil devient « Reprendre le duel » et reprend la partie",resumeBtn==="Reprendre le duel",resumeBtn);
     T("Résultat validé : aussi après un rechargement en plein tour",r.a.srv==="valid"&&r.b.srv==="valid",JSON.stringify([r.a.srv,r.b.srv])); }
   { const r=await game(2,0); T("Tricheur : carte posée sans assez d'énergie, refusée et notée chez l'adversaire",r.a.bad===1&&r.a.log.some(l=>/^Coup adverse refusé : .+ \(énergie insuffisante\)$/.test(l)),JSON.stringify([r.cheat,r.a.log]));
     T("Résultat validé : partie avec un coup tricheur en désaccord, jamais validée",r.a.srv==="conflict"&&r.b.srv==="conflict",JSON.stringify([r.a.srv,r.b.srv])); }
