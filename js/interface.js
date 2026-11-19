@@ -304,7 +304,7 @@ function noticeHTML(){
 /* Un seul bouton « Jouer » : il ouvre ce panneau (même mécanique que les Quêtes et les Réglages : `sheet`). Rien n'est retiré, tout est rangé ici. */
 const duelLive=()=>!!(S&&S.mp&&!S.over);
 function homeNotes(){
-  const n=[]; if(duelLive()) n.push(`Duel en cours contre ${esc(S.mp.oppNick)}`); else if(mpSession()) n.push("Un duel peut être repris");
+  const n=[]; if(duelLive()) n.push(`Duel en cours contre ${esc(S.mp.oppNick)}`); else if(mpSession()&&!duelResumable()) n.push("Un duel peut être repris");
   if(!mq&&!duelLive()&&lobSeeking()) n.push("Un joueur cherche un adversaire : appuie sur Jouer");
   if(blitzRun()) n.push(`Blitz en cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`);
   return n.length?`<div class="hint playhint modenotes" role="status">${n.map(t=>`<span>${t}</span>`).join("")}</div>`:"";
@@ -312,26 +312,29 @@ function homeNotes(){
 function playSheetHTML(){
   if(mq&&mq.jouer){ const left=Math.max(0,Math.ceil((mq.until-Date.now())/1000));
     return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div><p class="hint" role="status">${mq.room?"Adversaire trouvé, connexion au salon…":`Recherche d'un adversaire… ${left} s`}</p><button class="primary" data-act="seekai">Jouer contre l'IA maintenant</button></section>`; }
+  const ms=duelResumable()&&mpSession(), resumeBox=ms?`<div class="notice">Duel contre ${esc(safeNick(ms.oppNick))} interrompu. <span class="row2" style="margin-top:8px;display:flex"><button class="primary" data-act="mpresume">Reprendre</button><button class="ghost" data-act="mpforget">Oublier ce duel</button></span></div>`:"";
   const ready=deckReady(), inG=!!(S&&!S.over&&!S.blitz&&!S.rp&&!S.mp), rec=P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:"";
   const rival=`<button class="qcard duelcard modemain" data-act="${inG?"resume":"play"}" ${ready||inG?"":"disabled"}><span class="t">Contre un rival</span><span class="m">${inG?"Partie en cours : la reprendre":ready?(lobFree()?"Un joueur en ligne : un humain d'abord, sinon l'IA":"Partie classée contre l'IA"):"Il te faut un deck de 12 cartes"}</span></button>`;
   const friend=`<button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Défier un ami</span><span class="m">${duelLive()?`En cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon"}${rec}</span></button>`;
   const bz=blitzOpen()
     ?`<button class="qcard duelcard bzcard" data-act="go" data-to="blitz"><span class="t">Blitz</span><span class="m">${blitzRun()?`En cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`:bzFree()?"Partie gratuite du jour":`Gratuit dans ${hoursToReset()} h`}</span></button>`
     :`<div class="qcard duelcard bzcard modelock" role="group" aria-disabled="true"><span class="t">${ico("lock")} Blitz</span><span class="m">${blitzLockText()}</span></div>`;
-  return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div>${rival}${friend}${bz}</section>`;
+  return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div>${resumeBox}${rival}${friend}${bz}</section>`;
 }
 /* Joueurs en ligne (présence anonyme du lot B) : jeux ouverts et visibles de même version, toi compris. Rien si la présence est indisponible. */
 function lobCountHTML(){ if(!lob) return ""; const n=lobOthers().length+1;
   return `<div class="lobcount" title="Jeux ouverts en ce moment, toi compris"><i aria-hidden="true"></i>${n} en ligne</div>`; }
+/* Duel interrompu (page rechargée, téléphone éteint) : il se reprend depuis « Jouer », pas seulement depuis « Défier un ami » */
+const duelResumable=()=>!(S&&!S.over)&&!myMp&&!mpConn&&rtReady()&&!!mpSession();
 function homeHTML(){
-  const inGame=S && !S.over && !S.blitz && !S.rp;
+  const inGame=S && !S.over && !S.blitz && !S.rp, resumable=!inGame&&duelResumable();
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
   return `
   ${noticeHTML()}
   ${vitrineHTML()}
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
-  <button class="play" data-act="${inGame?"resume":"sheet"}" ${inGame?"":'data-s="play" aria-haspopup="dialog"'}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>
-  ${inGame?`<button class="ghost small modemore" data-act="sheet" data-s="play" aria-haspopup="dialog">Autres façons de jouer</button>`:""}
+  ${resumable?`<button class="play" data-act="mpresume">Reprendre le duel</button>`:`<button class="play" data-act="${inGame?"resume":"sheet"}" ${inGame?"":'data-s="play" aria-haspopup="dialog"'}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>`}
+  ${inGame||resumable?`<button class="ghost small modemore" data-act="sheet" data-s="play" aria-haspopup="dialog">Autres façons de jouer</button>`:""}
   ${lobCountHTML()}
   ${homeNotes()}
   ${seasonBarHTML()}
@@ -1331,8 +1334,8 @@ document.addEventListener("click", e=>{
     case "playhelp": if(S){ S.help=!S.help; sfx("click"); render(); } return;
     case "mqstart": mqStart(); return;
     case "mqcancel": mqStop(""); sfx("click"); return;
-    case "mpresume": mpResume(); return;
-    case "mpforget": mpSaveSession(null); render(); return;
+    case "mpresume": sheet=null; mpResume(); return;
+    case "mpforget": mpSaveSession(null); sfx("click"); render(); return;
     case "mpcopy": { const t=myMp&&myMp.code; const old=el.textContent; navigator.clipboard.writeText(t).then(()=>{ el.textContent=trUI("Copié"); setTimeout(()=>{ el.textContent=old; },1500); }).catch(()=>{}); return; }
     case "mpagain": if(S&&S.mp){ S.mp.wantAgain=true; mpPush({again:myMp.g}); sfx("click"); render(); mpTick(); } return;
     case "mpquit": mpClear(); mpSaveSession(null); if(S&&S.mp) S=null; screen="home"; render(); window.scrollTo(0,0); return;
