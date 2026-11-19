@@ -258,13 +258,15 @@ begin
     else
       w := case when (p_role = 'host') = (p_res = 'win') then d.host else d.guest end;
       l := case when w = d.host then d.guest else d.host end;
+      -- les deux compteurs, toujours dans le même ordre (pas de blocage mutuel), et AVANT de compter (pas de 4e victoire)
+      insert into public.board_guard (user_id) select u from unnest(array[w, l]) u order by u on conflict (user_id) do nothing;
+      perform 1 from public.board_guard where user_id in (w, l) order by user_id for update;
       select count(*) into n from public.duel_games x
        where x.ranked and x.counted and x.status = 'valid' and x.id <> d.id
          and x.done_at >= (date_trunc('day', now() at time zone 'utc') at time zone 'utc')
          and ((x.host = w and x.guest = l and x.host_res = 'win') or (x.guest = w and x.host = l and x.guest_res = 'win'));
       ok_count := n < 3;
       if ok_count then
-        insert into public.board_guard (user_id) values (w), (l) on conflict (user_id) do nothing;
         update public.board_guard set duel_w = least(duel_w + 1, 50) where user_id = w;
         update public.board_guard set duel_l = least(duel_l + 1, 50) where user_id = l;
       end if;

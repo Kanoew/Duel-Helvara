@@ -465,7 +465,7 @@ async function mpReport(res){
   const oath=S.oath!=null?(leader(S.oath)==="p"?"kept":"broken"):null, cross=S.oath!=null&&S.oath===S.aiOath, ov=S.over;
   const rec=mpRecord(); let hash; try{ hash=mpHex(await mpHash(JSON.stringify(rec))); }catch(e){ return; }
   const db=await mpDbGet(); if(!db||!db.duelReport) return;
-  const send=async()=>{ try{ const r=await db.duelReport(code,g,role,res,hash,rec); if(r&&r.status){ mp.srv=r.status; if(r.status!=="open") mpRank(mp,ov,r,res,oath,cross); if(S===sRef) render(); } return r; }catch(e){ return null; } };
+  const send=async()=>{ try{ const r=await db.duelReport(code,g,role,res,hash,rec); if(r&&r.status){ mp.srv=r.status; mp.ranked=r.ranked===true; if(r.status!=="open") mpRank(mp,ov,r,res,oath,cross); if(S===sRef) render(); } return r; }catch(e){ return null; } };
   let r=await send();
   for(let i=0;i<5&&r&&r.status==="open"&&S===sRef;i++){ await new Promise(ok=>setTimeout(ok,6000)); r=await send(); }   /* l'autre n'a pas encore envoyé : on relit la décision */
 }
