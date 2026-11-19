@@ -6,16 +6,16 @@
 --   - seuls les duels trouvés par la recherche (« Jouer » ou « Chercher un adversaire ») sont classés : le serveur note les deux
 --     comptes au moment où il les met ensemble (mm_seek), donc personne ne peut y glisser un second compte par le code du salon.
 --     La revanche dans le même salon est classée aussi. Les duels entre amis (avec code) restent hors classement ;
---   - un duel classé ne compte que sur résultat validé (duels-valides.sql), et au plus 3 victoires par jour contre un même adversaire ;
---   - parties contre l'IA (invérifiables) : 1 toutes les 2 minutes (réserve de 5), 60 par jour ;
---   - au plus 45 étoiles gagnées par jour au total (IA et duels) : un tricheur met 3 jours, pas une heure, pour le rang maximum.
--- Rien de nouveau n'est collecté : deux compteurs (victoires et défaites de duel pas encore reportées au classement) et le score du
--- début de journée, dans la table technique board_guard ; deux colonnes (classé, compté) dans duel_games.
+--   - un duel classé ne compte que sur résultat validé (duels-valides.sql), et au plus 10 victoires par jour contre un même adversaire ;
+--     ses étoiles ne sont pas plafonnées par jour (le serveur a vérifié la partie) ;
+--   - parties contre l'IA (invérifiables) : 1 toutes les 2 minutes (réserve de 5), 60 par jour. Pas de plafond d'étoiles par jour :
+--     il aurait surtout freiné les meilleurs joueurs honnêtes (choix de Jordan, 19 novembre).
+-- Rien de nouveau n'est collecté : deux compteurs (victoires et défaites de duel pas encore reportées au classement) dans la table
+-- technique board_guard ; deux colonnes (classé, compté) dans duel_games.
 
 -- 1. Colonnes ajoutées ---------------------------------------------------------------------------------------------------------
 alter table public.board_guard add column if not exists duel_w   int not null default 0;  -- victoires de duel validées, pas encore reportées
 alter table public.board_guard add column if not exists duel_l   int not null default 0;  -- défaites de duel validées, pas encore reportées
-alter table public.board_guard add column if not exists day_base int;                     -- score (étoiles cumulées) au début du jour
 alter table public.duel_games  add column if not exists ranked  boolean not null default false;  -- trouvé par la recherche : classé
 alter table public.duel_games  add column if not exists counted boolean;                         -- validé et compté au classement
 create index if not exists duel_games_done on public.duel_games (done_at) where ranked;
@@ -31,14 +31,13 @@ declare
   k_cap      constant numeric := 5;    -- réserve maximale
   k_day      constant int     := 60;   -- parties contre l'IA par jour
   k_stars    constant int     := 4;    -- étoiles maximales par victoire (serment croisé)
-  k_daystars constant int     := 45;   -- étoiles gagnées par jour au plus (IA et duels)
   uid      uuid := auth.uid();
   starts   constant int[] := array[0,3,6,9,12,17,22];
   cur      text := to_char(now() at time zone 'utc', 'YYYY-MM');
   today    date := (now() at time zone 'utc')::date;
   nick text; av text; season text; ose text;
   g public.board_guard%rowtype; o jsonb;
-  cr numeric; dg int; allowed int; db int;
+  cr numeric; dg int; allowed int;
   blv int; bst int; bsw int; bsl int; bbest int; tier int;
   dw int; dl int; uw int; ul int; aw int; al int; nsw int; nsl int;
   claim_lv int; claim_st int; cs int; bs int; ns int; nlv int; nst int; nbest int; arr int[];
@@ -78,7 +77,6 @@ begin
     blv := starts[greatest(0, tier - 3) + 1]; bst := 0; bsw := 0; bsl := 0; bbest := blv;
   end if;
   bs := public.board_base(blv) + bst;
-  db := case when g.day = today and g.day_base is not null then g.day_base else bs end;   -- score au début du jour
 
   -- parties : d'abord les duels validés (sans limite de réserve), puis la réserve IA ; jamais de baisse des compteurs
   dw := least(999, greatest(0, coalesce(p_sw, 0) - bsw));
@@ -88,11 +86,11 @@ begin
   aw := least(dw - uw, allowed); al := least(dl - ul, allowed - aw);
   nsw := least(999, bsw + uw + aw); nsl := least(999, bsl + ul + al);
 
-  -- rang : on peut descendre librement ; monter d'au plus 4 étoiles par victoire acceptée, et de 45 par jour au total
+  -- rang : on peut descendre librement ; monter d'au plus 4 étoiles par victoire acceptée (duel validé ou réserve IA)
   claim_lv := least(22, greatest(0, coalesce(p_lv, 0)));
   claim_st := least(case when claim_lv < 22 then public.board_maxst(claim_lv) else 999 end, greatest(0, coalesce(p_st, 0)));
   cs := public.board_base(claim_lv) + claim_st;
-  ns := least(cs, bs + k_stars * (uw + aw), greatest(bs, db + k_daystars));
+  ns := least(cs, bs + k_stars * (uw + aw));
   if ns = cs then nlv := claim_lv; nst := claim_st;
   else arr := public.board_from_score(ns); nlv := arr[1]; nst := arr[2]; end if;
   nbest := least(22, greatest(bbest, nlv));
@@ -105,7 +103,7 @@ begin
 
   update public.board_guard
      set credits = cr - (aw + al), refill_at = now(), day = today, day_games = dg + aw + al,
-         duel_w = g.duel_w - uw, duel_l = g.duel_l - ul, day_base = db
+         duel_w = g.duel_w - uw, duel_l = g.duel_l - ul
    where user_id = uid;
 
   return jsonb_build_object('ok', true, 'row', row_data, 'clamped', clamped);
@@ -207,7 +205,7 @@ end $$;
 revoke all on function public.duel_enter(text, int, text, text) from public, anon;
 grant execute on function public.duel_enter(text, int, text, text) to authenticated;
 
--- 5. Résultat : un duel classé validé est compté (3 victoires par jour au plus contre un même adversaire) -------------------------
+-- 5. Résultat : un duel classé validé est compté (10 victoires par jour au plus contre un même adversaire) -------------------------
 create or replace function public.duel_report(p_room text, p_g int, p_role text, p_res text, p_hash text, p_rec jsonb)
 returns jsonb
 language plpgsql security definer set search_path = public as
@@ -258,14 +256,14 @@ begin
     else
       w := case when (p_role = 'host') = (p_res = 'win') then d.host else d.guest end;
       l := case when w = d.host then d.guest else d.host end;
-      -- les deux compteurs, toujours dans le même ordre (pas de blocage mutuel), et AVANT de compter (pas de 4e victoire)
+      -- les deux compteurs, toujours dans le même ordre (pas de blocage mutuel), et AVANT de compter (pas de 11e victoire)
       insert into public.board_guard (user_id) select u from unnest(array[w, l]) u order by u on conflict (user_id) do nothing;
       perform 1 from public.board_guard where user_id in (w, l) order by user_id for update;
       select count(*) into n from public.duel_games x
        where x.ranked and x.counted and x.status = 'valid' and x.id <> d.id
          and x.done_at >= (date_trunc('day', now() at time zone 'utc') at time zone 'utc')
          and ((x.host = w and x.guest = l and x.host_res = 'win') or (x.guest = w and x.host = l and x.guest_res = 'win'));
-      ok_count := n < 3;
+      ok_count := n < 10;
       if ok_count then
         update public.board_guard set duel_w = least(duel_w + 1, 50) where user_id = w;
         update public.board_guard set duel_l = least(duel_l + 1, 50) where user_id = l;

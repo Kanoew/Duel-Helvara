@@ -98,7 +98,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 🛠️ **Lot B, « Jouer » contre un humain ou l'IA** :
   - ✅ présence en direct anonyme ; « Jouer » attend 15 s seulement si quelqu'un est libre, sinon IA tout de suite (18 novembre) ;
   - 🛠️ résultat envoyé par les deux joueurs et validé par le serveur, parties gardées 15 jours (décidé le 18 novembre) : codé (`alpha-0.44`). 🟣 👤 coller `duels-valides.sql` dans Supabase après relecture `db-guard`.
-- 🛠️ **Lot C, classement** (décidé le 19 novembre) : seuls les duels trouvés par « Jouer » sont classés, étoiles sur résultat validé (3 victoires par jour au plus contre un même adversaire), IA 1 partie / 2 min et 60 par jour, 45 étoiles par jour au plus. Codé (`alpha-0.45`). 🟣 👤 lancer `classement-duels.sql` après relecture `db-guard`.
+- 🛠️ **Lot C, classement** (décidé le 19 novembre) : seuls les duels trouvés par « Jouer » sont classés, étoiles sur résultat validé (10 victoires par jour au plus contre un même adversaire), IA 1 partie / 2 min et 60 par jour, pas de plafond d'étoiles par jour (choix de Jordan : il aurait freiné les meilleurs joueurs). Codé (`alpha-0.45`). 🟣 👤 lancer `classement-duels.sql` après relecture `db-guard`.
 - ✅ Le classé en ligne : **un seul classement** pour la sortie (étoiles contre l'IA, plafonnées par le serveur, et contre les humains, sur résultat validé). Un classement « en ligne » séparé viendra plus tard (4.2).
 
 ### 3.5 🟣 Préparer la sortie (en parallèle, sans rien publier)
