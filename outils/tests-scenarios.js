@@ -585,8 +585,10 @@ async function inPage() {
       const plan = aiPlan("e", 5); T("IA : Zeus joué au tour 5 face à 3 cartes adverses de coût ≤ 1", plan.some(x => x.c === z), JSON.stringify(plan.map(x => x.c.id))); }
     /* J13. IA autour de Nike (15 octobre) : petites cartes gardées pour son tour, Nike au tour 6, Zeus pour rejouer les petites cartes, deck construit autour d'elle */
     const other3 = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id)) || "athena";
-    fresh(); S.turn = 3; S.energy = S.energyE = 3; { const n = card("nike"), m = card("maat"), a = card("apollon"), o3 = card(other3); S.hand.e = [n, m, a, o3];
-      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 3 → Mā'at et Apollon gardés pour son tour", !ids.includes("maat") && !ids.includes("apollon") && !ids.includes("nike"), ids.join() || "rien"); }
+    fresh(); S.turn = 4; S.energy = S.energyE = 4; { const n = card("nike"), m = card("maat"), a = card("apollon"), o3 = card(other3); S.hand.e = [n, m, a, o3];
+      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 4 → Mā'at gardée pour son tour, Apollon joué tôt (sa Flèche à 0 arrive en main pour le tour 6)", !ids.includes("maat") && ids.includes("apollon") && !ids.includes("nike"), ids.join() || "rien"); }
+    fresh(); S.turn = 5; S.energy = S.energyE = 5; { const n = card("nike"), v = card("vesta"), o3 = card(other3); S.hand.e = [n, v, o3];
+      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 5 → Vesta jouée (Nike coûtera 1 de moins au tour 6)", ids.includes("vesta") && !ids.includes("nike"), ids.join() || "rien"); }
     fresh(); S.turn = 4; S.energy = S.energyE = 4; { const n = card("nike"), m = card("maat"); S.hand.e = [n, m];
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : pas de Nike au tour 4 avec moins de 3 cartes devant elle", !ids.includes("nike"), ids.join() || "rien"); }
     fresh(); S.turn = 6; S.energy = S.energyE = 6; { const hs = ["maat", "vesta", "apollon", "fleche", "nike"].map(id => card(id)); S.hand.e = hs;

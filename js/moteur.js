@@ -826,7 +826,7 @@ function revealFx(s,li,c,opts={}){
 
 /* ======= IA ======= */
 const RES=new Set(["hel","hel_r","ulhel","hades","loviatar"]);
-const HITS=["ereshkigal_n","bia","circe","qetesh","qetesh_r","pele_r","ulqetjor_r","poseidon","uloshun","tyr","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
+const HITS=["ereshkigal_n","circe","qetesh","qetesh_r","pele_r","ulqetjor_r","poseidon","uloshun","tyr","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
 const DESTROYERS=new Set(["pakhet","anat","anubis","boucher","durga","ereshkigal","esquille","ficelle","izzy_h","lilith","maree","nergal_h","nyx","nyx_h","rusalka","sekhmet","sekhmet_n","troll","ulnem","uloshun","yarden_d"]);
 const NEEDS_MATES=["susanoo","ulaph","oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
 /* Synergies connues de l'IA : [carte qui prépare, cartes qui en profitent, 1 si elles doivent partager le lieu] */
@@ -917,6 +917,9 @@ function aiPlan(me="e",tierOv){
       case "nyx_h": { const t=byPow(fz.filter(canKill)).slice(0,2); if(t.length) hit+=t.reduce((a,x)=>a+fp(x),0); else adj-=1; break; }
       case "sekhmet_n": { const t=fz.filter(x=>fp(x)<=2&&canKill(x)); if(t.length) hit+=t.reduce((a,x)=>a+fp(x),0)+1; else adj-=1; break; }
       case "shamash": { const b=Math.max(0,...fz.map(x=>fp(x)-CARDS[x.id].pow)); if(b>0) hit+=b; else adj-=1; break; }
+      case "bia": { if((S.bonus[op]||0)>0) adj+=2; else if(fz.some(canWeak)) hit+=1; else adj-=1; break; }   /* énergie conservée perdue, sinon −1 à la plus forte ici (avant : comptée comme un coup à 2,5) */
+      case "chernobog": { const b=fz.reduce((a,x)=>a+Math.max(0,fp(x)-CARDS[x.id].pow),0); hit+=b+1; break; }   /* les bonus adverses ici sont plafonnés à la puissance de base */
+      case "eir": { pow+=.8*(S.board[me][li].filter(x=>x.rev).length+ctx.pend[li]); break; }   /* protège tes cartes ici : vaut surtout là où tu en as */
       case "kali": { const t=byPow(fz.filter(canKill))[0]; if(t){ hit+=fp(t); pow+=2; } const m=S.board[me][li].filter(x=>x.rev&&!fated(x)).sort((a,b)=>cardPow(me,li,a)-cardPow(me,li,b))[0]; if(m) pow+=2-cardPow(me,li,m); break; }
     }
     if(c.id==="vritra") adj+=diff<0?4:-2;
@@ -933,7 +936,11 @@ function aiPlan(me="e",tierOv){
     if(isNike(c.id)){ pow+=ctx.plays.length*2;
       /* au tour 6 de préférence ; plus tôt seulement avec au moins 3 cartes jouées avant elle (Vesta, Prométhée) */
       if(S.turn<6&&ctx.plays.length<3) adj-=20; }
-    if(nikeWait&&!ctx.nike&&smallJ(c)&&S.turn<6&&!zeusPlan&&hand.length<7) adj-=nikeHand?8:4;
+    /* petites cartes gardées pour le tour de Nike. Sauf Apollon (sa Flèche à 0 n'arrive en main qu'à sa Révélation : jouée au tour 6, elle ne sert plus)
+       et Vesta (sa réduction ne vaut que pour le tour suivant : au tour 5, elle fait baisser Nike au tour 6). Relecture extérieure du 20 novembre. */
+    if(nikeWait&&!ctx.nike&&smallJ(c)&&c.id!=="apollon"&&c.id!=="vesta"&&S.turn<6&&!zeusPlan&&hand.length<7) adj-=nikeHand?8:4;
+    if(nikeHand&&c.id==="apollon"&&S.turn<=5) adj+=2;
+    if(nikeHand&&c.id==="vesta"&&S.turn===5) adj+=3;
     /* vague Jugement (15 novembre, 14 décembre) */
     if(c.id==="maat"&&(mates||S.board[me][li].some(x=>x.rev))) pow+=1;
     if((c.id==="apollon"||c.id==="hephaistos")&&hand.length-ctx.plays.length<=7) adj+=c.id==="apollon"?1.5:2;
