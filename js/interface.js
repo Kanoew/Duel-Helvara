@@ -1,6 +1,6 @@
 // Code couleur des mots-clés d'effet (Révélation, Continu, Fatalité) : le mot seul est coloré, avec un symbole pour ne pas dépendre de la couleur
-const FXK={"Révélation":"rev","On Reveal":"rev","Continu":"cont","Ongoing":"cont","Capacité":"cap","Ability":"cap","Fatalité":"fat","Fate":"fat"};
-function fxH(t){ return String(t||"").replace(/(^|\. )(Révélation|Continu|Capacité|Fatalité|On Reveal|Ongoing|Ability|Fate)( ?:)/g,(m,a,k,c)=>`${a}<span class="kw kw-${FXK[k]}">${k}</span>${c}`); }
+const FXK={"Révélation":"rev","On Reveal":"rev","Continu":"cont","Ongoing":"cont","Capacité":"cap","Ability":"cap","Fatalité":"fat","Fate":"fat","Lien":"lien","Bond":"lien"};
+function fxH(t){ return String(t||"").replace(/(^|\. )(Révélation|Continu|Capacité|Fatalité|Lien|On Reveal|Ongoing|Ability|Fate|Bond)( ?:)/g,(m,a,k,c)=>`${a}<span class="kw kw-${FXK[k]}">${k}</span>${c}`); }
 /* Duel d'Helvara : rendu des écrans, interactions et démarrage.
    Extrait d'index.html le 12 octobre 2026 sans aucun changement de code : les fichiers js/ se chargent dans l'ordre d'index.html et partagent la même portée globale. */
 /* ======= RENDU ======= */
@@ -731,6 +731,7 @@ function rulesHTML(){
       </ol>`)}
   ${acc("effets","Les effets et le vocabulaire",`<ol class="rules">
         <li>« Révélation » se déclenche une fois quand la carte se retourne. « Continu » agit tant que la carte est en jeu et n'a pas perdu ses effets. Une carte qui perd ses effets garde ce que sa Révélation lui a déjà donné.</li>
+        <li><b>Lien</b> (mot-clé d'Helvara) : la carte a +1 de puissance par autre carte Helvara à toi dans le même lieu, donc +3 au plus. Il agit comme un effet Continu : il s'éteint si la carte perd ses effets.</li>
         <li><b>De ton côté</b> : uniquement tes cartes révélées. <b>En jeu</b> : n'importe quelle carte révélée, des deux côtés.</li>
         <li><b>Détruire</b> : la carte quitte le plateau. Eir et Ame-no-Uzume l'empêchent, sauf si l'effet dit « rien ne la protège » : là, aucune protection ne tient.</li>
         <li><b>Défausser</b> : la carte quitte ta main sans être jouée.</li>

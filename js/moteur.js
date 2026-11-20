@@ -323,6 +323,7 @@ function cardPow(s,li,c){
   if(d.cost===3&&!d.token) for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c && live(o) && eid(o)==="musicien") p+=2;   /* Le Musicien : tes autres cartes de coût d'origine 3 (une copie d'Anahita compte aussi, des deux côtés : seule la carte elle-même est exclue) */
   if(!c.neg){
     if(eid(c)==="gaia") for(let i=0;i<3;i++) if(i!==li&&slotsUsed(s,i)>=capOf(s,i)) p+=2;   /* Gaïa : +2 par autre lieu où ton côté est plein */
+    if(d.kw==="lien") for(const o of S.board[s][li]) if(o!==c && live(o) && CARDS[o.id].fac==="helvara") p+=1;   /* Lien : +1 par autre carte Helvara à toi ici (4 cartes par lieu : +3 au plus) */
     if(eid(c)==="costumes" && inPlay("thot")) p+=4;
     if(eid(c)==="freyr" && hasHere(s,li,"freya")) p+=2;
     if(eid(c)==="tsukuyomi" && S.board[s][li].some(x=>x!==c&&x.rev&&CARDS[x.id].fac==="jugement")) p+=2;
@@ -879,6 +880,10 @@ function aiPlan(me="e",tierOv){
     if(locIs(li,"marche")&&S.turn<=4&&mates>0) pow-=Math.min(2,CARDS[c.id].pow*.2);
     if(locIs(li,"trone")){ const m=mates; if(S.turn>=4){ if(m<=foes&&m+1>foes) pow+=2; } else if(m<foes&&m+1>=foes) pow-=1; }   /* Trône : passer devant en nombre de cartes dès le tour 4 */
     if((c.id==="hermes"||c.id==="susanoo")&&[0,1,2].some(i=>i!==li&&locIs(i,"flon"))) pow+=1;
+    if(d.fac==="helvara"){   /* Lien : la carte gagne +1 par autre carte Helvara ici, et chaque carte Lien déjà ici gagne +1 grâce à elle */
+      const here=[...S.board[me][li].filter(x=>!x.neg), ...ctx.plays.filter(x=>x.li===li).map(x=>x.c)];
+      const helv=here.filter(x=>CARDS[x.id].fac==="helvara").length, lien=here.filter(x=>CARDS[x.id].kw==="lien").length;
+      pow+=(d.kw==="lien"?helv:0)+lien; }
     if(c.id==="vritra") adj+=diff<0?4:-2;
     if(c.id==="maeve"&&diff<0) pow+=3;
     if(c.id==="morrigan"&&Math.abs(diff)<=2) adj+=2;

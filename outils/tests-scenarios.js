@@ -1055,9 +1055,10 @@ async function inPage() {
 
   /* ===== Carte du jour (25 octobre) ===== */
   { const keepT = window.__today, keepOwn = P.owned, keepChf = P.chf, keepCd = P.cd, keepQ = quiet;
-    fresh(); window.__today = "2026-11-20"; P.owned = plain.slice(0, 6); P.cd = { day: "", id: "", got: false };
+    fresh(); window.__today = "2026-11-20"; const relPlain = Object.keys(CARDS).filter(id => REL(id) && !CARDS[id].token && !ULof(id) && !CARDS[id].base && CARDS[id].cost <= 3).sort();   /* cartes déjà sorties (la carte du jour ne tire que celles-là ; depuis Lien, plus aucune carte sans effet n'est sortie) */
+    P.owned = relPlain.slice(0, 6); P.cd = { day: "", id: "", got: false };
     const a = cardOfDay(); T("Carte du jour : une carte de la collection est tirée", !!a && P.owned.includes(a) && P.cd.day === "2026-11-20", a);
-    P.owned = plain.slice(0, 12); T("Carte du jour : la même toute la journée, même si la collection grandit", cardOfDay() === a, "");
+    P.owned = relPlain.slice(0, 12); T("Carte du jour : la même toute la journée, même si la collection grandit", cardOfDay() === a, "");
     window.__today = "2026-11-21"; const b = cardOfDay(); T("Carte du jour : nouvelle carte le lendemain (de la collection), compteur remis à zéro", !!b && P.owned.includes(b) && P.cd.got === false && P.cd.day === "2026-11-21", b);
     fresh(); S.turn = 3; S.energy = 6; { const id = P.cd.id, c = card(id), o = card(plain.find(x => x !== id)); S.hand.p = [c, o]; P.chf = 100; quiet = true;
       await resolveTurn([{ c: o, li: 0 }], [], false); T("Carte du jour : une autre carte jouée ne rapporte rien", P.chf === 100 && !P.cd.got, `${P.chf}`);
@@ -1575,6 +1576,22 @@ async function inPage() {
         }
       } finally { window.aiDeck = keepDeck; }
       T("Anti-triche : coups honnêtes joués comme dans l'interface (80 parties) jamais refusés", games === 80 && nP > 300 && !falseP.length, `${nP} cartes, ${nSw} traversées ; ${falseP.slice(0, 3).join(" | ")}`); }
+    S = null; }
+
+  /* Lien (mot-clé d'Helvara) : +1 par autre carte Helvara à toi ici, sans plafond (4 cartes par lieu : +3 au plus) */
+  { fresh(); const pa = put("p", 0, "passante"); put("p", 0, "coursier"); put("p", 0, "felix"); put("p", 0, plain[0], 1);
+    T("Lien : +1 par autre carte Helvara à toi ici (une carte d'une autre faction ne compte pas)", cardPow("p", 0, pa) === 4, cardPow("p", 0, pa));
+    fresh(); const v = put("p", 1, "veilleur"), p2 = put("p", 1, "passante"); put("p", 1, "coursier"); put("p", 1, "felix");
+    T("Lien : quatre cartes Helvara, +3 chacune (Veilleur 6, Passante 5)", cardPow("p", 1, v) === 6 && cardPow("p", 1, p2) === 5, `${cardPow("p", 1, v)} / ${cardPow("p", 1, p2)}`);
+    fresh(); const p3 = put("p", 0, "passante"); put("e", 0, "coursier"); put("e", 0, "felix"); put("p", 1, "coursier"); put("p", 2, "felix");
+    T("Lien : les cartes Helvara adverses et celles des autres lieux ne comptent pas", cardPow("p", 0, p3) === 2, cardPow("p", 0, p3));
+    fresh(); const p4 = put("p", 0, "passante"); put("p", 0, "coursier"); p4.neg = true;
+    T("Lien : une carte qui a perdu ses effets n'a plus Lien", cardPow("p", 0, p4) === 2, cardPow("p", 0, p4));
+    fresh(); const p5 = put("p", 0, "passante"); const hid = mk("coursier"); S.board.p[0].push(hid);
+    T("Lien : une carte pas encore révélée ne compte pas", cardPow("p", 0, p5) === 2, cardPow("p", 0, p5));
+    fresh(); S.turn = 4; { const va = card("vasseur"), cou = card("coursier"); S.hand.p = [va, cou]; S.energy = 9; put("p", 2, "felix");
+      await resolveTurn([{ c: va, li: 2 }, { c: cou, li: 2 }], [], false);
+      T("Lien : Vasseur garde sa Révélation et gagne Lien une fois révélé", va.rev && va.pay === 6 && cardPow("p", 2, va) === 4, `${va.pay} ${cardPow("p", 2, va)}`); }
     S = null; }
 
   return res;
