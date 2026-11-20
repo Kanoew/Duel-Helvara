@@ -1,6 +1,6 @@
 // Code couleur des mots-clés d'effet (Révélation, Continu, Fatalité) : le mot seul est coloré, avec un symbole pour ne pas dépendre de la couleur
-const FXK={"Révélation":"rev","On Reveal":"rev","Continu":"cont","Ongoing":"cont","Capacité":"cap","Ability":"cap","Fatalité":"fat","Fate":"fat","Lien":"lien","Bond":"lien","Tentation":"tent","Temptation":"tent","Verdict":"verd"};
-function fxH(t){ return String(t||"").replace(/(^|\. )(Révélation|Continu|Capacité|Fatalité|Lien|Tentation|Verdict|On Reveal|Ongoing|Ability|Fate|Bond|Temptation)( \d+)?( ?:)/g,(m,a,k,n,c)=>`${a}<span class="kw kw-${FXK[k]}">${k}${n||""}</span>${c}`); }
+const FXK={"Révélation":"rev","On Reveal":"rev","Continu":"cont","Ongoing":"cont","Capacité":"cap","Ability":"cap","Fatalité":"fat","Fate":"fat","Lien":"lien","Bond":"lien","Tentation":"tent","Temptation":"tent","Verdict":"verd","Ère":"ere","Era":"ere"};
+function fxH(t){ return String(t||"").replace(/(^|\. )(Révélation|Continu|Capacité|Fatalité|Lien|Tentation|Verdict|Ère|On Reveal|Ongoing|Ability|Fate|Bond|Temptation|Era)( \d+)?( ?:)/g,(m,a,k,n,c)=>`${a}<span class="kw kw-${FXK[k]}">${k}${n||""}</span>${c}`); }
 /* Duel d'Helvara : rendu des écrans, interactions et démarrage.
    Extrait d'index.html le 12 octobre 2026 sans aucun changement de code : les fichiers js/ se chargent dans l'ordre d'index.html et partagent la même portée globale. */
 /* ======= RENDU ======= */
@@ -734,6 +734,7 @@ function rulesHTML(){
         <li><b>Lien</b> (mot-clé d'Helvara) : la carte a +1 de puissance par autre carte Helvara à toi dans le même lieu, donc +3 au plus. Il agit comme un effet Continu : il s'éteint si la carte perd ses effets.</li>
         <li><b>Tentation</b> (mot-clé du Désir) : à la Révélation, la carte inflige le pire de deux maux à l'adversaire : chaque carte adverse ici perd 1 de puissance (si elles sont au moins 2 à pouvoir être affaiblies), sinon la carte gagne +2.</li>
         <li><b>Verdict N</b> (mot-clé du Jugement) : à la Révélation, détruit la carte adverse la plus forte ici qui a N de puissance ou moins. Les protections contre la destruction s'appliquent.</li>
+        <li><b>Ère</b> (mot-clé de Primordial) : la carte a +2 de puissance une fois en jeu depuis 2 tours (posée au tour 4, elle l'a au tour 6). Il agit comme un effet Continu : il s'éteint si la carte perd ses effets.</li>
         <li><b>De ton côté</b> : uniquement tes cartes révélées. <b>En jeu</b> : n'importe quelle carte révélée, des deux côtés.</li>
         <li><b>Détruire</b> : la carte quitte le plateau. Eir et Ame-no-Uzume l'empêchent, sauf si l'effet dit « rien ne la protège » : là, aucune protection ne tient.</li>
         <li><b>Défausser</b> : la carte quitte ta main sans être jouée.</li>

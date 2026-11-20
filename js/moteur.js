@@ -304,11 +304,12 @@ function checkPlays(s,list){
   if(sw) ok.swim=sw; if(list.oath!=null) ok.oath=list.oath;
   return {plays:ok,bad};
 }
-/* Ananké, Fatalité : en fin de partie (S.final, après toutes les révélations et fins de tour du tour 6), sa puissance devient la puissance totale adverse ici +1.
+/* Ananké, Fatalité : en fin de partie (S.final, après toutes les révélations et fins de tour du tour 6), sa puissance devient la puissance totale adverse ici +1, 9 au maximum (20 novembre : elle gagnait 64 % de ses parties).
    Deux Ananké face à face : la seconde compte pour 1 dans le calcul de la première (garde ANK, pas de boucle). */
 let ANK=0;
 /* charmée (Qetesh) : elle compte pour celui qui l'a charmée, donc sa puissance est celle de SON adversaire, le joueur qui la possède, +1 */
-function ankEnd(s,li,c){ if(ANK) return c.pow; ANK=1; try{ return total(opp(charmOf(c)||s),li)+1; } finally{ ANK=0; } }
+function ankEnd(s,li,c){ if(ANK) return c.pow; ANK=1; try{ return Math.min(total(opp(charmOf(c)||s),li)+1,ANK_MAX); } finally{ ANK=0; } }
+const ANK_MAX=9;
 function cardPow(s,li,c){
   if(!c.rev) return 0;
   if(c.captive&&captorLive(c.captive)) return 0;   /* captive (Calypso) : 0, Ananké comprise, même en fin de partie */
@@ -323,6 +324,7 @@ function cardPow(s,li,c){
   if(d.cost===3&&!d.token) for(let i=0;i<3;i++) for(const o of S.board[s][i]) if(o!==c && live(o) && eid(o)==="musicien") p+=2;   /* Le Musicien : tes autres cartes de coût d'origine 3 (une copie d'Anahita compte aussi, des deux côtés : seule la carte elle-même est exclue) */
   if(!c.neg){
     if(eid(c)==="gaia") for(let i=0;i<3;i++) if(i!==li&&slotsUsed(s,i)>=capOf(s,i)) p+=2;   /* Gaïa : +2 par autre lieu où ton côté est plein */
+    if(d.kw==="ere" && c.arr!=null && S.turn>=c.arr+2) p+=2;   /* Ère : +2 une fois en jeu depuis 2 tours (arrivée au tour 4 : active au tour 6) */
     if(d.kw==="lien") for(const o of S.board[s][li]) if(o!==c && live(o) && CARDS[o.id].fac==="helvara") p+=1;   /* Lien : +1 par autre carte Helvara à toi ici (4 cartes par lieu : +3 au plus) */
     if(eid(c)==="costumes" && inPlay("thot")) p+=4;
     if(eid(c)==="freyr" && hasHere(s,li,"freya")) p+=2;
@@ -892,6 +894,7 @@ function aiPlan(me="e",tierOv){
       const here=[...S.board[me][li].filter(x=>!x.neg), ...ctx.plays.filter(x=>x.li===li).map(x=>x.c)];
       const helv=here.filter(x=>CARDS[x.id].fac==="helvara").length, lien=here.filter(x=>CARDS[x.id].kw==="lien").length;
       pow+=(d.kw==="lien"?helv:0)+lien; }
+    if(d.kw==="ere"&&S.turn<=4) pow+=1.6;   /* Ère : ne vaut que posée au plus tard au tour 4 */
     if(d.kw==="tentation"){ const v=S.board[op][li].filter(x=>x.rev&&!noWeak(x)).length; if(v>=2) hit+=v; else pow+=2; }   /* Tentation : −1 à chaque carte adverse ici (2 ou plus), sinon +2 */
     if(d.kw==="verdict"){ const t=S.board[op][li].filter(x=>x.rev&&!fated(x)&&cardPow(op,li,x)<=d.vd); if(t.length) hit+=2+Math.max(...t.map(x=>cardPow(op,li,x))); else adj-=1; }   /* Verdict : une cible à détruire ici ? */
     if(c.id==="vritra") adj+=diff<0?4:-2;
