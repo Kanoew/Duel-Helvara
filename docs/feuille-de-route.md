@@ -73,7 +73,10 @@ Une faction par vague, mesurée avant et après. Ordre décidé le 20 novembre :
   - ✅ 👤 **Les 7 cartes** (validées le 20 novembre) : sorties, **Passante d'Ouchy**, **Veilleur du Sous-gare**, **Vasseur** (garde son effet) ; cachées sans effet, **La Somnambule du Flon**, **La Reine de Sévelin**, **L'Écolière de Dorigny**, **La Tatoueuse du Flon**.
   - ✅ Écartées : Colosse du Léman (déjà la plus forte d'Helvara), Funambule (veut être seul), Mendiant (Lien à 0 d'énergie, trop facile), Nammu (question ultra-légendaire ouverte). Possédée, Pénitente, Effigie, Emiri et Artiste restent libres (Juré / Parjure ou ta plume).
   - ✅ Mesure de départ (6 000 parties, 20 novembre) : Helvara 50,6 % ; aucune carte au-delà de ±8 ; Vasseur la plus faible (−6). Avec Lien et les 4 cachées : Helvara 48,4 %, aucun matchup au-delà de 60 %.
-  - 🟣 🛠️ Coder Lien pour de vrai (moteur, texte FR et EN, aide), **apprendre à l'IA à empiler** ses cartes Helvara, remesurer, `balance-reviewer`.
+  - ✅ 🛠️ Lien codé (`alpha-0.46`, branche `claude/modest-rubin-r960fx`) : moteur, texte FR et EN (« Bond »), aide, mot-clé coloré ⧉, l'IA empile ses cartes Helvara (30 % de ses cartes Lien posées seules, contre 48 % pour les autres Helvara). 6 tests de scénarios.
+  - ✅ Remesuré et relu par `balance-reviewer` : **publiable**. Helvara 48,6 % (46,4 avant) avec les 4 cachées, 50,7 % sans ; Helvara contre Primordial 44,1 % (40,4 avant) ; Passante −0,9, Veilleur +1,1, Vasseur −0,2 ; Primordial inchangé. À surveiller : La Doyenne (−6,8) et le Mendiant (−5,2), sans lien direct avec Lien.
+  - ✅ Testé par `playtest-qa` : tous les tests du dépôt, tutoriel gagnable en FR et EN, 12 parties sans erreur.
+  - 🟣 👤 Essayer sur ton téléphone (le symbole ⧉ avec la police d'Android), puis ouvrir la PR et fusionner.
   - 🟣 👤 Coût, puissance, rareté et date de sortie des 4 cartes cachées (aujourd'hui provisoires et faibles : 3/3, Reine 4/4).
   - 🟣 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage, pour mesurer Lien sur les Escaliers du Marché (+2 aux cartes Helvara).
 - 🟣 **Tentation** (Désir) : version automatique, décidée. Doit marcher en jeu simultané.
@@ -213,5 +216,6 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Le Voile fixé comme priorité n°1 après la sortie, Chronique 1 réduite à 3 matchs.
 
 ### 20 novembre
-- ✅ Lien : mesure de départ d'Helvara, 7 cartes choisies, version sans plafond retenue.
+- ✅ Lien : mesure de départ d'Helvara, 7 cartes choisies, version sans plafond retenue, codé, mesuré et testé (`alpha-0.46`).
+- ✅ Verre dépoli codé sur la branche `claude/liquid-glass` (barre du bas et zoom de carte en partie).
 - ✅ Ordre des mots-clés fixé (Primordial et son nerf en dernier).
