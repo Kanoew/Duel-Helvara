@@ -10,13 +10,19 @@ function loadPlaywright(){ for(const p of ["playwright","/opt/node-tools/node_mo
 const {chromium}=loadPlaywright();
 const TYPES={".html":"text/html",".js":"text/javascript",".css":"text/css",".webp":"image/webp",".png":"image/png",".mp3":"audio/mpeg",".json":"application/json"};
 const FAKE=`(function(){ const rooms={}; window.__recv=m=>{ const r=rooms[m.name]; if(r) r.recv(m); }; window.__drop=()=>{ for(const r of Object.values(rooms)) r.dropAll(); };
-  function makeRoom(name){ const key="t"+Math.random().toString(36).slice(2,8); let state={}, others={}, cb=null, q=Promise.resolve();
-    const send=type=>{ const msg={name,key,type,p:JSON.parse(JSON.stringify(state))}; q=q.then(()=>new Promise(r=>setTimeout(r,20+Math.random()*200))).then(()=>window.__send(msg)); };
-    const room={list:[], rebuild(){ room.list=[{by:"me",presence:state,sameTab:true,isMe:true},...Object.entries(others).map(([k,p])=>({by:k,presence:p,sameTab:false,isMe:false}))]; if(cb) cb(); },
-      recv(m){ if(m.key===key) return; if(m.type==="leave") delete others[m.key]; else { others[m.key]=m.p; if(m.type==="hello") send("state"); } room.rebuild(); },
-      presence(patch){ state=Object.assign({},state,patch); send("state"); setTimeout(()=>room.rebuild(),0); return Promise.resolve(); },
-      peers(){ return room.list; }, dropAll(){ others={}; room.rebuild(); }, onPeers(c){ cb=c; if(room.list.length) c(); }, leave(){ cb=null; send("leave"); delete rooms[name]; } };
-    rooms[name]=room; send("hello"); return room; }
+  /* quota de présence de Supabase, comme cloud.js : 4 envois par 30 s par connexion, dernier état seulement, salons de duel d'abord */
+  const PM=4,PL=1,PW=30000,sent=[],wait=new Map(); let tm=null; window.__presSent=0;
+  function pump(){ const n=Date.now(); while(sent.length&&n-sent[0].t>=PW) sent.shift(); for(const [k,f] of [...wait.entries()].sort((a,b)=>a[1].prio-b[1].prio)){ if(sent.length>=PM) break; if(f.prio&&sent.filter(x=>x.prio).length>=PL) continue; wait.delete(k); sent.push({t:Date.now(),prio:f.prio}); window.__presSent++; f(); }
+    if(wait.size&&!tm) tm=setTimeout(()=>{ tm=null; pump(); },Math.max(50,PW-(Date.now()-sent[0].t)+50)); }
+  function makeRoom(name){ const key="t"+Math.random().toString(36).slice(2,8); let state={}, pub={}, others={}, cb=null, onMsg=null, q=Promise.resolve();
+    const send=(type,p)=>{ const msg={name,key,type,p:JSON.parse(JSON.stringify(p))}; q=q.then(()=>new Promise(r=>setTimeout(r,20+Math.random()*200))).then(()=>window.__send(msg)); };
+    const track=()=>{ const f=()=>{ pub=JSON.parse(JSON.stringify(state)); send("state",pub); room.rebuild(); }; f.prio=name==="lobby"?1:0; wait.set(room,f); pump(); };
+    const room={list:[], rebuild(){ room.list=[{by:"me",key,presence:pub,sameTab:true,isMe:true},...Object.entries(others).map(([k,p])=>({by:k,key:k,presence:p,sameTab:false,isMe:false}))]; if(cb) cb(); },
+      recv(m){ if(m.key===key) return; if(m.type==="bc"){ if(onMsg) onMsg(m.p); return; } if(m.type==="leave") delete others[m.key]; else { others[m.key]=m.p; if(m.type==="hello") send("sync",pub); } room.rebuild(); },
+      presence(patch){ state=Object.assign({},state,patch); track(); return Promise.resolve("ok"); },
+      send(p){ send("bc",Object.assign({},p,{__k:key})); return Promise.resolve("ok"); }, onMessage(c){ onMsg=c; },
+      peers(){ return room.list; }, dropAll(){ others={}; room.rebuild(); }, onPeers(c){ cb=c; if(room.list.length) c(); }, leave(){ cb=null; onMsg=null; wait.delete(room); send("leave",{}); delete rooms[name]; } };
+    rooms[name]=room; setTimeout(track,0); send("hello",pub); return room; }
   window.claude={ async use(n){ if(n==="lobby") return makeRoom("lobby"); if(n==="db") return {mmSeek:(v,r)=>window.__mm(v,r), mmLeave:()=>window.__mmLeave(), duelEnter:(r,g,ro,v)=>window.__dEnter(r,g,ro,v), duelReport:(r,g,ro,res,h,rec)=>window.__dReport(r,g,ro,res,h,rec)};
     return typeof n==="string"&&n.startsWith("room:")?makeRoom(n.slice(5)):null; } }; })();`;
 /* File d'attente de la base simulée : mêmes règles que mm_seek (file-attente.sql) */

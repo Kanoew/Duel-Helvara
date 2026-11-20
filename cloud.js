@@ -171,42 +171,65 @@
   };
 
   /* ---------- Salon des duels (présence en temps réel) ---------- */
+  /* Quota de Supabase : chaque connexion envoie au plus 5 mises à jour de présence (track) par tranche de 30 s, tous canaux confondus ;
+     au-delà, le serveur ferme le canal (« Client presence rate limit exceeded », vu en vrai le 20 novembre : duels bloqués au tour 1).
+     On en envoie donc 4 au plus par 30 s, dont 1 seulement pour la présence anonyme (lobby), pour qu'il reste toujours de la place
+     pour le salon de duel. Un envoi en trop attend son tour, et seul le dernier état de chaque canal part (les précédents sont
+     remplacés). Les messages rapides des duels passent par la diffusion (send), qui n'a pas ce quota. */
+  const PRES_MAX = 4, PRES_LOBBY = 1, PRES_WIN = 30000, presSent = [], presWait = new Map(); let presTimer = null;
+  function presPump(){
+    const now = Date.now(); while(presSent.length && now - presSent[0].t >= PRES_WIN) presSent.shift();
+    const order = [...presWait.entries()].sort((a, b) => a[1].prio - b[1].prio);   /* salons de duel d'abord, présence anonyme ensuite */
+    for(const [k, job] of order){
+      if(presSent.length >= PRES_MAX) break;
+      if(job.prio && presSent.filter(x => x.prio).length >= PRES_LOBBY) continue;
+      presWait.delete(k); presSent.push({ t:Date.now(), prio:job.prio }); job(); }
+    if(presWait.size && !presTimer) presTimer = setTimeout(() => { presTimer = null; presPump(); }, Math.max(50, PRES_WIN - (Date.now() - presSent[0].t) + 100));
+  }
+  /* envoie fn() dès que le quota le permet ; un nouvel envoi pour le même canal remplace celui qui attend encore */
+  function presQueue(k, fn, prio){ return new Promise(ok => { const prev = presWait.get(k); if(prev) prev.cancel(); const job = () => { Promise.resolve(fn()).then(ok, () => ok("error")); }; job.cancel = () => ok("replaced"); job.prio = prio || 0; presWait.set(k, job); presPump(); }); }
+
   /* anon : salon de présence (lobby) où l'on ne publie AUCUN identifiant de compte, seulement un jeton tiré au hasard à chaque connexion */
   async function makeRoom(name, anon){
     const s = await sessionP;
     const uid = !anon && s && s.user ? s.user.id : null;
     const key = "t" + Math.random().toString(36).slice(2, 10);
-    const ch = sb.channel(name, { config:{ presence:{ key } } });
-    let state = {}, list = [], onPeers = null, onErr = null, joined = false, errTimer = null;
+    const ch = sb.channel(name, { config:{ presence:{ key }, broadcast:{ self:false } } });
+    let state = {}, list = [], onPeers = null, onErr = null, onMsg = null, joined = false, errTimer = null;
 
     const rebuild = () => {
       list = Object.entries(ch.presenceState()).map(([k, metas]) => {
         const m = metas[metas.length - 1] || {};
         const by = typeof m.uid === "string" ? m.uid : null;
-        return { by, presence: m.p || {}, sameTab: k === key, isMe: k === key || (!!uid && by === uid) };
+        return { by, key:k, presence: m.p || {}, sameTab: k === key, isMe: k === key || (!!uid && by === uid) };
       });
       if(onPeers) onPeers();
     };
     ch.on("presence", { event:"sync" }, rebuild);
+    ch.on("broadcast", { event:"m" }, msg => { if(onMsg && msg && msg.payload && typeof msg.payload === "object") onMsg(msg.payload); });
+    const track = () => presQueue(ch, () => joined ? ch.track({ uid, p:state }) : "not joined", anon ? 1 : 0);
 
     await new Promise(resolve => {
       const t = setTimeout(resolve, 8000);
-      ch.subscribe(async status => {
+      ch.subscribe(status => {
         if(status === "SUBSCRIBED"){
           joined = true; clearTimeout(errTimer); errTimer = null;
-          await ch.track({ uid, p:state }); clearTimeout(t); resolve();
-        } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){
-          // Supabase se reconnecte seul ; on ne prévient le joueur que si ça dure.
-          if(!errTimer) errTimer = setTimeout(() => { errTimer = null; if(onErr) onErr(new Error(status)); }, 30000);
+          clearTimeout(t); resolve(); setTimeout(track, 0);   /* après coup : le premier état que le jeu publie part dans le même envoi */
+        } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED"){
+          // Supabase se reconnecte seul après une coupure réseau ; un canal fermé par le serveur (CLOSED), lui, ne revient pas : on prévient vite.
+          if(!errTimer) errTimer = setTimeout(() => { errTimer = null; if(onErr) onErr(new Error(status)); }, status === "CLOSED" ? 3000 : 30000);
         }
       });
     });
 
     return {
-      presence(patch){ state = Object.assign({}, state, patch); return joined ? ch.track({ uid, p:state }) : Promise.resolve(); },
+      presence(patch){ state = Object.assign({}, state, patch); return track(); },
+      /* diffusion : message instantané aux autres joueurs du canal (non gardé : un joueur absent ne le reçoit pas) */
+      send(payload){ return joined ? ch.send({ type:"broadcast", event:"m", payload:Object.assign({}, payload, { __k:key }) }).catch(() => "error") : Promise.resolve("not joined"); },   /* __k : clé de présence de l'expéditeur */
+      onMessage(cb){ onMsg = cb; },
       peers(){ return list; },
       onPeers(cb, err){ onPeers = cb; onErr = err; if(list.length) cb(); },
-      leave(){ onPeers = null; onErr = null; clearTimeout(errTimer); try { sb.removeChannel(ch); } catch(e) {} }
+      leave(){ onPeers = null; onErr = null; onMsg = null; clearTimeout(errTimer); const w = presWait.get(ch); if(w){ w.cancel(); presWait.delete(ch); } try { sb.removeChannel(ch); } catch(e) {} }
     };
   }
 
