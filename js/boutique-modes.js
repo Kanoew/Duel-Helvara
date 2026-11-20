@@ -200,11 +200,13 @@ async function rtOpen(kind,name){
   if(!r) return null;
   if(t!==rtTok[kind]){ if(r.leave) r.leave(); return null; } /* fermé pendant la connexion */
   r.name=name;
-  r.onPeers(()=>{ mqTick(); mpTick(); }, e=>{ mpMsg="Connexion au salon perdue. Recharge la page."; render(); });
+  r.onPeers(()=>{ if(kind==="c"){ const ks=r.peers().filter(p=>!p.sameTab).map(p=>p.key).sort().join(); if(ks!==mpKeys){ const more=ks.length>mpKeys.length||ks.split(",").some(k=>k&&!mpKeys.includes(k)); mpKeys=ks; if(more) mpCast(); } }   /* un joueur arrive (ou revient) : on lui renvoie notre état tout de suite */
+    mqTick(); mpTick(); }, e=>{ if(kind==="c"&&mpLive()){ mpRejoin(); return; } mpMsg="Connexion au salon perdue. Recharge la page."; render(); });
+  if(kind==="c"&&r.onMessage) r.onMessage(mpOnMsg);
   if(kind==="c") roomC=r; else roomQ=r;
   return r;
 }
-function rtClose(kind){ rtTok[kind]++; const r=kind==="c"?roomC:roomQ; if(kind==="c") roomC=null; else roomQ=null; if(r&&r.leave) r.leave(); }
+function rtClose(kind){ rtTok[kind]++; const r=kind==="c"?roomC:roomQ; if(kind==="c"){ roomC=null; mpBc={}; mpBcAt={}; mpKeys=""; } else roomQ=null; if(r&&r.leave) r.leave(); }
 function initRoom(){ roomTried=true; render(); lobOpen(); }
 /* ======= Présence en direct (anti-triche, lot B) =======
    Chaque jeu ouvert ET visible rejoint « helvara-lobby » (cloud.js : aucun identifiant de compte, un jeton tiré au hasard) et n'y publie
@@ -218,17 +220,22 @@ async function lobOpen(){
   let r=null; try{ r=await window.claude.use("lobby"); }catch(e){ r=null; } lobConn=false;
   if(!r) return;
   if(document.hidden||lob){ if(r.leave) r.leave(); return; }
-  lob=r; lobSent=-1;
+  lob=r; lobSent=-1; lobBc={};
+  if(r.onMessage) r.onMessage(m=>{ if(lob!==r||!m||m.v!==BUILD||typeof m.__k!=="string"||![0,1,2].includes(m.s)) return; lobBc[m.__k]=m.s; const k=lobOthers().length+"|"+lobFree()+"|"+lobSeeking(); if(k!==lobSeen){ lobSeen=k; if(screen==="home") render(); } });
   r.onPeers(()=>{ if(lob!==r) return;
     if(r.peers().length>LOB_MAX){ lobFull=true; lobClose(); return; }
     const k=lobOthers().length+"|"+lobFree()+"|"+lobSeeking(); if(k!==lobSeen){ lobSeen=k; if(screen==="home") render(); } }, ()=>{ if(lob===r) lobClose(); });
   lobSync();
 }
-function lobClose(){ const r=lob; lob=null; lobSent=-1; lobSeen=""; if(r&&r.leave) r.leave(); }
-function lobSync(){ if(!lob) return; const s=lobState(); if(s===lobSent) return; lobSent=s; lob.presence({v:BUILD,s}).catch(()=>{}); }
-const lobOthers=()=>lob?lob.peers().filter(p=>!p.sameTab&&p.presence&&p.presence.v===BUILD):[];
-const lobFree=()=>lobOthers().filter(p=>p.presence.s!==2).length;
-const lobSeeking=()=>lobOthers().filter(p=>p.presence.s===1).length;
+function lobClose(){ const r=lob; lob=null; lobSent=-1; lobSeen=""; lobBc={}; if(r&&r.leave) r.leave(); }
+/* L'état part en présence (rationnée : 1 envoi par 30 s pour le lobby, voir cloud.js) ET en diffusion (instantanée) ; lobBc garde
+   les états reçus en diffusion par clé de présence, plus récents que la présence */
+let lobBc={};
+function lobSync(){ if(!lob) return; const s=lobState(); if(s===lobSent) return; lobSent=s; lob.presence({v:BUILD,s}).catch(()=>{}); if(lob.send) lob.send({v:BUILD,s}).catch(()=>{}); }
+const lobS=p=>lobBc[p.key]!=null?lobBc[p.key]:p.presence.s;
+const lobOthers=()=>lob?lob.peers().filter(p=>!p.sameTab&&p.presence&&(p.presence.v===BUILD||(lobBc[p.key]!=null))):[];
+const lobFree=()=>lobOthers().filter(p=>lobS(p)!==2).length;
+const lobSeeking=()=>lobOthers().filter(p=>lobS(p)===1).length;
 document.addEventListener("visibilitychange",()=>{ if(document.hidden) lobClose(); else { lobFull=false; lobOpen(); } });   /* canal plein (ou rempli par un tricheur) : on réessaie au retour au premier plan */
 /* « Jouer » (lot B) : si un autre joueur de même version est libre, on le cherche au plus LOB_WAIT ms (la file d'attente habituelle),
    sinon partie contre l'IA tout de suite. Appariement trouvé : un peu de marge pour entrer dans le salon. Renvoie false = jouer contre l'IA. */
@@ -243,7 +250,28 @@ function playSeek(){
 }
 function playStop(me){ clearInterval(me.jt); if(mq===me) mqStop(""); if(myMp&&!(S&&S.mp)) mpClear(); }
 function playAI(me){ playStop(me); sheet=null; newGame(); window.scrollTo(0,0); }
-function mpPush(patch){ myMp=Object.assign({},myMp||{},patch); if(roomC) roomC.presence({mp:myMp}).catch(()=>{}); }
+/* Chaque état du duel part deux fois : en diffusion (instantané) et en présence (rationnée par cloud.js à 4 envois par 30 s : elle sert
+   de mémoire pour la reprise et les retardataires). seq numérote les états : l'adversaire garde toujours le plus récent des deux. */
+function mpPush(patch){ myMp=Object.assign({},myMp||{},patch,{seq:Math.max(((myMp&&+myMp.seq)||0)+1,Date.now())});   /* croît toujours, même après un rechargement */ if(roomC){ roomC.presence({mp:myMp}).catch(()=>{}); mpCast(); } }
+function mpCast(){ if(roomC&&roomC.send&&myMp) roomC.send({mp:myMp}).catch(()=>{}); }
+/* Filet de sécurité (20 novembre) : pendant un duel, si l'adversaire a disparu du salon depuis plus de 10 s, ou si le serveur a fermé
+   notre canal, on rejoint le salon tout seul (comme un rechargement de page, sans recharger) : 1 essai toutes les 20 s au plus. */
+const mpLive=()=>!!(S&&S.mp&&!S.over&&!S.mp.resuming&&myMp&&myMp.code);
+let mpGoneAt=0, mpRejoinAt=0, mpRejoining=false;
+async function mpRejoin(){
+  if(!mpLive()||mpRejoining||Date.now()-mpRejoinAt<20000) return; mpRejoining=true; mpRejoinAt=Date.now();
+  const code=myMp.code; rtClose("c"); const r=await rtOpen("c","helvara-room-"+code); mpRejoining=false;
+  if(r&&myMp&&myMp.code===code) mpPush({}); else if(!r){ mpMsg=RT_FAIL; render(); }
+}
+setInterval(()=>{ if(!mpLive()||!roomC) { mpGoneAt=0; return; }
+  const gone=!mpOpp(); if(gone!==S.mp.gone){ S.mp.gone=gone; if(screen==="play") render(); }
+  if(!gone){ mpGoneAt=0; return; } mpGoneAt=mpGoneAt||Date.now(); if(Date.now()-mpGoneAt>10000) mpRejoin(); },3000);
+/* Derniers états reçus en diffusion, par jeton de joueur (vidé à la fermeture du salon) */
+let mpBc={}, mpBcAt={}, mpKeys="";
+function mpOnMsg(m){ const x=m&&m.mp; if(!x||typeof x!=="object"||typeof x.tok!=="string"||!myMp||x.code!==myMp.code) return;
+  mpBcAt[x.tok]=Date.now(); const o=mpBc[x.tok]; if(!o||(+x.seq||0)>(+o.seq||0)){ mpBc[x.tok]=x; mpTick(); } }
+/* Signe de vie : la diffusion n'a pas de quota, elle remplace la présence quand celle-ci attend son tour (enchaînement de duels) */
+setInterval(()=>{ if(roomC&&myMp&&myMp.code) mpCast(); },12000);
 function mpClear(){ myMp=null; mpMsg=""; rtClose("c"); }
 function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck],lp:locPool(),ft:featureLoc()}; }
 const mpNewCode=()=>MP_PLACES[mpRandInt(MP_PLACES.length)]+"-"+Array.from({length:6},()=>MP_ALPHA[mpRandInt(MP_ALPHA.length)]).join("");
@@ -349,13 +377,20 @@ function mqTick(){
   mq.verWarn=!same.length&&others.some(p=>p.presence.q.ver!==BUILD);
   if(screen==="duel") render();
 }
-function mpOpp(){
+function mpOppP(){
   if(!roomC||!myMp) return null;
   const other=myMp.role==="host"?"guest":"host";
   const list=roomC.peers().filter(p=>!p.sameTab&&p.presence&&p.presence.mp&&typeof p.presence.mp==="object"&&p.presence.mp.code===myMp.code&&p.presence.mp.role===other);
   if(myMp.role==="host") return myMp.oppTok?(list.find(p=>p.presence.mp.tok===myMp.oppTok)||null):(list.find(p=>validDeck(p.presence.mp.deck))||null);
   return list.find(p=>p.presence.mp.oppTok===myMp.tok)||list.find(p=>!p.presence.mp.oppTok)||null;
-}
+}/* L'adversaire vu seulement en diffusion (sa présence attend encore son tour) : il compte s'il a donné signe de vie il y a moins de 35 s */
+function mpOppB(){ if(!myMp) return null; const other=myMp.role==="host"?"guest":"host", now=Date.now();
+  const l=Object.keys(mpBc).filter(t=>now-(mpBcAt[t]||0)<35000).map(t=>mpBc[t]).filter(m=>m.code===myMp.code&&m.role===other);
+  const m=myMp.role==="host"?(myMp.oppTok?l.find(x=>x.tok===myMp.oppTok):l.find(x=>validDeck(x.deck))):(l.find(x=>x.oppTok===myMp.tok)||l.find(x=>!x.oppTok));
+  return m?{sameTab:false,presence:{mp:m}}:null; }
+/* L'adversaire : sa présence, avec l'état le plus récent reçu en diffusion s'il est plus neuf */
+function mpOpp(){ const p=mpOppP(); if(!p) return mpOppB(); const b=mpBc[p.presence.mp.tok]; return b&&(+b.seq||0)>(+p.presence.mp.seq||0)?{...p,presence:{...p.presence,mp:b}}:p; }
+
 function mpRoomFull(){ if(!roomC||!myMp||myMp.role!=="guest") return false; return roomC.peers().some(p=>!p.sameTab&&p.presence&&p.presence.mp&&p.presence.mp.code===myMp.code&&p.presence.mp.role==="host"&&p.presence.mp.oppTok&&p.presence.mp.oppTok!==myMp.tok); }
 const validDeck=d=>Array.isArray(d)&&d.length===12&&new Set(d).size===12&&d.every(id=>POOL.includes(id));
 /* Deck adverse (anti-triche, lot A) : mêmes règles que l'éditeur de deck. Cartes sorties (un jour de marge : horloges décalées le jour d'une sortie),
@@ -508,7 +543,18 @@ function mpSealPush(pend){
   mpSeal(pend.plays,pend.salt).then(h=>{ if(mpPend!==pend||!myMp) return; pend.seal=h; mpPush({t:pend.t,seal:Object.assign({},myMp.seal||{},{[pend.t]:h})}); mpSaveAll(); mpTryResolve(); })
     .catch(()=>{ if(mpPend!==pend) return; mpPend=null; if(S&&S.mp){ S.mp.locked=false; mpMsg="Ton navigateur ne peut pas sceller les coups (connexion non sécurisée)."; render(); } });
 }
+/* Rattrapage après une reprise : si mes coups du tour en cours sont déjà connus (révélés, ou scellés avant le rechargement), on les remet
+   en place et on reverrouille. La reprise rejoue avec ce qu'on sait de l'adversaire à cet instant ; ses tours suivants arrivent ensuite
+   (diffusion, présence en retard) et se résolvent ici, un par un. */
+function mpCatchUp(){
+  if(!S||!S.mp||S.mp.locked||S.busy||S.over||S.mp.replaying||!myMp) return;
+  const t=S.turn, done=myMp.hist&&myMp.hist[t], pend=mpPend&&mpPend.g===S.mp.g&&mpPend.t===t?mpPend:null, mine=done||(pend&&pend.plays);
+  if(!mine) return;
+  const st=mapPlays("p",mine); S.hand.p=S.hand.p.filter(c=>!st.some(x=>x.c===c)); S.staged=st; S.swimP=st.swim||null; S.oathStage=st.oath!=null?st.oath:null; S.mp.locked=true;
+  if(pend&&!done&&!(myMp.seal&&myMp.seal[t])) mpSealPush(pend);
+}
 function mpTryResolve(){
+  mpCatchUp();
   if(!S||!S.mp||!S.mp.locked||S.busy||S.over||S.mp.replaying||S.mp.checking) return;
   const o=mpOpp(); if(!o) return; const om=o.presence.mp, t=S.turn;
   if(om.g!==S.mp.g) return;
