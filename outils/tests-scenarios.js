@@ -312,14 +312,18 @@ async function inPage() {
   fresh(); S.turn = 4; { const es = [put("e", 0, plain[0], 3), put("e", 0, plain[1], 3), put("e", 0, plain[2], 3)]; const b = mk("balor"); S.board.p[0].push(b); reveal("p", 0, b); T("Balor : −3 à deux cartes différentes seulement", es.filter(x => x.pow === 0).length === 2 && es.filter(x => x.pow === 3).length === 1, ""); }
 
   /* ===== Ananké (Fatalité : ni détruite ni déplacée (15 octobre, 2e version) ; fin de partie : puissance adverse ici +1) ===== */
-  /* A1. Ananké révélée en premier, l'adversaire pose ensuite 10 de puissance au même endroit → elle gagne quand même le lieu */
+  /* A1. Ananké révélée en premier, l'adversaire pose ensuite 7 de puissance au même endroit → elle gagne quand même le lieu */
+  fresh(); S.turn = 6; { const a = card("ananke"), big = card(plain[0], 7); S.hand.p = [a]; S.hand.e = [big];
+    await resolveTurn([{ c: a, li: 0 }], [{ c: big, li: 0 }], false);
+    T("Ananké : révélée avant 7 de puissance adverse, elle gagne le lieu (8 contre 7)", cardPow("p", 0, a) === 8 && total("p", 0) === 8 && total("e", 0) === 7 && leader(0) === "p", `Ananké ${cardPow("p", 0, a)}, lieu ${total("p", 0)} contre ${total("e", 0)}`); }
+  /* A1-plafond (20 novembre) : 9 au maximum. Face à 10 de puissance adverse, elle perd le lieu */
   fresh(); S.turn = 6; { const a = card("ananke"), big = card(plain[0], 10); S.hand.p = [a]; S.hand.e = [big];
     await resolveTurn([{ c: a, li: 0 }], [{ c: big, li: 0 }], false);
-    T("Ananké : révélée avant 10 de puissance adverse, elle gagne le lieu (11 contre 10)", cardPow("p", 0, a) === 11 && total("p", 0) === 11 && total("e", 0) === 10 && leader(0) === "p", `Ananké ${cardPow("p", 0, a)}, lieu ${total("p", 0)} contre ${total("e", 0)}`); }
+    T("Ananké : 9 au maximum, face à 10 de puissance adverse elle perd le lieu (9 contre 10)", cardPow("p", 0, a) === 9 && leader(0) === "e", `Ananké ${cardPow("p", 0, a)}, lieu ${total("p", 0)} contre ${total("e", 0)}`); }
   /* A1b. L'ordre ne change rien : l'adversaire était déjà là avant elle */
-  fresh(); S.turn = 6; { put("e", 0, plain[0], 10); const a = card("ananke"); S.hand.p = [a];
+  fresh(); S.turn = 6; { put("e", 0, plain[0], 7); const a = card("ananke"); S.hand.p = [a];
     await resolveTurn([{ c: a, li: 0 }], [], false);
-    T("Ananké : même résultat si l'adversaire était déjà posé (11 contre 10)", cardPow("p", 0, a) === 11 && leader(0) === "p", cardPow("p", 0, a)); }
+    T("Ananké : même résultat si l'adversaire était déjà posé (8 contre 7)", cardPow("p", 0, a) === 8 && leader(0) === "p", cardPow("p", 0, a)); }
   /* A1c. Pendant la partie (avant la fin) elle reste à 1 ; la puissance de fin s'affiche en direct dans le plateau */
   fresh(); S.turn = 4; { put("e", 0, plain[0], 6); const a = card("ananke"); S.hand.p = [a];
     S.board.p[0].push(a); reveal("p", 0, a); const pre = cardPow("p", 0, a); const live7 = ankEnd("p", 0, a); const html = mini("p", 0, a, false);
@@ -360,7 +364,7 @@ async function inPage() {
   for (const id of ["apsu", "apsu_n"]) { fresh(); S.turn = 6; { const a = card("ananke"), ap = card(id); S.hand.p = [a]; S.hand.e = [ap]; await resolveTurn([{ c: a, li: 0 }], [{ c: ap, li: 0 }], false);
       T(`Ananké : ${id} adverse posée après elle → elle reste à 1`, a.neg && cardPow("p", 0, a) === 1, `${cardPow("p", 0, a)}, neg ${a.neg}`); }
     fresh(); S.turn = 6; { put("e", 0, id); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); S.final = true; const v = cardPow("p", 0, a); S.final = false;
-      T(`Ananké : ${id} déjà posée avant elle → ne l'atteint pas (une Révélation n'agit qu'une fois)`, !a.neg && v === total("e", 0) + 1, `${v}, neg ${a.neg}`); } }
+      T(`Ananké : ${id} déjà posée avant elle → ne l'atteint pas (une Révélation n'agit qu'une fois)`, !a.neg && v === Math.min(total("e", 0) + 1, 9), `${v}, neg ${a.neg}`); } }
   /* A4b. Une Qetesh ou une Calypso déjà en jeu ne touche pas une Ananké posée après elle (Révélation passée) : l'IA peut la poser en face */
   fresh(); S.turn = 6; { put("e", 0, "qetesh"); put("e", 0, "calypso"); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
     T("Ananké posée après une Qetesh et une Calypso adverses : ni charmée ni captive", !a.charm && !a.captive && !a.neg, JSON.stringify({ ch: a.charm, cap: !!a.captive })); }
@@ -604,7 +608,7 @@ async function inPage() {
     fresh(); S.turn = 4; { const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false); S.turn = 5; const q = card("qetesh"); S.hand.e = [q]; await resolveTurn([], [{ c: q, li: 0 }], false);
       T("Ananké posée au tour 4, Qetesh adverse au tour 5 : charmée", a.charm === "e", a.charm); }
     /* Ananké posée au tour 5 sur un lieu adverse plein → plus aucun contre possible, elle gagne */
-    fresh(); S.turn = 5; { for (let k = 0; k < capOf("e", 0); k++) put("e", 0, plain[k], 3); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
+    fresh(); S.turn = 5; { for (let k = 0; k < capOf("e", 0); k++) put("e", 0, plain[k], 2); const a = card("ananke"); S.hand.p = [a]; await resolveTurn([{ c: a, li: 0 }], [], false);
       const full = S.board.e[0].length >= capOf("e", 0); S.final = true; const v = cardPow("p", 0, a), w = leader(0); S.final = false;
       T("Ananké posée au tour 5 face à un lieu adverse plein : aucune place pour un contre, elle gagne le lieu", full && w === "p" && v === total("e", 0) + 1, `${v} contre ${total("e", 0)}, plein ${full}`); }
     /* Cronos au tour 5 : les deux autres lieux sont vidés, des deux côtés ; son lieu intact */
@@ -1614,6 +1618,16 @@ async function inPage() {
       T("Verdict : Eir empêche la destruction", S.board.e[2].includes(k1), ""); }
     fresh(); { const k3 = put("e", 0, plain[0], 3), k6 = put("e", 0, plain[1], 6); const mine = put("p", 0, plain[2], 5); await play("inanna", 0);
       T("Verdict 3 : Inanna détruit la carte à 3, puis toutes les cartes ici reviennent à leur puissance de base", !S.board.e[0].includes(k3) && k6.pow === CARDS[k6.id].pow && mine.pow === CARDS[mine.id].pow, `${k6.pow} ${mine.pow}`); }
+    S = null; }
+
+  /* Ère (Primordial) : +2 une fois en jeu depuis 2 tours */
+  { fresh(); S.turn = 4; const t = card("tehom"); S.hand.p = [t]; S.energy = 9; await resolveTurn([{ c: t, li: 0 }], [], false);
+    const p4 = cardPow("p", 0, t); S.turn = 5; const p5 = cardPow("p", 0, t); S.turn = 6; const p6 = cardPow("p", 0, t);
+    T("Ère : posée au tour 4, rien aux tours 4 et 5, +2 au tour 6", p4 === 3 && p5 === 3 && p6 === 5, `${p4} ${p5} ${p6}`);
+    t.neg = true; T("Ère : une carte qui a perdu ses effets n'a plus Ère", cardPow("p", 0, t) === 3, cardPow("p", 0, t));
+    fresh(); S.turn = 5; const m = card("mouche"); S.hand.p = [m]; S.energy = 9; await resolveTurn([{ c: m, li: 1 }], [], false); S.turn = 6;
+    T("Ère : posée au tour 5, toujours rien au tour 6", cardPow("p", 1, m) === 3, cardPow("p", 1, m));
+    T("Yarden X Apsu : coût 10, puissance 9 (20 novembre)", CARDS.ulya.cost === 10 && CARDS.ulya.pow === 9, "");
     S = null; }
 
   return res;

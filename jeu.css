@@ -942,6 +942,7 @@ body.ec-draw #app{filter:brightness(.75);transition:filter .6s}
 .kw-fat{color:var(--kw-fat)}.kw-fat::before{content:"✠"}
 .kw-lien{color:#7fb6ff}.kw-lien::before{content:"⧉"}
 .kw-tent{color:#f28cc8}.kw-tent::before{content:"❦"}
+.kw-ere{color:#b9a3f0}.kw-ere::before{content:"⧗"}
 .kw-verd{color:#e9c46a}.kw-verd::before{content:"\2696\FE0E"}
 
 /* Glisser-déposer : soulever une carte de la main vers le haut, la lâcher sur un lieu */

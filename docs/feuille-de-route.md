@@ -88,7 +88,14 @@ Une faction par vague, mesurée avant et après. Ordre décidé le 20 novembre :
 - ✅ Tentation et Verdict mesurés par `balance-reviewer` (6 000 parties) : **publiables**. Désir 45,9 → 48,7 % ; Primordial contre Désir 62,9 → 57,2 % (plus aucun matchup au-delà de 60 %) ; Jugement contre Helvara 47,4 → 49,3 % (Verdict contre un peu Lien, sans l'écraser) ; Dionysos −4,7 → +0,4. Jugement ne gagne rien contre Primordial (41,8 %) : Verdict 2 ne touche pas les grosses cartes.
 - 🟣 👤 Différencier les cartes cachées avant leur sortie : 4 Tentation identiques en 3/3 et 4 Verdict 2 identiques en 3/3 (coût, puissance, seuil 2 ou 3). Ra, Thanatos, Yama et Shango sont un peu faibles (−0,7 à −4,7) : un Verdict 3 sur certaines est une piste, à remesurer.
 - 🟣 👤 Tentation et Verdict : test en jeu, puis PR et essai sur ton téléphone (symboles ❦ et ⚖).
-- 🟣 **Ère** (Primordial), en dernier : effet en plus si la carte est en jeu depuis 2 tours. ⚠️ **Primordial surperforme** (55 à 56 % de victoire, 59,9 % contre Désir, à la limite des 60 %) : nerf décidé le 20 novembre, fait avec Ère. Ère ira sur les cartes Primordial faibles.
+- 🟣 **Ère** (Primordial), codé le 20 novembre (`alpha-0.48`) :
+  - ✅ **Texte** : « Ère : +2 de puissance une fois en jeu depuis 2 tours. » (Posée au tour 4, elle l'a au tour 6.)
+  - ✅ **Cartes** : Tehom, Rhéa, Jörmungandr, Danu (cachées, gardent 3/3), Mouche de la Faille, Mère de Cendre (sorties).
+- ✅ **Nerf de Primordial** (20 novembre) : son avance venait d'Ananké (decks avec elle 64,7 %, sans elle ~50 %).
+  - ✅ **Ananké** (et ses variantes) : coût 4 inchangé, fin de partie « puissance totale adverse ici +1, **9 au maximum** ». Decks avec elle 57,7 % (+8,2).
+  - ✅ **Yarden X Apsu** : coût 10, puissance 9 (au lieu de 9 / 10). +7,8.
+  - ✅ Primordial 52,7 % ; pire matchup Primordial contre Jugement 56,7 %. Détail des 12 réglages mesurés : `docs/historique-equilibrage.md`.
+  - 🟣 Après la sortie d'Ananké (1er décembre) : relever ses vraies statistiques et celles de Yarden X Apsu dans Supabase (lecture seule).
 - 🟣 👤 Les effets précis de chaque carte : c'est ta plume.
 - 🟣 🛠️ Chaque effet mesuré (outil d'équilibrage + `balance-reviewer`), l'IA apprend à les jouer, cercle des contres vérifié (aucun matchup au-dessus de 60 %).
 
@@ -226,4 +233,6 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Lien : mesure de départ d'Helvara, 7 cartes choisies, version sans plafond retenue, codé, mesuré et testé (`alpha-0.46`).
 - ✅ Verre dépoli codé sur la branche `claude/liquid-glass` (barre du bas et zoom de carte en partie), fusionné sur `main`.
 - ✅ Lien fusionné sur `main`. Tentation et Verdict codés et mesurés (`alpha-0.47`).
+- ✅ Ère codé, Ananké et Yarden X Apsu corrigés (`alpha-0.48`) : les quatre mots-clés de faction sont faits.
+- ✅ Verre dépoli étendu à toute carte agrandie (Collection, partie, ouverture de paquet).
 - ✅ Ordre des mots-clés fixé (Primordial et son nerf en dernier).
