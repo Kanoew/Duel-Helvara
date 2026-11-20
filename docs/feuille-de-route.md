@@ -97,21 +97,28 @@ Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : le
 - 🟣 👤 Fusionner la dernière PR (Ère, Primordial, verre dépoli étendu), puis essayer sur ton téléphone : les symboles ⧉ ❦ ⚖ ⧗ avec la police d'Android, et le verre dans la Collection (fluidité derrière les cartes holo).
 - 🟣 👤 Ta plume, avant la sortie des cartes cachées : leurs coût, puissance, rareté et date. Les 4 de Tentation sont identiques (3/3), les 4 de Verdict aussi (Verdict 2, 3/3, un peu faibles : un Verdict 3 sur certaines est une piste, à remesurer). Il ne reste plus de carte cachée sans effet en Jugement pour Juré / Parjure.
 
-**À surveiller**
-- 🟣 Après le 1er décembre : vraies statistiques d'Ananké, de Yarden X Apsu et de Dionysos dans Supabase (lecture seule). Correction seulement au-delà de ±8 points avec au moins 100 decks.
-- 🟣 Jugement un peu bas (47,4 %) et faible contre Primordial (42 à 43 %) : Verdict 2 ne touche pas les grosses cartes.
-- 🟣 La Doyenne (−6,8) et le Mendiant (−5,2), zone de surveillance.
+**À surveiller** (remesuré le 20 novembre au soir avec l'IA corrigée, 3 graines × 6 000 parties)
+- ✅ 🛠️ **IA corrigée** (relevé d'une relecture extérieure du code) : une quinzaine de cartes qui frappent l'adversaire ici (Lilith, Ereshkigal, Rusalka, Durga, Izzy Lune de Sang…) n'étaient pas évaluées selon le lieu ; Tentation et Verdict ignoraient certaines protections ; pour les coups d'une ou deux cartes, le deuxième meilleur lieu est maintenant simulé aussi. Nos mesures sous-estimaient donc les cartes qui détruisent.
+- Factions : Helvara 47,8 · Primordial 52,7 · Désir 51,8 · **Jugement 46,6** ; decks avec Ananké 55,1 %. Pire face-à-face : Désir contre Jugement ~56 %, Primordial contre Jugement ~56 %.
+- 🟣 👤 **Au-delà de +8** : **Yarden X Apsu +10,5** (même après le 10 / 9) et **Lilith +8,9** (sortie : une retouche légère est permise). À décider.
+- 🟣 Entre +6 et +8 : Ereshkigal +6,7, Apsu +6,6, Arès d'Halloween +6,5, Calypso +6,4, Nyx d'Halloween +6,1, le Troll +6,1.
+- 🟣 **Jugement est maintenant la faction la plus faible** (46,6 %, ~43 % contre Primordial et contre Désir) : piste, un Verdict 3 sur certaines cartes cachées (Ra, Thanatos, Yama, Shango sont à −1,7 à −4,6).
+- 🟣 Après le 1er décembre : vraies statistiques d'Ananké, de Yarden X Apsu, de Lilith et de Dionysos dans Supabase (lecture seule). Correction seulement au-delà de ±8 points avec au moins 100 decks.
 - 🟣 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage, pour mesurer Lien sur les Escaliers du Marché (+2 aux cartes Helvara).
 
 ### 3.3 🟣 🛠️ Chronique 1, en 3 matchs
 - 🟣 Un adversaire de faction, puis un adversaire avec un avantage, puis un boss.
 - 🟣 Deck persistant, titre permanent, CHF.
-- 🟣 Boss : règles spéciales. S'il joue 8 tours, vérifier tous les effets qui disent « tour 6 ».
+- 🟣 **Boss en 6 tours, pas 8** (validé le 20 novembre) : 8 tours casseraient Ananké, Cronos, Nemesis, Méduse, Konohana, Loviatar, Fenrir, Médée d'Halloween et l'IA, tous calés sur le tour 6. À la place : **le Trône de Tiamat fixe au centre**, avec une « Loi du Trône » propre au boss (par exemple : il vaut 2 lieux au décompte, ou le boss y prête Serment dès le tour 1, ou une onde à la fin du tour 3 quand le Trône change d'allégeance). 👤 La loi exacte : ta plume.
 - 🟣 👤 L'histoire de la Chronique et les portraits des quatre rivaux (provisoires aujourd'hui : Set, Lilith, Anubis, Joanna).
 
 ### 3.4 🟣 🛠️ Accueil des nouveaux joueurs
 - ✅ **Tutoriel centré sur le Serment, moins guidé** : le Serment présenté dès l'accueil ; l'adversaire jure à la fin du tour 2 ; au tour 3, tu jures où tu veux ou tu relèves son défi (Serment croisé) ; tours 4 à 6 libres, avec des indices ; à la fin, ce que ton Serment aurait valu en partie classée. 👤 À essayer sur ton téléphone.
 - 🟣 Partie rapide avec un deck prêté (parmi les 7 decks prêts) dès la première partie.
+- 🟣 🛠️ **Défi du jour, sans Supabase** (idée du 20 novembre, 👤 avant la sortie à confirmer) : chaque jour la même partie pour tout le monde (mêmes lieux, même deck prêté parmi les 7, même rival, même tirage), un seul essai, une petite récompense en CHF, et un bouton « Copier mon résultat » à coller sur Discord (lieux en 🟢 / 🔴, Serment tenu ou non). Couvre aussi la partie avec un deck prêté. Tout reste dans le navigateur (pas plus protégé contre la triche qu'une partie contre l'IA).
+- 🟣 🛠️ **Fin de la Première Brûlure** : le bouton « Voir mon deck » devient « Jouer ma première partie » (le deck est déjà rempli).
+- 🟣 🛠️ **Pastille ⏳ sur le plateau** : compte à rebours pour les cartes Ère (⏳ 2, ⏳ 1) et pour Vasseur (+4 dans deux tours), comme les pastilles d'Ananké (✠) ou d'Hédoné.
+- 🟣 🛠️ **Aperçu du bonus pendant le glisser-déposer** : un petit « +2 » vert sur la carte soulevée au-dessus d'un lieu (Escaliers du Marché, Lien, Jardins de Désir…), pour comprendre les synergies avant de lâcher la carte.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
 - 🟣 🛠️ Idée : une phrase sur Lien dans le tutoriel (au tour 3, la Passante gagne +1 grâce au Coursier).
@@ -159,7 +166,8 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 🛠️ Classement saisonnier avec récompenses cosmétiques.
 - 🟣 👤 Tournoi sur Discord avec les duels entre amis, IndieDB, vidéo YouTube, petits streamers.
 - 🟣 🛠️ Chronique 2 (cartes temporaires et handicaps entre les matchs).
-- 🟣 🛠️ Défi du jour, decks fantômes (écrivent dans Supabase : relecture `db-guard` et ton accord avant).
+- 🟣 🛠️ Decks fantômes (écrivent dans Supabase : relecture `db-guard` et ton accord avant). Le Défi du jour, lui, passe en 3.4, sans Supabase.
+- 🟣 🛠️ **Tester mon deck** : affronter un de ses propres decks piloté par l'IA (entraînement, sans gain ni perte de rang).
 - 🟣 🛠️ Rattrapage : un deck de faction offert après 5 parties. Buts de collection visibles.
 - 🟣 👤 Google Play (compte développeur payant) et nom de domaine (prévoir le passage : la sauvegarde locale ne suit pas un changement d'adresse).
 
@@ -175,7 +183,8 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 ## 5. 🟣 Le contenu en attente (ta plume)
 
 - 🟣 👤 **45 cartes sans effet**, cachées : elles peuvent recevoir les mots-clés, en plus des cartes sorties (option B). Leurs coûts, puissances, raretés et factions sont souvent provisoires. Liste complète dans `docs/calendrier-et-en-attente.md`, partie « En attente ».
-- 🟣 👤 Famille Serment « Juré » et « Parjure » (plan du 16 novembre) : à fusionner ou non avec les mots-clés de faction. Les deux puisent dans les mêmes 45 cartes.
+- 🟣 👤 Famille Serment « Juré » et « Parjure » : **piste retenue le 20 novembre**, pas de nouveau mot-clé ; à la place, **une ou deux cartes cachées par faction** combinent leur mot-clé avec le Serment (par exemple : Verdict qui monte si un Serment est posé ici, Lien +2 si tu as juré ici). Ça différencie aussi les cartes cachées identiques. Attention en duel : le Serment est caché jusqu'à la fin du tour, la carte doit lire une information visible au moment où elle se révèle. Les textes : ta plume.
+- 🟣 👤 **Répliques des rivaux** : une seule phrase par tempérament aujourd'hui (on devine le tempérament en 4 ou 5 parties). En écrire 3 ou 4 par tempérament, plus une réplique quand tu relèves son Serment et une quand il perd le sien. 🛠️ Ensuite, un « tableau de chasse » au profil : Exodus, Clara, Timothée, Mira et ton score contre chacun.
 - 🟣 👤 Saison Saint-Valentin : les illustrations et la musique sont prêtes, il manque les effets des cartes et celui de Nike V.
 - 🟣 👤 Noms à confirmer : `reflet_noir` (à renommer), « L'Enfant sans École ».
 - 🟣 👤 Questions du 22 octobre : formulation « univers d'Helvara, inspiré de Lausanne » dans le tutoriel, La Source (50 parties avec 8 cartes Helvara ?), nuance de Vesta, cartes holo sans coût ni nom affichés.
@@ -239,3 +248,4 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Nerf de Primordial : Ananké 9 au maximum, Yarden X Apsu 10 / 9 (12 réglages mesurés).
 - ✅ Verre dépoli (« Liquid Glass ») : barre du bas, puis encadré de toute carte agrandie (Collection, partie, ouverture de paquet), avec repli et version allégée pour les petits téléphones.
 - ✅ Tests rendus indépendants des cartes sans effet (carte du jour, La Source) ; 735 scénarios.
+- ✅ Relecture extérieure du code vérifiée : IA corrigée (cartes qui frappent ici, protections, deuxième lieu simulé), zoom de l'ouverture de paquet réparé (une carte holo n'y affichait aucun texte), verre dépoli sur le zoom d'un lieu, fins de ligne LF forcées (`.gitattributes`). Idées rangées : Défi du jour, pastille ⏳, boss en 6 tours, Serment sur les cartes cachées, répliques des rivaux, Tester mon deck.
