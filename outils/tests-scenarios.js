@@ -486,7 +486,7 @@ async function inPage() {
     let bad = 0; for (let i = 0; i < 100; i++) { bzGame(); if ([...S.deck.e, ...S.deck.p].some(c => CARDS[c.id].r === "U")) bad++; }
     T("Blitz : le vrai déroulement (bzGame, match 3 sur 3) ne distribue aucune ultra-légendaire (100 parties)", bad === 0, `${bad} partie(s) avec une ultra-légendaire`); P.bz = { day: "", used: false, run: null }; }
   /* ===== La Source (15 octobre 2026) : les Révélations de tes autres cartes Helvara jouées ici se déclenchent deux fois ===== */
-  { const base = plain[20]; CARDS[base].pow = 5;
+  { const base = plain[plain.length - 1]; CARDS[base].pow = 5;   /* la dernière carte sans effet (les autres tests prennent les premières) */
     /* S1. Source déjà en jeu, tatoueur (Helvara, +1 à la plus forte ici) posé ici → 2 déclenchements */
     fresh(); S.turn = 4; { put("p", 0, "source"); const big = put("p", 0, base, 5); const t = card("tatoueur"); S.hand.p = [t]; await resolveTurn([{ c: t, li: 0 }], [], false);
       T("La Source : la Révélation d'une carte Helvara jouée ici se déclenche deux fois (+2 au lieu de +1)", big.pow === 7, big.pow); }
@@ -1592,6 +1592,28 @@ async function inPage() {
     fresh(); S.turn = 4; { const va = card("vasseur"), cou = card("coursier"); S.hand.p = [va, cou]; S.energy = 9; put("p", 2, "felix");
       await resolveTurn([{ c: va, li: 2 }, { c: cou, li: 2 }], [], false);
       T("Lien : Vasseur garde sa Révélation et gagne Lien une fois révélé", va.rev && va.pay === 6 && cardPow("p", 2, va) === 4, `${va.pay} ${cardPow("p", 2, va)}`); }
+    S = null; }
+
+  /* Tentation (Désir) et Verdict N (Jugement) : Révélations des mots-clés, avant l'effet propre de la carte */
+  { const play = async (id, li) => { const c = card(id); S.hand.p = [c]; S.energy = 9; await resolveTurn([{ c, li }], [], false); return c; };
+    fresh(); { const a = put("e", 0, plain[0], 3), b = put("e", 0, plain[1], 3); const d = await play("daji", 0);
+      T("Tentation : deux cartes adverses ici, chacune perd 1 (Daji reste à 3)", a.pow === 2 && b.pow === 2 && d.pow === 3, `${a.pow} ${b.pow} ${d.pow}`); }
+    fresh(); { const a = put("e", 0, plain[0], 3); const d = await play("daji", 0);
+      T("Tentation : une seule carte adverse ici, la carte gagne +2", a.pow === 3 && d.pow === 5, `${a.pow} ${d.pow}`); }
+    fresh(); { put("e", 1, "eir"); const a = put("e", 1, plain[0], 3), b = put("e", 1, plain[1], 3); const d = await play("aine", 1);
+      T("Tentation : Eir protège les cartes adverses, donc +2 à la place", a.pow === 3 && b.pow === 3 && d.pow === 5, `${a.pow} ${b.pow} ${d.pow}`); }
+    fresh(); { put("e", 2, plain[0], 3); put("e", 2, plain[1], 3); const h0 = S.hand.e.length; const d = await play("dionysos", 2);
+      T("Tentation : Dionysos garde son effet (chaque joueur pioche puis défausse)", S.log.some(l => /Dionysos/.test(l) && /Tentation : −1 à 2 cartes/.test(l) && /défausser|pioche/.test(l)), S.log.filter(l => /Dionysos/.test(l)).join(" | ")); }
+    fresh(); { const k2 = put("e", 0, plain[0], 2), k1 = put("e", 0, plain[1], 1), k4 = put("e", 0, plain[2], 4); await play("ra", 0);
+      T("Verdict 2 : détruit la plus forte des cartes adverses de puissance 2 ou moins", !S.board.e[0].includes(k2) && S.board.e[0].includes(k1) && S.board.e[0].includes(k4), S.board.e[0].map(x => x.pow).join(",")); }
+    fresh(); { const k3 = put("e", 0, plain[0], 3); await play("thanatos", 0);
+      T("Verdict 2 : aucune carte adverse à 2 ou moins, rien n'est détruit", S.board.e[0].includes(k3), ""); }
+    fresh(); { const u = put("e", 1, "uzume", 2), k1 = put("e", 1, plain[0], 1); await play("yama", 1);
+      T("Verdict : Ame-no-Uzume ne peut pas être visée, la cible suivante est détruite", S.board.e[1].includes(u) && !S.board.e[1].includes(k1), S.board.e[1].map(x => x.id).join(",")); }
+    fresh(); { put("e", 2, "eir"); const k1 = put("e", 2, plain[0], 1); await play("shango", 2);
+      T("Verdict : Eir empêche la destruction", S.board.e[2].includes(k1), ""); }
+    fresh(); { const k3 = put("e", 0, plain[0], 3), k6 = put("e", 0, plain[1], 6); const mine = put("p", 0, plain[2], 5); await play("inanna", 0);
+      T("Verdict 3 : Inanna détruit la carte à 3, puis toutes les cartes ici reviennent à leur puissance de base", !S.board.e[0].includes(k3) && k6.pow === CARDS[k6.id].pow && mine.pow === CARDS[mine.id].pow, `${k6.pow} ${mine.pow}`); }
     S = null; }
 
   return res;

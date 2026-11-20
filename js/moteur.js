@@ -562,6 +562,13 @@ function revealFx(s,li,c,opts={}){
   let note="", snd="reveal";
   const buffSelf=n=>{ c.pow+=n; note=(note?note+", ":"")+`+${n}`; snd="buff"; };
   S.forge=S.forge||{p:0,e:0};
+  let kwNote="";
+  if(d.kw==="tentation"){   /* Tentation : le pire des deux pour l'adversaire. −1 à chaque carte adverse ici qui peut être affaiblie (s'il y en a 2 ou plus), sinon +2 */
+    const vic=targets.filter(x=>!(shielded(o,li)||sunlit(o)||noWeak(x)||baldurSafe(o,x)));
+    if(vic.length>=2){ let n=0; for(const x of vic) if(weaken(o,li,x,1)){ (x.mods=x.mods||[]).push({v:-1,src:"Tentation"}); n++; } kwNote=`Tentation : −1 à ${n} carte${n>1?"s":""}`; snd="debuff"; }
+    else { c.pow+=2; (c.mods=c.mods||[]).push({v:2,src:"Tentation"}); kwNote="Tentation : +2"; snd="buff"; } }
+  if(d.kw==="verdict"){   /* Verdict N : détruit la carte adverse la plus forte ici de puissance N ou moins (protections respectées) */
+    const t=maxR(targets.filter(x=>!fated(x)&&pw(o,li,x)<=d.vd),o,li); if(t&&destroy(o,li,t)){ kwNote=`Verdict : détruit ${nm(t)}`; snd="destroy"; } }
   if(S.forge[s]&&eid(c)!=="brigid"&&!opts.replay){ S.forge[s]=0; c.pow+=3; (c.mods=c.mods||[]).push({v:3,src:"Brigid"}); note="+3 (Brigid)"; snd="buff"; }
   switch(eid(c)){
     case "apophis_p": { const o2=opp(s); if(S.board[o2][li].length<capOf(o2,li)){ const k=mk("oeuf_maudit"); k.rev=true; k.fresh=true; S.board[o2][li].push(k); note="un Œuf maudit apparaît chez l'adversaire"; snd="void"; } break; }
@@ -803,6 +810,7 @@ function revealFx(s,li,c,opts={}){
     case "sekhmet": { let n=0; for(const side of [s,o]) for(const x of S.board[side][li].slice()) if(x!==c&&x.rev&&pw(side,li,x)<=2&&!(side===o&&untargetable(s,o,x))){ if(destroy(side,li,x)) n++; }
       if(n){ note=`détruit ${n} carte${n>1?"s":""}`; snd="destroy"; } break; }
   }
+  if(kwNote) note=note?`${kwNote}, ${note}`:kwNote;
   sfx(snd);
   log(`${who(s)} · ${d.name} → ${LOCS[S.locs[li].id].name}${note?` (${note})`:""}`);
   if(opts.replay) return;
@@ -884,6 +892,8 @@ function aiPlan(me="e",tierOv){
       const here=[...S.board[me][li].filter(x=>!x.neg), ...ctx.plays.filter(x=>x.li===li).map(x=>x.c)];
       const helv=here.filter(x=>CARDS[x.id].fac==="helvara").length, lien=here.filter(x=>CARDS[x.id].kw==="lien").length;
       pow+=(d.kw==="lien"?helv:0)+lien; }
+    if(d.kw==="tentation"){ const v=S.board[op][li].filter(x=>x.rev&&!noWeak(x)).length; if(v>=2) hit+=v; else pow+=2; }   /* Tentation : −1 à chaque carte adverse ici (2 ou plus), sinon +2 */
+    if(d.kw==="verdict"){ const t=S.board[op][li].filter(x=>x.rev&&!fated(x)&&cardPow(op,li,x)<=d.vd); if(t.length) hit+=2+Math.max(...t.map(x=>cardPow(op,li,x))); else adj-=1; }   /* Verdict : une cible à détruire ici ? */
     if(c.id==="vritra") adj+=diff<0?4:-2;
     if(c.id==="maeve"&&diff<0) pow+=3;
     if(c.id==="morrigan"&&Math.abs(diff)<=2) adj+=2;
