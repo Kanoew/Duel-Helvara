@@ -76,11 +76,18 @@ Une faction par vague, mesurée avant et après. Ordre décidé le 20 novembre :
   - ✅ 🛠️ Lien codé (`alpha-0.46`, branche `claude/modest-rubin-r960fx`) : moteur, texte FR et EN (« Bond »), aide, mot-clé coloré ⧉, l'IA empile ses cartes Helvara (30 % de ses cartes Lien posées seules, contre 48 % pour les autres Helvara). 6 tests de scénarios.
   - ✅ Remesuré et relu par `balance-reviewer` : **publiable**. Helvara 48,6 % (46,4 avant) avec les 4 cachées, 50,7 % sans ; Helvara contre Primordial 44,1 % (40,4 avant) ; Passante −0,9, Veilleur +1,1, Vasseur −0,2 ; Primordial inchangé. À surveiller : La Doyenne (−6,8) et le Mendiant (−5,2), sans lien direct avec Lien.
   - ✅ Testé par `playtest-qa` : tous les tests du dépôt, tutoriel gagnable en FR et EN, 12 parties sans erreur.
-  - 🟣 👤 Essayer sur ton téléphone (le symbole ⧉ avec la police d'Android), puis ouvrir la PR et fusionner.
+  - ✅ 👤 PR fusionnée sur `main` (20 novembre). 🟣 👤 Essayer sur ton téléphone (le symbole ⧉ avec la police d'Android).
   - 🟣 👤 Coût, puissance, rareté et date de sortie des 4 cartes cachées (aujourd'hui provisoires et faibles : 3/3, Reine 4/4).
   - 🟣 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage, pour mesurer Lien sur les Escaliers du Marché (+2 aux cartes Helvara).
-- 🟣 **Tentation** (Désir) : version automatique, décidée. Doit marcher en jeu simultané.
-- 🟣 **Verdict** (Jugement) : détruit **une** carte adverse ici sous un seuil, en respectant les protections.
+- 🟣 **Tentation** (Désir), codé le 20 novembre (`alpha-0.47`) :
+  - ✅ **Texte** : « Tentation : chaque carte adverse ici perd 1 de puissance, ou +2 de puissance (le pire pour l'adversaire). » Automatique, sans pause (marche en duel) : −1 à chacune s'il y a au moins 2 cartes adverses affaiblissables ici, sinon +2.
+  - ✅ **Cartes** : Tlazolteotl (sortie), Dionysos (sort le 1er décembre), Daji, Áine, Benzaiten, Baba Yaga (cachées, sans effet jusqu'ici). Le mot-clé passe avant l'effet propre de la carte.
+- 🟣 **Verdict N** (Jugement), codé le 20 novembre (`alpha-0.47`) :
+  - ✅ **Texte** : « Verdict N : détruit la carte adverse la plus forte ici de puissance N ou moins. » Protections respectées (Eir, Uzume, Baldur…).
+  - ✅ **Cartes** : Perséphone (2), Inanna (3) (sorties), Ra, Thanatos, Yama, Shango (2, cachées). Plus aucune carte cachée sans effet en Jugement pour Juré / Parjure.
+- ✅ Tentation et Verdict mesurés par `balance-reviewer` (6 000 parties) : **publiables**. Désir 45,9 → 48,7 % ; Primordial contre Désir 62,9 → 57,2 % (plus aucun matchup au-delà de 60 %) ; Jugement contre Helvara 47,4 → 49,3 % (Verdict contre un peu Lien, sans l'écraser) ; Dionysos −4,7 → +0,4. Jugement ne gagne rien contre Primordial (41,8 %) : Verdict 2 ne touche pas les grosses cartes.
+- 🟣 👤 Différencier les cartes cachées avant leur sortie : 4 Tentation identiques en 3/3 et 4 Verdict 2 identiques en 3/3 (coût, puissance, seuil 2 ou 3). Ra, Thanatos, Yama et Shango sont un peu faibles (−0,7 à −4,7) : un Verdict 3 sur certaines est une piste, à remesurer.
+- 🟣 👤 Tentation et Verdict : test en jeu, puis PR et essai sur ton téléphone (symboles ❦ et ⚖).
 - 🟣 **Ère** (Primordial), en dernier : effet en plus si la carte est en jeu depuis 2 tours. ⚠️ **Primordial surperforme** (55 à 56 % de victoire, 59,9 % contre Désir, à la limite des 60 %) : nerf décidé le 20 novembre, fait avec Ère. Ère ira sur les cartes Primordial faibles.
 - 🟣 👤 Les effets précis de chaque carte : c'est ta plume.
 - 🟣 🛠️ Chaque effet mesuré (outil d'équilibrage + `balance-reviewer`), l'IA apprend à les jouer, cercle des contres vérifié (aucun matchup au-dessus de 60 %).
@@ -96,7 +103,7 @@ Une faction par vague, mesurée avant et après. Ordre décidé le 20 novembre :
 - 🟣 Partie rapide avec un deck prêté (parmi les 7 decks prêts) dès la première partie.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
-- 🟣 🛠️ **Verre dépoli (« Liquid Glass »)**, demandé le 20 novembre, sur une branche à part (`claude/liquid-glass`) : seulement la barre du bas et le zoom de carte en partie, jamais les fenêtres pleines ; coût et puissance toujours sur fond opaque ; repli opaque si le navigateur ne gère pas le flou. 👤 Juger les captures avant / après, puis tester la fluidité sur un vrai téléphone.
+- ✅ 🛠️ **Verre dépoli (« Liquid Glass »)**, fusionné le 20 novembre : seulement la barre du bas et le zoom de carte en partie, jamais les fenêtres pleines ; coût et puissance toujours sur fond opaque ; repli opaque si le navigateur ne gère pas le flou. 👤 Juger les captures avant / après, puis tester la fluidité sur un vrai téléphone.
 
 ### 3.4 bis 🟣 🛠️ Duel en ligne classé et anti-triche (avant la sortie, décidé le 18 novembre)
 Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
@@ -217,5 +224,6 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 
 ### 20 novembre
 - ✅ Lien : mesure de départ d'Helvara, 7 cartes choisies, version sans plafond retenue, codé, mesuré et testé (`alpha-0.46`).
-- ✅ Verre dépoli codé sur la branche `claude/liquid-glass` (barre du bas et zoom de carte en partie).
+- ✅ Verre dépoli codé sur la branche `claude/liquid-glass` (barre du bas et zoom de carte en partie), fusionné sur `main`.
+- ✅ Lien fusionné sur `main`. Tentation et Verdict codés et mesurés (`alpha-0.47`).
 - ✅ Ordre des mots-clés fixé (Primordial et son nerf en dernier).
