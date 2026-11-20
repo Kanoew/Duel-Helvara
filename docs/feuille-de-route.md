@@ -1,6 +1,6 @@
 # Duel d'Helvara : feuille de route
 
-> Écrite le 18 novembre 2026 par Karina, mise à jour le 20 novembre. Elle rassemble en un seul endroit :
+> Écrite le 18 novembre 2026 par Karina, mise à jour le 20 novembre au soir. Elle rassemble en un seul endroit :
 > l'analyse compétitive du 17 novembre et mon avis (`docs/analyse-competitive-avis-karina.md`),
 > le plan d'action du 16 novembre (`docs/plan-action.md`) et les questions encore ouvertes (`docs/calendrier-et-en-attente.md`).
 > En cas d'écart avec le code, **le code fait foi**.
@@ -66,38 +66,42 @@ Les cinq lieux sont codés avec tes illustrations, mesurés sur 48 000 parties s
 - ✅ **Les Eaux d'Apsu** (ex-Faille d'Apsu) : la première carte de chaque joueur ici fait perdre 1 à toutes les cartes des lieux voisins, des deux côtés. « Chaque carte » était trop lourd (le vainqueur changeait dans une partie sur quatre).
 - ✅ **Le Marché des Ombres** : fin du tour 4, la plus faible de chaque joueur ici change de camp. Elle garde tout, effets compris, et joue pour son nouveau camp.
 
-### 3.2 🟣 🛠️ Mots-clés de faction (option B : cartes sorties comprises)
-Une faction par vague, mesurée avant et après. Ordre décidé le 20 novembre : **Lien → Tentation et Verdict → Ère** (Primordial en dernier).
-- 🟣 **Lien** (Helvara), le chantier en cours :
-  - ✅ 👤 **Texte** : « Lien : +1 de puissance par autre carte Helvara à toi ici. » **Sans plafond** : un lieu tient 4 cartes, donc +3 au plus (la version plafonnée à +2 ne changeait presque rien, mesure du 20 novembre).
-  - ✅ 👤 **Les 7 cartes** (validées le 20 novembre) : sorties, **Passante d'Ouchy**, **Veilleur du Sous-gare**, **Vasseur** (garde son effet) ; cachées sans effet, **La Somnambule du Flon**, **La Reine de Sévelin**, **L'Écolière de Dorigny**, **La Tatoueuse du Flon**.
-  - ✅ Écartées : Colosse du Léman (déjà la plus forte d'Helvara), Funambule (veut être seul), Mendiant (Lien à 0 d'énergie, trop facile), Nammu (question ultra-légendaire ouverte). Possédée, Pénitente, Effigie, Emiri et Artiste restent libres (Juré / Parjure ou ta plume).
-  - ✅ Mesure de départ (6 000 parties, 20 novembre) : Helvara 50,6 % ; aucune carte au-delà de ±8 ; Vasseur la plus faible (−6). Avec Lien et les 4 cachées : Helvara 48,4 %, aucun matchup au-delà de 60 %.
-  - ✅ 🛠️ Lien codé (`alpha-0.46`, branche `claude/modest-rubin-r960fx`) : moteur, texte FR et EN (« Bond »), aide, mot-clé coloré ⧉, l'IA empile ses cartes Helvara (30 % de ses cartes Lien posées seules, contre 48 % pour les autres Helvara). 6 tests de scénarios.
-  - ✅ Remesuré et relu par `balance-reviewer` : **publiable**. Helvara 48,6 % (46,4 avant) avec les 4 cachées, 50,7 % sans ; Helvara contre Primordial 44,1 % (40,4 avant) ; Passante −0,9, Veilleur +1,1, Vasseur −0,2 ; Primordial inchangé. À surveiller : La Doyenne (−6,8) et le Mendiant (−5,2), sans lien direct avec Lien.
-  - ✅ Testé par `playtest-qa` : tous les tests du dépôt, tutoriel gagnable en FR et EN, 12 parties sans erreur.
-  - ✅ 👤 PR fusionnée sur `main` (20 novembre). 🟣 👤 Essayer sur ton téléphone (le symbole ⧉ avec la police d'Android).
-  - 🟣 👤 Coût, puissance, rareté et date de sortie des 4 cartes cachées (aujourd'hui provisoires et faibles : 3/3, Reine 4/4).
-  - 🟣 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage, pour mesurer Lien sur les Escaliers du Marché (+2 aux cartes Helvara).
-- 🟣 **Tentation** (Désir), codé le 20 novembre (`alpha-0.47`) :
-  - ✅ **Texte** : « Tentation : chaque carte adverse ici perd 1 de puissance, ou +2 de puissance (le pire pour l'adversaire). » Automatique, sans pause (marche en duel) : −1 à chacune s'il y a au moins 2 cartes adverses affaiblissables ici, sinon +2.
-  - ✅ **Cartes** : Tlazolteotl (sortie), Dionysos (sort le 1er décembre), Daji, Áine, Benzaiten, Baba Yaga (cachées, sans effet jusqu'ici). Le mot-clé passe avant l'effet propre de la carte.
-- 🟣 **Verdict N** (Jugement), codé le 20 novembre (`alpha-0.47`) :
-  - ✅ **Texte** : « Verdict N : détruit la carte adverse la plus forte ici de puissance N ou moins. » Protections respectées (Eir, Uzume, Baldur…).
-  - ✅ **Cartes** : Perséphone (2), Inanna (3) (sorties), Ra, Thanatos, Yama, Shango (2, cachées). Plus aucune carte cachée sans effet en Jugement pour Juré / Parjure.
-- ✅ Tentation et Verdict mesurés par `balance-reviewer` (6 000 parties) : **publiables**. Désir 45,9 → 48,7 % ; Primordial contre Désir 62,9 → 57,2 % (plus aucun matchup au-delà de 60 %) ; Jugement contre Helvara 47,4 → 49,3 % (Verdict contre un peu Lien, sans l'écraser) ; Dionysos −4,7 → +0,4. Jugement ne gagne rien contre Primordial (41,8 %) : Verdict 2 ne touche pas les grosses cartes.
-- 🟣 👤 Différencier les cartes cachées avant leur sortie : 4 Tentation identiques en 3/3 et 4 Verdict 2 identiques en 3/3 (coût, puissance, seuil 2 ou 3). Ra, Thanatos, Yama et Shango sont un peu faibles (−0,7 à −4,7) : un Verdict 3 sur certaines est une piste, à remesurer.
-- 🟣 👤 Tentation et Verdict : test en jeu, puis PR et essai sur ton téléphone (symboles ❦ et ⚖).
-- 🟣 **Ère** (Primordial), codé le 20 novembre (`alpha-0.48`) :
-  - ✅ **Texte** : « Ère : +2 de puissance une fois en jeu depuis 2 tours. » (Posée au tour 4, elle l'a au tour 6.)
-  - ✅ **Cartes** : Tehom, Rhéa, Jörmungandr, Danu (cachées, gardent 3/3), Mouche de la Faille, Mère de Cendre (sorties).
-- ✅ **Nerf de Primordial** (20 novembre) : son avance venait d'Ananké (decks avec elle 64,7 %, sans elle ~50 %).
-  - ✅ **Ananké** (et ses variantes) : coût 4 inchangé, fin de partie « puissance totale adverse ici +1, **9 au maximum** ». Decks avec elle 57,7 % (+8,2).
-  - ✅ **Yarden X Apsu** : coût 10, puissance 9 (au lieu de 9 / 10). +7,8.
-  - ✅ Primordial 52,7 % ; pire matchup Primordial contre Jugement 56,7 %. Détail des 12 réglages mesurés : `docs/historique-equilibrage.md`.
-  - 🟣 Après la sortie d'Ananké (1er décembre) : relever ses vraies statistiques et celles de Yarden X Apsu dans Supabase (lecture seule).
-- 🟣 👤 Les effets précis de chaque carte : c'est ta plume.
-- 🟣 🛠️ Chaque effet mesuré (outil d'équilibrage + `balance-reviewer`), l'IA apprend à les jouer, cercle des contres vérifié (aucun matchup au-dessus de 60 %).
+### 3.2 🟣 Mots-clés de faction (option B : cartes sorties comprises)
+Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : les quatre mots-clés sont codés, mesurés (6 000 parties par réglage), relus par `balance-reviewer`, testés par `playtest-qa`, en français et en anglais, avec une ligne d'aide chacun et un mot-clé coloré. L'IA sait les jouer. Il reste tes essais et ta plume (en bas).
+
+| Mot-clé | Faction | Texte | Cartes sorties | Cartes cachées (sans effet jusqu'ici) |
+|---|---|---|---|---|
+| ⧉ **Lien** | Helvara | +1 de puissance par autre carte Helvara à toi ici (sans plafond : +3 au plus) | Passante d'Ouchy, Veilleur du Sous-gare, Vasseur | Somnambule du Flon, Reine de Sévelin, Écolière de Dorigny, Tatoueuse du Flon |
+| ❦ **Tentation** | Désir | Chaque carte adverse ici perd 1 de puissance, ou +2 de puissance (le pire pour l'adversaire : −1 s'il y a au moins 2 cartes adverses affaiblissables ici, sinon +2) | Tlazolteotl, Dionysos (sort le 1er décembre) | Daji, Áine, Benzaiten, Baba Yaga |
+| ⚖ **Verdict N** | Jugement | Détruit la carte adverse la plus forte ici de puissance N ou moins (protections respectées) | Perséphone (2), Inanna (3) | Ra, Thanatos, Yama, Shango (2) |
+| ⧗ **Ère** | Primordial | +2 de puissance une fois en jeu depuis 2 tours (posée au tour 4, elle l'a au tour 6) | Mouche de la Faille, Mère de Cendre | Tehom, Rhéa, Jörmungandr, Danu |
+
+- ✅ Le mot-clé se déclenche **avant** l'effet propre de la carte (ordre du texte). Tentation et Verdict sont automatiques : aucune pause, ils marchent en duel en ligne.
+- ✅ **Nerf de Primordial** : son avance venait presque entièrement d'**Ananké** (decks avec elle 64,7 %, sans elle ~50 %).
+  - **Ananké** et ses variantes : coût 4 inchangé (jouable aux tours 4 et 5), fin de partie « puissance totale adverse ici +1, **9 au maximum** ». Decks avec elle 57,7 % : elle reste la meilleure carte de sa faction.
+  - **Yarden X Apsu** : coût 10, puissance 9 (au lieu de 9 / 10), ton choix.
+  - Les 4 cartes cachées d'Ère gardent 3/3 : elles semblaient fortes parce que leurs decks portaient Ananké (ta remarque, confirmée par la mesure).
+- ✅ Écartées de Lien : Colosse du Léman (déjà la plus forte d'Helvara), Funambule (veut être seul), Mendiant (Lien à 0 d'énergie), Nammu (question ultra-légendaire ouverte).
+- ✅ **Le méta après les quatre mots-clés** :
+
+| Faction | Avant (18 novembre) | Après (20 novembre) |
+|---|---:|---:|
+| Helvara | 46,4 % | 48,7 % |
+| Primordial | 55,7 % | 52,7 % |
+| Désir | 47,5 % | 50,5 % |
+| Jugement | 49,0 % | 47,4 % |
+
+  Pire face-à-face : Primordial contre Jugement, 56,7 % (contre 62,9 % pour Primordial contre Désir avant). Aucun au-delà de 60 %. Détail des mesures et des 12 réglages de Primordial : `docs/historique-equilibrage.md`.
+
+**Ce qu'il te reste**
+- 🟣 👤 Fusionner la dernière PR (Ère, Primordial, verre dépoli étendu), puis essayer sur ton téléphone : les symboles ⧉ ❦ ⚖ ⧗ avec la police d'Android, et le verre dans la Collection (fluidité derrière les cartes holo).
+- 🟣 👤 Ta plume, avant la sortie des cartes cachées : leurs coût, puissance, rareté et date. Les 4 de Tentation sont identiques (3/3), les 4 de Verdict aussi (Verdict 2, 3/3, un peu faibles : un Verdict 3 sur certaines est une piste, à remesurer). Il ne reste plus de carte cachée sans effet en Jugement pour Juré / Parjure.
+
+**À surveiller**
+- 🟣 Après le 1er décembre : vraies statistiques d'Ananké, de Yarden X Apsu et de Dionysos dans Supabase (lecture seule). Correction seulement au-delà de ±8 points avec au moins 100 decks.
+- 🟣 Jugement un peu bas (47,4 %) et faible contre Primordial (42 à 43 %) : Verdict 2 ne touche pas les grosses cartes.
+- 🟣 La Doyenne (−6,8) et le Mendiant (−5,2), zone de surveillance.
+- 🟣 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage, pour mesurer Lien sur les Escaliers du Marché (+2 aux cartes Helvara).
 
 ### 3.3 🟣 🛠️ Chronique 1, en 3 matchs
 - 🟣 Un adversaire de faction, puis un adversaire avec un avantage, puis un boss.
@@ -110,6 +114,7 @@ Une faction par vague, mesurée avant et après. Ordre décidé le 20 novembre :
 - 🟣 Partie rapide avec un deck prêté (parmi les 7 decks prêts) dès la première partie.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
+- 🟣 🛠️ Idée : une phrase sur Lien dans le tutoriel (au tour 3, la Passante gagne +1 grâce au Coursier).
 - ✅ 🛠️ **Verre dépoli (« Liquid Glass »)**, fusionné le 20 novembre : seulement la barre du bas et le zoom de carte en partie, jamais les fenêtres pleines ; coût et puissance toujours sur fond opaque ; repli opaque si le navigateur ne gère pas le flou. 👤 Juger les captures avant / après, puis tester la fluidité sur un vrai téléphone.
 
 ### 3.4 bis 🟣 🛠️ Duel en ligne classé et anti-triche (avant la sortie, décidé le 18 novembre)
@@ -230,9 +235,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Le Voile fixé comme priorité n°1 après la sortie, Chronique 1 réduite à 3 matchs.
 
 ### 20 novembre
-- ✅ Lien : mesure de départ d'Helvara, 7 cartes choisies, version sans plafond retenue, codé, mesuré et testé (`alpha-0.46`).
-- ✅ Verre dépoli codé sur la branche `claude/liquid-glass` (barre du bas et zoom de carte en partie), fusionné sur `main`.
-- ✅ Lien fusionné sur `main`. Tentation et Verdict codés et mesurés (`alpha-0.47`).
-- ✅ Ère codé, Ananké et Yarden X Apsu corrigés (`alpha-0.48`) : les quatre mots-clés de faction sont faits.
-- ✅ Verre dépoli étendu à toute carte agrandie (Collection, partie, ouverture de paquet).
-- ✅ Ordre des mots-clés fixé (Primordial et son nerf en dernier).
+- ✅ Les quatre mots-clés de faction : Lien (`alpha-0.46`, fusionné), Tentation et Verdict (`alpha-0.47`, fusionnés), Ère (`alpha-0.48`). Ordre fixé : Primordial en dernier.
+- ✅ Nerf de Primordial : Ananké 9 au maximum, Yarden X Apsu 10 / 9 (12 réglages mesurés).
+- ✅ Verre dépoli (« Liquid Glass ») : barre du bas, puis encadré de toute carte agrandie (Collection, partie, ouverture de paquet), avec repli et version allégée pour les petits téléphones.
+- ✅ Tests rendus indépendants des cartes sans effet (carte du jour, La Source) ; 735 scénarios.
