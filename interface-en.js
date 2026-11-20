@@ -10,9 +10,10 @@
 
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
+    [/^(Tentation : [^,]+|Verdict : détruit [^,]+), (.+)$/, (m,a,b)=>note(a)+", "+note(b)],   /* mot-clé suivi de l'effet propre de la carte : chaque moitié traduite à part */
     [/^Tentation : −1 à (\d+) cartes?$/, (m,n)=>`Temptation: −1 to ${n} ${n>1?"cards":"card"}`],
     [/^Tentation : \+2$/, ()=>"Temptation: +2"],
-    [/^Verdict : détruit (.+)$/, (m,a)=>`Verdict: destroys ${a}`],
+    [/^Verdict : détruit ([^,]+)$/, (m,a)=>`Verdict: destroys ${a}`],
     [/^Fatalité, \+2$/, ()=>"Fate, +2"],
     [/^attire (.+), (\d+) Pourceaux?$/, (m,a,n)=>`draws ${a} here, ${n} Swine`],
     [/^attire (.+)$/, (m,a)=>`draws ${a} here`],
