@@ -11,6 +11,8 @@ const holoDir = id => (HOLO_TESTON && HOLO_TEST[id]) || HOLO[id] || null;
 /* Navigateurs intégrés (Messenger, Instagram, WebView Android) et téléphones à 4 Go ou moins : peu de mémoire graphique.
    Le holo y passe en qualité réduite, 30 images par seconde (Redmi Note 14 dans Messenger, 18 novembre : carte noire ou par morceaux sinon). */
 const HOLO_WEAK = /FBAN|FBAV|FB_IAB|Messenger|Instagram|; wv\)|Line\/|Snapchat/i.test(navigator.userAgent) || (navigator.deviceMemory > 0 && navigator.deviceMemory <= 4);
+/* même détection pour alléger le verre dépoli de jeu.css (classe `faible` sur <html>) */
+try{ if(HOLO_WEAK) document.documentElement.classList.add("faible"); }catch(e){}
 let holoModP = null;
 const holoLoad = () => holoModP || (holoModP = import(new URL(HOLO_MOD, document.baseURI).href).catch(e => { holoModP = null; throw e; }));
 /* Monte l'effet dans `slot` (l'image fixe y reste tant que l'effet n'est pas prêt, puis la classe holo-on la cache).
