@@ -696,9 +696,13 @@ function revealFx(s,li,c,opts={}){
       if(res){ S.bonus[o]=0; if(S.biaBlock) S.biaBlock[o]=true; note="l'adversaire perd son énergie conservée"; snd="debuff"; }
       else { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Bia"}); note=`−1 à ${nm(t)}`; snd="debuff"; } } break; }
     case "ananke": case "ananke_r": case "ananke_v": note="Fatalité : ni détruite ni déplacée"; snd="legend"; break;   /* Apsu ne l'atteint que par sa propre Révélation, s'il est posé après elle (Jordan : « Révélation c'est Révélation ») */
-    case "nike": case "nike_v": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k); break; }
+    case "nike": case "nike_v": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k);
+      /* l'Élan de la Victoire (20 novembre) : chacune des cartes jouées avant elle ce tour, encore en jeu, gagne +1 */
+      if(ix>0){ let n=0; for(const x of pl.slice(0,ix)) if(!isAph(x)&&S.board[s].some(col=>col.includes(x))){ x.pow+=1; (x.mods=x.mods||[]).push({v:1,src:"Nike"}); n++; } if(n) note=(note?note+", ":"")+`+1 à ${n} carte${n>1?"s":""}`; }
+      break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(4); snd=foes.length?"void":snd; break; }
-    case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
+    case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=5),o,li);   /* 5 ou moins depuis le 20 novembre (6 avant : +8,9 points) */
+      if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
       if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else if(forest(li)||deathless(t)){ S.board[o][li].push(t); } else { S.destroyed++; entomb(o,li,t); if(o==="e") S.killE=(S.killE||0)+1; danteHook(li); note=`${nm(t)} est détruite`; } snd="void"; } break; }
     case "psyche": { const t=weakest(mates,s,li)||c; t.pow+=2; note=`+2 à ${nm(t)}`; snd="buff"; break; }
     case "tlazol": { let n=0; for(const x of mates) if(x.pow<CARDS[x.id].pow){ x.pow=CARDS[x.id].pow; x.malus=0; n++; } if(n){ c.pow+=2*n; note=`purifie ${n} carte${n>1?"s":""}, +${2*n}`; snd="buff"; } break; }
@@ -825,7 +829,7 @@ function revealFx(s,li,c,opts={}){
 
 /* ======= IA ======= */
 const RES=new Set(["hel","hel_r","ulhel","hades","loviatar"]);
-const HITS=["ereshkigal_n","bia","circe","qetesh","qetesh_r","pele_r","ulqetjor_r","poseidon","uloshun","tyr","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
+const HITS=["ereshkigal_n","circe","qetesh","qetesh_r","pele_r","ulqetjor_r","poseidon","uloshun","tyr","mohini","thot","esquille","izzy","artemis","oya","nyx","hathor","ishtar","araignee","apsu","balor","calypso","chasseur","maree","set","andraste","ulnem"];
 const DESTROYERS=new Set(["pakhet","anat","anubis","boucher","durga","ereshkigal","esquille","ficelle","izzy_h","lilith","maree","nergal_h","nyx","nyx_h","rusalka","sekhmet","sekhmet_n","troll","ulnem","uloshun","yarden_d"]);
 const NEEDS_MATES=["susanoo","ulaph","oshun","tatoueur","comptable","bastet","anat","troll","tefnut"];
 /* Synergies connues de l'IA : [carte qui prépare, cartes qui en profitent, 1 si elles doivent partager le lieu] */
@@ -906,7 +910,7 @@ function aiPlan(me="e",tierOv){
     if(d.kw==="tentation"){ const v=fz.filter(canWeak).length; if(v>=2) hit+=v; else pow+=2; }   /* Tentation : −1 à chaque carte adverse ici (2 ou plus), sinon +2 */
     if(d.kw==="verdict"){ const t=fz.filter(x=>canKill(x)&&fp(x)<=d.vd); if(t.length) hit+=2+Math.max(...t.map(fp)); else adj-=1; }   /* Verdict : une cible à détruire ici ? */
     switch(c.id){
-      case "lilith": { const t=byPow(fz.filter(x=>!fated(x)&&fp(x)<=6)).pop(); if(t) hit+=2*fp(t); else adj-=2; break; }   /* la plus forte (6 ou moins) change de camp */
+      case "lilith": { const t=byPow(fz.filter(x=>!fated(x)&&fp(x)<=5)).pop(); if(t) hit+=2*fp(t); else adj-=2; break; }   /* la plus forte (5 ou moins) change de camp */
       case "ereshkigal": { const t=fz.filter(x=>fp(x)<=3&&!fated(x)&&!forest(li)); if(t.length) hit+=t.reduce((a,x)=>a+fp(x),0)+1; else adj-=1; break; }   /* rien ne les protège */
       case "ares": case "ares_h": { const k=c.id==="ares"?1:2, t=fz.filter(canWeak); if(t.length){ hit+=k*t.length; pow+=t.length; } else adj-=1; break; }
       case "rusalka": { const t=byPow(fz)[0]; if(t&&fp(t)<=2&&canKill(t)) hit+=fp(t)+1; else adj-=1; break; }
@@ -916,6 +920,9 @@ function aiPlan(me="e",tierOv){
       case "nyx_h": { const t=byPow(fz.filter(canKill)).slice(0,2); if(t.length) hit+=t.reduce((a,x)=>a+fp(x),0); else adj-=1; break; }
       case "sekhmet_n": { const t=fz.filter(x=>fp(x)<=2&&canKill(x)); if(t.length) hit+=t.reduce((a,x)=>a+fp(x),0)+1; else adj-=1; break; }
       case "shamash": { const b=Math.max(0,...fz.map(x=>fp(x)-CARDS[x.id].pow)); if(b>0) hit+=b; else adj-=1; break; }
+      case "bia": { if((S.bonus[op]||0)>0) adj+=2; else if(fz.some(canWeak)) hit+=1; else adj-=1; break; }   /* énergie conservée perdue, sinon −1 à la plus forte ici (avant : comptée comme un coup à 2,5) */
+      case "chernobog": { const b=fz.reduce((a,x)=>a+Math.max(0,fp(x)-CARDS[x.id].pow),0); hit+=b+1; break; }   /* les bonus adverses ici sont plafonnés à la puissance de base */
+      case "eir": { pow+=.8*(S.board[me][li].filter(x=>x.rev).length+ctx.pend[li]); break; }   /* protège tes cartes ici : vaut surtout là où tu en as */
       case "kali": { const t=byPow(fz.filter(canKill))[0]; if(t){ hit+=fp(t); pow+=2; } const m=S.board[me][li].filter(x=>x.rev&&!fated(x)).sort((a,b)=>cardPow(me,li,a)-cardPow(me,li,b))[0]; if(m) pow+=2-cardPow(me,li,m); break; }
     }
     if(c.id==="vritra") adj+=diff<0?4:-2;
@@ -929,10 +936,14 @@ function aiPlan(me="e",tierOv){
     if(locIs(li,"faille")&&S.turn<=4&&d.pow<=2) pow-=d.pow;
     if(c.id==="nemesis") adj+=(diff>0&&diff<12)?5:-6;
     if(c.id==="mouche") pow-=mates;
-    if(isNike(c.id)){ pow+=ctx.plays.length*2;
+    if(isNike(c.id)){ pow+=ctx.plays.length*3;   /* +2 pour elle, +1 pour chaque carte jouée avant elle */
       /* au tour 6 de préférence ; plus tôt seulement avec au moins 3 cartes jouées avant elle (Vesta, Prométhée) */
       if(S.turn<6&&ctx.plays.length<3) adj-=20; }
-    if(nikeWait&&!ctx.nike&&smallJ(c)&&S.turn<6&&!zeusPlan&&hand.length<7) adj-=nikeHand?8:4;
+    /* petites cartes gardées pour le tour de Nike. Sauf Apollon (sa Flèche à 0 n'arrive en main qu'à sa Révélation : jouée au tour 6, elle ne sert plus)
+       et Vesta (sa réduction ne vaut que pour le tour suivant : au tour 5, elle fait baisser Nike au tour 6). Relecture extérieure du 20 novembre. */
+    if(nikeWait&&!ctx.nike&&smallJ(c)&&c.id!=="apollon"&&c.id!=="vesta"&&S.turn<6&&!zeusPlan&&hand.length<7) adj-=nikeHand?8:4;
+    if(nikeHand&&c.id==="apollon"&&S.turn<=5) adj+=2;
+    if(nikeHand&&c.id==="vesta"&&S.turn===5) adj+=3;
     /* vague Jugement (15 novembre, 14 décembre) */
     if(c.id==="maat"&&(mates||S.board[me][li].some(x=>x.rev))) pow+=1;
     if((c.id==="apollon"||c.id==="hephaistos")&&hand.length-ctx.plays.length<=7) adj+=c.id==="apollon"?1.5:2;
