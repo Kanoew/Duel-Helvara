@@ -450,8 +450,13 @@ function ouvrirTirage(op){
   function zoomCard(c){
     if(zoomEl || closed) return;
     zoomEl = document.createElement("div"); zoomEl.className = "t-zoom";
+    /* même encadré que le zoom de la Collection (zoomHTML) : nom, faction, rareté, coût, puissance et effet.
+       Indispensable pour une carte holo, dont l'image grand format n'affiche que l'illustration (.holopre). */
+    const d = CARDS[c.id], F = FAC[d.fac], R = RAR[d.r];
     zoomEl.innerHTML = `<div class="t-zoomwrap">${fullCard(c.id, "big")}
-      <div class="zoominfo"><div class="row2"><button class="ghost" type="button" data-z="close">${tr("Fermer")}</button></div></div></div>`;
+      <div class="zoominfo"><div class="t">${d.name}</div><div class="m"><span style="color:${F.c}">${F.n}</span> · <span style="color:${R.c}">${rarN(c.id)}</span> · coût ${d.cost} · puissance ${d.pow}</div>${d.fx ? `<p>${fxH(d.fx)}</p>` : ""}
+      <div class="row2"><button class="ghost" type="button" data-z="close">Fermer</button></div></div></div>`;
+    if (typeof translateDOM === "function") translateDOM(zoomEl);   /* anglais : mêmes règles que la Collection */
     zoomEl.addEventListener("click", e => { e.stopPropagation(); closeZoom(); });
     root.appendChild(zoomEl);
     const b = zoomEl.querySelector("button"); if(b) b.focus({ preventScroll: true });
