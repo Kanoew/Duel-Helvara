@@ -895,8 +895,29 @@ function aiPlan(me="e",tierOv){
       const helv=here.filter(x=>CARDS[x.id].fac==="helvara").length, lien=here.filter(x=>CARDS[x.id].kw==="lien").length;
       pow+=(d.kw==="lien"?helv:0)+lien; }
     if(d.kw==="ere"&&S.turn<=4) pow+=1.6;   /* Ère : ne vaut que posée au plus tard au tour 4 */
-    if(d.kw==="tentation"){ const v=S.board[op][li].filter(x=>x.rev&&!noWeak(x)).length; if(v>=2) hit+=v; else pow+=2; }   /* Tentation : −1 à chaque carte adverse ici (2 ou plus), sinon +2 */
-    if(d.kw==="verdict"){ const t=S.board[op][li].filter(x=>x.rev&&!fated(x)&&cardPow(op,li,x)<=d.vd); if(t.length) hit+=2+Math.max(...t.map(x=>cardPow(op,li,x))); else adj-=1; }   /* Verdict : une cible à détruire ici ? */
+    /* Cartes qui frappent l'adversaire ICI : la valeur dépend des cartes adverses déjà révélées dans ce lieu et des protections
+       (Sauvabelin, Eir, Amaterasu, Baldur, Uzume, Fatalité…). Avant le 20 novembre, une quinzaine de ces cartes n'étaient pas
+       évaluées ici : l'IA les posait selon leur seule puissance (relevé d'une relecture extérieure). */
+    const fz=S.board[op][li].filter(x=>x.rev&&!untargetable(me,op,x)), fp=x=>cardPow(op,li,x);
+    const baldurNo=x=>eid(x)==="baldur"&&!x.neg&&d.cost>2;
+    const canKill=x=>!(forest(li)||shielded(op,li)||x.ward||fated(x)||deathless(x)||baldurNo(x));
+    const canWeak=x=>!(shielded(op,li)||sunlit(op)||noWeak(x)||baldurNo(x));
+    const byPow=a=>a.slice().sort((x,y)=>fp(x)-fp(y));
+    if(d.kw==="tentation"){ const v=fz.filter(canWeak).length; if(v>=2) hit+=v; else pow+=2; }   /* Tentation : −1 à chaque carte adverse ici (2 ou plus), sinon +2 */
+    if(d.kw==="verdict"){ const t=fz.filter(x=>canKill(x)&&fp(x)<=d.vd); if(t.length) hit+=2+Math.max(...t.map(fp)); else adj-=1; }   /* Verdict : une cible à détruire ici ? */
+    switch(c.id){
+      case "lilith": { const t=byPow(fz.filter(x=>!fated(x)&&fp(x)<=6)).pop(); if(t) hit+=2*fp(t); else adj-=2; break; }   /* la plus forte (6 ou moins) change de camp */
+      case "ereshkigal": { const t=fz.filter(x=>fp(x)<=3&&!fated(x)&&!forest(li)); if(t.length) hit+=t.reduce((a,x)=>a+fp(x),0)+1; else adj-=1; break; }   /* rien ne les protège */
+      case "ares": case "ares_h": { const k=c.id==="ares"?1:2, t=fz.filter(canWeak); if(t.length){ hit+=k*t.length; pow+=t.length; } else adj-=1; break; }
+      case "rusalka": { const t=byPow(fz)[0]; if(t&&fp(t)<=2&&canKill(t)) hit+=fp(t)+1; else adj-=1; break; }
+      case "ecorche": case "meduse": { const t=fz.filter(canWeak); if(t.length) hit+=2; else adj-=1; break; }
+      case "durga": { const t=byPow(fz).pop(); if(t&&fp(t)>=7&&canKill(t)) hit+=fp(t); else pow+=3; break; }
+      case "izzy_h": { const t=byPow(fz.filter(x=>fp(x)<=6&&canKill(x))).pop(); if(t){ hit+=fp(t); pow+=Math.ceil(fp(t)/2); } else adj-=2; break; }
+      case "nyx_h": { const t=byPow(fz.filter(canKill)).slice(0,2); if(t.length) hit+=t.reduce((a,x)=>a+fp(x),0); else adj-=1; break; }
+      case "sekhmet_n": { const t=fz.filter(x=>fp(x)<=2&&canKill(x)); if(t.length) hit+=t.reduce((a,x)=>a+fp(x),0)+1; else adj-=1; break; }
+      case "shamash": { const b=Math.max(0,...fz.map(x=>fp(x)-CARDS[x.id].pow)); if(b>0) hit+=b; else adj-=1; break; }
+      case "kali": { const t=byPow(fz.filter(canKill))[0]; if(t){ hit+=fp(t); pow+=2; } const m=S.board[me][li].filter(x=>x.rev&&!fated(x)).sort((a,b)=>cardPow(me,li,a)-cardPow(me,li,b))[0]; if(m) pow+=2-cardPow(me,li,m); break; }
+    }
     if(c.id==="vritra") adj+=diff<0?4:-2;
     if(c.id==="maeve"&&diff<0) pow+=3;
     if(c.id==="morrigan"&&Math.abs(diff)<=2) adj+=2;
@@ -1059,11 +1080,13 @@ function aiPlan(me="e",tierOv){
   const cands=[];
   for(let mask=0;mask<(1<<hand.length);mask++){
     const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,jf:true,plays:[],pend:[0,0,0],nike:cs.some(x=>isNike(x.id))}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
-    for(const c of cs){ let bp=null;
+    const alt=[];   /* deuxième meilleur lieu de chaque carte (variantes vérifiées par la simulation exacte, plus bas) */
+    for(const c of cs){ let bp=null, b2=null;
       /* chaque carte va là où elle fait le plus monter la probabilité de victoire */
       for(let li=0;li<3;li++){ const r=place(c,li,ctx); if(!r) continue; add[li]+=r.pow; hit[li]+=r.hit; const ob=me==="e"&&S.aiOath===li?1.5:0;   /* défendre son serment : léger penchant pour le lieu juré */
-        const v=winP(add,hit)*100+r.adj+ob; add[li]-=r.pow; hit[li]-=r.hit; if(!bp||v>bp.v) bp={...r,li,v,ob}; }
+        const v=winP(add,hit)*100+r.adj+ob; add[li]-=r.pow; hit[li]-=r.hit; if(!bp||v>bp.v){ b2=bp; bp={...r,li,v,ob}; } else if(!b2||v>b2.v) b2={...r,li,v,ob}; }
       if(!bp){ ok=false; break; }
+      alt.push(b2&&bp.v-b2.v<8?b2.li:null);
       ctx.plays.push({c,li:bp.li}); ctx.en-=bp.cost; if(c.id!=="herakles") ctx.pend[bp.li]++; ctx.first=false; if(vestaT(c.id)) ctx.jf=false; add[bp.li]+=bp.pow; hit[bp.li]+=bp.hit; adj+=bp.adj+(bp.ob||0); }
     if(!ok) continue;
     let bonus=adj;
@@ -1071,6 +1094,9 @@ function aiPlan(me="e",tierOv){
     const kept=hand.filter(c=>!cs.includes(c));
     if(S.turn>=2&&S.turn<=5&&kept.some(k=>(AI_PAY[k.id]||[]).some(p=>onBoard(p.a)||ctx.plays.some(x=>x.c.id===p.a))||(CARDS[k.id].cost>=6&&S.turn===5))) bonus+=3;
     const cand={plays:ctx.plays,bonus,est:winP(add,hit)*100+bonus}; cands.push(cand);
+    /* coups d'une ou deux cartes : la carte peut aussi aller à son deuxième meilleur lieu, si l'estimation rapide les sépare peu.
+       La simulation exacte tranche ; une variante impossible (coût, place) est écartée (alt:true, jamais choisie sans simulation). */
+    if(ctx.plays.length<=2) ctx.plays.forEach((x,i)=>{ if(alt[i]==null) return; const v=ctx.plays.map((y,j)=>j===i?{c:y.c,li:alt[i]}:y), ck=checkPlays(me,v); if(!ck.bad.length&&ck.plays.length===v.length) cands.push({plays:v,bonus,est:cand.est-.5,alt:true}); });   /* l'arbitre des duels refuse les coups impossibles */
     /* Aphrodite : variantes où chaque autre carte passe juste avant elle (l'ordre décide quelle Révélation elle rejoue) */
     const aph=ctx.plays.find(x=>x.c.id==="aphrodite");
     if(aph) for(const k of ctx.plays) if(k!==aph&&k.c.id!=="pandore"&&!isAph(k.c)){
@@ -1081,7 +1107,7 @@ function aiPlan(me="e",tierOv){
   /* les meilleures estimations sont rejouées pour de vrai sur une copie : le choix final se fait sur le résultat exact */
   cands.sort((a,b)=>b.est-a.est);
   let best=cands[0]||{plays:[]}, bv=-1e9;
-  for(const c of cands.slice(0,t>=4?40:t>=2?12:0)){ const r=sim(c.plays); const v=r?exactP(r)*100+c.bonus+(Math.random()*2-1)*noise*3:c.est; if(v>bv){ bv=v; best=c; } }
+  for(const c of cands.slice(0,t>=4?40:t>=2?12:0)){ const r=sim(c.plays); const v=r?exactP(r)*100+c.bonus+(Math.random()*2-1)*noise*3:(c.alt?-1e9:c.est); if(v>bv){ bv=v; best=c; } }
   return best.plays;
 }
 
