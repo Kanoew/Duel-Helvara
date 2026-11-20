@@ -63,7 +63,7 @@ window.HELVARA_EN = {
     sekhmet:{fx:"On Reveal: destroy every other card here with 2 Power or less, on both sides."},
     jordan:{n:"Jordan, the Creator", fx:"Can't be weakened. On Reveal: add Yarden Weiss to your hand from your deck."},
     jordan_n:{n:"Jordan, the Narrator", fx:"On Reveal: add to your hand, from your deck, a card that can form a Fusion with Jordan."},
-    lilith:{fx:"On Reveal: the strongest enemy card here (6 or less) switches to your side. If your side is full, it is destroyed."},
+    lilith:{fx:"On Reveal: the strongest enemy card here (5 or less) switches to your side. If your side is full, it is destroyed."},
     psyche:{n:"Psyche", fx:"Ongoing: your cards here can't go below 1. On Reveal: +2 Power to your weakest card here."},
     tlazol:{fx:"Temptation: each enemy card here loses 1 Power, or +2 Power (whichever hurts the opponent more). On Reveal: your weakened cards here return to their base Power. +2 Power for each."},
     eris:{n:"Eris", fx:"On Reveal: move the strongest enemy card here to another location."},

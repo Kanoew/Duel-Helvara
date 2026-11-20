@@ -1628,6 +1628,9 @@ async function inPage() {
     fresh(); S.turn = 5; const m = card("mouche"); S.hand.p = [m]; S.energy = 9; await resolveTurn([{ c: m, li: 1 }], [], false); S.turn = 6;
     T("Ère : posée au tour 5, toujours rien au tour 6", cardPow("p", 1, m) === 3, cardPow("p", 1, m));
     T("Yarden X Apsu : coût 10, puissance 9 (20 novembre)", CARDS.ulya.cost === 10 && CARDS.ulya.pow === 9, "");
+    fresh(); S.turn = 6; { const six = put("e", 0, plain[0], 6), five = put("e", 1, plain[1], 5); const l1 = card("lilith"), l2 = card("lilith"); S.hand.p = [l1, l2]; S.energy = 20;
+      await resolveTurn([{ c: l1, li: 0 }, { c: l2, li: 1 }], [], false);
+      T("Lilith : 5 ou moins depuis le 20 novembre (une carte à 6 reste, une carte à 5 change de camp)", S.board.e[0].includes(six) && S.board.p[1].includes(five), `${S.board.e[0].includes(six)} ${S.board.p[1].includes(five)}`); }
     S = null; }
 
   return res;

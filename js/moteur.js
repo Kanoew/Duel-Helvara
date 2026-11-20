@@ -698,7 +698,8 @@ function revealFx(s,li,c,opts={}){
     case "ananke": case "ananke_r": case "ananke_v": note="Fatalité : ni détruite ni déplacée"; snd="legend"; break;   /* Apsu ne l'atteint que par sa propre Révélation, s'il est posé après elle (Jordan : « Révélation c'est Révélation ») */
     case "nike": case "nike_v": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k); break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(4); snd=foes.length?"void":snd; break; }
-    case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=6),o,li); if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
+    case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=5),o,li);   /* 5 ou moins depuis le 20 novembre (6 avant : +8,9 points) */
+      if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
       if(S.board[s][li].length<capOf(s,li)){ S.board[s][li].push(t); t.fresh=true; note=`séduit ${nm(t)}`; } else if(forest(li)||deathless(t)){ S.board[o][li].push(t); } else { S.destroyed++; entomb(o,li,t); if(o==="e") S.killE=(S.killE||0)+1; danteHook(li); note=`${nm(t)} est détruite`; } snd="void"; } break; }
     case "psyche": { const t=weakest(mates,s,li)||c; t.pow+=2; note=`+2 à ${nm(t)}`; snd="buff"; break; }
     case "tlazol": { let n=0; for(const x of mates) if(x.pow<CARDS[x.id].pow){ x.pow=CARDS[x.id].pow; x.malus=0; n++; } if(n){ c.pow+=2*n; note=`purifie ${n} carte${n>1?"s":""}, +${2*n}`; snd="buff"; } break; }
@@ -906,7 +907,7 @@ function aiPlan(me="e",tierOv){
     if(d.kw==="tentation"){ const v=fz.filter(canWeak).length; if(v>=2) hit+=v; else pow+=2; }   /* Tentation : −1 à chaque carte adverse ici (2 ou plus), sinon +2 */
     if(d.kw==="verdict"){ const t=fz.filter(x=>canKill(x)&&fp(x)<=d.vd); if(t.length) hit+=2+Math.max(...t.map(fp)); else adj-=1; }   /* Verdict : une cible à détruire ici ? */
     switch(c.id){
-      case "lilith": { const t=byPow(fz.filter(x=>!fated(x)&&fp(x)<=6)).pop(); if(t) hit+=2*fp(t); else adj-=2; break; }   /* la plus forte (6 ou moins) change de camp */
+      case "lilith": { const t=byPow(fz.filter(x=>!fated(x)&&fp(x)<=5)).pop(); if(t) hit+=2*fp(t); else adj-=2; break; }   /* la plus forte (5 ou moins) change de camp */
       case "ereshkigal": { const t=fz.filter(x=>fp(x)<=3&&!fated(x)&&!forest(li)); if(t.length) hit+=t.reduce((a,x)=>a+fp(x),0)+1; else adj-=1; break; }   /* rien ne les protège */
       case "ares": case "ares_h": { const k=c.id==="ares"?1:2, t=fz.filter(canWeak); if(t.length){ hit+=k*t.length; pow+=t.length; } else adj-=1; break; }
       case "rusalka": { const t=byPow(fz)[0]; if(t&&fp(t)<=2&&canKill(t)) hit+=fp(t)+1; else adj-=1; break; }

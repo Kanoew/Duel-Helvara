@@ -100,9 +100,11 @@ Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : le
 **À surveiller** (remesuré le 20 novembre au soir avec l'IA corrigée, 3 graines × 6 000 parties)
 - ✅ 🛠️ **IA corrigée** (relevé d'une relecture extérieure du code) : une quinzaine de cartes qui frappent l'adversaire ici (Lilith, Ereshkigal, Rusalka, Durga, Izzy Lune de Sang…) n'étaient pas évaluées selon le lieu ; Tentation et Verdict ignoraient certaines protections ; pour les coups d'une ou deux cartes, le deuxième meilleur lieu est maintenant simulé aussi. Nos mesures sous-estimaient donc les cartes qui détruisent.
 - Factions : Helvara 47,8 · Primordial 52,7 · Désir 51,8 · **Jugement 46,6** ; decks avec Ananké 55,1 %. Pire face-à-face : Désir contre Jugement ~56 %, Primordial contre Jugement ~56 %.
-- 🟣 👤 **Au-delà de +8** : **Yarden X Apsu +10,5** (même après le 10 / 9) et **Lilith +8,9** (sortie : une retouche légère est permise). À décider.
+- ✅ **Lilith** : « 5 ou moins » au lieu de 6 (+8,9 → +7,6).
+- 🟣 👤 **Yarden X Apsu** : +10,5 avec l'IA corrigée, même en 10 / 9. Tu l'essaies d'abord, puis on regarde ses vraies statistiques.
 - 🟣 Entre +6 et +8 : Ereshkigal +6,7, Apsu +6,6, Arès d'Halloween +6,5, Calypso +6,4, Nyx d'Halloween +6,1, le Troll +6,1.
-- 🟣 **Jugement est maintenant la faction la plus faible** (46,6 %, ~43 % contre Primordial et contre Désir) : piste, un Verdict 3 sur certaines cartes cachées (Ra, Thanatos, Yama, Shango sont à −1,7 à −4,6).
+- 🟣 👤 **Jugement est la faction la plus faible** (46,6 %, ~43 % contre Primordial et contre Désir), et **Nike ne porte pas sa faction** (decks avec elle 47,4 %, contre 55,1 % pour Ananké). Ta volonté : relever Jugement par Nike. Mesuré sans rien appliquer : Nike avec Verdict 3 → decks Nike 51,0 %, Jugement 47,5 % ; « Nike renforce les Verdicts de +2 » → presque rien. Tu demandes un autre avis avant de choisir.
+- 🟣 👤 **Patch note** des nouveautés à préparer à ton retour (sur le modèle de `docs/patch-note-2026-11-18.md`).
 - 🟣 Après le 1er décembre : vraies statistiques d'Ananké, de Yarden X Apsu, de Lilith et de Dionysos dans Supabase (lecture seule). Correction seulement au-delà de ±8 points avec au moins 100 decks.
 - 🟣 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage, pour mesurer Lien sur les Escaliers du Marché (+2 aux cartes Helvara).
 

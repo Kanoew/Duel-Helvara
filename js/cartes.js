@@ -55,7 +55,7 @@ const CARDS = {
   jordan:  {name:"Jordan, le Créateur", cost:1, pow:-1, fac:"primordial", r:"E", fx:"Ne peut pas être affaibli. Révélation : ajoute Yarden Weiss à ta main depuis ton deck.", img:"images/jordan.webp"},
   jordan_n:{name:"Jordan, le Narrateur", base:"jordan", cost:1, pow:0, fac:"primordial", r:"E", fx:"Révélation : ajoute à ta main, depuis ton deck, une carte qui peut former une Fusion avec Jordan.", img:"images/jordan_n.webp?v=7"},
   /* --- OCTOBRE 2026 --- */
-  lilith:  {name:"Lilith", vfx:"lilith", cost:6, pow:5, fac:"desir", r:"L", rel:"2026-10-01", fx:"Révélation : la carte adverse la plus forte ici (6 ou moins) passe de ton côté. Si ton côté est plein, elle est détruite.", img:"images/lilith.webp?v=6"},
+  lilith:  {name:"Lilith", vfx:"lilith", cost:6, pow:5, fac:"desir", r:"L", rel:"2026-10-01", fx:"Révélation : la carte adverse la plus forte ici (5 ou moins) passe de ton côté. Si ton côté est plein, elle est détruite.", img:"images/lilith.webp?v=6"},
   psyche:  {name:"Psyché", cost:4, pow:3, fac:"desir", r:"E", rel:"2026-10-01", fx:"Continu : tes cartes ici ne descendent pas sous 1. Révélation : +2 de puissance à ta carte la plus faible ici.", img:"images/psyche.webp"},
   tlazol:  {kw:"tentation", name:"Tlazolteotl", cost:3, pow:2, fac:"desir", r:"R", rel:"2026-10-01", fx:"Tentation : chaque carte adverse ici perd 1 de puissance, ou +2 de puissance (le pire pour l'adversaire). Révélation : tes cartes affaiblies ici reviennent à leur puissance de base. +2 de puissance pour chacune.", img:"images/tlazol.webp?v=2"},
   eris:    {name:"Éris", cost:3, pow:3, fac:"desir", r:"R", rel:"2026-10-01", fx:"Révélation : déplace la carte adverse la plus forte ici vers un autre lieu.", img:"images/eris.webp?v=2"},
