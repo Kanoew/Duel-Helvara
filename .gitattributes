@@ -1,0 +1,4 @@
+# Fins de ligne : toujours LF dans le dépôt et dans les copies, même sous Windows.
+# outils/versions.js calcule les empreintes ?v= sur les octets des fichiers : un CRLF
+# ajouté par un clone Windows les rendrait toutes « périmées ».
+* text=auto eol=lf
