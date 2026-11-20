@@ -150,12 +150,14 @@ function blitzHTML(){
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.44", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.45", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Coups scellés (anti-triche, lot A) : mes coups du tour, envoyés d'abord sous forme d'empreinte. Ils restent ICI (jamais dans la présence)
    jusqu'à ce que l'adversaire ait publié son empreinte : {g, t, plays, salt, seal}. */
 let mpPend=null;
+/* Lot C : salon donné par la recherche de la base (mm_seek) = duel classé (le serveur y a déjà inscrit les deux comptes) */
+let mpRankedRoom="";
 /* Graine commune : mon nombre secret de l'hôte (jamais dans la présence avant la révélation), l'empreinte vue par l'invité, le match en cours de tirage */
 let mpSecret=null, mpSeedSeen=null, mpDealing="";   /* mpDealing : « mon jeton|match », le numéro de match repart à 1 dans chaque salon */
 /* Jetons et codes de salon : crypto.getRandomValues (pas Math.random). Code = LIEU- + 6 caractères sans I, L, O ni 0/1 (31 symboles, tirage sans biais). */
@@ -167,7 +169,7 @@ function mpSession(){ try{ const s=JSON.parse(localStorage.getItem(MP_KEY)); ret
 const mpSalt=()=>mpTok()+mpTok();
 async function mpSeal(plays,salt){ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(salt+"|"+JSON.stringify(plays))); return Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,"0")).join(""); }
 async function mpSealOk(plays,salt,seal){ if(!Array.isArray(plays)||typeof salt!=="string"||typeof seal!=="string") return false; try{ return await mpSeal(plays,salt)===seal; }catch(e){ return false; } }
-function mpSaveAll(){ if(S&&S.mp) mpSaveSession({mp:myMp,oppNick:S.mp.oppNick,pend:mpPend,seen:S.mp.seen||{},deal:S.mp.deal||null}); }
+function mpSaveAll(){ if(S&&S.mp) mpSaveSession({mp:myMp,oppNick:S.mp.oppNick,pend:mpPend,seen:S.mp.seen||{},deal:S.mp.deal||null,ranked:!!S.mp.ranked}); }
 /* Graine commune (anti-triche, lot A) : l'hôte publie l'empreinte de son nombre (hc), l'invité répond avec le sien (rg), l'hôte révèle (rh).
    La graine de la partie et les trois lieux sortent de l'empreinte des deux nombres : personne ne peut les choisir.
    Lieux : tirés parmi les lieux sortis chez LES DEUX joueurs (lp), dans un ordre fixe. */
@@ -295,7 +297,7 @@ async function mqSqlTick(me){
   catch(e){ if(mq!==me) return; if(e&&e.code==="PGRST202"){ me.sql=false; mqPresenceStart(me); return; } next(); return; }   /* SQL pas encore lancé : ancienne file */
   if(mq!==me) return;
   if(res&&res.ok&&res.room&&MP_CODE.test(res.room)){
-    me.room=res.room; me.since=Date.now(); me.role=res.role;
+    me.room=res.room; me.since=Date.now(); me.role=res.role; mpRankedRoom=res.room;
     const ok=res.role==="host"?(await mpCreate(res.room),!!myMp):await mpJoinCode(res.room);
     if(mq!==me) return; if(!ok){ me.since=0; }   /* salon injoignable : on se remet à chercher au prochain passage */
     render(); next(); return;
@@ -414,7 +416,7 @@ function mpTick(){
   if(screen==="duel"||screen==="play") render();
 }
 function mpStart(om,replay,deal){
-  const meHost=myMp.role==="host", hostP=meHost?myMp:om, guestP=meHost?om:myMp, seen0=replay&&S&&S.mp&&S.mp.seen||{};
+  const meHost=myMp.role==="host", hostP=meHost?myMp:om, guestP=meHost?om:myMp, seen0=replay&&S&&S.mp&&S.mp.seen||{}, ranked0=replay?!!(S&&S.mp&&S.mp.ranked):!!myMp.code&&mpRankedRoom===myMp.code;
   if(!deal||!validDeck(hostP.deck)||!validDeck(guestP.deck)||!Array.isArray(deal.locs)||deal.locs.length!==3||!deal.locs.every(l=>LOCS[l])) return;
   RNG=mulberry(deal.seed|0); uidN=0;
   const hostDeck=gShuffle(hostP.deck.map(mk)), guestDeck=gShuffle(guestP.deck.map(mk));
@@ -424,7 +426,7 @@ function mpStart(om,replay,deal){
     deck:{p:meHost?hostDeck:guestDeck, e:meHost?guestDeck:hostDeck},
     staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
     log:[], sel:null, info:null, busy:false, over:null,
-    mp:{g:myMp.g, meHost, oppNick:safeNick(om.nick), oppAv:POOL.includes(om.av)?om.av:null, locked:false, gone:false, replaying:!!replay, seen:seen0, deal:{seed:deal.seed|0,locs:deal.locs.slice()}}};
+    mp:{g:myMp.g, meHost, oppNick:safeNick(om.nick), oppAv:POOL.includes(om.av)?om.av:null, locked:false, gone:false, replaying:!!replay, seen:seen0, deal:{seed:deal.seed|0,locs:deal.locs.slice()}, ranked:ranked0}};
   for(let i=0;i<3;i++){ draw(meHost?"p":"e"); draw(meHost?"e":"p"); }
   quiet=!!replay;
   log(`Duel contre ${S.mp.oppNick}`); sheet=null; if(mq) mqStop("");   /* la recherche est finie dès que le duel commence */
@@ -455,16 +457,28 @@ function mpEnter(){ if(window.__wiped||!myMp||!S||!S.mp) return; const code=myMp
 function mpTr(t,mine,theirs){ if(S&&S.mp){ (S.mp.tr=S.mp.tr||{})[t]=[mine||[],theirs||[]]; } }
 function mpRecord(){
   const h=S.mp.meHost, tr=S.mp.tr||{}, turns=Object.keys(tr).sort((a,b)=>a-b).map(t=>h?tr[t]:[tr[t][1],tr[t][0]]);
-  return {v:BUILD, seed:S.mp.deal.seed, locs:S.mp.deal.locs, t:turns, fin:[0,1,2].map(li=>h?[total("p",li),total("e",li)]:[total("e",li),total("p",li)])};
+  /* bad : coups adverses refusés vus par CE téléphone. Deux joueurs honnêtes ont 0 ; un coup refusé rend les relevés différents (désaccord),
+     même s'il n'a rien changé aux puissances finales */
+  return {v:BUILD, seed:S.mp.deal.seed, locs:S.mp.deal.locs, t:turns, bad:S.mp.bad||0, fin:[0,1,2].map(li=>h?[total("p",li),total("e",li)]:[total("e",li),total("p",li)])};
 }
 async function mpReport(res){
   if(window.__wiped||!S||!S.mp||S.mp.reported||!myMp||!S.mp.deal) return;
   const sRef=S, mp=S.mp, code=myMp.code, role=myMp.role, g=mp.g; mp.reported=true;
+  const oath=S.oath!=null?(leader(S.oath)==="p"?"kept":"broken"):null, cross=S.oath!=null&&S.oath===S.aiOath, ov=S.over;
   const rec=mpRecord(); let hash; try{ hash=mpHex(await mpHash(JSON.stringify(rec))); }catch(e){ return; }
   const db=await mpDbGet(); if(!db||!db.duelReport) return;
-  const send=async()=>{ try{ const r=await db.duelReport(code,g,role,res,hash,rec); if(r&&r.status){ mp.srv=r.status; if(S===sRef) render(); } return r; }catch(e){ return null; } };
+  const send=async()=>{ try{ const r=await db.duelReport(code,g,role,res,hash,rec); if(r&&r.status){ mp.srv=r.status; mp.ranked=r.ranked===true; if(r.status!=="open") mpRank(mp,ov,r,res,oath,cross); if(S===sRef) render(); } return r; }catch(e){ return null; } };
   let r=await send();
   for(let i=0;i<5&&r&&r.status==="open"&&S===sRef;i++){ await new Promise(ok=>setTimeout(ok,6000)); r=await send(); }   /* l'autre n'a pas encore envoyé : on relit la décision */
+}
+/* Lot C : duel classé validé et compté par le serveur → étoiles, comme une partie classée (Serment compris). Une seule fois par match.
+   Même si le joueur a déjà quitté l'écran de fin ou lancé la revanche (ov garde le résultat de CE match). */
+function mpRank(mp,ov,r,res,oath,cross){
+  if(mp.rankDone||!r.ranked) return; mp.rankDone=true; mp.counted=!!r.counted;
+  if(!r.counted||window.__wiped) return;
+  if(res==="win") P.sw++; else if(res==="lose") P.sl++; else P.sd++;
+  const rk=applyRank(res,oath,cross); if(ov) ov.rk=rk;
+  save(); lbPublish(); if(rk.up) sfx("legend");
 }
 /* Coups révélés qui ne correspondent pas à l'empreinte publiée avant : tous refusés (il les a changés après avoir vu les miens) */
 function oppSealed(plays,ok){ if(ok) return oppPlays(plays); log("Coups adverses refusés : ils ne correspondent pas à ceux annoncés"); if(S.mp) S.mp.bad=(S.mp.bad||0)+1; return []; }
@@ -518,7 +532,7 @@ async function mpResume(){
   const r=await rtOpen("c","helvara-room-"+s.mp.code); mpConn=false;
   if(!r){ mpMsg=RT_FAIL; render(); return; }
   myMp=null; mpPush(s.mp); mpPend=s.pend&&s.pend.g===s.mp.g?s.pend:null;
-  S={mp:{resuming:true,g:s.mp.g,oppNick:s.oppNick,deal:s.deal&&Array.isArray(s.deal.locs)?s.deal:null,seen:s.seen&&typeof s.seen==="object"?s.seen:{}}, over:null};
+  S={mp:{resuming:true,g:s.mp.g,oppNick:s.oppNick,ranked:!!s.ranked,deal:s.deal&&Array.isArray(s.deal.locs)?s.deal:null,seen:s.seen&&typeof s.seen==="object"?s.seen:{}}, over:null};
   screen="duel"; render(); mpTick();
 }
 function onlineHTML(){

@@ -55,7 +55,7 @@ Ton plan commence par l'économie. Je propose de commencer par ce qui touche **l
 - **Lot B, « Jouer » contre un humain ou l'IA + résultat validé par le serveur** :
   - détecter qui est en ligne ; attente de 15 s au plus seulement si quelqu'un l'est, sinon partie contre l'IA tout de suite ;
   - à la fin, chaque joueur envoie le résultat ; le serveur ne compte la partie que si les deux concordent ; les parties sont enregistrées (joueurs, graine, coups, résultat) pour être rejouées.
-- **Lot C, classement** (relecture `db-guard` du lot B, à respecter) :
+- **Lot C, classement** (codé le 19 novembre, `classement-duels.sql`, `alpha-0.45` ; relecture `db-guard` du lot B, respectée) :
   - triche « avec un second compte » : l'hôte connaît le code en premier et peut inscrire un second compte à lui comme invité, puis faire valider un résultat inventé. Parades : plafonner les étoiles gagnées contre un même adversaire par jour ; donner les étoiles **au moment de la validation** (les lignes de `duel_games` disparaissent après 15 jours ou avec un compte) ; plus tard, faire inscrire les deux joueurs par `mm_seek` lui-même ;
   - un `conflict` n'est jamais une preuve de triche à lui seul ;
   - les étoiles d'un duel en ligne ne passent que par un résultat validé (lot B) ;

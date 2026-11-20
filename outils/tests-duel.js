@@ -25,16 +25,17 @@ function mmSeek(who,ver,room){ const now=Date.now(); for(const k in MM) if(now-M
   const mine=MM[who]; if(mine&&mine.room){ delete MM[who]; return {ok:true,room:mine.room,role:"guest"}; }
   if(!mine) MM[who]={ver,joined:now,seen:now,room:null}; else { mine.seen=now; mine.ver=ver; }
   const foe=Object.keys(MM).filter(k=>k!==who&&MM[k].ver===ver&&!MM[k].room&&now-MM[k].seen<8000).sort((a,b)=>MM[a].joined-MM[b].joined)[0];
-  if(foe){ MM[foe].room=room; MM[foe].seen=now; delete MM[who]; return {ok:true,room,role:"host"}; }
+  if(foe){ MM[foe].room=room; MM[foe].seen=now; delete MM[who]; DG[room+"|1"]={host:who,guest:foe,status:"open",ranked:true}; return {ok:true,room,role:"host"}; }   /* lot C : duel classé */
   return {ok:true,room:null,waiting:Object.keys(MM).filter(k=>k!==who&&MM[k].ver===ver).length,other_ver:false}; }
 /* Duels validés simulés : mêmes règles que duel_enter / duel_report (duels-valides.sql) ; « who » joue le rôle du compte */
 const DG={};
-function dEnter(who,room,g,role){ const k=room+"|"+g, d=DG[k]=DG[k]||{host:null,guest:null,status:"open"}; const o=role==="host"?"guest":"host";
+function dEnter(who,room,g,role){ const k=room+"|"+g, f=DG[room+"|1"]; if(!DG[k]&&g>1&&f&&f.ranked) DG[k]={host:f.host,guest:f.guest,status:"open",ranked:true};
+  const d=DG[k]=DG[k]||{host:null,guest:null,status:"open",ranked:false}; const o=role==="host"?"guest":"host";
   if(d[role]==null&&d[o]!==who){ d[role]=who; return {ok:true}; } return d[role]===who?{ok:true}:{ok:false,reason:"taken"}; }
 function dReport(who,room,g,role,res,hash){ const d=DG[room+"|"+g]; if(!d) return {ok:false,reason:"unknown"}; if(d[role]!==who) return {ok:false,reason:"not_player"};
-  const r=role[0]; if(d.status!=="open"||d[r+"res"]) return {ok:true,status:d.status}; d[r+"res"]=res; d[r+"hash"]=hash; const o=role==="host"?"g":"h";
-  if(!d[o+"res"]) return {ok:true,status:"open"}; const m={win:"lose",lose:"win",draw:"draw"}[res];
-  d.status=d[o+"res"]===m&&d[o+"hash"]===hash?"valid":"conflict"; return {ok:true,status:d.status}; }
+  const r=role[0], out=()=>({ok:true,status:d.status,ranked:!!d.ranked,counted:!!d.counted}); if(d.status!=="open"||d[r+"res"]) return out(); d[r+"res"]=res; d[r+"hash"]=hash; const o=role==="host"?"g":"h";
+  if(!d[o+"res"]) return out(); const m={win:"lose",lose:"win",draw:"draw"}[res];
+  d.status=d[o+"res"]===m&&d[o+"hash"]===hash?"valid":"conflict"; d.counted=d.status==="valid"&&!!d.ranked; return out(); }
 const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,b)=>CARDS[b.id].cost-CARDS[a.id].cost)[0]; window.__cheat=c&&{id:c.id,cost:CARDS[c.id].cost,en:S.energy}; if(c){ S.hand.p=S.hand.p.filter(x=>x!==c); S.staged.push({c,li:0}); } }
   else for(let k=0;k<10;k++){ const c=S.hand.p[Math.floor(Math.random()*S.hand.p.length)], li=Math.floor(Math.random()*3); if(!c||!canStage(c,li)) continue;
     const fx=(c.id==="ulya"||c.id==="ereshkigal_n")?costFor("p",c.id,li,S.staged.length===0):null; S.hand.p=S.hand.p.filter(x=>x!==c); S.staged.push(fx!=null?{c,li,fixed:fx}:{c,li}); }
@@ -77,7 +78,7 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
       if(!await until(async()=>{ const a=await st(A), b=await st(B); return a&&b&&!a.busy&&!b.busy&&((a.turn>t&&b.turn>t)||(a.over&&b.over)); },90000)) throw new Error("tour "+t+" bloqué "+JSON.stringify([await st(A),await st(B)]));
     } }
     await until(async()=>{ const x=await A.evaluate(()=>S.mp.srv), y=await B.evaluate(()=>S.mp.srv); return x&&y&&x!=="open"&&y!=="open"; },25000);
-    const fin=pg=>pg.evaluate(()=>({srv:S.mp.srv,res:S.over&&S.over.res,tot:[0,1,2].map(li=>[total("p",li),total("e",li)]),bad:S.mp.bad||0,log:S.log.filter(l=>/refus/.test(l))}));
+    const fin=pg=>pg.evaluate(()=>({srv:S.mp.srv,ranked:!!S.mp.ranked,rk:!!(S.over&&S.over.rk),res:S.over&&S.over.res,tot:[0,1,2].map(li=>[total("p",li),total("e",li)]),bad:S.mp.bad||0,log:S.log.filter(l=>/refus/.test(l))}));
     const a=await fin(A), b=await fin(B);
     await A.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; }); await B.evaluate(()=>{ mpClear(); mpSaveSession(null); S=null; screen="home"; });
     for(const pg of [A,B]) await pg.evaluate(()=>{ P.owned=POOL.slice(); if(P.deck.length!==12) P.deck=POOL.filter(id=>REL(id)&&!ULof(id)&&!CARDS[id].base).slice(0,12); });
@@ -100,6 +101,17 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     await play(B);
     const met=await until(async()=>(await mode(A))==="humain"&&(await mode(B))==="humain",20000);
     T("Jouer : les deux appuient sur Jouer, ils se retrouvent en duel (pas contre l'IA)",met&&await A.evaluate(()=>JSON.stringify(S.mp.deal))===await B.evaluate(()=>JSON.stringify(S.mp.deal)),JSON.stringify([await mode(A),await mode(B)]));
+    /* lot C : ce duel est classé ; on le joue jusqu'au bout, les étoiles tombent après la validation du serveur */
+    const sw0=[await A.evaluate(()=>[P.sw,P.sl,P.sd,P.lv,P.st]),await B.evaluate(()=>[P.sw,P.sl,P.sd,P.lv,P.st])];
+    const ranked=[await A.evaluate(()=>S.mp.ranked),await B.evaluate(()=>S.mp.ranked)];
+    for(let t=1;t<=6;t++){ await B.evaluate(STAGE,false); await until(async()=>(await A.evaluate(()=>S.mp.oppLocked)),10000); await A.evaluate(STAGE,false);
+      if(!await until(async()=>{ const a=await st(A), b=await st(B); return a&&b&&!a.busy&&!b.busy&&((a.turn>t&&b.turn>t)||(a.over&&b.over)); },90000)) throw new Error("duel classé : tour "+t+" bloqué"); }
+    const done=await until(async()=>(await A.evaluate(()=>!!S.mp.rankDone))&&(await B.evaluate(()=>!!S.mp.rankDone)),25000);
+    const rs=[await A.evaluate(()=>({res:S.over.res,rk:!!S.over.rk,c:[P.sw,P.sl,P.sd]})),await B.evaluate(()=>({res:S.over.res,rk:!!S.over.rk,c:[P.sw,P.sl,P.sd]}))];
+    const moved=rs.every((r,i)=>r.c[{win:0,lose:1,draw:2}[r.res]]===sw0[i][{win:0,lose:1,draw:2}[r.res]]+1);
+    T("Duel classé (trouvé par Jouer) : validé, compté, et les étoiles s'appliquent chez les deux joueurs",ranked.every(Boolean)&&done&&rs.every(r=>r.rk)&&moved,JSON.stringify({ranked,done,rs,sw0}));
+    const scr=await A.evaluate(()=>{ const k=LANG; LANG="en"; render(); translateDOM&&translateDOM(document.body); const t=document.querySelector(".result")?.innerText||""; LANG=k; render(); return t; });
+    T("Duel classé : écran de fin traduit en anglais (« Ranked duel against »)",/Ranked duel against/.test(scr)&&!/Duel classé/.test(scr),scr.slice(0,200));
     await home(A); await home(B); await until(()=>A.evaluate(()=>lobFree()===1),10000);
     const t0=Date.now(); await play(A); const ai=await until(async()=>(await mode(A))==="ia",25000), waited=Date.now()-t0;
     T("Jouer : l'autre est en ligne mais ne joue pas, l'IA après 15 s d'attente",ai&&waited>=14000&&waited<20000,waited+" ms");
@@ -112,6 +124,7 @@ const STAGE=(cheat)=>{ S.staged=[]; if(cheat){ const c=S.hand.p.slice().sort((a,
     await home(A); await B.evaluate(()=>{ lobFull=false; lobOpen(); }); await until(()=>A.evaluate(()=>lobFree()===1),10000); }
   { const r=await game(0,0); T("Duel honnête : même partie sur les deux téléphones, aucun refus",same(r)&&!r.a.bad&&!r.b.bad,JSON.stringify([r.a.res,r.b.res,r.a.bad,r.b.bad]));
     T("Résultat validé : partie honnête validée par le serveur chez les deux joueurs",r.a.srv==="valid"&&r.b.srv==="valid",JSON.stringify([r.a.srv,r.b.srv]));
+    T("Duel entre amis (code) : validé mais hors classement, aucune étoile",!r.a.ranked&&!r.b.ranked&&!r.a.rk&&!r.b.rk,JSON.stringify([r.a.ranked,r.a.rk]));
     T("Coups scellés : aucun joueur ne voit les coups de l'autre avant d'avoir fini son tour",!r.peek.some(Boolean),JSON.stringify(r.peek)); }
   { const r=await game(0,0,true); T("Revanche dans le même salon : nouvelle partie, nouveau tirage, identique des deux côtés, validée",same(r)&&r.a.srv==="valid"&&r.deals.length===2&&r.deals.every(([x,y])=>x&&x===y)&&r.deals[0][0]!==r.deals[1][0],JSON.stringify(r.deals));
     T("Graine commune : même graine et mêmes lieux chez les deux joueurs",r.deals[0][0]===r.deals[0][1],JSON.stringify(r.deals[0])); }
