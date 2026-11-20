@@ -696,7 +696,10 @@ function revealFx(s,li,c,opts={}){
       if(res){ S.bonus[o]=0; if(S.biaBlock) S.biaBlock[o]=true; note="l'adversaire perd son énergie conservée"; snd="debuff"; }
       else { const t=strongest(targets,o,li); if(t&&weaken(o,li,t,1)){ (t.mods=t.mods||[]).push({v:-1,src:"Bia"}); note=`−1 à ${nm(t)}`; snd="debuff"; } } break; }
     case "ananke": case "ananke_r": case "ananke_v": note="Fatalité : ni détruite ni déplacée"; snd="legend"; break;   /* Apsu ne l'atteint que par sa propre Révélation, s'il est posé après elle (Jordan : « Révélation c'est Révélation ») */
-    case "nike": case "nike_v": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k); break; }
+    case "nike": case "nike_v": { const pl=(S.turnPlays&&S.turnPlays[s])||[], ix=pl.indexOf(c), k=ix<0?0:pl.slice(0,ix).filter(x=>!isAph(x)).length; if(k) buffSelf(2*k);
+      /* l'Élan de la Victoire (20 novembre) : chacune des cartes jouées avant elle ce tour, encore en jeu, gagne +1 */
+      if(ix>0){ let n=0; for(const x of pl.slice(0,ix)) if(!isAph(x)&&S.board[s].some(col=>col.includes(x))){ x.pow+=1; (x.mods=x.mods||[]).push({v:1,src:"Nike"}); n++; } if(n) note=(note?note+", ":"")+`+1 à ${n} carte${n>1?"s":""}`; }
+      break; }
     case "apsu": { foes.forEach(x=>x.neg=true); if(foes.length) note=`${foes.length} carte${foes.length>1?"s":""} sans effet`; if(onSide(s,"yarden")) buffSelf(4); snd=foes.length?"void":snd; break; }
     case "lilith": { const t=strongest(targets.filter(x=>pw(o,li,x)<=5),o,li);   /* 5 ou moins depuis le 20 novembre (6 avant : +8,9 points) */
       if(t){ S.board[o][li]=S.board[o][li].filter(x=>x!==t);
@@ -933,7 +936,7 @@ function aiPlan(me="e",tierOv){
     if(locIs(li,"faille")&&S.turn<=4&&d.pow<=2) pow-=d.pow;
     if(c.id==="nemesis") adj+=(diff>0&&diff<12)?5:-6;
     if(c.id==="mouche") pow-=mates;
-    if(isNike(c.id)){ pow+=ctx.plays.length*2;
+    if(isNike(c.id)){ pow+=ctx.plays.length*3;   /* +2 pour elle, +1 pour chaque carte jouée avant elle */
       /* au tour 6 de préférence ; plus tôt seulement avec au moins 3 cartes jouées avant elle (Vesta, Prométhée) */
       if(S.turn<6&&ctx.plays.length<3) adj-=20; }
     /* petites cartes gardées pour le tour de Nike. Sauf Apollon (sa Flèche à 0 n'arrive en main qu'à sa Révélation : jouée au tour 6, elle ne sert plus)

@@ -31,10 +31,10 @@ async function inPage() {
 
   /* 1. Nike + Aphrodite : 2 cartes à 1, Nike (3/2), Aphrodite au tour 6 → Nike finit à 10 */
   fresh(); S.turn = 6; { const a = card(plain[0], 1), b = card(plain[1], 1), n = card("nike"), ap = card("aphrodite"); S.hand.p = [a, b, n, ap];
-    await resolveTurn([a, b, n, ap].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Nike + Aphrodite : Nike finit à 10", nk && nk.pow === 10, nk && nk.pow); }
+    await resolveTurn([a, b, n, ap].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Nike + Aphrodite : Nike finit à 11 (3/3 depuis le 20 novembre)", nk && nk.pow === 11, nk && nk.pow); }
   /* 1b. Aphrodite posée AVANT Nike : elle ne compte pas parmi les cartes jouées avant Nike */
   fresh(); S.turn = 5; { const a = card(plain[0], 1), ap = card("aphrodite"), n = card("nike"); S.hand.p = [a, ap, n];
-    await resolveTurn([a, ap, n].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Aphrodite posée avant Nike : Nike +2 seulement (4)", nk && nk.pow === 4, nk && nk.pow); }
+    await resolveTurn([a, ap, n].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike"); T("Aphrodite posée avant Nike : Nike +2 seulement (5)", nk && nk.pow === 5, nk && nk.pow); }
   /* 2. Aphrodite seule en début de tour → aucun effet */
   fresh(); S.turn = 4; { const ap = card("aphrodite"); S.hand.p = [ap]; const before = JSON.stringify(S.board);
     await resolveTurn([{ c: ap, li: 0 }], [], false); const a = find("p", "aphrodite"); T("Aphrodite seule : aucun effet", a && a.pow === 2 && S.board.p.flat().length === 1 && !before.includes('"id":"aphrodite"'), a && a.pow); }
@@ -525,7 +525,7 @@ async function inPage() {
     fresh(); S.turn = 6; S.energy = 6; S.vesta = { p: 1, e: 0 }; { const m = card("maat"), f = card("fleche"), v = card("vesta"), a = card("apollon"), n = card("nike"); S.hand.p = [m, f, v, a, n];
       const plays = [m, f, v, a, n].map(c => ({ c, li: 0 })); S.staged = plays.slice(); const u = used(); S.staged = [];
       await resolveTurn(plays, [], false); const nk = find("p", "nike");
-      T("Tour 6 : Mā'at + Flèche + Vesta + Apollon puis Nike → Nike finit à 10", nk && nk.pow === 10, nk && nk.pow);
+      T("Tour 6 : Mā'at + Flèche + Vesta + Apollon puis Nike → Nike finit à 11", nk && nk.pow === 11, nk && nk.pow);
       T("Tour 6 : ces 5 cartes coûtent 4 d'énergie (Vesta du tour précédent : −1 sur la première carte Jugement de coût 1 ou plus)", u === 4, u);
       T("Apollon : la Flèche arrive en main après sa Révélation", S.hand.p.some(x => x.id === "fleche"), S.hand.p.map(x => x.id).join()); }
     /* J1b. Vesta en attente : Nike coûte 2 si elle est la première carte Jugement de coût 1 ou plus */
@@ -573,7 +573,7 @@ async function inPage() {
     fresh(); { const t = put("p", 0, "tsukuyomi"); const p0 = cardPow("p", 0, t); put("p", 1, "athena"); const p1 = cardPow("p", 0, t); put("e", 0, "athena"); const p2 = cardPow("p", 0, t);
       put("p", 0, plain.find(id => CARDS[id].fac !== "jugement") || "coursier"); const p3 = cardPow("p", 0, t); put("p", 0, "fleche"); const p4 = cardPow("p", 0, t);
       T("Tsukuyomi : 2 seule, 2 avec une Jugement ailleurs ou chez l'adversaire, 2 avec une autre faction ici, 4 avec une Jugement ici (jeton compris)", p0 === 2 && p1 === 2 && p2 === 2 && p3 === 2 && p4 === 4, `${p0}/${p1}/${p2}/${p3}/${p4}`); }
-    T("Nike : 3/2", CARDS.nike.cost === 3 && CARDS.nike.pow === 2);
+    T("Nike : 3/3 (20 novembre)", CARDS.nike.cost === 3 && CARDS.nike.pow === 3);
     /* J11. Données, dates et jetons */
     T("Renfort Jugement : coûts, puissances, raretés et dates", CARDS.maat.cost === 0 && CARDS.maat.pow === 1 && CARDS.maat.r === "C" && CARDS.apollon.cost === 1 && CARDS.apollon.r === "R" && CARDS.vesta.pow === 2 && CARDS.hephaistos.cost === 2 && CARDS.tsukuyomi.r === "C" && CARDS.zeus.cost === 5 && CARDS.zeus.pow === 4 && CARDS.zeus.r === "L"
       && ["maat", "apollon", "vesta"].every(id => CARDS[id].rel === "2026-11-15" && CARDS[id].soon === "2026-11-10") && ["hephaistos", "tsukuyomi", "zeus", "cronos"].every(id => CARDS[id].rel === "2026-12-01" && CARDS[id].soon === "2026-11-26") && ["maat", "apollon", "vesta", "hephaistos", "tsukuyomi", "zeus"].every(id => CARDS[id].fac === "jugement"));
@@ -586,7 +586,7 @@ async function inPage() {
     /* J13. IA autour de Nike (15 octobre) : petites cartes gardées pour son tour, Nike au tour 6, Zeus pour rejouer les petites cartes, deck construit autour d'elle */
     const other3 = Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id)) || "athena";
     fresh(); S.turn = 4; S.energy = S.energyE = 4; { const n = card("nike"), m = card("maat"), a = card("apollon"), o3 = card(other3); S.hand.e = [n, m, a, o3];
-      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 4 → Mā'at gardée pour son tour, Apollon joué tôt (sa Flèche à 0 arrive en main pour le tour 6)", !ids.includes("maat") && ids.includes("apollon") && !ids.includes("nike"), ids.join() || "rien"); }
+      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 4 → Apollon n'est plus gardé pour son tour (sa Flèche à 0 arrive en main pour la suite)", ids.includes("apollon"), ids.join() || "rien"); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { const n = card("nike"), v = card("vesta"), o3 = card(other3); S.hand.e = [n, v, o3];
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 5 → Vesta jouée (Nike coûtera 1 de moins au tour 6)", ids.includes("vesta") && !ids.includes("nike"), ids.join() || "rien"); }
     fresh(); S.turn = 4; S.energy = S.energyE = 4; { const n = card("nike"), m = card("maat"); S.hand.e = [n, m];
@@ -627,7 +627,7 @@ async function inPage() {
     fresh(); S.turn = 5; { put("e", 1, plain[0], 3); put("e", 2, plain[1], 3); const cr = card("cronos"); S.hand.p = [cr]; await resolveTurn([{ c: cr, li: 0 }], [], false);
       S.turn = 6; S.energy = 6; const m = card("maat"), f = card("fleche"), v = card("vesta"), n = card("nike"), ap = card("aphrodite"); S.hand.p = [m, f, v, n, ap];
       await resolveTurn([{ c: m, li: 1 }, { c: f, li: 1 }, { c: v, li: 1 }, { c: n, li: 1 }, { c: ap, li: 2 }], [], false);
-      T("Après Cronos : Nike calcule normalement dans un lieu vidé (2 + 3 × 2, rejouée par Aphrodite : 14)", n.pow === 14, n.pow); }
+      T("Après Cronos : Nike calcule normalement dans un lieu vidé (3 + 3 × 2, rejouée par Aphrodite : 15)", n.pow === 15, n.pow); }
     /* Echidna : défausse les cartes de coût 0 ou 1 de ta main, +2 chacune */
     fresh(); S.turn = 4; { const e = card("echidna"); S.hand.p = [e, card("fleche"), card("maat"), card("athena")]; await resolveTurn([{ c: e, li: 0 }], [], false);
       T("Echidna : défausse les 2 cartes de coût 0 ou 1 (+4), garde les autres", e.pow === 7 && S.discardPile.p.length === 1 && S.hand.p.some(c => c.id === "athena") && !S.hand.p.some(c => c.id === "maat"), `${e.pow}, défausse ${S.discardPile.p.join()}`); }
@@ -638,12 +638,12 @@ async function inPage() {
       const plan = aiPlan("e", 5); T("IA : jamais Cronos quand elle mène déjà deux lieux", !plan.some(x => x.c === cr), JSON.stringify(plan.map(x => [x.c.id, x.li]))); }
 
     /* Nike de la Saint-Valentin (22 octobre) : même carte que Nike, autre illustration ; quête dès le 1er février, sortie le 14 */
-    T("Nike V : 3/2 comme Nike, même personnage, effet identique, holo et effet visuel de Nike", CARDS.nike_v.cost === CARDS.nike.cost && CARDS.nike_v.pow === CARDS.nike.pow && charOf("nike_v") === "nike" && isNike("nike_v") && isNike("nike") && !isNike("styx") && /\+2 de puissance pour chaque autre carte que tu as jouée avant elle/.test(CARDS.nike_v.fx) && CARDS.nike_v.vfx === "nike" && !!holoDir("nike_v"));
+    T("Nike V : 3/3 comme Nike, même personnage, effet identique, holo et effet visuel de Nike", CARDS.nike_v.cost === CARDS.nike.cost && CARDS.nike_v.pow === CARDS.nike.pow && charOf("nike_v") === "nike" && isNike("nike_v") && isNike("nike") && !isNike("styx") && /\+2 de puissance pour chaque autre carte que tu as jouée avant elle/.test(CARDS.nike_v.fx) && CARDS.nike_v.vfx === "nike" && !!holoDir("nike_v"));
     fresh(); S.turn = 6; { const a = card(plain[0], 1), b = card(plain[1], 1), n = card("nike_v"), ap = card("aphrodite"); S.hand.p = [a, b, n, ap];
-      await resolveTurn([a, b, n, ap].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike_v"); T("Nike V + Aphrodite : finit à 10 comme Nike", nk && nk.pow === 10, nk && nk.pow); }
+      await resolveTurn([a, b, n, ap].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike_v"); T("Nike V + Aphrodite : finit à 11 comme Nike", nk && nk.pow === 11, nk && nk.pow); }
     fresh(); S.turn = 5; { const a = card(plain[0], 1), n = card("nike_v"); S.hand.p = [a, n]; await resolveTurn([a, n].map(c => ({ c, li: 0 })), [], false);
-      const nk = find("p", "nike_v"); T("Nike V : +2 par carte jouée avant elle (une carte : 4)", nk && nk.pow === 4, nk && nk.pow); }
-    fresh(); S.turn = 4; { put("p", 0, "styx"); const nk = put("p", 0, "nike_v"); T("Styx : Nike V reçoit aussi +3 (2 + 3)", cardPow("p", 0, nk) === 5, cardPow("p", 0, nk));
+      const nk = find("p", "nike_v"); T("Nike V : +2 par carte jouée avant elle (une carte : 5)", nk && nk.pow === 5, nk && nk.pow); }
+    fresh(); S.turn = 4; { put("p", 0, "styx"); const nk = put("p", 0, "nike_v"); T("Styx : Nike V reçoit aussi +3 (3 + 3)", cardPow("p", 0, nk) === 6, cardPow("p", 0, nk));
       SRC = { s: "e", cost: 3 }; const ok = destroy("p", 0, nk); SRC = null; T("Styx : Nike V détruite par l'adversaire revient en main", ok && S.hand.p.includes(nk) && !S.graveyard.p.includes("nike_v"), ok); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { const m = card("maat"), a = card("apollon"), n = card("nike_v"); S.hand.e = [n, m, a];
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike V posée après Mā'at et Apollon, comme Nike", ids.indexOf("nike_v") === ids.length - 1 && ids.length === 3, ids.join()); }
@@ -692,9 +692,9 @@ async function inPage() {
     fresh(); S.turn = 3; { const ap = card("aphrodite_r"); S.hand.p = [ap]; S.hand.e = [...Array(7)].map(() => card(plain[0])); await resolveTurn([{ c: ap, li: 0 }], [], false); T("Coupe de Minuit : main adverse pleine (7) : pas de carte en plus, rien ne plante, l'énergie est bien donnée", S.hand.e.length === 7 && S.energy === 6, `${S.hand.e.length} / ${S.energy}`); }
     fresh(); S.turn = 3; { const ap = card("aphrodite_r"), a = card("aphrodite"); const r = [[ap, a]]; S.hand.p = [ap]; T("Coupe de Minuit : une Aphrodite ne la rejoue pas (les variantes ne sont pas rejouables) mais elle compte pour Nike", !replayable(ap) && !isAph(ap) && isAph(a) && isAph(card("ulaph"))); }
     /* Nike et les variantes d'Aphrodite (22 octobre, Jordan) : seules Aphrodite et Aphrodite X Yarden ne comptent pas */
-    for (const [id, cnt, nom] of [["aphrodite_r", 4, "Coupe de Minuit"], ["aphrodite_n", 4, "Étoile de Noël"], ["aphrodite", 2, "de base"], ["ulaph", 2, "X Yarden"]]) {
+    for (const [id, cnt, nom] of [["aphrodite_r", 5, "Coupe de Minuit"], ["aphrodite_n", 5, "Étoile de Noël"], ["aphrodite", 3, "de base"], ["ulaph", 3, "X Yarden"]]) {
       fresh(); S.turn = 5; { const a = card(id), n = card("nike"); S.hand.p = [a, n]; await resolveTurn([a, n].map(c => ({ c, li: 0 })), [], false); const nk = find("p", "nike");
-        T(`Nike après Aphrodite ${nom} : ${cnt === 4 ? "elle compte (+2 : Nike à 4)" : "elle ne compte pas (Nike reste à 2)"}`, nk && nk.pow === cnt, nk && nk.pow); } }
+        T(`Nike après Aphrodite ${nom} : ${cnt === 5 ? "elle compte (+2 : Nike à 5)" : "elle ne compte pas (Nike reste à 3)"}`, nk && nk.pow === cnt, nk && nk.pow); } }
     T("Aphrodite et Aphrodite X Yarden : le texte dit qu'elles ne comptent pas pour Nike (FR et EN)", /Ne compte pas pour Nike\./.test(CARDS.aphrodite.fx) && /Ne compte pas pour Nike\./.test(CARDS.ulaph.fx) && /Does not count for Nike\./.test(HELVARA_EN.cards.aphrodite.fx) && /Does not count for Nike\./.test(HELVARA_EN.cards.ulaph.fx) && !/Nike/.test(CARDS.aphrodite_r.fx));
     /* Arès, Duelliste du Dernier Soir */
     fresh(); S.turn = 3; { const ar = card("ares_n"), f = put("e", 0, plain[0], 3); S.hand.p = [ar]; await resolveTurn([{ c: ar, li: 0 }], [], false);
@@ -1633,6 +1633,12 @@ async function inPage() {
     fresh(); S.turn = 6; { const six = put("e", 0, plain[0], 6), five = put("e", 1, plain[1], 5); const l1 = card("lilith"), l2 = card("lilith"); S.hand.p = [l1, l2]; S.energy = 20;
       await resolveTurn([{ c: l1, li: 0 }, { c: l2, li: 1 }], [], false);
       T("Lilith : 5 ou moins depuis le 20 novembre (une carte à 6 reste, une carte à 5 change de camp)", S.board.e[0].includes(six) && S.board.p[1].includes(five), `${S.board.e[0].includes(six)} ${S.board.p[1].includes(five)}`); }
+    S = null; }
+
+  /* Nike, l'Élan de la Victoire (20 novembre) : chaque carte jouée avant elle ce tour gagne +1, où qu'elle soit */
+  { fresh(); S.turn = 6; const a = card(plain[0], 1), b = card(plain[1], 1), n = card("nike"); S.hand.p = [a, b, n]; S.energy = 20;
+    await resolveTurn([{ c: a, li: 0 }, { c: b, li: 2 }, { c: n, li: 1 }], [], false);
+    T("Nike : +2 par carte jouée avant elle (3 + 4 = 7), et chacune d'elles +1, dans son propre lieu (2 et 2)", n.pow === 7 && a.pow === 2 && b.pow === 2, `${n.pow} ${a.pow} ${b.pow}`);
     S = null; }
 
   return res;

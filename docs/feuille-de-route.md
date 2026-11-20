@@ -101,9 +101,10 @@ Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : le
 - ✅ 🛠️ **IA corrigée** (relevé d'une relecture extérieure du code) : une quinzaine de cartes qui frappent l'adversaire ici (Lilith, Ereshkigal, Rusalka, Durga, Izzy Lune de Sang…) n'étaient pas évaluées selon le lieu ; Tentation et Verdict ignoraient certaines protections ; pour les coups d'une ou deux cartes, le deuxième meilleur lieu est maintenant simulé aussi. Nos mesures sous-estimaient donc les cartes qui détruisent.
 - Factions : Helvara 47,8 · Primordial 52,7 · Désir 51,8 · **Jugement 46,6** ; decks avec Ananké 55,1 %. Pire face-à-face : Désir contre Jugement ~56 %, Primordial contre Jugement ~56 %.
 - ✅ **Lilith** : « 5 ou moins » au lieu de 6 (+8,9 → +7,6).
-- 🟣 👤 **Yarden X Apsu** : +10,5 avec l'IA corrigée, même en 10 / 9. Tu l'essaies d'abord, puis on regarde ses vraies statistiques.
+- 🟣 👤 **Yarden X Apsu** : +9,9 en simulation même en 10 / 9, et **87,3 % de victoires sur 150 vraies parties** avant son nerf. Tu l'essaies d'abord, puis on décide.
 - 🟣 Entre +6 et +8 : Ereshkigal +6,7, Apsu +6,6, Arès d'Halloween +6,5, Calypso +6,4, Nyx d'Halloween +6,1, le Troll +6,1.
-- 🟣 👤 **Jugement est la faction la plus faible** (46,6 %, ~43 % contre Primordial et contre Désir), et **Nike ne porte pas sa faction** (decks avec elle 47,4 %, contre 55,1 % pour Ananké). Ta volonté : relever Jugement par Nike. Mesuré sans rien appliquer : Nike avec Verdict 3 → decks Nike 51,0 %, Jugement 47,5 % ; « Nike renforce les Verdicts de +2 » → presque rien. Tu demandes un autre avis avant de choisir.
+- ✅ **Nike, l'Élan de la Victoire** (choix de Jordan, idée d'une relecture extérieure) : 3/3, « +2 de puissance pour chaque autre carte jouée avant elle ce tour, et chacune d'elles gagne +1 de puissance ». Decks avec Nike 47,4 → 53,7 % ; **Jugement 46,6 → 48,6 %**. L'IA de Jugement est corrigée aussi (Apollon, Vesta, Bia, Eir, Chernobog).
+- 🟣 **Helvara est maintenant la faction la plus basse** (47,3 %, ~44 % contre Primordial) : à surveiller, Lien n'a pas encore été mesuré avec l'IA corrigée sur les Escaliers du Marché.
 - 🟣 👤 **Patch note** des nouveautés à préparer à ton retour (sur le modèle de `docs/patch-note-2026-11-18.md`).
 - 🟣 Après le 1er décembre : vraies statistiques d'Ananké, de Yarden X Apsu, de Lilith et de Dionysos dans Supabase (lecture seule). Correction seulement au-delà de ±8 points avec au moins 100 decks.
 - 🟣 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage, pour mesurer Lien sur les Escaliers du Marché (+2 aux cartes Helvara).
@@ -251,3 +252,4 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Verre dépoli (« Liquid Glass ») : barre du bas, puis encadré de toute carte agrandie (Collection, partie, ouverture de paquet), avec repli et version allégée pour les petits téléphones.
 - ✅ Tests rendus indépendants des cartes sans effet (carte du jour, La Source) ; 735 scénarios.
 - ✅ Relecture extérieure du code vérifiée : IA corrigée (cartes qui frappent ici, protections, deuxième lieu simulé), zoom de l'ouverture de paquet réparé (une carte holo n'y affichait aucun texte), verre dépoli sur le zoom d'un lieu, fins de ligne LF forcées (`.gitattributes`). Idées rangées : Défi du jour, pastille ⏳, boss en 6 tours, Serment sur les cartes cachées, répliques des rivaux, Tester mon deck.
+- ✅ Nike, l'Élan de la Victoire (3/3) et IA de Jugement corrigée : Jugement 46,6 → 48,6 %.
