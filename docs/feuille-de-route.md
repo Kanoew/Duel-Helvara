@@ -1,6 +1,6 @@
 # Duel d'Helvara : feuille de route
 
-> Écrite le 18 novembre 2026 par Karina, mise à jour le soir même. Elle rassemble en un seul endroit :
+> Écrite le 18 novembre 2026 par Karina, mise à jour le 20 novembre. Elle rassemble en un seul endroit :
 > l'analyse compétitive du 17 novembre et mon avis (`docs/analyse-competitive-avis-karina.md`),
 > le plan d'action du 16 novembre (`docs/plan-action.md`) et les questions encore ouvertes (`docs/calendrier-et-en-attente.md`).
 > En cas d'écart avec le code, **le code fait foi**.
@@ -19,7 +19,8 @@ Les parties gardent leur ordre d'origine. Un titre en ✅ veut dire que toute la
 ## 1. 🟣 Tes décisions, celles qui débloquent tout le reste
 
 - ✅ **Le premier lieu** : le Trône de Tiamat (puis les quatre autres, voir 3.1).
-- ✅ **Mots-clés de faction : option B**. Ils vont aussi sur les cartes sorties. Il reste à choisir **lesquelles**, faction par faction (voir 3.2).
+- ✅ **Mots-clés de faction : option B**. Ils vont aussi sur les cartes sorties. Les cartes se choisissent faction par faction (voir 3.2) : Helvara choisie le 20 novembre.
+- ✅ **Ordre des mots-clés** (20 novembre) : Lien (Helvara) d'abord, puis Tentation et Verdict, **Primordial en dernier** (Ère, avec un nerf de la faction).
 - ✅ **Tentation (Désir)** : version automatique (la carte choisit pour l'adversaire l'option qui lui fait le plus mal).
 - ✅ **Le tutoriel** : le Serment n'était pas assez mis en avant. Refait le 18 novembre (voir 3.4).
 - ✅ **Prix itch.io** : 0 €, avec une cagnotte façon « offre-moi un café ».
@@ -66,12 +67,18 @@ Les cinq lieux sont codés avec tes illustrations, mesurés sur 48 000 parties s
 - ✅ **Le Marché des Ombres** : fin du tour 4, la plus faible de chaque joueur ici change de camp. Elle garde tout, effets compris, et joue pour son nouveau camp.
 
 ### 3.2 🟣 🛠️ Mots-clés de faction (option B : cartes sorties comprises)
-- 🟣 👤 Choisir, faction par faction, les cartes (sorties ou non) qui reçoivent le mot-clé. Je peux te proposer une première liste.
-- 🟣 🛠️ Mesurer toute la faction avant et après : ajouter un mot-clé à des cartes sorties change tout le méta.
-- 🟣 **Lien** (Helvara) : +1 de puissance par autre carte Helvara ici, avec un plafond. À mesurer avec les Escaliers du Marché, qui donnent déjà +2 aux cartes Helvara.
-- 🟣 **Ère** (Primordial) : effet en plus si la carte est en jeu depuis 2 tours.
-- 🟣 **Tentation** (Désir) : version automatique, décidée.
+Une faction par vague, mesurée avant et après. Ordre décidé le 20 novembre : **Lien → Tentation et Verdict → Ère** (Primordial en dernier).
+- 🟣 **Lien** (Helvara), le chantier en cours :
+  - ✅ 👤 **Texte** : « Lien : +1 de puissance par autre carte Helvara à toi ici. » **Sans plafond** : un lieu tient 4 cartes, donc +3 au plus (la version plafonnée à +2 ne changeait presque rien, mesure du 20 novembre).
+  - ✅ 👤 **Les 7 cartes** (validées le 20 novembre) : sorties, **Passante d'Ouchy**, **Veilleur du Sous-gare**, **Vasseur** (garde son effet) ; cachées sans effet, **La Somnambule du Flon**, **La Reine de Sévelin**, **L'Écolière de Dorigny**, **La Tatoueuse du Flon**.
+  - ✅ Écartées : Colosse du Léman (déjà la plus forte d'Helvara), Funambule (veut être seul), Mendiant (Lien à 0 d'énergie, trop facile), Nammu (question ultra-légendaire ouverte). Possédée, Pénitente, Effigie, Emiri et Artiste restent libres (Juré / Parjure ou ta plume).
+  - ✅ Mesure de départ (6 000 parties, 20 novembre) : Helvara 50,6 % ; aucune carte au-delà de ±8 ; Vasseur la plus faible (−6). Avec Lien et les 4 cachées : Helvara 48,4 %, aucun matchup au-delà de 60 %.
+  - 🟣 🛠️ Coder Lien pour de vrai (moteur, texte FR et EN, aide), **apprendre à l'IA à empiler** ses cartes Helvara, remesurer, `balance-reviewer`.
+  - 🟣 👤 Coût, puissance, rareté et date de sortie des 4 cartes cachées (aujourd'hui provisoires et faibles : 3/3, Reine 4/4).
+  - 🟣 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage, pour mesurer Lien sur les Escaliers du Marché (+2 aux cartes Helvara).
+- 🟣 **Tentation** (Désir) : version automatique, décidée. Doit marcher en jeu simultané.
 - 🟣 **Verdict** (Jugement) : détruit **une** carte adverse ici sous un seuil, en respectant les protections.
+- 🟣 **Ère** (Primordial), en dernier : effet en plus si la carte est en jeu depuis 2 tours. ⚠️ **Primordial surperforme** (55 à 56 % de victoire, 59,9 % contre Désir, à la limite des 60 %) : nerf décidé le 20 novembre, fait avec Ère. Ère ira sur les cartes Primordial faibles.
 - 🟣 👤 Les effets précis de chaque carte : c'est ta plume.
 - 🟣 🛠️ Chaque effet mesuré (outil d'équilibrage + `balance-reviewer`), l'IA apprend à les jouer, cercle des contres vérifié (aucun matchup au-dessus de 60 %).
 
@@ -86,6 +93,7 @@ Les cinq lieux sont codés avec tes illustrations, mesurés sur 48 000 parties s
 - 🟣 Partie rapide avec un deck prêté (parmi les 7 decks prêts) dès la première partie.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
+- 🟣 🛠️ **Verre dépoli (« Liquid Glass »)**, demandé le 20 novembre, sur une branche à part (`claude/liquid-glass`) : seulement la barre du bas et le zoom de carte en partie, jamais les fenêtres pleines ; coût et puissance toujours sur fond opaque ; repli opaque si le navigateur ne gère pas le flou. 👤 Juger les captures avant / après, puis tester la fluidité sur un vrai téléphone.
 
 ### 3.4 bis 🟣 🛠️ Duel en ligne classé et anti-triche (avant la sortie, décidé le 18 novembre)
 Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
@@ -203,3 +211,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Conseils de fin de partie réécrits.
 - ✅ Patch note joueurs : `docs/patch-note-2026-11-18.md`.
 - ✅ Le Voile fixé comme priorité n°1 après la sortie, Chronique 1 réduite à 3 matchs.
+
+### 20 novembre
+- ✅ Lien : mesure de départ d'Helvara, 7 cartes choisies, version sans plafond retenue.
+- ✅ Ordre des mots-clés fixé (Primordial et son nerf en dernier).
