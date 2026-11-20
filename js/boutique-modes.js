@@ -206,7 +206,7 @@ async function rtOpen(kind,name){
   if(kind==="c") roomC=r; else roomQ=r;
   return r;
 }
-function rtClose(kind){ rtTok[kind]++; const r=kind==="c"?roomC:roomQ; if(kind==="c"){ roomC=null; mpBc={}; mpBcAt={}; mpKeys=""; } else roomQ=null; if(r&&r.leave) r.leave(); }
+function rtClose(kind){ rtTok[kind]++; const r=kind==="c"?roomC:roomQ; if(kind==="c"){ roomC=null; mpBc=mpNew(); mpBcAt=mpNew(); mpBcK=mpNew(); mpKeys=""; } else roomQ=null; if(r&&r.leave) r.leave(); }
 function initRoom(){ roomTried=true; render(); lobOpen(); }
 /* ======= Présence en direct (anti-triche, lot B) =======
    Chaque jeu ouvert ET visible rejoint « helvara-lobby » (cloud.js : aucun identifiant de compte, un jeton tiré au hasard) et n'y publie
@@ -220,17 +220,17 @@ async function lobOpen(){
   let r=null; try{ r=await window.claude.use("lobby"); }catch(e){ r=null; } lobConn=false;
   if(!r) return;
   if(document.hidden||lob){ if(r.leave) r.leave(); return; }
-  lob=r; lobSent=-1; lobBc={};
-  if(r.onMessage) r.onMessage(m=>{ if(lob!==r||!m||m.v!==BUILD||typeof m.__k!=="string"||![0,1,2].includes(m.s)) return; lobBc[m.__k]=m.s; const k=lobOthers().length+"|"+lobFree()+"|"+lobSeeking(); if(k!==lobSeen){ lobSeen=k; if(screen==="home") render(); } });
+  lob=r; lobSent=-1; lobBc=Object.create(null);
+  if(r.onMessage) r.onMessage(m=>{ if(lob!==r||!m||m.v!==BUILD||!/^t[0-9a-z]{1,10}$/.test(m.__k||"")||![0,1,2].includes(m.s)) return; lobBc[m.__k]=m.s; const k=lobOthers().length+"|"+lobFree()+"|"+lobSeeking(); if(k!==lobSeen){ lobSeen=k; if(screen==="home") render(); } });
   r.onPeers(()=>{ if(lob!==r) return;
     if(r.peers().length>LOB_MAX){ lobFull=true; lobClose(); return; }
     const k=lobOthers().length+"|"+lobFree()+"|"+lobSeeking(); if(k!==lobSeen){ lobSeen=k; if(screen==="home") render(); } }, ()=>{ if(lob===r) lobClose(); });
   lobSync();
 }
-function lobClose(){ const r=lob; lob=null; lobSent=-1; lobSeen=""; lobBc={}; if(r&&r.leave) r.leave(); }
+function lobClose(){ const r=lob; lob=null; lobSent=-1; lobSeen=""; lobBc=Object.create(null); if(r&&r.leave) r.leave(); }
 /* L'état part en présence (rationnée : 1 envoi par 30 s pour le lobby, voir cloud.js) ET en diffusion (instantanée) ; lobBc garde
    les états reçus en diffusion par clé de présence, plus récents que la présence */
-let lobBc={};
+let lobBc=Object.create(null);
 function lobSync(){ if(!lob) return; const s=lobState(); if(s===lobSent) return; lobSent=s; lob.presence({v:BUILD,s}).catch(()=>{}); if(lob.send) lob.send({v:BUILD,s}).catch(()=>{}); }
 const lobS=p=>lobBc[p.key]!=null?lobBc[p.key]:p.presence.s;
 const lobOthers=()=>lob?lob.peers().filter(p=>!p.sameTab&&p.presence&&(p.presence.v===BUILD||(lobBc[p.key]!=null))):[];
@@ -267,11 +267,16 @@ setInterval(()=>{ if(!mpLive()||!roomC) { mpGoneAt=0; return; }
   const gone=!mpOpp(); if(gone!==S.mp.gone){ S.mp.gone=gone; if(screen==="play") render(); }
   if(!gone){ mpGoneAt=0; return; } mpGoneAt=mpGoneAt||Date.now(); if(Date.now()-mpGoneAt>10000) mpRejoin(); },3000);
 /* Derniers états reçus en diffusion, par jeton de joueur (vidé à la fermeture du salon) */
-let mpBc={}, mpBcAt={}, mpKeys="";
-function mpOnMsg(m){ const x=m&&m.mp; if(!x||typeof x!=="object"||typeof x.tok!=="string"||!myMp||x.code!==myMp.code) return;
-  mpBcAt[x.tok]=Date.now(); const o=mpBc[x.tok]; if(!o||(+x.seq||0)>(+o.seq||0)){ mpBc[x.tok]=x; mpTick(); } }
+/* mpBc : par jeton (tok), seulement pour un adversaire pas encore visible en présence ; mpBcK : par clé de présence de l'expéditeur
+   (__k), la seule source acceptée quand l'adversaire est visible en présence : un tiers qui connaît le code ne peut pas usurper son état. */
+const mpNew=()=>Object.create(null), TOK_RE=/^[0-9a-f]{16}$/, KEY_RE=/^t[0-9a-z]{1,10}$/;
+let mpBc=mpNew(), mpBcAt=mpNew(), mpBcK=mpNew(), mpKeys="";
+function mpOnMsg(m){ const x=m&&m.mp; if(!x||typeof x!=="object"||!TOK_RE.test(x.tok||"")||!KEY_RE.test(m.__k||"")||!myMp||x.code!==myMp.code) return;
+  const sq=+x.seq||0; if(sq>Date.now()+864e5) return;   /* numéro de séquence absurde : refusé */
+  mpBcAt[x.tok]=Date.now(); const k=mpBcK[m.__k]; if(!k||sq>(+k.seq||0)) mpBcK[m.__k]=x;
+  const o=mpBc[x.tok]; if(!o||sq>(+o.seq||0)) mpBc[x.tok]=x; mpTick(); }
 /* Signe de vie : la diffusion n'a pas de quota, elle remplace la présence quand celle-ci attend son tour (enchaînement de duels) */
-setInterval(()=>{ if(roomC&&myMp&&myMp.code) mpCast(); },12000);
+setInterval(()=>{ if(roomC&&myMp&&myMp.code&&!document.hidden) mpCast(); },12000);
 function mpClear(){ myMp=null; mpMsg=""; rtClose("c"); }
 function mpBase(role,code){ return {v:1,ver:BUILD,code,role,tok:mpTok(),nick:P.name.slice(0,24),av:(P.avatar&&P.owned.includes(P.avatar))?P.avatar:null,deck:[...P.deck],lp:locPool(),ft:featureLoc()}; }
 const mpNewCode=()=>MP_PLACES[mpRandInt(MP_PLACES.length)]+"-"+Array.from({length:6},()=>MP_ALPHA[mpRandInt(MP_ALPHA.length)]).join("");
@@ -389,7 +394,7 @@ function mpOppB(){ if(!myMp) return null; const other=myMp.role==="host"?"guest"
   const m=myMp.role==="host"?(myMp.oppTok?l.find(x=>x.tok===myMp.oppTok):l.find(x=>validDeck(x.deck))):(l.find(x=>x.oppTok===myMp.tok)||l.find(x=>!x.oppTok));
   return m?{sameTab:false,presence:{mp:m}}:null; }
 /* L'adversaire : sa présence, avec l'état le plus récent reçu en diffusion s'il est plus neuf */
-function mpOpp(){ const p=mpOppP(); if(!p) return mpOppB(); const b=mpBc[p.presence.mp.tok]; return b&&(+b.seq||0)>(+p.presence.mp.seq||0)?{...p,presence:{...p.presence,mp:b}}:p; }
+function mpOpp(){ const p=mpOppP(); if(!p) return mpOppB(); const b=p.key?mpBcK[p.key]:null; return b&&(+b.seq||0)>(+p.presence.mp.seq||0)?{...p,presence:{...p.presence,mp:b}}:p; }
 
 function mpRoomFull(){ if(!roomC||!myMp||myMp.role!=="guest") return false; return roomC.peers().some(p=>!p.sameTab&&p.presence&&p.presence.mp&&p.presence.mp.code===myMp.code&&p.presence.mp.role==="host"&&p.presence.mp.oppTok&&p.presence.mp.oppTok!==myMp.tok); }
 const validDeck=d=>Array.isArray(d)&&d.length===12&&new Set(d).size===12&&d.every(id=>POOL.includes(id));
