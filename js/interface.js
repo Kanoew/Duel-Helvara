@@ -359,6 +359,7 @@ function homeHTML(){
   const inGame=S && !S.over && !S.blitz && !S.rp, resumable=!inGame&&duelResumable();
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
   return `
+  ${APERCU&&!window.__sandbox?`<div class="hint apercu">Avant-première activée sur cet appareil · <a href="?apercu=0">la retirer</a></div>`:""}
   ${noticeHTML()}
   ${vitrineHTML()}
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
@@ -596,6 +597,7 @@ function shopHTML(){
     <div class="opened ${lp.res.length>3?"many":""}">${lp.res.map((r,k)=>`<div class="cell" style="--d:${(k*(lp.res.length>3?.12:.35)).toFixed(2)}s">${fullCard(r.id,CARDS[r.id].r==="L"&&r.isNew?"legend":"")}<span class="badge ${r.isNew?"new":"dup"}">${r.isNew?"Nouvelle":`Doublon · +${r.v} CHF`}</span></div>`).join("")}</div>
     <div class="row2" style="margin-top:12px">${lp.pid==="brulure"?(deckReady()?`<button class="primary" data-act="firstplay">${P.w+P.l+P.d?"Jouer avec ce deck":"Jouer ma première partie"}</button><button class="ghost" data-act="go" data-to="deck">Voir mon deck</button>`:`<button class="primary" data-act="go" data-to="deck">Voir mon deck</button>`):lp.res.some(r=>r.isNew)?`<button class="ghost" data-act="go" data-to="deck">Ajouter à mon deck</button>`:""}</div>
   </section>`:""}
+  ${window.__sandbox?`<section class="sec sbtest"><div class="eyebrow">Bac à sable · ouvertures de test</div><div class="row2"><button class="ghost small" data-act="sbtirage" data-k="L">Avec une légendaire</button><button class="ghost small" data-act="sbtirage" data-k="U">Avec une ultra-légendaire</button></div></section>`:""}
   ${stallHTML()}
   <div class="packs">${tiles}</div>
   <section class="collbar"><div class="qt"><span>Collection</span><b>${owned} / ${tot}</b></div>
@@ -1342,6 +1344,7 @@ document.addEventListener("click", e=>{
     /* Fin de la Première Brûlure : partie contre l'IA tout de suite (pas d'attente d'un humain pour un nouveau joueur) */
     case "daily": if(dailyDone()||!dailyOpen()) return; sheet=null; sfx("click"); migratedNote=""; newGame({daily:true}); window.scrollTo(0,0); return;
     case "dailycopy": dailyCopy(); return;
+    case "sbtirage": sandboxTirage(el.dataset.k); return;
     case "dailyresume": if(!dailyResumable()) return; sheet=null; sfx("click"); migratedNote=""; dailyResume().then(()=>window.scrollTo(0,0)); return;
     case "firstplay": sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": sheet=null; screen="play"; sfx("click"); render(); return;

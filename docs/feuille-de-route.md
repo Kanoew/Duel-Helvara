@@ -258,3 +258,6 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Agents : `balance-reviewer` et `playtest-qa` sur Sonnet, règle de délégation dans `CLAUDE.md`.
 - ✅ Accueil des nouveaux joueurs (3.4) : fin de la Première Brûlure, pastille ⏳, aperçu du bonus au glisser-déposer, Défi du jour (`alpha-0.49`).
 - 🟣 Deux tests de l'IA autour de Nike échouent par moments (environ 1 lancement sur 10, déjà avant ces changements) : à rendre fiables.
+- ✅ **Avant-première** : le Défi du jour et le nouveau Tirage ne sont visibles que dans le bac à sable (`?date=`) ou sur un appareil où `?apercu=1` a été ouvert (`?apercu=0` pour l'enlever). 👤 Leur date de sortie pour tous : à choisir (`NOUV`, `js/langue-profil.js`). Les petites améliorations (Première Brûlure, pastille ⏳, aperçu du bonus, tutoriel) sortent pour tous à la fusion.
+- ✅ Bac à sable : les paquets restent ouvrables avec toutes les cartes, fusions comprises, et deux boutons de test (« avec une légendaire », « avec une ultra-légendaire ») dans la boutique.
+- 🟣 👤 Bouton de la Nageuse du Lac vu en partie alors qu'elle sort en mars : capture demandée (aucune voie trouvée dans le code pour l'obtenir avant sa date).

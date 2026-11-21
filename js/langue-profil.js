@@ -47,6 +47,11 @@ const POOL = Object.keys(CARDS).filter(k=>!CARDS[k].token);
 const STARTER = ["passante","coursier","ishara","felix","veilleur","celeste","colosse","esquille","yarden","izzy","devote","thot"];
 const today=()=>window.__today||dayKey();
 const REL=id=>!CARDS[id].rel||today()>=CARDS[id].rel;
+/* Nouveautés en avant-première (21 novembre) : visibles dans le bac à sable (?date=), sur un appareil où ?apercu=1 a été ouvert
+   (gardé sur l'appareil ; ?apercu=0 l'enlève), ou pour tout le monde à partir de leur date. 2099 = date pas encore choisie par Jordan. */
+const NOUV={defi:"2099-01-01", tirage:"2099-01-01"};
+const APERCU=(()=>{ try{ const m=/[?&]apercu=([01])(?=&|$)/.exec(location.search); if(m){ if(m[1]==="1") localStorage.setItem("helvara-apercu","1"); else localStorage.removeItem("helvara-apercu"); } return localStorage.getItem("helvara-apercu")==="1"; }catch(e){ return false; } })();
+const nouv=k=>!!window.__sandbox||APERCU||today()>=NOUV[k];
 const avail=()=>POOL.filter(REL);
 const PACK=(ex)=>POOL.filter(id=>REL(id)&&CARDS[id].r!=="U"&&(!CARDS[id].ex||CARDS[id].ex===ex));
 const ULS=[{id:"nike",req:[],fac:"jugement",min:8,n:"8 cartes Jugement, Nike comprise",quest:{k:"jugement",n:50}},{id:"ananke",req:[],fac:"primordial",min:8,n:"8 cartes Primordial, Ananké comprise",quest:{k:"primordial",n:50}},{id:"hedone",req:[],fac:"desir",min:8,n:"8 cartes Désir, Hédoné comprise",quest:{k:"desir",n:50}},{id:"source",req:[],fac:"helvara",min:8,n:"8 cartes Helvara, La Source comprise",quest:{k:"helvara",n:50}},

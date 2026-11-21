@@ -11,6 +11,8 @@ const OUV_TIMING = {
   L: { wait: 380, tension: 1800, reveal: 450, reward: null },   /* 21 novembre : +550 ms pour trois battements de cœur */
   U: { wait: 800, tension: 3250, reveal: 550, reward: null }    /* 21 novembre : le faux arrêt dure 1,4 s, le temps que l'ombre de Tiamat passe */
 };
+/* Tirage d'avant le 21 novembre (sans déchirure, battement ni ombre) : gardé tant que la nouveauté « tirage » n'est pas sortie (nouv, js/langue-profil.js) */
+const OUV_TIMING_AVANT = { L: { wait: 380, tension: 1250, reveal: 450, reward: null }, U: { wait: 800, tension: 2300, reveal: 550, reward: null } };
 /* Couleurs et palettes du ciel par rareté (lettres du jeu : C R E L U) */
 const OUV_LOOK = {
   C: { color: "#9aa9bf", glow: "transparent" },
@@ -29,6 +31,8 @@ function ouvrirTirage(op){
   if(document.getElementById("tirage")) return;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches, K = reduced ? 0.25 : 1;
   const tr = t => (typeof trUI === "function" ? trUI(t) : t);
+  const fx2 = typeof nouv === "function" && nouv("tirage");   /* déchirure, battement de cœur, ombre de Tiamat : avant-première */
+  const timing = r => (!fx2 && OUV_TIMING_AVANT[r]) || OUV_TIMING[r];
   const rk = id => (OUV_TIMING[CARDS[id].r] ? CARDS[id].r : "C");
   const cards = op.res.map(r => ({ id: r.id, isNew: r.isNew, v: r.v, r: rk(r.id), open: false }));
   const N = cards.length, grid = N > 5;
@@ -201,7 +205,7 @@ function ouvrirTirage(op){
 
   /* ---------- Battement de cœur (légendaire, ultra-légendaire) : vibration « boum-boum », halo qui pulse au bord de l'écran ---------- */
   function heartbeat(color, strong){
-    if(skipped || closed) return;
+    if(!fx2 || skipped || closed) return;
     sfxQ("heart"); buzz(strong ? [70, 120, 110] : [45, 120, 75]);
     pulse.style.setProperty("--pc", color);
     anim(pulse, [{ opacity: 0 }, { opacity: strong ? 1 : .7, offset: .12 }, { opacity: .12, offset: .3 }, { opacity: strong ? .85 : .55, offset: .42 }, { opacity: 0 }], { duration: 640, easing: "ease-out" });
@@ -219,7 +223,7 @@ function ouvrirTirage(op){
     return "M" + top.join(" L") + " L" + bot.reverse().join(" L") + "Z";
   }
   async function tiamatShade(cy, dur){
-    if(reduced || skipped || closed) return;
+    if(!fx2 || reduced || skipped || closed) return;
     const Lw = Math.round(SW * 1.9), H = Math.round(Math.min(SH * .5, SW * 1.15)), d = shadePath(Lw, H);
     shade.innerHTML = `<svg width="${Lw}" height="${H}" viewBox="0 0 ${Lw} ${H}" aria-hidden="true"><defs><filter id="tshb" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation="7"/></filter></defs>
       <path d="${d}" fill="none" stroke="rgba(255,120,190,.5)" stroke-width="10" filter="url(#tshb)"/><path d="${d}" fill="none" stroke="rgba(150,170,255,.35)" stroke-width="4" filter="url(#tshb)"/>
@@ -269,7 +273,7 @@ function ouvrirTirage(op){
   let tearing = null, tearTick = 0, tearDrag = 0;
   function setTear(p){ pack.style.setProperty("--tp", p.toFixed(3)); const k = Math.floor(p * 5); if(k > tearTick){ tearTick = k; buzz(8); } }
   pack.style.setProperty("--tc", tearCol);
-  pack.addEventListener("pointerdown", e => { if(state !== "pack" || e.button > 0) return; tearing = { id: e.pointerId, x0: e.clientX, p: 0, moved: false }; tearTick = 0; try{ pack.setPointerCapture(e.pointerId); }catch(_){} });
+  pack.addEventListener("pointerdown", e => { if(!fx2 || state !== "pack" || e.button > 0) return; tearing = { id: e.pointerId, x0: e.clientX, p: 0, moved: false }; tearTick = 0; try{ pack.setPointerCapture(e.pointerId); }catch(_){} });
   pack.addEventListener("pointermove", e => {
     if(!tearing || e.pointerId !== tearing.id || state !== "pack") return;
     const dx = Math.abs(e.clientX - tearing.x0), w = pack.getBoundingClientRect().width;
@@ -293,8 +297,9 @@ function ouvrirTirage(op){
     const flap = $(".t-flap");
     anim(flap, [{ transform: "none", opacity: 1 }, { transform: "translate(60px,-90px) rotate(28deg)", opacity: 0 }], { duration: 380, easing: "cubic-bezier(.3,.6,.4,1)" });
     const pr = pack.getBoundingClientRect();
-    sparkle(pr.left + pr.width / 2, pr.top + 20, [tearCol, "#ffffff", tearCol], 18 + RORD[best] * 10, 3.5 + RORD[best] * .6);   /* la lumière annonce la meilleure carte du paquet */
-    if(RORD[best] >= 1) wave(pr.left + pr.width / 2, pr.top + pr.height * .12, tearCol, 4 + RORD[best], 34 + RORD[best] * 4);
+    if(!fx2) sparkle(pr.left + pr.width / 2, pr.top + 20, ["#f0c94d", "#ffffff", "#c8b4ff"], 26, 4);
+    else sparkle(pr.left + pr.width / 2, pr.top + 20, [tearCol, "#ffffff", tearCol], 18 + RORD[best] * 10, 3.5 + RORD[best] * .6);   /* la lumière annonce la meilleure carte du paquet */
+    if(fx2 && RORD[best] >= 1) wave(pr.left + pr.width / 2, pr.top + pr.height * .12, tearCol, 4 + RORD[best], 34 + RORD[best] * 4);
     await sleep(110);
     fan.hidden = false;
     const slots = [...fan.children];
@@ -315,7 +320,7 @@ function ouvrirTirage(op){
   /* ---------- Révélation ---------- */
   async function reveal(i){
     state = "busy"; current = i; say("");
-    const c = cards[i], T = OUV_TIMING[c.r], L = OUV_LOOK[c.r], slot = fan.children[i];
+    const c = cards[i], T = timing(c.r), L = OUV_LOOK[c.r], slot = fan.children[i];
     const W = Math.round(Math.min(280, SW * .6, (SH - 200) / 1.5)), H = Math.round(W * 1.5);
     const fx = Math.round((SW - W) / 2), fy = Math.max(48, Math.round((SH - H) / 2 - 36));
     focus.getAnimations().forEach(a => a.cancel());
@@ -363,7 +368,7 @@ function ouvrirTirage(op){
       await sleep(d);
     } else if(c.r === "U"){
       /* deux battements → la galaxie s'enroule en accélérant → FAUX ARRÊT → explosion */
-      const [b1, b2, b3, w1, w2, w3, stop] = part(160 / 3250, 220 / 3250, 320 / 3250, 450 / 3250, 400 / 3250, 300 / 3250, 1400 / 3250);
+      const tt = T.tension, [b1, b2, b3, w1, w2, w3, stop] = part(160 / tt, 220 / tt, 320 / tt, 450 / tt, 400 / tt, 300 / tt, (tt - 1850) / tt);   /* faux arrêt : 1,4 s avec l'ombre, 0,45 s sans */
       heartbeat(L.color); later(() => heartbeat(L.color), b1 + b2); later(() => heartbeat(L.color, true), b1 + b2 + b3 + w1 + w2);
       const beats = b1 + b2 + b3, wind = w1 + w2 + w3;
       sky.target = .45; sky.spin = .012; sky.inflow = .2;
@@ -380,7 +385,7 @@ function ouvrirTirage(op){
       if(closed || skipped) return;
       sky.freeze = true;                                     /* tout se fige : galaxie immobile, halo qui retombe, plus de tremblement */
       anim(glow, [{ opacity: 1 }, { opacity: .12 }], { duration: 180 });
-      sky.target = 1;                                        /* le ciel reste allumé : c'est l'ombre qui l'éteint en passant */
+      sky.target = fx2 ? 1 : .6;                             /* avec l'ombre, le ciel reste allumé : c'est elle qui l'éteint en passant */
       shaker.getAnimations().forEach(a => a.cancel());
       tiamatShade(cy, stop * .95);
       await sleep(stop);
@@ -561,6 +566,6 @@ function ouvrirTirage(op){
   pack.addEventListener("click", e => { e.stopPropagation(); if(Date.now() - tearDrag < 400) return; openPack(false); });   /* une simple touche ouvre toujours le paquet */
 
   sizeCanvas(); sizePack(); buildFan();
-  say("Déchire le paquet ou touche-le");
+  say(fx2 ? "Déchire le paquet ou touche-le" : "Touche le paquet");
   pack.focus({ preventScroll: true });
 }

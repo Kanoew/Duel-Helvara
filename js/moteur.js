@@ -104,12 +104,12 @@ function dailyPlan(d=today()){
   const locs=locPool().slice().sort(); for(let i=locs.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [locs[i],locs[j]]=[locs[j],locs[i]]; }
   return {d, mine:mine.id, foe:foe.id, rival:rival.id, locs:locs.slice(0,3), seed:(R()*2147483647)|0};
 }
-const dailyOpen=()=>!!(P.tuto&&P.starter);
+const dailyOpen=()=>!!(P.tuto&&P.starter&&nouv("defi"));
 const dailyDone=()=>!!(P.dy&&P.dy.d===today());
 /* Reprise du défi après un rechargement : la partie du jour est reconstruite (même graine), puis les tours déjà joués sont rejoués
    en silence avec les coups gardés dans P.dy.run (les tiens, ceux de l'IA et les deux Serments), comme la reprise d'un duel en ligne */
 function dailySave(){
-  if(window.__wiped||!S||!S.daily||S.rs||!S.rec||!P.dy||P.dy.d!==S.daily.d||P.dy.res!=="abandon") return;
+  if((window.__wiped&&!window.__sandbox)||!S||!S.daily||S.rs||!S.rec||!P.dy||P.dy.d!==S.daily.d||P.dy.res!=="abandon") return;
   P.dy.run={turns:S.rec.turns.map(t=>({p:t.p,e:t.e,sw:t.sw})),op:S.rec.op||null,oe:S.rec.oe||null}; save();
 }
 const dailyResumable=()=>!!(P.dy&&P.dy.d===today()&&P.dy.res==="abandon"&&P.dy.run&&!(S&&S.daily&&!S.over));
@@ -146,7 +146,7 @@ function newGame(opt){
     log:[], sel:null, info:null, busy:false, over:null};
   S.feat=!firstEver&&locIds.includes(featureLoc())?featureLoc():null; /* lieu à l'honneur présent dans cette partie */
   if(dy){ RNG=mulberry(dy.seed); S.daily={d:dy.d,pc:dy.mine}; S.deck.p=gShuffle(PRECONS.find(x=>x.id===dy.mine).cards.filter(id=>CARDS[id]).map(mk)); S.rival={id:dy.rival,mood:rivalOf(dy.rival).mood};
-    if(!window.__wiped&&!resume){ P.dy={d:dy.d,res:"abandon",run:{turns:[],op:null,oe:null}}; save(); } }   /* l'essai du jour est compté dès le lancement ; après un rechargement, il se reprend (dailyResume) */
+    if((!window.__wiped||window.__sandbox)&&!resume){ P.dy={d:dy.d,res:"abandon",run:{turns:[],op:null,oe:null}}; save(); } }   /* l'essai du jour est compté dès le lancement ; après un rechargement, il se reprend (dailyResume) */
   else S.rival=drawRival(S.aiTier);
   const ai=dy?aiPreconDeck(dy.foe,S.aiTier,true,false):rivalDeck(S.rival,S.aiTier,false,false); S.deck.e=(dy?gShuffle:shuffle)(ai.deck.map(mk)); S.aiFac=ai.fac; if(typeof preloadFoe==="function") preloadFoe(); /* range les illustrations du deck adverse pour jouer hors ligne */
   /* Replay (25 octobre) : graine du hasard de la partie et ordre exact des decks ; les coups de chaque tour sont ajoutés par resolveTurn */
@@ -1339,7 +1339,7 @@ function finish(){
     const res=pw>ew?"win":ew>pw?"lose":pt>et?"win":et>pt?"lose":"draw", gain=res==="win"?DAILY.win:DAILY.other;
     /* Défi du jour : ni étoiles, ni quêtes, ni journal des factions, ni statistiques de cartes (le deck est prêté) ; le Serment suit la règle habituelle mais ne rapporte pas de CHF */
     const oath=S.oath!=null?{kept:leader(S.oath)==="p",cross:S.aiOath===S.oath}:null;
-    if(!window.__wiped){ const d=S.daily.d, y=new Date(d+"T12:00:00"); y.setDate(y.getDate()-1);
+    if(!window.__wiped||window.__sandbox){ const d=S.daily.d, y=new Date(d+"T12:00:00"); y.setDate(y.getDate()-1);
       P.dys=P.dyl===dayKey(y)?(P.dys||0)+1:1; P.dyl=d; if(res==="win") P.dyw=(P.dyw||0)+1;
       P.dy={d,res,w:rows.map(r=>r.w||""),oath:oath?(oath.kept?"kept":"broken"):"",pc:S.daily.pc}; P.chf+=gain; save(); }
     S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,daily:true,oath};

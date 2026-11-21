@@ -1017,6 +1017,8 @@ body:has(.sandbar) #app{padding-top:62px}
 .cdjour .cdart .art{background-size:cover;background-position:center}
 .cdjour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cdjour .cdtx b{font-family:var(--display);font-size:17px}
+.apercu{text-align:center;margin:6px 0 2px;color:var(--warm)}
+.apercu a{color:inherit}
 /* Défi du jour (accueil) : même gabarit que la carte du jour, bouton à droite */
 .defijour{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:10px 0;border-left:3px solid var(--me)}
 .defijour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
