@@ -564,7 +564,7 @@ function shopHTML(){
   ${hlStarter?`<div class="notice">Voilà tes 100 CHF. Achète la <b>Première Brûlure</b> : 12 cartes pour construire ton premier deck.</div>`:""}
   ${lp?`<section class="sec"><h2>${lp.name}</h2>
     <div class="opened ${lp.res.length>3?"many":""}">${lp.res.map((r,k)=>`<div class="cell" style="--d:${(k*(lp.res.length>3?.12:.35)).toFixed(2)}s">${fullCard(r.id,CARDS[r.id].r==="L"&&r.isNew?"legend":"")}<span class="badge ${r.isNew?"new":"dup"}">${r.isNew?"Nouvelle":`Doublon · +${r.v} CHF`}</span></div>`).join("")}</div>
-    <div class="row2" style="margin-top:12px">${lp.pid==="brulure"?`<button class="primary" data-act="go" data-to="deck">Voir mon deck</button>`:lp.res.some(r=>r.isNew)?`<button class="ghost" data-act="go" data-to="deck">Ajouter à mon deck</button>`:""}</div>
+    <div class="row2" style="margin-top:12px">${lp.pid==="brulure"?(deckReady()?`<button class="primary" data-act="firstplay">${P.w+P.l+P.d?"Jouer avec ce deck":"Jouer ma première partie"}</button><button class="ghost" data-act="go" data-to="deck">Voir mon deck</button>`:`<button class="primary" data-act="go" data-to="deck">Voir mon deck</button>`):lp.res.some(r=>r.isNew)?`<button class="ghost" data-act="go" data-to="deck">Ajouter à mon deck</button>`:""}</div>
   </section>`:""}
   ${stallHTML()}
   <div class="packs">${tiles}</div>
@@ -1287,6 +1287,8 @@ document.addEventListener("click", e=>{
     case "rpauto": if(S&&S.rp){ S.rp.auto=!S.rp.auto; sfx("click"); render(); if(S.rp.auto) rpAuto(); } return;
     case "rpquit": S=null; screen="hist"; sfx("click"); render(); window.scrollTo(0,0); return;
     case "play": if(playSeek()){ sfx("click"); render(); return; } sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
+    /* Fin de la Première Brûlure : partie contre l'IA tout de suite (pas d'attente d'un humain pour un nouveau joueur) */
+    case "firstplay": sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": sheet=null; screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
     case "cancelname": editName=false; render(); return;

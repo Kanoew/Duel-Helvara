@@ -229,7 +229,7 @@
     "Pack de départ · 12 cartes":"Starter pack · 12 cards", "Tu as déjà toutes les cartes de ces raretés":"You already own every card of these rarities",
     "Collection complète":"Collection complete", "Ouvre d'abord la Première Brûlure":"Open the First Burn first", "Acheter et ouvrir":"Buy and open",
     "Voilà tes 100 CHF. Achète la":"Here are your 100 CHF. Buy the", ": 12 cartes pour construire ton premier deck.":": 12 cards to build your first deck.",
-    "Échoppe du jour":"Daily stall", "Déjà à toi":"Already yours", "Nouvelle":"New", "Voir mon deck":"View my deck", "Ajouter à mon deck":"Add to my deck",
+    "Échoppe du jour":"Daily stall", "Déjà à toi":"Already yours", "Nouvelle":"New", "Voir mon deck":"View my deck", "Jouer ma première partie":"Play my first game", "Ajouter à mon deck":"Add to my deck",
     /* classement */
     "actif":"active", "Les 100 meilleurs de la saison. « actif » signale les joueurs vus ces 10 dernières minutes.":"The season's top 100. “active” marks players seen in the last 10 minutes.",
     "Ta progression n'est pas sauvegardée sur ton compte : tu n'apparais pas dans le classement des autres.":"Your progress isn't saved to your account: you don't appear in other players' leaderboard.",
