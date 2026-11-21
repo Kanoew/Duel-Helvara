@@ -1640,6 +1640,12 @@ async function inPage() {
     await resolveTurn([{ c: a, li: 0 }, { c: b, li: 2 }, { c: n, li: 1 }], [], false);
     T("Nike : +2 par carte jouée avant elle (3 + 4 = 7), et chacune d'elles +1, dans son propre lieu (2 et 2)", n.pow === 7 && a.pow === 2 && b.pow === 2, `${n.pow} ${a.pow} ${b.pow}`);
     S = null; }
+  /* Détail d'une carte (« +1 · Nike ») : chaque bonus noté une seule fois, la somme des lignes = puissance actuelle − puissance de base (doublons signalés par Jordan le 21 novembre) */
+  { fresh(); S.turn = 6; const t = card("tefnut"), m = card("maat"), pd = put("p", 2, "pandore", 0), n = card("nike"), ap = card("aphrodite"); S.hand.p = [t, m, n, ap];
+    await resolveTurn([{ c: t, li: 2 }, { c: m, li: 2 }, { c: n, li: 0 }, { c: ap, li: 0 }], [], false);
+    const bad = S.board.p.flat().filter(c => (c.mods || []).reduce((s, x) => s + x.v, 0) !== c.pow - CARDS[c.id].pow).map(c => `${c.id} ${c.pow}/${CARDS[c.id].pow} ${JSON.stringify(c.mods)}`);
+    T("Détail des bonus : pas de doublon (Nike + Aphrodite, Mā‘at, Tefnut), la liste correspond à la puissance", !bad.length && t.mods.filter(x => x.src === "Nike").length === 2, bad.join(" | ") || JSON.stringify(t.mods));
+    S = null; }
 
   return res;
 }
