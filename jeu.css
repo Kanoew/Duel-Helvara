@@ -1008,6 +1008,11 @@ body:has(.sandbar) #app{padding-top:62px}
 .cdjour .cdart .art{background-size:cover;background-position:center}
 .cdjour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cdjour .cdtx b{font-family:var(--display);font-size:17px}
+/* Défi du jour (accueil) : même gabarit que la carte du jour, bouton à droite */
+.defijour{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:10px 0;border-left:3px solid var(--me)}
+.defijour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.defijour .cdtx b{font-family:var(--display);font-size:17px}
+.defijour button{flex:0 0 auto;max-width:46%}
 .cdjour .eyebrow{color:var(--warm)}
 /* Cadres de fête : cadre fin posé dans la carte (il suit son inclinaison) ; clics laissés à la carte */
 .full>.cadre,.hc-card>.cadre{position:absolute;inset:0;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}

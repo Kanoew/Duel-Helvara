@@ -283,6 +283,34 @@ function vitrineHTML(){
   return `<section class="vitrinewrap">${seasonDeco("fan")}<div class="fan"${fan.length===3?' data-n="3"':""} aria-label="Vitrine : glisse pour faire tourner les cartes">${order.map((id,k)=>{ const h=!!holoDir(id)&&CARDS[id].r==="U"; return `<button class="fcard" data-act="fantap" data-pos="${pos[k]}" data-id="${id}" aria-label="${pos[k]===0?"Agrandir ":"Mettre en avant "}${CARDS[id].name}">${fullCard(id,h?"fanh":"")}${h?tileHolo(id,"f"+id,12,true):""}</button>`; }).join("")}</div>
     <div class="vfoot"><span class="hint">Glisse pour faire tourner</span><button class="ghost small" data-act="fanpick">Choisir mes cartes</button></div></section>`;
 }
+/* Défi du jour : carte d'accueil (après le tutoriel et la Première Brûlure), un essai par jour, résultat à copier pour Discord */
+let dailyCopied=0;
+function dailyStreak(){ if(!P.dys||!P.dyl) return 0; const y=new Date(today()+"T12:00:00"); y.setDate(y.getDate()-1); return P.dyl===today()||P.dyl===dayKey(y)?P.dys:0; }
+function dailyText(){
+  const y=P.dy; if(!y||y.res==="abandon") return "";
+  const en=LANG==="en", em=y.w.map(w=>w==="p"?"🟢":w==="e"?"🔴":"⚪").join(""), dt=frDate(y.d.slice(5));
+  const res=en?{win:"Victory",lose:"Defeat",draw:"Draw"}[y.res]:{win:"Victoire",lose:"Défaite",draw:"Égalité"}[y.res];
+  const oa=y.oath==="kept"?(en?"Oath kept ⚖":"Serment tenu ⚖"):y.oath==="broken"?(en?"Oath broken":"Serment rompu"):(en?"No Oath":"Sans Serment");
+  return `${en?"Helvara Daily":"Défi d'Helvara"} · ${dt}\n${em} · ${res} · ${oa}\nhttps://kanoew.github.io/Duel-Helvara/`;
+}
+function dailyCopy(){
+  const t=dailyText(); if(!t) return;
+  const done=()=>{ dailyCopied=Date.now(); sfx("coin"); render(); setTimeout(()=>{ if(Date.now()-dailyCopied>=1900) render(); },2000); };
+  const old=()=>{ const a=document.createElement("textarea"); a.value=t; a.setAttribute("readonly",""); a.style.cssText="position:fixed;left:-9999px;top:0"; document.body.appendChild(a); a.select(); try{ document.execCommand("copy"); }catch(_){} a.remove(); done(); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done,old); else old();
+}
+const dailyCopyLabel=()=>Date.now()-dailyCopied<2000?"Copié ✓":"Copier mon résultat";
+function dailyHTML(){
+  if(!dailyOpen()) return "";
+  const pl=dailyPlan(), pc=PRECONS.find(x=>x.id===pl.mine), rv=rivalOf(pl.rival), y=P.dy, live=S&&S.daily&&!S.over, st=dailyStreak();
+  const series=st>1?` · série de ${st} jours`:"";
+  let hint, btn="";
+  if(live){ hint="Défi en cours : reprends-le avec « Reprendre la partie »."; }
+  else if(!dailyDone()){ hint=`Un seul essai · +${DAILY.win} CHF si tu gagnes, +${DAILY.other} sinon`; btn=`<button class="primary small" data-act="daily">Relever le défi</button>`; }
+  else if(y.res==="abandon"){ hint="Défi abandonné aujourd'hui. Un nouveau t'attend demain."; }
+  else { hint=`${{win:"Gagné",lose:"Perdu",draw:"Égalité"}[y.res]} ${y.w.map(w=>w==="p"?"🟢":w==="e"?"🔴":"⚪").join("")}${series} · nouveau défi demain`; btn=`<button class="ghost small" data-act="dailycopy">${dailyCopyLabel()}</button>`; }
+  return `<section class="sec defijour"><div class="cdtx"><div class="eyebrow">Défi du jour${dailyDone()&&!live?" ✓":""}</div><b>Deck « ${esc(pc.name)} » contre ${esc(rv.n)}</b><span class="hint">${hint}</span></div>${btn}</section>`;
+}
 function cardDayHTML(){
   if(!P.starter||!P.tuto) return "";
   const id=cardOfDay(); if(!id) return "";
@@ -336,6 +364,7 @@ function homeHTML(){
   ${resumable?`<button class="play" data-act="mpresume">Reprendre le duel</button>`:`<button class="play" data-act="${inGame?"resume":"sheet"}" ${inGame?"":'data-s="play" aria-haspopup="dialog"'}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>`}
   ${inGame||resumable?`<button class="ghost small modemore" data-act="sheet" data-s="play" aria-haspopup="dialog">Autres façons de jouer</button>`:""}
   ${lobCountHTML()}
+  ${dailyHTML()}
   ${homeNotes()}
   ${seasonBarHTML()}
   ${featureHTML()}
@@ -917,14 +946,15 @@ function resultHTML(){
     ${o.feat?`<div class="qdone">Lieu à l'honneur : +${o.feat} CHF pour ta première partie du jour.</div>`:""}
     ${o.oath&&(o.mp||o.blitz)?oathChfHTML(o):""}
     ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
-    ${o.blitz?"":o.mp&&!o.rk?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>${!S.mp.ranked?"Duel entre amis · hors classement":S.mp.srv==="conflict"?"Duel classé · résultat non validé : aucune étoile":S.mp.rankDone&&!S.mp.counted?(o.res==="lose"?"Duel classé · ce joueur a déjà 10 victoires comptées contre toi aujourd'hui : rien de perdu":"Duel classé · déjà 10 victoires comptées aujourd'hui contre ce joueur : aucune étoile"):"Duel classé · étoiles dès que le serveur a validé le résultat"}</span></div>`:`${o.mp?`<div class="hint">Duel classé contre ${esc(S.mp.oppNick)}</div>`:""}<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
+    ${o.daily?`<div class="rankline"><b>Défi du jour</b><br><span>Hors classement${o.oath?` · ⚖ Serment ${o.oath.cross?"croisé ":""}${o.oath.kept?"tenu":"rompu"}`:""}</span></div>`:o.blitz?"":o.mp&&!o.rk?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>${!S.mp.ranked?"Duel entre amis · hors classement":S.mp.srv==="conflict"?"Duel classé · résultat non validé : aucune étoile":S.mp.rankDone&&!S.mp.counted?(o.res==="lose"?"Duel classé · ce joueur a déjà 10 victoires comptées contre toi aujourd'hui : rien de perdu":"Duel classé · déjà 10 victoires comptées aujourd'hui contre ce joueur : aucune étoile"):"Duel classé · étoiles dès que le serveur a validé le résultat"}</span></div>`:`${o.mp?`<div class="hint">Duel classé contre ${esc(S.mp.oppNick)}</div>`:""}<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
     <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
     <div class="rows sc3"><div class="row rh" aria-hidden="true"><span>Lieu</span><span class="c me">Toi</span><span class="c foe"${o.mp?` title="${esc(S.mp.oppNick)}"`:""}>${o.mp?esc(S.mp.oppNick):esc(foeName())}</span></div>${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span class="c me${r.w==="p"?" w":""}">${r.a}</span><span class="c foe${r.w==="e"?" w":""}">${r.b}</span></div>`).join("")}</div>
     ${bilanHTML(o)}
     ${fbHTML(o)}
     ${o.mp&&S.mp.srv?`<p class="hint" role="status">${S.mp.srv==="valid"?"✓ Résultat validé par le serveur":S.mp.srv==="conflict"?"⚠ Résultats différents entre les deux joueurs : partie non validée":"Résultat envoyé, en attente de l'adversaire…"}</p>`:""}
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
-    <div class="row2"><button class="ghost" data-act="mpquit">Quitter le salon</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.blitz?`<button class="primary" data-act="go" data-to="blitz">${o.ended?"Voir le bilan":"Continuer le Blitz"}</button><div class="row2"><button class="ghost" data-act="close">Voir le plateau</button></div>`:`<button class="primary" data-act="play">Rejouer</button>
+    <div class="row2"><button class="ghost" data-act="mpquit">Quitter le salon</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.blitz?`<button class="primary" data-act="go" data-to="blitz">${o.ended?"Voir le bilan":"Continuer le Blitz"}</button><div class="row2"><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.daily?`<button class="primary" data-act="dailycopy">${dailyCopyLabel()}</button>
+    <div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:`<button class="primary" data-act="play">Rejouer</button>
     <div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`}
   </div></div>`;
 }
@@ -1009,7 +1039,7 @@ function gameHTML(){
   ${resultHTML()}${gzHTML()}`;
 }
 function endBtnHTML(){
-  return S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`;
+  return S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:S.daily?`<button class="endbtn" data-act="go" data-to="home">Accueil</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`;
 }
 /* Le Serment est possible jusqu'au tour 5 : partie classée, Blitz, duel (caché jusqu'à la fin du tour) et partie guidée (sans enjeu). Jamais en replay ni pendant la reprise d'un duel. */
 const oathOK=()=>S&&!S.rp&&!S.over&&S.turn<=5&&!(S.mp&&(S.mp.resuming||S.mp.replaying));
@@ -1309,6 +1339,8 @@ document.addEventListener("click", e=>{
     case "rpquit": S=null; screen="hist"; sfx("click"); render(); window.scrollTo(0,0); return;
     case "play": if(playSeek()){ sfx("click"); render(); return; } sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     /* Fin de la Première Brûlure : partie contre l'IA tout de suite (pas d'attente d'un humain pour un nouveau joueur) */
+    case "daily": if(dailyDone()||!dailyOpen()) return; sheet=null; sfx("click"); migratedNote=""; newGame({daily:true}); window.scrollTo(0,0); return;
+    case "dailycopy": dailyCopy(); return;
     case "firstplay": sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": sheet=null; screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
