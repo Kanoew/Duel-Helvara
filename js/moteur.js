@@ -41,8 +41,10 @@ const gShuffle=a=>{ for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1)
 const gPick=a=>a[Math.floor(rnd()*a.length)];
 let quiet=false;
 const mk=id=>({uid:++uidN,id,pow:CARDS[id].pow,rev:false,fresh:false,neg:false,pay:0,mods:[]});
-function snapPow(){ const m=new Map(); for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) m.set(c,c.pow); return m; }
-function diffPow(m,src){ for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col){ if(c.reset){ delete c.reset; continue; } if(m.has(c)&&c.pow!==m.get(c)){ (c.mods=c.mods||[]).push({v:c.pow-m.get(c),src}); } } }
+function snapPow(){ const m=new Map(); for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) m.set(c,{pow:c.pow,mods:c.mods,n:(c.mods||[]).length}); return m; }
+/* Affichage seulement : la part d'un changement déjà notée par l'effet lui-même (Nike, Mā‘at, Bia…) n'est pas notée une deuxième fois (doublons signalés par Jordan le 21 novembre) */
+function diffPow(m,src){ for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col){ if(c.reset){ delete c.reset; continue; } const b=m.get(c); if(!b) continue;
+  const deja=c.mods&&(c.mods===b.mods||!b.mods)?c.mods.slice(b.n).reduce((t,x)=>t+x.v,0):0, v=c.pow-b.pow-deja; if(v) (c.mods=c.mods||[]).push({v,src}); } }
 const opp=s=>s==="p"?"e":"p";
 const deckReady=()=>P.deck.length===ECO.deckSize;
 
