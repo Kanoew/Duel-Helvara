@@ -356,6 +356,7 @@
   };
 
   const rules=[
+    [/^(Ère|Vasseur) : \+(\d) de puissance dans (\d) tours?$/, (m,k,v,n)=>`${k==="Ère"?"Era":"Vasseur"}: +${v} Power in ${n} turn${n>1?"s":""}`],
     [/^Note (\d+) sur (\d+)$/, (m,a,b)=>`Note ${a} of ${b}`],
     [/^Lire la règle : (.+)$/, (m,a)=>`Read the rule: ${a}`],
     [/^: lieu (perdu|gagné) de (\d+)$/, (m,k,n)=>`: location ${k==="perdu"?"lost":"won"} by ${n}`],
