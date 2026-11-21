@@ -1230,6 +1230,24 @@ function dragMark(on,uid){
   const c=on?findHand(uid):null;
   document.querySelectorAll("[data-act=stage]").forEach(el=>{ const li=+el.dataset.li; el.classList.toggle("dropok",!!c&&canStage(c,li)); el.classList.toggle("dropno",!!c&&!canStage(c,li)); if(!on) el.classList.remove("drophov"); });
 }
+/* Aperçu pendant le glisser : puissance qu'aurait la carte une fois posée ici (bonus et malus Continus : Lien, Escaliers du Marché,
+   la Doyenne, la Mouche…, plus les Jardins de Désir). Calcul d'affichage seulement : la carte est posée sur une copie, puis retirée. */
+function dropBonus(c,li){
+  const bd=S.board.p[li], n=bd.length, mute=locIs(li,"autel");
+  const tmp={...c,rev:true,fresh:false,arr:S.turn,neg:mute||c.neg}; let v=0;
+  try{
+    for(const x of S.staged) if(x.li===li&&x.c!==c) bd.push({...x.c,rev:true,fresh:false,arr:S.turn,neg:mute||x.c.neg});
+    bd.push(tmp); v=cardPow("p",li,tmp)-c.pow;
+  } catch(_){ v=0; } finally { bd.length=n; }
+  if(locIs(li,"jardins")&&!mute&&!(S.jard&&S.jard.p[li])&&!S.staged.some(x=>x.li===li&&x.c!==c)) v+=2;
+  return v;
+}
+function dragBonus(li){
+  if(!drag||!drag.ghost||drag.li===li) return; drag.li=li;
+  const old=drag.ghost.querySelector(".dropb"); if(old) old.remove();
+  const c=li==null?null:findHand(drag.uid), v=c?dropBonus(c,li):0;
+  if(v) drag.ghost.insertAdjacentHTML("beforeend",`<span class="dropb ${v>0?"up":"down"}">${v>0?"+":"−"}${Math.abs(v)}</span>`);
+}
 function dragStop(){ if(!drag) return; if(drag.ghost) drag.ghost.remove(); dragMark(false); document.body.classList.remove("dragging"); if(drag.src) drag.src.classList.remove("lifted"); drag=null; }
 document.addEventListener("pointerdown", e=>{
   if(drag||e.button>0||!S||screen!=="play"||S.busy||S.over||(S.mp&&S.mp.locked)) return;
@@ -1253,7 +1271,7 @@ document.addEventListener("pointermove", e=>{
   e.preventDefault();
   drag.ghost.style.transform=`translate(${e.clientX-drag.dx}px,${e.clientY-drag.dy-34}px) scale(1.12) rotate(-3deg)`;
   const t=dragTarget(e.clientX,e.clientY-34);
-  document.querySelectorAll(".drophov").forEach(x=>x.classList.remove("drophov")); if(t&&t.classList.contains("dropok")){ const li=t.dataset.li; document.querySelectorAll(`[data-act=stage][data-li="${li}"]`).forEach(x=>x.classList.add("drophov")); }
+  document.querySelectorAll(".drophov").forEach(x=>x.classList.remove("drophov")); if(t&&t.classList.contains("dropok")){ const li=t.dataset.li; document.querySelectorAll(`[data-act=stage][data-li="${li}"]`).forEach(x=>x.classList.add("drophov")); dragBonus(+li); } else dragBonus(null);
 });
 function dragRelease(e,cancel){
   if(!drag||e.pointerId!==drag.id) return;
