@@ -282,7 +282,9 @@ const themisOn=li=>["p","e"].some(s=>S.board[s][li].some(x=>live(x)&&eid(x)==="t
 function swimmer(s="p"){ if(S.busy||S.over||S.swimP) return null; for(let li=0;li<3;li++) for(const c of S.board[s][li]) if(live(c)&&eid(c)==="nageuse_lac"&&(c.arr==null||c.arr<S.turn)&&c.swimT!==S.turn&&!fated(c)&&!c.captive) return {c,li}; return null; }
 function swimOk(li){ const w=swimmer(); return !!w&&li!==w.li&&S.locs[li].rev&&!S.locs[li].locked&&leader(li)!=="p"&&slotsUsed("p",li)+stagedAt(li)<capOf("p",li); }   /* jamais vers un lieu où tu mènes déjà */
 /* Pourquoi la Nageuse ne peut pas traverser (pour l'afficher dans le bouton), ou "" si elle le peut */
-function swimWhy(){ if(S.swimP||S.busy||S.over) return ""; const c=S.board.p.flat().find(x=>live(x)&&eid(x)==="nageuse_lac"); if(!c) return null;
+/* null : pas de bouton ; "" : traversée possible ; sinon la raison. Pendant une révélation ou en fin de partie : pas de bouton (avant, "" faisait apparaître
+   « 🏊 Nageuse : changer de lieu » chez tout le monde, même sans Nageuse : vidéo de Jordan, 21 novembre) */
+function swimWhy(){ if(S.swimP) return ""; if(S.busy||S.over) return null; const c=S.board.p.flat().find(x=>live(x)&&eid(x)==="nageuse_lac"); if(!c) return null;
   if(c.arr!=null&&c.arr>=S.turn) return "dès le prochain tour"; if(c.swimT===S.turn) return "déjà traversée ce tour"; if(fated(c)||c.captive) return "immobilisée";
   return [0,1,2].some(swimOk)?"":"aucun lieu possible"; }
 function swimTo(li){ const w=swimmer(); if(!w||!swimOk(li)) return false; S.swimP={c:w.c,li,from:w.li}; S.swimSel=false; return true; }
