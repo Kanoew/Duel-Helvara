@@ -202,6 +202,24 @@ Trois relecteurs. Ils **rapportent à Jordan, ils ne modifient rien** dans le d�
 - **`playtest-qa`** : avant de dire qu'un changement du moteur, de l'interface ou d'un visuel « marche ». Lance les tests et joue le jeu sur écran de téléphone, avec captures.
 - **`db-guard`** : **avant** d'appliquer tout SQL sur Supabase, de modifier `cloud.js` ou les pages de confidentialité, et pour toute nouvelle donnée collectée. N'a aucun accès à la base.
 
+Modèle et effort de chacun : dans sa fiche (`model:`, `effort:`). `balance-reviewer` et `playtest-qa` tournent sur Sonnet, effort moyen ; `db-guard` garde le modèle de la session (`inherit`), car il protège la base en direct.
+
+### Déléguer (autorisation permanente de Jordan, 21 novembre)
+
+Tu peux lancer des agents **sans demander**, et choisir leur modèle et leur effort, selon la tâche :
+
+| Tâche | Agent | Modèle | Effort |
+|---|---|---|---|
+| Trouver où est un truc dans le code, relecture mécanique (textes FR / EN, liste de cartes) | `Explore` ou `general-purpose` | Haiku | bas |
+| Mesure d'équilibrage, tests, parties jouées avec captures | `balance-reviewer`, `playtest-qa` | Sonnet (fiche) | moyen (fiche) |
+| Petit code isolé et bien décrit (un écran, un outil hors du jeu) | `general-purpose` | Sonnet | moyen |
+| Moteur, IA, duels en ligne, Supabase, décisions de design | **personne** : la session principale | — | — |
+
+- Un agent repart de zéro à chaque lancement : déléguer les tâches longues (mesures, tests), pas une petite modification plus rapide à faire soi-même.
+- Plusieurs agents indépendants peuvent tourner en même temps (par exemple une mesure pendant qu'on code).
+- Un agent qui modifie le dépôt travaille sur une copie isolée (`isolation: worktree`) ; la session principale relit et fusionne.
+- Le rapport d'un agent ne s'affiche pas chez Jordan : lui en résumer l'essentiel, chiffres compris.
+
 ## Entretenir ce fichier
 
 Ce fichier est lu en entier à chaque session : il doit rester **court** (objectif : moins de 250 lignes). Y mettre seulement ce qui est vrai **en permanence** : garde-fous, décisions de design, procédures, pièges.

@@ -564,7 +564,7 @@ function shopHTML(){
   ${hlStarter?`<div class="notice">Voilà tes 100 CHF. Achète la <b>Première Brûlure</b> : 12 cartes pour construire ton premier deck.</div>`:""}
   ${lp?`<section class="sec"><h2>${lp.name}</h2>
     <div class="opened ${lp.res.length>3?"many":""}">${lp.res.map((r,k)=>`<div class="cell" style="--d:${(k*(lp.res.length>3?.12:.35)).toFixed(2)}s">${fullCard(r.id,CARDS[r.id].r==="L"&&r.isNew?"legend":"")}<span class="badge ${r.isNew?"new":"dup"}">${r.isNew?"Nouvelle":`Doublon · +${r.v} CHF`}</span></div>`).join("")}</div>
-    <div class="row2" style="margin-top:12px">${lp.pid==="brulure"?`<button class="primary" data-act="go" data-to="deck">Voir mon deck</button>`:lp.res.some(r=>r.isNew)?`<button class="ghost" data-act="go" data-to="deck">Ajouter à mon deck</button>`:""}</div>
+    <div class="row2" style="margin-top:12px">${lp.pid==="brulure"?(deckReady()?`<button class="primary" data-act="firstplay">${P.w+P.l+P.d?"Jouer avec ce deck":"Jouer ma première partie"}</button><button class="ghost" data-act="go" data-to="deck">Voir mon deck</button>`:`<button class="primary" data-act="go" data-to="deck">Voir mon deck</button>`):lp.res.some(r=>r.isNew)?`<button class="ghost" data-act="go" data-to="deck">Ajouter à mon deck</button>`:""}</div>
   </section>`:""}
   ${stallHTML()}
   <div class="packs">${tiles}</div>
@@ -776,8 +776,11 @@ function mini(s,li,c,staged){
   const fat=!staged&&!S.final&&charOf(c.id)==="ananke"&&c.rev&&fated(c)?`<span class="fatb" title="Fatalité : puissance en fin de partie">✠ ${ankEnd(s,li,c)}</span>`:"";
   const sick=!staged&&c.sick>0?`<span class="sickb" title="Malade : −1 au début de chacun des tours suivants">🤒 ${c.sick}</span>`:"";
   const absb=!staged&&c.id==="tezcatlipoca"&&c.rev&&c.abs&&c.abs.length?`<span class="absb" title="Cartes absorbées : ${c.abs.map(x=>CARDS[x.id].name).join(", ")}">⊕ ${c.abs.length}</span>`:"";
+  /* Ère (+2 deux tours après l'arrivée) et Vasseur (+4 au paiement) : tours restants avant le bonus, seulement s'il arrive avant la fin */
+  const due=staged||!c.rev||c.neg||S.final?null:CARDS[c.id].kw==="ere"&&c.arr!=null?c.arr+2:eid(c)==="vasseur"&&c.pay?c.pay:null;
+  const wait=due!=null&&due<=6&&due>S.turn?`<span class="waitb" title="${CARDS[c.id].kw==="ere"?"Ère : +2 de puissance dans":"Vasseur : +4 de puissance dans"} ${due-S.turn} tour${due-S.turn>1?"s":""}">⏳${due-S.turn}</span>`:"";
   const hed=!staged&&c.id==="hedone"&&c.rev?`<span class="hedb" title="Charmes">${c.hed||0}/2</span>`:"";
-  return `<button class="mini${CARDS[c.id].r==="U"?hasHoloTile(c.id)?" holof":" holo":""}${chm}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${tileHolo(c.id,"m"+c.uid)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}${fat}${hed}${absb}${sick}<span class="pw ${cls}">${p}</span></button>`;
+  return `<button class="mini${CARDS[c.id].r==="U"?hasHoloTile(c.id)?" holof":" holo":""}${chm}${rc(CARDS[c.id])}${staged?" staged":""}${c.fresh?" flip":""}${c.neg?" neg":""}" data-cu="${c.uid}" ${act} aria-label="${CARDS[c.id].name}, puissance ${p}">${art(c.id)}${tileHolo(c.id,"m"+c.uid)}${staged?"":deltaBadge(p-base)}${c.midnight>0&&!c.neg?`<span class="midn" title="Minuit : charmera au prochain tour">🕛</span>`:""}${fat}${hed}${absb}${sick}${wait}<span class="pw ${cls}">${p}</span></button>`;
 }
 /* Bouton de la Nageuse du Lac : toujours visible quand elle est en jeu, grisé avec la raison quand elle ne peut pas traverser */
 function swimBtn(){ if(S.mp&&S.mp.locked) return ""; const why=swimWhy(); if(S.swimP) return `<button class="toggle on" data-act="swim">Annuler la traversée</button>`;
@@ -1287,6 +1290,8 @@ document.addEventListener("click", e=>{
     case "rpauto": if(S&&S.rp){ S.rp.auto=!S.rp.auto; sfx("click"); render(); if(S.rp.auto) rpAuto(); } return;
     case "rpquit": S=null; screen="hist"; sfx("click"); render(); window.scrollTo(0,0); return;
     case "play": if(playSeek()){ sfx("click"); render(); return; } sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
+    /* Fin de la Première Brûlure : partie contre l'IA tout de suite (pas d'attente d'un humain pour un nouveau joueur) */
+    case "firstplay": sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": sheet=null; screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
     case "cancelname": editName=false; render(); return;
