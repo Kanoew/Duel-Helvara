@@ -117,11 +117,11 @@ Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : le
 
 ### 3.4 🟣 🛠️ Accueil des nouveaux joueurs
 - ✅ **Tutoriel centré sur le Serment, moins guidé** : le Serment présenté dès l'accueil ; l'adversaire jure à la fin du tour 2 ; au tour 3, tu jures où tu veux ou tu relèves son défi (Serment croisé) ; tours 4 à 6 libres, avec des indices ; à la fin, ce que ton Serment aurait valu en partie classée. 👤 À essayer sur ton téléphone.
-- 🟣 Partie rapide avec un deck prêté (parmi les 7 decks prêts) dès la première partie.
-- 🟣 🛠️ **Défi du jour, sans Supabase** (idée du 20 novembre, 👤 avant la sortie à confirmer) : chaque jour la même partie pour tout le monde (mêmes lieux, même deck prêté parmi les 7, même rival, même tirage), un seul essai, une petite récompense en CHF, et un bouton « Copier mon résultat » à coller sur Discord (lieux en 🟢 / 🔴, Serment tenu ou non). Couvre aussi la partie avec un deck prêté. Tout reste dans le navigateur (pas plus protégé contre la triche qu'une partie contre l'IA).
-- 🟣 🛠️ **Fin de la Première Brûlure** : le bouton « Voir mon deck » devient « Jouer ma première partie » (le deck est déjà rempli).
-- 🟣 🛠️ **Pastille ⏳ sur le plateau** : compte à rebours pour les cartes Ère (⏳ 2, ⏳ 1) et pour Vasseur (+4 dans deux tours), comme les pastilles d'Ananké (✠) ou d'Hédoné.
-- 🟣 🛠️ **Aperçu du bonus pendant le glisser-déposer** : un petit « +2 » vert sur la carte soulevée au-dessus d'un lieu (Escaliers du Marché, Lien, Jardins de Désir…), pour comprendre les synergies avant de lâcher la carte.
+- ✅ Partie rapide avec un deck prêté : couverte par le Défi du jour (21 novembre).
+- ✅ 🛠️ **Défi du jour** (21 novembre, `alpha-0.49`) : chaque jour la même partie pour tout le monde (lieux, deck prêté parmi les 7, deck et rival adverses, tirage), un seul essai compté dès le lancement (page rechargée : défi perdu), +20 CHF si victoire, +5 sinon. Ni étoiles, ni quêtes, ni journal des factions ; Serment avec la règle habituelle, sans CHF. Carte à l'accueil après la Première Brûlure, bouton « Copier mon résultat » (lieux en 🟢 / 🔴, Serment), FR et EN. Le résultat est gardé dans la sauvegarde du joueur, comme la carte du jour. 👤 À essayer sur ton téléphone.
+- ✅ 🛠️ **Fin de la Première Brûlure** (21 novembre) : « Jouer ma première partie » lance une partie contre l'IA, « Voir mon deck » à côté.
+- ✅ 🛠️ **Pastille ⏳ sur le plateau** (21 novembre) : compte à rebours pour les cartes Ère (⏳ 2, ⏳ 1) et pour Vasseur (+4 dans deux tours), comme les pastilles d'Ananké (✠) ou d'Hédoné.
+- ✅ 🛠️ **Aperçu du bonus pendant le glisser-déposer** (21 novembre, bonus et malus Continus et Jardins de Désir ; pas les Révélations) : un petit « +2 » vert sur la carte soulevée au-dessus d'un lieu (Escaliers du Marché, Lien, Jardins de Désir…), pour comprendre les synergies avant de lâcher la carte.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
 - 🟣 🛠️ Idée : une phrase sur Lien dans le tutoriel (au tour 3, la Passante gagne +1 grâce au Coursier).
@@ -253,3 +253,8 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Tests rendus indépendants des cartes sans effet (carte du jour, La Source) ; 735 scénarios.
 - ✅ Relecture extérieure du code vérifiée : IA corrigée (cartes qui frappent ici, protections, deuxième lieu simulé), zoom de l'ouverture de paquet réparé (une carte holo n'y affichait aucun texte), verre dépoli sur le zoom d'un lieu, fins de ligne LF forcées (`.gitattributes`). Idées rangées : Défi du jour, pastille ⏳, boss en 6 tours, Serment sur les cartes cachées, répliques des rivaux, Tester mon deck.
 - ✅ Nike, l'Élan de la Victoire (3/3) et IA de Jugement corrigée : Jugement 46,6 → 48,6 %.
+
+### 21 novembre
+- ✅ Agents : `balance-reviewer` et `playtest-qa` sur Sonnet, règle de délégation dans `CLAUDE.md`.
+- ✅ Accueil des nouveaux joueurs (3.4) : fin de la Première Brûlure, pastille ⏳, aperçu du bonus au glisser-déposer, Défi du jour (`alpha-0.49`).
+- 🟣 Deux tests de l'IA autour de Nike échouent par moments (environ 1 lancement sur 10, déjà avant ces changements) : à rendre fiables.

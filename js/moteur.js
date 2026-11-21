@@ -95,22 +95,38 @@ function aiPreconDeck(precId,t,full,noUL){
 const rivalDeck=(rv,t,full,noUL)=>rv.id==="exodus"?aiPreconDeck("miser",t,full,noUL):aiDeck(t,full,noUL,rivalOf(rv.id).fac);
 /* Trois lieux au hasard ; le week-end, le lieu à l'honneur du jour en fait toujours partie (à une place tirée au hasard) */
 function pickLocs(){ const f=featureLoc(); let ids=shuffle(locPool()).slice(0,3); if(f&&!ids.includes(f)) ids=shuffle([f,...ids.slice(0,2)]); return ids; }
-function newGame(){
+/* Défi du jour (21 novembre) : chaque jour la même partie pour tout le monde (lieux, deck prêté parmi PRECONS, deck et rival adverses, tirage),
+   tirée de la date seule. Un essai par jour, compté dès le lancement ; tout reste dans la sauvegarde du joueur (P.dy), rien d'autre n'est envoyé. */
+const DAILY={win:20, other:5, tier:3};
+function dailyPlan(d=today()){
+  const R=mulberry(hashStr("defi|"+d)), pick=a=>a[Math.floor(R()*a.length)];
+  const mine=pick(PRECONS), foe=pick(PRECONS.filter(x=>x.id!==mine.id)), rv=RIVALS.filter(r=>r.fac===foe.fac), rival=rv.length?pick(rv):pick(RIVALS);
+  const locs=locPool().slice().sort(); for(let i=locs.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [locs[i],locs[j]]=[locs[j],locs[i]]; }
+  return {d, mine:mine.id, foe:foe.id, rival:rival.id, locs:locs.slice(0,3), seed:(R()*2147483647)|0};
+}
+const dailyOpen=()=>!!(P.tuto&&P.starter);
+const dailyDone=()=>!!(P.dy&&P.dy.d===today());
+function newGame(opt){
+  const dy=opt&&opt.daily?dailyPlan():null;
   RNG=Math.random;
-  if(!deckReady()){ screen="deck"; render(); return; }
+  if(dy&&(dailyDone()||!dailyOpen())) return;
+  if(!dy&&!deckReady()){ screen="deck"; render(); return; }
   if(S&&S.blitz&&!S.over) bzEndRun();
-  const firstEver = games===0 && P.w+P.l+P.d===0, locIds = firstEver ? ["ruelle","ouchy","sousgare"] : pickLocs();
+  const firstEver = !dy && games===0 && P.w+P.l+P.d===0, locIds = dy ? dy.locs : firstEver ? ["ruelle","ouchy","sousgare"] : pickLocs();
   games++;
   S={turn:0, energy:0, energyE:0, bonus:{p:0,e:0}, destroyed:0,
     locs:locIds.map(id=>({id,rev:false,stopped:false,locked:false})),
     board:{p:[[],[],[]],e:[[],[],[]]}, hand:{p:[],e:[]},
-    deck:{p:shuffle(P.deck.map(mk)), e:[]}, aiTier:tierOf(P.lv), aiFac:null,
+    deck:{p:dy?[]:shuffle(P.deck.map(mk)), e:[]}, aiTier:dy?DAILY.tier:tierOf(P.lv), aiFac:null,
     staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
     log:[], sel:null, info:null, busy:false, over:null};
   S.feat=!firstEver&&locIds.includes(featureLoc())?featureLoc():null; /* lieu à l'honneur présent dans cette partie */
-  S.rival=drawRival(S.aiTier); const ai=rivalDeck(S.rival,S.aiTier,false,false); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac; if(typeof preloadFoe==="function") preloadFoe(); /* range les illustrations du deck adverse pour jouer hors ligne */
+  if(dy){ RNG=mulberry(dy.seed); S.daily={d:dy.d,pc:dy.mine}; S.deck.p=gShuffle(PRECONS.find(x=>x.id===dy.mine).cards.filter(id=>CARDS[id]).map(mk)); S.rival={id:dy.rival,mood:rivalOf(dy.rival).mood};
+    if(!window.__wiped){ P.dy={d:dy.d,res:"abandon"}; save(); } }   /* l'essai du jour est compté dès le lancement (page rechargée : défi perdu) */
+  else S.rival=drawRival(S.aiTier);
+  const ai=dy?aiPreconDeck(dy.foe,S.aiTier,true,false):rivalDeck(S.rival,S.aiTier,false,false); S.deck.e=(dy?gShuffle:shuffle)(ai.deck.map(mk)); S.aiFac=ai.fac; if(typeof preloadFoe==="function") preloadFoe(); /* range les illustrations du deck adverse pour jouer hors ligne */
   /* Replay (25 octobre) : graine du hasard de la partie et ordre exact des decks ; les coups de chaque tour sont ajoutés par resolveTurn */
-  { const seed=(Math.random()*2147483647)|0; RNG=mulberry(seed); S.rec={v:BUILD,seed,locs:locIds.slice(),feat:S.feat||null,dp:S.deck.p.map(c=>c.id),de:S.deck.e.map(c=>c.id),fac:S.aiFac,tier:S.aiTier,turns:[]}; }
+  { const seed=dy?dy.seed:(Math.random()*2147483647)|0; RNG=mulberry(seed); S.rec={v:BUILD,seed,locs:locIds.slice(),feat:S.feat||null,dp:S.deck.p.map(c=>c.id),de:S.deck.e.map(c=>c.id),fac:S.aiFac,tier:S.aiTier,turns:[]}; }
   for(let i=0;i<3;i++){draw("p");draw("e");}
   log(`Adversaire : deck ${FAC[ai.fac].n} · niveau ${TIERS[S.aiTier]}`);   /* ni nom ni tempérament du rival dans le journal : le tempérament tiré reste caché */
   screen="play"; startTurn();
@@ -1293,6 +1309,15 @@ function finish(){
     const oath=S.oath!=null?{kept:leader(S.oath)==="p",cross:S.aiOath===S.oath,n:LOCS[S.locs[S.oath].id].name}:null;
     S.over={tut:true,res:pw>ew?"win":"lose",rows,pw,ew,pt:0,et:0,gain:0,oath}; sfx(pw>ew?"win":"lose"); render(); return; }
   let pw=0,ew=0,pt=0,et=0; const rows=[];
+  if(S.daily){ S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); pt+=a; et+=b; if(w==="p") pw++; else if(w==="e") ew++; rows.push({n:LOCS[L.id].name,a,b,w,inv:nemInv(li)}); });
+    const res=pw>ew?"win":ew>pw?"lose":pt>et?"win":et>pt?"lose":"draw", gain=res==="win"?DAILY.win:DAILY.other;
+    /* Défi du jour : ni étoiles, ni quêtes, ni journal des factions, ni statistiques de cartes (le deck est prêté) ; le Serment suit la règle habituelle mais ne rapporte pas de CHF */
+    const oath=S.oath!=null?{kept:leader(S.oath)==="p",cross:S.aiOath===S.oath}:null;
+    if(!window.__wiped){ const d=S.daily.d, y=new Date(d+"T12:00:00"); y.setDate(y.getDate()-1);
+      P.dys=P.dyl===dayKey(y)?(P.dys||0)+1:1; P.dyl=d; if(res==="win") P.dyw=(P.dyw||0)+1;
+      P.dy={d,res,w:rows.map(r=>r.w||""),oath:oath?(oath.kept?"kept":"broken"):"",pc:S.daily.pc}; P.chf+=gain; save(); }
+    S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,daily:true,oath};
+    endCine(S.over); endMusic(res); setTimeout(()=>sfx("coin"),700); render(); return; }
   if(S.blitz){ S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); pt+=a; et+=b; if(w==="p") pw++; else if(w==="e") ew++; rows.push({n:LOCS[L.id].name,a,b,w,inv:nemInv(li)}); });
     const res=pw>ew?"win":ew>pw?"lose":pt>et?"win":et>pt?"lose":"draw"; const r=P.bz.run;
     ensureQuests(); qProg("play3"); if(res==="win") qProg("win3"); qEnd(res,true);

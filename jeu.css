@@ -951,6 +951,11 @@ body.ec-draw #app{filter:brightness(.75);transition:filter .6s}
 body.dragging{user-select:none;-webkit-user-select:none;touch-action:none}
 .hc.lifted{opacity:.3}
 .dragghost{border-radius:9px;box-shadow:0 14px 30px rgba(0,0,0,.6),0 0 0 2px var(--me);opacity:.96}
+.dragghost .dropb{position:absolute;left:50%;top:30%;transform:translateX(-50%);padding:3px 11px;border-radius:14px;font:700 20px var(--display);background:rgba(6,10,18,.92);pointer-events:none;z-index:3;animation:dropbIn .18s ease-out}
+.dragghost .dropb.up{color:#7dffa8;border:1px solid rgba(110,240,160,.7);box-shadow:0 0 10px rgba(110,240,160,.45)}
+.dragghost .dropb.down{color:#ff9a9a;border:1px solid rgba(255,120,120,.6)}
+@keyframes dropbIn{from{opacity:0;transform:translateX(-50%) scale(.6)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+@media (prefers-reduced-motion:reduce){.dragghost .dropb{animation:none}}
 .dragging .dropok{outline:2px dashed var(--me);outline-offset:-3px;transition:background .12s}
 .dragging .dropno{opacity:.45}
 .dragging .dropok.drophov{outline:2px solid var(--frost);background-color:rgba(111,184,222,.18)}
@@ -1003,6 +1008,11 @@ body:has(.sandbar) #app{padding-top:62px}
 .cdjour .cdart .art{background-size:cover;background-position:center}
 .cdjour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cdjour .cdtx b{font-family:var(--display);font-size:17px}
+/* Défi du jour (accueil) : même gabarit que la carte du jour, bouton à droite */
+.defijour{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:10px 0;border-left:3px solid var(--me)}
+.defijour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.defijour .cdtx b{font-family:var(--display);font-size:17px}
+.defijour button{flex:0 0 auto;max-width:46%}
 .cdjour .eyebrow{color:var(--warm)}
 /* Cadres de fête : cadre fin posé dans la carte (il suit son inclinaison) ; clics laissés à la carte */
 .full>.cadre,.hc-card>.cadre{position:absolute;inset:0;pointer-events:none;background-size:100% 100%;background-repeat:no-repeat}
