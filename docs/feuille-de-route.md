@@ -124,7 +124,7 @@ Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : le
 - ✅ 🛠️ **Aperçu du bonus pendant le glisser-déposer** (21 novembre, bonus et malus Continus et Jardins de Désir ; pas les Révélations) : un petit « +2 » vert sur la carte soulevée au-dessus d'un lieu (Escaliers du Marché, Lien, Jardins de Désir…), pour comprendre les synergies avant de lâcher la carte.
 - 🟣 Ouverture de paquet plus spectaculaire (on part du « Tirage » actuel).
 - 🟣 Animations de cartes plus expressives, toujours en bulle par-dessus le plateau.
-- 🟣 🛠️ Idée : une phrase sur Lien dans le tutoriel (au tour 3, la Passante gagne +1 grâce au Coursier).
+- ✅ 🛠️ Une phrase sur Lien dans le tutoriel (21 novembre) : au tour 3, « ⧉ Lien : +1 grâce au Coursier, Helvara comme elle », FR et EN.
 - ✅ 🛠️ **Verre dépoli (« Liquid Glass »)**, fusionné le 20 novembre : seulement la barre du bas et le zoom de carte en partie, jamais les fenêtres pleines ; coût et puissance toujours sur fond opaque ; repli opaque si le navigateur ne gère pas le flou. 👤 Juger les captures avant / après, puis tester la fluidité sur un vrai téléphone.
 
 ### 3.4 bis 🟣 🛠️ Duel en ligne classé et anti-triche (avant la sortie, décidé le 18 novembre)

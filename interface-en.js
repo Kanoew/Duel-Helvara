@@ -188,7 +188,7 @@
     "Tu connais maintenant l'essentiel : l'énergie, les lieux, la révélation, les bonus en vert, les malus en rouge et le Serment.":"You now know the essentials: energy, locations, reveals, bonuses in green, penalties in red and the Oath.",
     ": une fois par partie, jure sur un lieu. Gagne-le avec la partie et tu es récompensé ; perds-le et tu le paies. C'est la marque d'Helvara.":": once per game, swear on a location. Win it along with the game and you are rewarded; lose it and you pay. It is Helvara's signature.",
     "au Sous-gare (Félix et le Sous-gare la font passer à 1), puis la":"at the Underground (Félix and the Underground bring her down to 1), then the",
-    "à la Ruelle.":"at the Alley.",
+    "à la Ruelle.":"at the Alley.", "à la Ruelle (":"at the Alley (", "⧉ Lien":"⧉ Bond", ": +1 grâce au Coursier, Helvara comme elle).":": +1 thanks to the Courier, Helvara like her).",
     "Puis le moment clé : le":"Then the key moment: the",
     ". Jure sur le lieu de ton choix. L'adversaire vient de jurer : jurer sur le même lieu que lui, c'est le":". Swear on the location of your choice. The opponent has just sworn: swearing on the same location is the",
     ", tout ou rien.":", all or nothing.",
