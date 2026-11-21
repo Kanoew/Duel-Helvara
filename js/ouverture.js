@@ -273,17 +273,18 @@ function ouvrirTirage(op){
   let tearing = null, tearTick = 0, tearDrag = 0;
   function setTear(p){ pack.style.setProperty("--tp", p.toFixed(3)); const k = Math.floor(p * 5); if(k > tearTick){ tearTick = k; buzz(8); } }
   pack.style.setProperty("--tc", tearCol);
-  pack.addEventListener("pointerdown", e => { if(!fx2 || state !== "pack" || e.button > 0) return; tearing = { id: e.pointerId, x0: e.clientX, p: 0, moved: false }; tearTick = 0; try{ pack.setPointerCapture(e.pointerId); }catch(_){} });
+  pack.addEventListener("pointerdown", e => { if(!fx2 || state !== "pack" || e.button > 0) return; tearing = { id: e.pointerId, x0: e.clientX, y0: e.clientY, p: 0, moved: false }; tearTick = 0; try{ pack.setPointerCapture(e.pointerId); }catch(_){} });
   pack.addEventListener("pointermove", e => {
     if(!tearing || e.pointerId !== tearing.id || state !== "pack") return;
-    const dx = Math.abs(e.clientX - tearing.x0), w = pack.getBoundingClientRect().width;
-    if(dx > 8){ if(!tearing.moved){ tearing.moved = true; pack.style.animation = "none"; } tearing.p = Math.min(1, (dx - 8) / (w * .7)); setTear(tearing.p); }
+    /* dans n'importe quelle direction : à la souris, on tire souvent vers le bas (vidéo de Jordan, 21 novembre) */
+    const dx = Math.hypot(e.clientX - tearing.x0, e.clientY - tearing.y0), w = pack.getBoundingClientRect().width;
+    if(dx > 8){ if(!tearing.moved){ tearing.moved = true; pack.style.animation = "none"; } tearing.p = Math.min(1, (dx - 8) / (w * .6)); setTear(tearing.p); }
     if(tearing.p >= 1){ tearing = null; tearDrag = Date.now(); openPack(true); }
   });
   const tearEnd = e => {
     if(!tearing || e.pointerId !== tearing.id) return; const t = tearing; tearing = null;
     if(!t.moved) return; tearDrag = Date.now();
-    if(t.p >= .55) openPack(true); else { pack.style.setProperty("--tp", 0); pack.style.animation = ""; }   /* pas assez déchiré : le paquet se referme */
+    openPack(true);   /* relâcher ouvre toujours : pas de geste raté (avant : sous la moitié, rien ne se passait et le clic était ignoré) */
   };
   pack.addEventListener("pointerup", tearEnd); pack.addEventListener("pointercancel", tearEnd);
 
