@@ -306,6 +306,7 @@ function dailyHTML(){
   const series=st>1?` · série de ${st} jours`:"";
   let hint, btn="";
   if(live){ hint="Défi en cours : reprends-le avec « Reprendre la partie »."; }
+  else if(dailyResumable()){ hint=`Défi interrompu au tour ${y.run.turns.length+1} : reprends-le là où tu l'avais laissé.`; btn=`<button class="primary small" data-act="dailyresume">Reprendre le défi</button>`; }
   else if(!dailyDone()){ hint=`Un seul essai · +${DAILY.win} CHF si tu gagnes, +${DAILY.other} sinon`; btn=`<button class="primary small" data-act="daily">Relever le défi</button>`; }
   else if(y.res==="abandon"){ hint="Défi abandonné aujourd'hui. Un nouveau t'attend demain."; }
   else { hint=`${{win:"Gagné",lose:"Perdu",draw:"Égalité"}[y.res]} ${y.w.map(w=>w==="p"?"🟢":w==="e"?"🔴":"⚪").join("")}${series} · nouveau défi demain`; btn=`<button class="ghost small" data-act="dailycopy">${dailyCopyLabel()}</button>`; }
@@ -358,6 +359,7 @@ function homeHTML(){
   const inGame=S && !S.over && !S.blitz && !S.rp, resumable=!inGame&&duelResumable();
   const played=P.w+P.l+P.d, splayed=P.sw+P.sl+P.sd;
   return `
+  ${APERCU&&!window.__sandbox?`<div class="hint apercu">Avant-première activée sur cet appareil · <a href="?apercu=0">la retirer</a></div>`:""}
   ${noticeHTML()}
   ${vitrineHTML()}
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
@@ -595,6 +597,7 @@ function shopHTML(){
     <div class="opened ${lp.res.length>3?"many":""}">${lp.res.map((r,k)=>`<div class="cell" style="--d:${(k*(lp.res.length>3?.12:.35)).toFixed(2)}s">${fullCard(r.id,CARDS[r.id].r==="L"&&r.isNew?"legend":"")}<span class="badge ${r.isNew?"new":"dup"}">${r.isNew?"Nouvelle":`Doublon · +${r.v} CHF`}</span></div>`).join("")}</div>
     <div class="row2" style="margin-top:12px">${lp.pid==="brulure"?(deckReady()?`<button class="primary" data-act="firstplay">${P.w+P.l+P.d?"Jouer avec ce deck":"Jouer ma première partie"}</button><button class="ghost" data-act="go" data-to="deck">Voir mon deck</button>`:`<button class="primary" data-act="go" data-to="deck">Voir mon deck</button>`):lp.res.some(r=>r.isNew)?`<button class="ghost" data-act="go" data-to="deck">Ajouter à mon deck</button>`:""}</div>
   </section>`:""}
+  ${window.__sandbox?`<section class="sec sbtest"><div class="eyebrow">Bac à sable · ouvertures de test</div><div class="row2"><button class="ghost small" data-act="sbtirage" data-k="L">Avec une légendaire</button><button class="ghost small" data-act="sbtirage" data-k="U">Avec une ultra-légendaire</button></div></section>`:""}
   ${stallHTML()}
   <div class="packs">${tiles}</div>
   <section class="collbar"><div class="qt"><span>Collection</span><b>${owned} / ${tot}</b></div>
@@ -682,7 +685,7 @@ const TUT={
   steps:{
    1:{req:[["coursier",0]],t:"Tu as <b>1 énergie</b> au tour 1 : ton énergie est égale au numéro du tour, elle ne se cumule pas. Touche le <b>Coursier du Flon</b> (coût 1), puis la <b>Ruelle</b>. Termine ton tour : à la <b>Révélation</b>, l'effet de la carte se déclenche. Ici, il te fait piocher une carte."},
    2:{req:[["felix",1]],t:"Le <b>Lac Ouchy</b> vient d'apparaître. Chaque lieu a sa règle : ici, ta première carte laisse un Reflet de 2. Pose <b>Félix</b> au Lac Ouchy : ta prochaine carte coûtera 1 de moins. Tu as maintenant 2 énergie, même si tu n'avais pas tout dépensé au tour 1."},
-   3:{req:[["celeste",2],["passante",0]],oath:true,t:"Pose <b>Céleste</b> au Sous-gare (Félix et le Sous-gare la font passer à 1), puis la <b>Passante</b> à la Ruelle.<br>Puis le moment clé : le <b>Serment</b>. Jure sur le lieu de ton choix. L'adversaire vient de jurer : jurer sur le même lieu que lui, c'est le <b>Serment croisé</b>, tout ou rien."},
+   3:{req:[["celeste",2],["passante",0]],oath:true,t:"Pose <b>Céleste</b> au Sous-gare (Félix et le Sous-gare la font passer à 1), puis la <b>Passante</b> à la Ruelle (<b>⧉ Lien</b> : +1 grâce au Coursier, Helvara comme elle).<br>Puis le moment clé : le <b>Serment</b>. Jure sur le lieu de ton choix. L'adversaire vient de jurer : jurer sur le même lieu que lui, c'est le <b>Serment croisé</b>, tout ou rien."},
    4:{req:[],free:true,t:"À partir de maintenant, plus de consigne : joue ce que tu veux, où tu veux. Ton Serment se gagne avec le lieu et avec la partie. Idée : Izzy copie la puissance de la carte adverse la plus forte de son lieu."},
    5:{req:[],free:true,t:"Tour 5. Idée : Yarden Weiss gagne +4 de puissance si tu as des cartes dans les 3 lieux. Le lieu de ton Serment est-il bien défendu ?"},
    6:{req:[],free:true,t:"Dernier tour. Celui qui mène sur 2 lieux sur 3 gagne. Ta dernière carte peut faire basculer un lieu, et ton Serment avec."}
@@ -1341,6 +1344,8 @@ document.addEventListener("click", e=>{
     /* Fin de la Première Brûlure : partie contre l'IA tout de suite (pas d'attente d'un humain pour un nouveau joueur) */
     case "daily": if(dailyDone()||!dailyOpen()) return; sheet=null; sfx("click"); migratedNote=""; newGame({daily:true}); window.scrollTo(0,0); return;
     case "dailycopy": dailyCopy(); return;
+    case "sbtirage": sandboxTirage(el.dataset.k); return;
+    case "dailyresume": if(!dailyResumable()) return; sheet=null; sfx("click"); migratedNote=""; dailyResume().then(()=>window.scrollTo(0,0)); return;
     case "firstplay": sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": sheet=null; screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;

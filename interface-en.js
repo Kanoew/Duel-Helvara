@@ -10,6 +10,7 @@
 
   /* Notes d'effet, entre parenthèses dans le journal */
   const NOTES=[
+    [/^Défi du jour repris au tour (\d+)$/, (m,n)=>`Daily challenge resumed on turn ${n}`],
     [/^(Tentation : [^,]+|Verdict : détruit [^,]+), (.+)$/, (m,a,b)=>note(a)+", "+note(b)],   /* mot-clé suivi de l'effet propre de la carte : chaque moitié traduite à part */
     [/^Tentation : −1 à (\d+) cartes?$/, (m,n)=>`Temptation: −1 to ${n} ${n>1?"cards":"card"}`],
     [/^Tentation : \+2$/, ()=>"Temptation: +2"],
@@ -187,7 +188,7 @@
     "Tu connais maintenant l'essentiel : l'énergie, les lieux, la révélation, les bonus en vert, les malus en rouge et le Serment.":"You now know the essentials: energy, locations, reveals, bonuses in green, penalties in red and the Oath.",
     ": une fois par partie, jure sur un lieu. Gagne-le avec la partie et tu es récompensé ; perds-le et tu le paies. C'est la marque d'Helvara.":": once per game, swear on a location. Win it along with the game and you are rewarded; lose it and you pay. It is Helvara's signature.",
     "au Sous-gare (Félix et le Sous-gare la font passer à 1), puis la":"at the Underground (Félix and the Underground bring her down to 1), then the",
-    "à la Ruelle.":"at the Alley.",
+    "à la Ruelle.":"at the Alley.", "à la Ruelle (":"at the Alley (", "⧉ Lien":"⧉ Bond", ": +1 grâce au Coursier, Helvara comme elle).":": +1 thanks to the Courier, Helvara like her).",
     "Puis le moment clé : le":"Then the key moment: the",
     ". Jure sur le lieu de ton choix. L'adversaire vient de jurer : jurer sur le même lieu que lui, c'est le":". Swear on the location of your choice. The opponent has just sworn: swearing on the same location is the",
     ", tout ou rien.":", all or nothing.",
@@ -229,7 +230,7 @@
     "Pack de départ · 12 cartes":"Starter pack · 12 cards", "Tu as déjà toutes les cartes de ces raretés":"You already own every card of these rarities",
     "Collection complète":"Collection complete", "Ouvre d'abord la Première Brûlure":"Open the First Burn first", "Acheter et ouvrir":"Buy and open",
     "Voilà tes 100 CHF. Achète la":"Here are your 100 CHF. Buy the", ": 12 cartes pour construire ton premier deck.":": 12 cards to build your first deck.",
-    "Échoppe du jour":"Daily stall", "Déjà à toi":"Already yours", "Nouvelle":"New", "Voir mon deck":"View my deck", "Défi du jour":"Daily challenge", "Défi du jour ✓":"Daily challenge ✓", "Relever le défi":"Take the challenge", "Copier mon résultat":"Copy my result", "Copié ✓":"Copied ✓", "Hors classement":"Unranked", "Défi en cours : reprends-le avec « Reprendre la partie ».":"Challenge in progress: continue it with “Resume the game”.", "Défi abandonné aujourd'hui. Un nouveau t'attend demain.":"Today's challenge was abandoned. A new one awaits tomorrow.", "Jouer ma première partie":"Play my first game", "Ajouter à mon deck":"Add to my deck",
+    "Échoppe du jour":"Daily stall", "Déjà à toi":"Already yours", "Nouvelle":"New", "Voir mon deck":"View my deck", "Avant-première activée sur cet appareil ·":"Preview enabled on this device ·", "la retirer":"turn it off", "Déchire le paquet ou touche-le":"Tear the pack or tap it", "Défi du jour":"Daily challenge", "Défi du jour ✓":"Daily challenge ✓", "Relever le défi":"Take the challenge", "Reprendre le défi":"Resume the challenge", "Copier mon résultat":"Copy my result", "Copié ✓":"Copied ✓", "Hors classement":"Unranked", "Défi en cours : reprends-le avec « Reprendre la partie ».":"Challenge in progress: continue it with “Resume the game”.", "Défi abandonné aujourd'hui. Un nouveau t'attend demain.":"Today's challenge was abandoned. A new one awaits tomorrow.", "Jouer ma première partie":"Play my first game", "Ajouter à mon deck":"Add to my deck",
     /* classement */
     "actif":"active", "Les 100 meilleurs de la saison. « actif » signale les joueurs vus ces 10 dernières minutes.":"The season's top 100. “active” marks players seen in the last 10 minutes.",
     "Ta progression n'est pas sauvegardée sur ton compte : tu n'apparais pas dans le classement des autres.":"Your progress isn't saved to your account: you don't appear in other players' leaderboard.",
@@ -356,6 +357,7 @@
   };
 
   const rules=[
+    [/^Défi interrompu au tour (\d+) : reprends-le là où tu l'avais laissé\.$/, (m,n)=>`Challenge interrupted on turn ${n}: pick it up where you left off.`],
     [/^Deck « (.+) » contre (.+)$/, (m,d,r)=>`“${trUI(d)}” deck against ${r}`],
     [/^Un seul essai · \+(\d+) CHF si tu gagnes, \+(\d+) sinon$/, (m,a,b)=>`One try only · +${a} CHF if you win, +${b} otherwise`],
     [/^(Gagné|Perdu|Égalité) (\S+)( · série de (\d+) jours)? · nouveau défi demain$/u, (m,r,e,x,n)=>`${{"Gagné":"Won","Perdu":"Lost","Égalité":"Draw"}[r]} ${e}${n?` · ${n}-day streak`:""} · new challenge tomorrow`],

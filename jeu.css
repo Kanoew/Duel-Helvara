@@ -856,12 +856,21 @@ body.ec-draw #app{filter:brightness(.75);transition:filter .6s}
 .t-dim{position:absolute;inset:0;background:#04050b;opacity:0;z-index:5;pointer-events:none}
 .t-sky,.t-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .t-sky{z-index:6}.t-fx{z-index:8}
+/* Battement de cœur : halo au bord de l'écran ; ombre de Tiamat : derrière la carte (même couche que le ciel, peinte après lui) */
+.t-pulse{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:11;box-shadow:inset 0 0 70px 26px var(--pc,#f0c94d),inset 0 0 160px 40px rgba(0,0,0,.35)}
+.t-shade{position:absolute;left:0;z-index:6;pointer-events:none;will-change:transform}
+.t-shade[hidden]{display:none}
 .t-flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,#fff,rgba(255,240,250,.5) 35%,transparent 72%);opacity:0;z-index:9;pointer-events:none}
 /* Paquet : la vraie image, avec un rabat qui s'envole */
 .t-pack{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);padding:0;border:0;background:none;cursor:pointer;z-index:3;animation:tpackfloat 3.2s ease-in-out infinite;filter:drop-shadow(0 18px 30px rgba(0,0,0,.6))}
 .t-pack:focus-visible{outline:2px solid var(--warm);outline-offset:6px;border-radius:10px}
 .t-body,.t-flap{position:absolute;inset:0;background-size:100% 100%;background-position:center;border-radius:10px}
 .t-pack::after{content:"";position:absolute;inset:0;border-radius:10px;pointer-events:none;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.16) 48%,transparent 60%) -200% 0/300% 100% no-repeat;animation:tsheen 4s ease-in-out infinite}
+/* Déchirure (21 novembre) : --tp de 0 à 1 pendant le glisser ; --tc = couleur de la meilleure carte du paquet */
+.t-pack{touch-action:none}
+.t-flap{transform:translate(calc(var(--tp,0) * 7px),calc(var(--tp,0) * -6px)) rotate(calc(var(--tp,0) * 5deg));transform-origin:0 100%}
+.t-tear{position:absolute;left:0;right:0;top:calc(var(--ph,300px) * .125 - 3px);height:6px;border-radius:3px;pointer-events:none;transform-origin:0 50%;transform:scaleX(var(--tp,0));opacity:calc(var(--tp,0) * 4);
+  background:linear-gradient(90deg,transparent,var(--tc,#fff) 18%,#fff 50%,var(--tc,#fff) 82%,transparent);box-shadow:0 0 18px 6px var(--tc,#fff),0 -10px 34px 10px var(--tc,#fff)}
 @keyframes tpackfloat{50%{margin-top:-7px}}
 @keyframes tsheen{0%,55%{background-position:-200% 0}100%{background-position:200% 0}}
 /* Éventail */
@@ -1008,6 +1017,8 @@ body:has(.sandbar) #app{padding-top:62px}
 .cdjour .cdart .art{background-size:cover;background-position:center}
 .cdjour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0}
 .cdjour .cdtx b{font-family:var(--display);font-size:17px}
+.apercu{text-align:center;margin:6px 0 2px;color:var(--warm)}
+.apercu a{color:inherit}
 /* Défi du jour (accueil) : même gabarit que la carte du jour, bouton à droite */
 .defijour{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:10px 0;border-left:3px solid var(--me)}
 .defijour .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}

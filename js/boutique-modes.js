@@ -20,7 +20,7 @@ function starterRoll(){
 const ulSeason=u=>{ if(CARDS[u.id]&&CARDS[u.id].ex) return CARDS[u.id].ex; for(const r of u.req) for(const x of [].concat(r)) if(CARDS[x]&&CARDS[x].ex) return CARDS[x].ex; return null; };
 function ulPool(pk){
   if(!pk||!pk.ul) return [];
-  const fus=ULS.filter(u=>u.req.length&&!u.fac&&CARDS[u.id]&&REL(u.id)&&!P.owned.includes(u.id));
+  const fus=ULS.filter(u=>u.req.length&&!u.fac&&CARDS[u.id]&&REL(u.id)&&(!P.owned.includes(u.id)||window.__sandbox));
   const own=pk.win?fus.filter(u=>ulSeason(u)===pk.id):[], reg=fus.filter(u=>!ulSeason(u));
   return (own.length?own:reg).map(u=>u.id);
 }
@@ -29,8 +29,8 @@ const packMissing=pk=>PACK(pk.id).filter(id=>!P.owned.includes(id)&&pk.odds.some
 /* Un paquet peut-il être acheté maintenant ? (même règle pour le bouton de la boutique et « Ouvrir un autre paquet ») */
 function packBuyable(pk){
   if(!pk) return false;
-  if(!pk.starter&&!packMissing(pk).length&&!ulPool(pk).length) return false;
-  return !(P.chf<pk.price||(pk.starter&&P.starter)||!inWin(pk.win)||(!pk.starter&&!P.starter));
+  if(!pk.starter&&!packMissing(pk).length&&!ulPool(pk).length&&!window.__sandbox) return false;   /* bac à sable : toutes les cartes, mais les paquets restent ouvrables */
+  return !(P.chf<pk.price||(pk.starter&&P.starter&&!window.__sandbox)||!inWin(pk.win)||(!pk.starter&&!P.starter));
 }
 /* Tirage du contenu d'un paquet payant (3 cartes). Lit P.owned, met à jour P.pity ; ne touche à rien d'autre (testé par outils/tests-scenarios.js). */
 function drawPack(pk){
@@ -73,6 +73,17 @@ function buyPack(pid){
   ouvrirTirage({res,name:pk.name,img:pk.img,pid,price:pk.price}); /* js/ouverture.js : « Le Tirage » (les sons sont joués pendant l'animation) */
 }
 
+
+/* Bac à sable : ouvertures de test (contenu choisi, rien n'est gardé) pour voir chaque effet du Tirage sans attendre la chance */
+function sandboxTirage(kind){
+  if(!window.__sandbox||document.getElementById("tirage")) return;
+  const pool=r=>PACK().filter(id=>CARDS[id].r===r), any=a=>a[Math.floor(Math.random()*a.length)];
+  const fus=ULS.filter(u=>u.req.length&&!u.fac&&CARDS[u.id]&&REL(u.id)).map(u=>u.id);
+  const top=kind==="U"&&fus.length?any(fus):any(pool(kind==="U"?"L":kind));
+  const ids=[any(pool("C")),any(pool("R")),top,any(pool("C")),any(pool("E"))].filter(Boolean);
+  const pk=PACKS.find(x=>x.id==="p100")||PACKS[1]||PACKS[0];
+  ouvrirTirage({res:ids.map(id=>({id,isNew:true})),name:"Test",img:pk.img,pid:null});
+}
 
 /* ======= ÉCHOPPE DU JOUR ======= */
 const STALL={R:200,E:400};
