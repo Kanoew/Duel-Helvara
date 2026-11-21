@@ -8,8 +8,8 @@ const OUV_TIMING = {
   C: { wait: 220, tension: 0,    reveal: 300, reward: 1400 },
   R: { wait: 240, tension: 380,  reveal: 380, reward: 1900 },
   E: { wait: 300, tension: 650,  reveal: 400, reward: 2300 },
-  L: { wait: 380, tension: 1250, reveal: 450, reward: null },
-  U: { wait: 800, tension: 2300, reveal: 550, reward: null }
+  L: { wait: 380, tension: 1800, reveal: 450, reward: null },   /* 21 novembre : +550 ms pour trois battements de cœur */
+  U: { wait: 800, tension: 3250, reveal: 550, reward: null }    /* 21 novembre : le faux arrêt dure 1,4 s, le temps que l'ombre de Tiamat passe */
 };
 /* Couleurs et palettes du ciel par rareté (lettres du jeu : C R E L U) */
 const OUV_LOOK = {
@@ -37,16 +37,17 @@ function ouvrirTirage(op){
   root.id = "tirage"; root.className = "tirage"; root.setAttribute("role", "dialog"); root.setAttribute("aria-label", tr("Ouverture du paquet"));
   root.innerHTML = `<div class="t-status" aria-live="polite"></div>
     <button class="t-skip" type="button">${tr("Passer")}</button>
-    <button class="t-pack" type="button" aria-label="${tr("Ouvrir le paquet")}"><span class="t-body"></span><span class="t-flap"></span></button>
+    <button class="t-pack" type="button" aria-label="${tr("Ouvrir le paquet")}"><span class="t-body"></span><span class="t-flap"></span><span class="t-tear"></span></button>
     <div class="t-fan${grid ? " grid" : ""}" hidden></div>
-    <div class="t-dim"></div><canvas class="t-sky"></canvas>
+    <div class="t-dim"></div><canvas class="t-sky"></canvas><div class="t-shade" hidden></div>
     <div class="t-focus" hidden></div>
-    <canvas class="t-fx"></canvas><div class="t-flash"></div><div class="t-banner"></div><div class="t-badge"></div>
+    <canvas class="t-fx"></canvas><div class="t-flash"></div><div class="t-banner"></div><div class="t-badge"></div><div class="t-pulse"></div>
     <div class="t-end" hidden></div>`;
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   const statusEl = $(".t-status"), skipBtn = $(".t-skip"), pack = $(".t-pack"), fan = $(".t-fan"), dim = $(".t-dim"), skyCv = $(".t-sky"),
-        focus = $(".t-focus"), cv = $(".t-fx"), flashEl = $(".t-flash"), banner = $(".t-banner"), badge = $(".t-badge"), endEl = $(".t-end");
+        focus = $(".t-focus"), cv = $(".t-fx"), flashEl = $(".t-flash"), banner = $(".t-banner"), badge = $(".t-badge"), endEl = $(".t-end"),
+        pulse = $(".t-pulse"), shade = $(".t-shade"), tearEl = $(".t-tear");
 
   let curHolo = null; /* effet holo de la carte en cours de révélation (Ultra-légendaires de faction qui en ont un) */
   let state = "pack", opened = 0, current = -1, skipped = false, closed = false, twinkle = 0, raf = 0;
@@ -62,6 +63,10 @@ function ouvrirTirage(op){
     return a.finished.then(() => { if(o.commit && !closed){ try{ a.commitStyles(); }catch(e){} a.cancel(); } }).catch(() => {});
   }
   const say = t => { statusEl.textContent = t ? tr(t) : ""; };
+  /* Vibration (Android ; l'iPhone l'ignore) : seulement si les effets sonores sont activés et sans « réduire les animations » */
+  const buzz = pat => { if(reduced || skipped || closed || (typeof P !== "undefined" && P.sfx === false) || !navigator.vibrate) return; try{ navigator.vibrate(pat); }catch(e){} };
+  /* Meilleure rareté du paquet : couleur de la lumière qui s'échappe de la déchirure */
+  const RORD = { C: 0, R: 1, E: 2, L: 3, U: 4 }, best = cards.reduce((b, c) => RORD[c.r] > RORD[b] ? c.r : b, "C"), tearCol = best === "C" ? "#cfd8e8" : OUV_LOOK[best].color;
   const sfxQ = n => { try{ sfx(n); }catch(e){} };
 
   /* ---------- Canvas ---------- */
@@ -188,10 +193,41 @@ function ouvrirTirage(op){
   }
   const skyStop = () => { sky.on = false; sky.target = 0; };
 
-  function shakeFrames(a0, a1, n){
+  function shakeFrames(a0, a1, n, base = ""){   /* base : transformation à garder (le paquet est centré par translate(-50%,-50%)) */
     const f = [];
-    for(let i = 0; i < n; i++){ const a = a0 + (a1 - a0) * (i / n); f.push({ transform: `translate(${rand(-a, a)}px,${rand(-a, a)}px) rotate(${rand(-a / 4, a / 4)}deg)` }); }
-    f.push({ transform: "none" }); return f;
+    for(let i = 0; i < n; i++){ const a = a0 + (a1 - a0) * (i / n); f.push({ transform: `${base}translate(${rand(-a, a)}px,${rand(-a, a)}px) rotate(${rand(-a / 4, a / 4)}deg)` }); }
+    f.push({ transform: base || "none" }); return f;
+  }
+
+  /* ---------- Battement de cœur (légendaire, ultra-légendaire) : vibration « boum-boum », halo qui pulse au bord de l'écran ---------- */
+  function heartbeat(color, strong){
+    if(skipped || closed) return;
+    sfxQ("heart"); buzz(strong ? [70, 120, 110] : [45, 120, 75]);
+    pulse.style.setProperty("--pc", color);
+    anim(pulse, [{ opacity: 0 }, { opacity: strong ? 1 : .7, offset: .12 }, { opacity: .12, offset: .3 }, { opacity: strong ? .85 : .55, offset: .42 }, { opacity: 0 }], { duration: 640, easing: "ease-out" });
+  }
+
+  /* ---------- L'ombre de Tiamat (ultra-légendaire) : une silhouette immense traverse le ciel derrière la carte, sans jamais se montrer ---------- */
+  function shadePath(Lw, H){
+    const n = 72, top = [], bot = [];
+    for(let i = 0; i <= n; i++){
+      const u = i / n, x = Lw * (.04 + u * .92), y = H * .5 + Math.sin(u * Math.PI * 2.4 + .5) * H * .26 + Math.sin(u * Math.PI * 7) * H * .025;
+      const w = H * (u < .1 ? .1 + u * 1.1 : .21 * Math.pow(1 - (u - .1) / .9, .85)) + 1.5;   /* tête massive, corps qui s'effile jusqu'à la queue */
+      const crest = u > .14 && u < .6 ? w * .32 * Math.max(0, Math.sin(u * Math.PI * 9)) : 0;   /* dos ondulé : quelques bosses douces, jamais une ligne dentelée */
+      top.push(`${x.toFixed(1)},${(y - w - crest).toFixed(1)}`); bot.push(`${x.toFixed(1)},${(y + w).toFixed(1)}`);
+    }
+    return "M" + top.join(" L") + " L" + bot.reverse().join(" L") + "Z";
+  }
+  async function tiamatShade(cy, dur){
+    if(reduced || skipped || closed) return;
+    const Lw = Math.round(SW * 1.9), H = Math.round(Math.min(SH * .5, SW * 1.15)), d = shadePath(Lw, H);
+    shade.innerHTML = `<svg width="${Lw}" height="${H}" viewBox="0 0 ${Lw} ${H}" aria-hidden="true"><defs><filter id="tshb" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+      <path d="${d}" fill="none" stroke="rgba(255,120,190,.5)" stroke-width="10" filter="url(#tshb)"/><path d="${d}" fill="none" stroke="rgba(150,170,255,.35)" stroke-width="4" filter="url(#tshb)"/>
+      <path d="${d}" fill="#010207" filter="url(#tshb)"/></svg>`;   /* reflet rose et bleu sur le contour : on devine la forme, jamais le détail */
+    shade.style.top = Math.round(cy - H * .55) + "px"; shade.hidden = false;
+    sfxQ("rumble"); buzz([380]);
+    await anim(shade, [{ transform: `translate(${SW}px,10px)`, opacity: 0 }, { opacity: 1, offset: .12 }, { opacity: 1, offset: .82 }, { transform: `translate(${-Lw}px,-26px)`, opacity: 0 }], { duration: dur, easing: "cubic-bezier(.35,.1,.55,.95)" });
+    shade.hidden = true; shade.innerHTML = "";
   }
 
   /* ---------- Cartes ---------- */
@@ -229,21 +265,41 @@ function ouvrirTirage(op){
     $(".t-body").style.clipPath = `polygon(${zig(12, 14)},100% 100%,0 100%)`;
     $(".t-flap").style.clipPath = `polygon(0 0,100% 0,${zig(14.2, 14).split(",").reverse().join(",")})`;
   }
-  async function openPack(){
+  /* ---------- Déchirure : glisser le doigt sur le haut du paquet ; la lumière qui s'échappe a la couleur de la meilleure carte ---------- */
+  let tearing = null, tearTick = 0, tearDrag = 0;
+  function setTear(p){ pack.style.setProperty("--tp", p.toFixed(3)); const k = Math.floor(p * 5); if(k > tearTick){ tearTick = k; buzz(8); } }
+  pack.style.setProperty("--tc", tearCol);
+  pack.addEventListener("pointerdown", e => { if(state !== "pack" || e.button > 0) return; tearing = { id: e.pointerId, x0: e.clientX, p: 0, moved: false }; tearTick = 0; try{ pack.setPointerCapture(e.pointerId); }catch(_){} });
+  pack.addEventListener("pointermove", e => {
+    if(!tearing || e.pointerId !== tearing.id || state !== "pack") return;
+    const dx = Math.abs(e.clientX - tearing.x0), w = pack.getBoundingClientRect().width;
+    if(dx > 8){ if(!tearing.moved){ tearing.moved = true; pack.style.animation = "none"; } tearing.p = Math.min(1, (dx - 8) / (w * .7)); setTear(tearing.p); }
+    if(tearing.p >= 1){ tearing = null; tearDrag = Date.now(); openPack(true); }
+  });
+  const tearEnd = e => {
+    if(!tearing || e.pointerId !== tearing.id) return; const t = tearing; tearing = null;
+    if(!t.moved) return; tearDrag = Date.now();
+    if(t.p >= .55) openPack(true); else { pack.style.setProperty("--tp", 0); pack.style.animation = ""; }   /* pas assez déchiré : le paquet se referme */
+  };
+  pack.addEventListener("pointerup", tearEnd); pack.addEventListener("pointercancel", tearEnd);
+
+  async function openPack(torn){
     if(state !== "pack") return;
-    state = "busy"; say(""); sfxQ("pack");
+    state = "busy"; say(""); sfxQ(torn ? "tear" : "pack");
     pack.style.animation = "none";
-    await anim(pack, shakeFrames(1, 5, 8), { duration: 300 });
+    if(torn){ pack.style.setProperty("--tp", 1); buzz([25, 40, 45]); }
+    else await anim(pack, shakeFrames(1, 5, 8, "translate(-50%,-50%) "), { duration: 300 });
     if(closed) return;
     const flap = $(".t-flap");
     anim(flap, [{ transform: "none", opacity: 1 }, { transform: "translate(60px,-90px) rotate(28deg)", opacity: 0 }], { duration: 380, easing: "cubic-bezier(.3,.6,.4,1)" });
     const pr = pack.getBoundingClientRect();
-    sparkle(pr.left + pr.width / 2, pr.top + 20, ["#f0c94d", "#ffffff", "#c8b4ff"], 26, 4);
+    sparkle(pr.left + pr.width / 2, pr.top + 20, [tearCol, "#ffffff", tearCol], 18 + RORD[best] * 10, 3.5 + RORD[best] * .6);   /* la lumière annonce la meilleure carte du paquet */
+    if(RORD[best] >= 1) wave(pr.left + pr.width / 2, pr.top + pr.height * .12, tearCol, 4 + RORD[best], 34 + RORD[best] * 4);
     await sleep(110);
     fan.hidden = false;
     const slots = [...fan.children];
     slots.forEach(s => (s.querySelector(".t-dealer").style.opacity = 0));
-    anim(pack, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(24px) scale(.9)" }], { duration: 320 });
+    anim(pack, [{ opacity: 1, transform: "translate(-50%,-50%)" }, { opacity: 0, transform: "translate(-50%,-50%) translateY(24px) scale(.9)" }], { duration: 320 });   /* garde le centrage du paquet (avant : il sautait en bas à droite en disparaissant) */
     for(let i = 0; i < slots.length; i++){
       const d = slots[i].querySelector(".t-dealer"), r = slots[i].getBoundingClientRect();
       const dx = pr.left + pr.width / 2 - (r.left + r.width / 2), dy = pr.top + pr.height / 2 - (r.top + r.height / 2);
@@ -296,7 +352,8 @@ function ouvrirTirage(op){
       await sleep(a); sky.spin = .04; sky.inflow = 1;
       await sleep(b);
     } else if(c.r === "L"){
-      const [a, b, d] = part(600 / 1250, 500 / 1250, 150 / 1250);
+      const [a, b, d] = part(.48, .4, .12);
+      heartbeat(L.color); later(() => heartbeat(L.color), a); later(() => heartbeat(L.color, true), a + b - 120);
       sky.target = 1; sky.spin = .018; sky.inflow = .35;
       anim(glow, [{ opacity: 0 }, { opacity: .5 }, { opacity: 1 }], { duration: T.tension * .88 });
       anim(neb, [{ opacity: 0 }, { opacity: 1 }], { duration: T.tension * .8, easing: "ease-in" });
@@ -306,7 +363,8 @@ function ouvrirTirage(op){
       await sleep(d);
     } else if(c.r === "U"){
       /* deux battements → la galaxie s'enroule en accélérant → FAUX ARRÊT → explosion */
-      const [b1, b2, b3, w1, w2, w3, stop] = part(160 / 2300, 220 / 2300, 320 / 2300, 450 / 2300, 400 / 2300, 300 / 2300, 450 / 2300);
+      const [b1, b2, b3, w1, w2, w3, stop] = part(160 / 3250, 220 / 3250, 320 / 3250, 450 / 3250, 400 / 3250, 300 / 3250, 1400 / 3250);
+      heartbeat(L.color); later(() => heartbeat(L.color), b1 + b2); later(() => heartbeat(L.color, true), b1 + b2 + b3 + w1 + w2);
       const beats = b1 + b2 + b3, wind = w1 + w2 + w3;
       sky.target = .45; sky.spin = .012; sky.inflow = .2;
       anim(glow, [{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: .3, offset: .4 }, { opacity: 1, offset: .55 }, { opacity: .45 }], { duration: beats });
@@ -322,8 +380,9 @@ function ouvrirTirage(op){
       if(closed || skipped) return;
       sky.freeze = true;                                     /* tout se fige : galaxie immobile, halo qui retombe, plus de tremblement */
       anim(glow, [{ opacity: 1 }, { opacity: .12 }], { duration: 180 });
-      sky.target = .6;
+      sky.target = 1;                                        /* le ciel reste allumé : c'est l'ombre qui l'éteint en passant */
       shaker.getAnimations().forEach(a => a.cancel());
+      tiamatShade(cy, stop * .95);
       await sleep(stop);
       sky.freeze = false;
     }
@@ -472,6 +531,7 @@ function ouvrirTirage(op){
     parts = []; waves = []; skyStop(); sky.freeze = false; sky.burst = false; sky.I = 0; sky.flare = 0;
     focus.hidden = true; holoKill(curHolo); curHolo = null; focus.innerHTML = ""; fan.classList.remove("focusing");
     banner.style.opacity = 0; badge.style.opacity = 0; dim.style.opacity = 0; flashEl.style.opacity = 0; root.style.transform = "";
+    shade.hidden = true; shade.innerHTML = ""; pulse.style.opacity = 0; if(navigator.vibrate) try{ navigator.vibrate(0); }catch(e){}
     pack.hidden = true; fan.hidden = false;
     [...fan.children].forEach((s, i) => { s.style.visibility = ""; s.querySelector(".t-dealer").style.opacity = ""; s.querySelector(".t-dealer").style.transform = ""; markOpen(i); });
     finishPack();
@@ -498,9 +558,9 @@ function ouvrirTirage(op){
     if(state === "waiting") settle();
   });
   skipBtn.addEventListener("click", e => { e.stopPropagation(); skipAll(); });
-  pack.addEventListener("click", e => { e.stopPropagation(); openPack(); });
+  pack.addEventListener("click", e => { e.stopPropagation(); if(Date.now() - tearDrag < 400) return; openPack(false); });   /* une simple touche ouvre toujours le paquet */
 
   sizeCanvas(); sizePack(); buildFan();
-  say("Touche le paquet");
+  say("Déchire le paquet ou touche-le");
   pack.focus({ preventScroll: true });
 }

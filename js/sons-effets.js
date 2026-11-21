@@ -42,6 +42,9 @@ const SFX = {
   eclose(){ noise(0,.55,.26,240); noise(.04,.18,.16,2600); tone(58,0,1.3,"sine",.22,32); tone(233,.08,.9,"sawtooth",.025,110); },
   ecdraw(){ noise(0,.25,.14,1400); tone(330,0,.6,"triangle",.07); tone(311,0,.6,"triangle",.07); },
   pack(){ noise(0,.4,.12,2400); tone(300,0,.45,"sine",.08,900); },
+  heart(){ tone(64,0,.16,"sine",.3,46); tone(58,.18,.22,"sine",.24,40); },   /* Tirage : battement de cœur avant une légendaire ou une ultra-légendaire */
+  rumble(){ tone(40,0,1.4,"sine",.22,28); noise(0,1.2,.07,160); },             /* Tirage : l'ombre de Tiamat passe */
+  tear(){ noise(0,.22,.11,3600); noise(.08,.18,.08,1800); },                   /* Tirage : le paquet se déchire */
   rare(){ [784,988,1319].forEach((f,i)=>tone(f,.9+i*.08,.3,"sine",.07)); },
   legend(){ [523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.9+i*.07,.4,"triangle",.07)); }
 };
