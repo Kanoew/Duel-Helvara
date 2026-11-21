@@ -106,10 +106,34 @@ function dailyPlan(d=today()){
 }
 const dailyOpen=()=>!!(P.tuto&&P.starter);
 const dailyDone=()=>!!(P.dy&&P.dy.d===today());
+/* Reprise du défi après un rechargement : la partie du jour est reconstruite (même graine), puis les tours déjà joués sont rejoués
+   en silence avec les coups gardés dans P.dy.run (les tiens, ceux de l'IA et les deux Serments), comme la reprise d'un duel en ligne */
+function dailySave(){
+  if(window.__wiped||!S||!S.daily||S.rs||!S.rec||!P.dy||P.dy.d!==S.daily.d||P.dy.res!=="abandon") return;
+  P.dy.run={turns:S.rec.turns.map(t=>({p:t.p,e:t.e,sw:t.sw})),op:S.rec.op||null,oe:S.rec.oe||null}; save();
+}
+const dailyResumable=()=>!!(P.dy&&P.dy.d===today()&&P.dy.res==="abandon"&&P.dy.run&&!(S&&S.daily&&!S.over));
+async function dailyResume(){
+  if(!dailyResumable()) return false;
+  const run=P.dy.run; newGame({daily:true,resume:true}); if(!S||!S.daily) return false;
+  S.rs=run; quiet=true;
+  try{
+    for(const t of run.turns){ if(S.over) break;
+      if(run.op&&run.op.t===S.turn&&S.oath==null) swearOath("p",run.op.li);
+      const used=new Set(), pick=(side,list)=>list.map(([id,li])=>{ const c=S.hand[side].find(x=>x.id===id&&!used.has(x)); if(c) used.add(c); return c?{c,li}:null; }).filter(Boolean);
+      const mine=pick("p",t.p), theirs=pick("e",t.e);
+      if(t.sw){ const c=S.board.p[t.sw[0]].find(x=>eid(x)==="nageuse_lac"); if(c) mine.swim={c,li:t.sw[1],from:t.sw[0]}; }
+      await resolveTurn(mine,theirs,false);
+    }
+    if(!S.over&&run.op&&run.op.t===S.turn&&S.oath==null) swearOath("p",run.op.li);   /* Serment prêté juste avant le rechargement */
+  } finally { quiet=false; if(S){ S.rs=null; S.oathCer=null; S.oathNew=null; } }
+  if(S&&!S.over){ log(`Défi du jour repris au tour ${S.turn}`); dailySave(); }
+  render(); return true;
+}
 function newGame(opt){
-  const dy=opt&&opt.daily?dailyPlan():null;
+  const dy=opt&&opt.daily?dailyPlan():null, resume=!!(opt&&opt.resume);
   RNG=Math.random;
-  if(dy&&(dailyDone()||!dailyOpen())) return;
+  if(dy&&!resume&&(dailyDone()||!dailyOpen())) return;
   if(!dy&&!deckReady()){ screen="deck"; render(); return; }
   if(S&&S.blitz&&!S.over) bzEndRun();
   const firstEver = !dy && games===0 && P.w+P.l+P.d===0, locIds = dy ? dy.locs : firstEver ? ["ruelle","ouchy","sousgare"] : pickLocs();
@@ -122,7 +146,7 @@ function newGame(opt){
     log:[], sel:null, info:null, busy:false, over:null};
   S.feat=!firstEver&&locIds.includes(featureLoc())?featureLoc():null; /* lieu à l'honneur présent dans cette partie */
   if(dy){ RNG=mulberry(dy.seed); S.daily={d:dy.d,pc:dy.mine}; S.deck.p=gShuffle(PRECONS.find(x=>x.id===dy.mine).cards.filter(id=>CARDS[id]).map(mk)); S.rival={id:dy.rival,mood:rivalOf(dy.rival).mood};
-    if(!window.__wiped){ P.dy={d:dy.d,res:"abandon"}; save(); } }   /* l'essai du jour est compté dès le lancement (page rechargée : défi perdu) */
+    if(!window.__wiped&&!resume){ P.dy={d:dy.d,res:"abandon",run:{turns:[],op:null,oe:null}}; save(); } }   /* l'essai du jour est compté dès le lancement ; après un rechargement, il se reprend (dailyResume) */
   else S.rival=drawRival(S.aiTier);
   const ai=dy?aiPreconDeck(dy.foe,S.aiTier,true,false):rivalDeck(S.rival,S.aiTier,false,false); S.deck.e=(dy?gShuffle:shuffle)(ai.deck.map(mk)); S.aiFac=ai.fac; if(typeof preloadFoe==="function") preloadFoe(); /* range les illustrations du deck adverse pour jouer hors ligne */
   /* Replay (25 octobre) : graine du hasard de la partie et ordre exact des decks ; les coups de chaque tour sont ajoutés par resolveTurn */
@@ -143,6 +167,7 @@ function swearOath(side,li){
   const k=side==="p"?"oath":"aiOath", o=side==="p"?S.aiOath:S.oath;
   if(!S||S[k]!=null||S.turn>5||!(li>=0&&li<3)||!S.locs[li]||!S.locs[li].rev) return false;
   S[k]=li; S.oathNew={li,at:Date.now()};
+  if(S.daily&&S.rec){ S.rec[side==="p"?"op":"oe"]={t:S.turn,li}; if(side==="p") dailySave(); }   /* Défi du jour : gardé pour la reprise */
   /* Cérémonie : portrait + nom (+ phrase du rival, selon son tempérament tiré), affichée OATH_CER_MS ; la phrase reste ensuite dans la barre du serment adverse */
   if(side==="p"||S.rival){ const say=side==="e"?gQuote(S.rival.mood):(!S.tut?PLAYER_QUOTES[Math.floor(Math.random()*PLAYER_QUOTES.length)]:null); if(side==="e") S.aiOathSay=say; const cer=S.oathCer={side,li,at:Date.now(),say}, sRef=S;
     setTimeout(()=>{ if(S===sRef&&S.oathCer===cer&&typeof render==="function"&&screen==="play") render(); },OATH_CER_MS+150); }
@@ -1269,7 +1294,7 @@ async function resolveTurn(mine, theirs, animate){
     if(to>2||!S.board[s][li].includes(c)||fated(c)||(c.captive&&captorLive(c.captive))||!S.locs[to].rev||S.locs[to].locked||S.board[s][to].length>=capOf(s,to)) continue;
     S.board[s][li]=S.board[s][li].filter(x=>x!==c); S.board[s][to].push(c); flonHook(to,c); log(`Hélios passe vers ${LOCS[S.locs[to].id].name} (${who(s)})`); sfx("legend");
     for(const x of S.board[s][li]) if(x!==c&&live(x)&&SELFMOVE.has(eid(x))){ x.pow+=2; (x.mods=x.mods||[]).push({v:2,src:"Hélios"}); log(`Hélios · +2 à ${nm(x)} (${who(s)})`); } }
-  if(S.turn>=1&&S.turn<=5&&!S.rp&&!S.mp&&!S.tut) aiOath();
+  if(S.turn>=1&&S.turn<=5&&!S.rp&&!S.mp&&!S.tut){ if(S.rs){ const o=S.rs.oe; if(o&&o.t===S.turn&&S.aiOath==null) swearOath("e",o.li); } else aiOath(); }   /* reprise du défi : le Serment de l'IA déjà tiré est rejoué tel quel */
   /* Partie guidée : l'adversaire jure à la fin du tour 2, là où il mène le plus (Ruelle si égalité), pour que le joueur puisse relever son défi au tour 3 */
   if(S.tut&&S.turn===2&&S.aiOath==null){ let li=0, m=-1e9; for(let i=0;i<3;i++) if(S.locs[i].rev){ const d=total("e",i)-total("p",i); if(d>m){ m=d; li=i; } } swearOath("e",li); }   /* la fenêtre de chaque tempérament est dans aiOath */
   if(hedoneTurn(dflt)&&animate) await wait(500);   /* Hédoné : fin de tour, après tous les autres effets */
@@ -1281,6 +1306,7 @@ async function resolveTurn(mine, theirs, animate){
   render(); await wait(300);
   for(const s of ["p","e"]) for(const col of S.board[s]) for(const c of col) c.fresh=false;
   S.busy=false;
+  dailySave();
   if(S.turn>=6){ if(S.rp) rpEnd(); else finish(); } else startTurn();
 }
 function loseStar(){ if(P.st>0) P.st--; else if(P.lv<MAXLV&&!isFloor(P.lv)){ P.lv--; P.st=maxSt(P.lv)-1; } }

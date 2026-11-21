@@ -243,7 +243,7 @@ function clean(p){
     lv:Math.min(MAXLV,p.rv===2?num(p.lv,0):migrateLv(num(p.lv,0))), st:num(p.st,0), streak:num(p.streak,0), best:Math.min(MAXLV,p.rv===2?num(p.best,0):migrateLv(num(p.best,0))), rv:2,
     season:(typeof p.season==="string"&&/^\d{4}-\d{2}$/.test(p.season))?p.season:seasonKey(), sw:num(p.sw,0), sl:num(p.sl,0), sd:num(p.sd,0),
     tuto:p.tuto===undefined?true:!!p.tuto, starter:!!p.starter, avatar:(POOL.includes(p.avatar)?p.avatar:null), music:p.music!==false, vm:Math.min(100,num(p.vm,35)), vs:Math.min(100,num(p.vs,100)), cine:p.cine!==false, cadres:p.cadres!==false, dis:(Array.isArray(p.dis)?p.dis.filter(x=>typeof x==="string").slice(0,20):[]), dw:num(p.dw,0), dl:num(p.dl,0), dd:num(p.dd,0), oathK:Math.min(99999,num(p.oathK,0)), oathB:Math.min(99999,num(p.oathB,0)), oathS:Math.min(99999,num(p.oathS,0)), oathMax:Math.min(99999,num(p.oathMax,0)), od:(p.od&&typeof p.od.d==="string")?{d:p.od.d.slice(0,10),g:Math.min(9999,num(p.od.g,0))}:{d:"",g:0}, fan:(Array.isArray(p.fan)?p.fan.filter(id=>POOL.includes(id)).slice(0,3):[]),
-    ld:(typeof p.ld==="string"?p.ld.slice(0,10):""), dy:(p.dy&&typeof p.dy.d==="string"&&/^\d{4}-\d\d-\d\d$/.test(p.dy.d))?{d:p.dy.d,res:["win","lose","draw","abandon"].includes(p.dy.res)?p.dy.res:"abandon",w:(Array.isArray(p.dy.w)?p.dy.w.slice(0,3).map(x=>x==="p"||x==="e"?x:""):[]),oath:["kept","broken"].includes(p.dy.oath)?p.dy.oath:"",pc:(typeof p.dy.pc==="string"?p.dy.pc.slice(0,20):"")}:null, dyw:Math.min(99999,num(p.dyw,0)), dys:Math.min(99999,num(p.dys,0)), dyl:(typeof p.dyl==="string"?p.dyl.slice(0,10):""), bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,HIST_MAX).map(cleanHist):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
+    ld:(typeof p.ld==="string"?p.ld.slice(0,10):""), dy:(p.dy&&typeof p.dy.d==="string"&&/^\d{4}-\d\d-\d\d$/.test(p.dy.d))?{d:p.dy.d,res:["win","lose","draw","abandon"].includes(p.dy.res)?p.dy.res:"abandon",w:(Array.isArray(p.dy.w)?p.dy.w.slice(0,3).map(x=>x==="p"||x==="e"?x:""):[]),oath:["kept","broken"].includes(p.dy.oath)?p.dy.oath:"",pc:(typeof p.dy.pc==="string"?p.dy.pc.slice(0,20):""),run:cleanDyRun(p.dy.run)}:null, dyw:Math.min(99999,num(p.dyw,0)), dys:Math.min(99999,num(p.dys,0)), dyl:(typeof p.dyl==="string"?p.dyl.slice(0,10):""), bz:cleanBz(p.bz), sb:(p.sb&&typeof p.sb.day==="string"&&Array.isArray(p.sb.ids))?{day:p.sb.day,ids:p.sb.ids.filter(x=>typeof x==="string").slice(0,3)}:{day:"",ids:[]}, hist:(Array.isArray(p.hist)?p.hist.filter(h=>h&&typeof h==="object"&&["win","lose","draw"].includes(h.res)).slice(0,HIST_MAX).map(cleanHist):[]), decks:cleanDecks(p.decks,owned,deck), di:Math.min(3,Math.max(0,p.di|0)),
     rps:cleanRps(p.rps),
     cd:(p.cd&&typeof p.cd.day==="string"&&typeof p.cd.id==="string"&&CARDS[p.cd.id])?{day:p.cd.day.slice(0,10),id:p.cd.id,got:!!p.cd.got}:{day:"",id:"",got:false},
     daily:(p.daily&&typeof p.daily.day==="string")?{day:p.daily.day.slice(0,10),n:Math.min(7,num(p.daily.n,0))}:{day:"",n:0},
@@ -258,6 +258,13 @@ function clean(p){
 }
 function lsRead(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)); }catch(e){ return null; } }
 function lsWrite(){ if(window.__wiped) return; try{ localStorage.setItem(SAVE_KEY, JSON.stringify(dataOf())); }catch(e){} }
+/* Défi du jour en cours : coups des tours déjà joués (identifiants de cartes connus, lieux 0 à 2), Serments ; de quoi reprendre après un rechargement */
+function cleanDyRun(r){
+  if(!r||typeof r!=="object"||!Array.isArray(r.turns)) return null;
+  const pl=l=>Array.isArray(l)?l.filter(x=>Array.isArray(x)&&typeof x[0]==="string"&&CARDS[x[0]]&&(x[1]|0)>=0&&(x[1]|0)<=2).slice(0,12).map(x=>[x[0],x[1]|0]):[];
+  const li=v=>Number.isInteger(v)&&v>=0&&v<=2, oa=o=>o&&Number.isInteger(o.t)&&o.t>=1&&o.t<=6&&li(o.li)?{t:o.t,li:o.li}:null;
+  return {turns:r.turns.slice(0,6).map(t=>({p:pl(t&&t.p),e:pl(t&&t.e),sw:t&&Array.isArray(t.sw)&&li(t.sw[0])&&li(t.sw[1])?[t.sw[0],t.sw[1]]:null})),op:oa(r.op),oe:oa(r.oe)};
+}
 function dataOf(){ const {_migrated,...d}=P; return d; }
 let seasonNote="";
 function checkSeason(){

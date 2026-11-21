@@ -306,6 +306,7 @@ function dailyHTML(){
   const series=st>1?` · série de ${st} jours`:"";
   let hint, btn="";
   if(live){ hint="Défi en cours : reprends-le avec « Reprendre la partie »."; }
+  else if(dailyResumable()){ hint=`Défi interrompu au tour ${y.run.turns.length+1} : reprends-le là où tu l'avais laissé.`; btn=`<button class="primary small" data-act="dailyresume">Reprendre le défi</button>`; }
   else if(!dailyDone()){ hint=`Un seul essai · +${DAILY.win} CHF si tu gagnes, +${DAILY.other} sinon`; btn=`<button class="primary small" data-act="daily">Relever le défi</button>`; }
   else if(y.res==="abandon"){ hint="Défi abandonné aujourd'hui. Un nouveau t'attend demain."; }
   else { hint=`${{win:"Gagné",lose:"Perdu",draw:"Égalité"}[y.res]} ${y.w.map(w=>w==="p"?"🟢":w==="e"?"🔴":"⚪").join("")}${series} · nouveau défi demain`; btn=`<button class="ghost small" data-act="dailycopy">${dailyCopyLabel()}</button>`; }
@@ -1341,6 +1342,7 @@ document.addEventListener("click", e=>{
     /* Fin de la Première Brûlure : partie contre l'IA tout de suite (pas d'attente d'un humain pour un nouveau joueur) */
     case "daily": if(dailyDone()||!dailyOpen()) return; sheet=null; sfx("click"); migratedNote=""; newGame({daily:true}); window.scrollTo(0,0); return;
     case "dailycopy": dailyCopy(); return;
+    case "dailyresume": if(!dailyResumable()) return; sheet=null; sfx("click"); migratedNote=""; dailyResume().then(()=>window.scrollTo(0,0)); return;
     case "firstplay": sheet=null; sfx("click"); migratedNote=""; newGame(); window.scrollTo(0,0); return;
     case "resume": sheet=null; screen="play"; sfx("click"); render(); return;
     case "editname": editName=true; sfx("click"); render(); return;
