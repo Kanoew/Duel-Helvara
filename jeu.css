@@ -1194,3 +1194,15 @@ html.faible :is(.zoomwrap,.t-zoomwrap,.gzloc) .zoominfo{backdrop-filter:blur(4px
   :is(.zoomwrap,.t-zoomwrap,.gzloc) .zoominfo{background:var(--deep);border:1px solid var(--line);box-shadow:none;backdrop-filter:none}
   :is(.zoomwrap,.t-zoomwrap,.gzloc) .zoominfo p:not(.deckstate):not(.deckmsg){color:#c8d4e6;text-shadow:none}
 }
+/* Chronique (24 novembre) : étapes du parcours, et « ×2 » du Trône au match du boss */
+.chsteps{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.chstep{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:rgba(17,24,39,.78)}
+.chstep .cdtx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.chstep .cdtx b{font-family:var(--display);font-size:16px;font-weight:400}
+.chstep .cdtx span{font-size:13px}
+.chstep.cur{border-color:var(--warm);box-shadow:0 0 0 1px rgba(214,180,106,.25)}
+.chstep.won{opacity:.72}
+.chstep .chok{color:var(--warm);font-size:18px;flex:0 0 auto}
+.loc .locx2{position:absolute;top:3px;left:3px;min-width:24px;height:22px;padding:0 5px;border-radius:11px;background:rgba(10,14,22,.78);border:1px solid var(--warm);color:var(--warm);font:700 12px/20px var(--display);text-align:center;pointer-events:none}
+.modesheet .bzcard+.chcard{margin-top:-10px}
+.chcard{border-color:rgba(111,184,222,.5)!important;background:linear-gradient(135deg,rgba(111,184,222,.16),rgba(17,24,39,.85) 60%)!important}

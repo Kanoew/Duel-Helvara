@@ -158,10 +158,80 @@ function blitzHTML(){
   return body+(r&&!r.over?`<button class="ghost" data-act="bzquit">Abandonner le Blitz${r.wins?` et prendre ${bzHeld(r)} CHF`:""}</button>`:"");
 }
 
+/* ======= CHRONIQUE 1 (24 novembre) =======
+   Trois matchs contre l'IA avec TON deck, figé au départ (deck persistant) : un rival de faction, un rival avec un avantage (une carte déjà en jeu),
+   puis le boss sur le Trône de Tiamat, fixé au centre, qui vaut 2 lieux (Loi du Trône, voir locW dans js/moteur.js).
+   Une défaite ou une égalité : le match se rejoue, sans pénalité (les handicaps entre les matchs viendront avec la Chronique 2).
+   CHF à la PREMIÈRE victoire de chaque match seulement ; le titre « Conquérant du Trône » à la première Chronique terminée. Ni étoiles ni statistiques de cartes.
+   Textes, rivaux et boss provisoires : l'histoire et les portraits sont la plume de Jordan. Avant-première tant que NOUV.chronique n'est pas daté (js/langue-profil.js). */
+const CHRON={title:"Conquérant du Trône", steps:[
+  {k:"faction", rival:"mira",   tier:1, chf:30,  n:"Le rival de faction", d:"Mira défend Helvara."},
+  {k:"avantage",rival:"clara",  tier:4, chf:50,  n:"Le rival avec un avantage", d:"Clara commence avec une carte déjà en jeu."},
+  {k:"boss",    rival:"exodus", tier:5, chf:120, n:"Le boss du Trône", d:"Exodus t'attend sur le Trône de Tiamat, au centre. Loi du Trône : il vaut 2 lieux au décompte."}]};
+const chOpen=()=>!!(P.tuto&&P.starter&&nouv("chronique"));
+const chRun=()=>!!(P.ch&&P.ch.run&&!P.ch.run.over);
+function chStart(){ if(!chOpen()||chRun()||!deckReady()) return;
+  P.ch.run={step:0,deck:P.deck.slice(),over:false,tries:0}; save(); sfx("pack"); render(); }
+function chQuit(){ if(!chRun()) return; P.ch.run=null; if(S&&S.chron&&!S.over) S=null; save(); sfx("click"); render(); }
+/* Fin d'un match (appelée par finish) : passe au match suivant sur une victoire ; CHF à la première victoire de chaque match ; titre à la fin */
+function chEnd(res){ const r=P.ch&&P.ch.run; if(!r||r.over) return {gain:0,step:0,done:false,first:false};
+  const st=r.step; let gain=0, first=false;
+  if(res!=="win"){ r.tries++; return {gain:0,step:st,done:false,first:false}; }
+  if((P.ch.paid|0)<=st){ gain=CHRON.steps[st].chf; P.ch.paid=st+1; P.chf+=gain; first=true; }
+  r.step++; r.tries=0;
+  if(r.step>=CHRON.steps.length){ r.over=true; P.ch.done=(P.ch.done|0)+1; if(!P.ch.title){ P.ch.title=true; } }
+  return {gain,step:st,done:r.over,first}; }
+function chGame(){ const r=P.ch&&P.ch.run; if(!r||r.over) return; const sp=CHRON.steps[r.step], boss=sp.k==="boss";
+  RNG=Math.random; games++;
+  let locIds;
+  if(boss){ const o=shuffle(locPool().filter(id=>id!=="trone")).slice(0,2); locIds=[o[0],"trone",o[1]]; }   /* le Trône, fixé au centre */
+  else locIds=shuffle(locPool()).slice(0,3);
+  S={turn:0, energy:0, energyE:0, bonus:{p:0,e:0}, destroyed:0,
+    locs:locIds.map(id=>({id,rev:false,stopped:false,locked:false})),
+    board:{p:[[],[],[]],e:[[],[],[]]}, hand:{p:[],e:[]},
+    deck:{p:shuffle(r.deck.filter(id=>CARDS[id]).map(mk)), e:[]}, aiTier:sp.tier, aiFac:null,
+    staged:[], disc:{p:0,e:0}, first:{p:[0,0,0],e:[0,0,0]},
+    log:[], sel:null, info:null, busy:false, over:null, chron:{step:r.step,boss}};
+  if(boss) S.locs[1].rev=true;   /* le Trône est connu dès le départ */
+  const rv=rivalOf(sp.rival); S.rival={id:rv.id,mood:rv.mood};   /* tempérament signature : le rival de la Chronique joue son propre rôle */
+  const ai=rivalDeck(S.rival,sp.tier,false,false); S.deck.e=shuffle(ai.deck.map(mk)); S.aiFac=ai.fac; if(typeof preloadFoe==="function") preloadFoe();
+  for(let i=0;i<3;i++){draw("p");draw("e");}
+  if(sp.k==="avantage"){ /* la carte de coût 3 au plus la plus puissante du deck adverse est déjà en jeu, à un lieu tiré au hasard.
+      Sa Révélation ne se déclenche pas (elle est déjà là) ; un effet Continu, lui, s'applique. Jamais d'ultra-légendaire, de jeton ni de Reflet Noir. */
+    const okc=c=>!CARDS[c.id].token&&!ULof(c.id)&&c.id!=="reflet_noir"&&CARDS[c.id].cost<=3, best=a=>a.filter(okc).sort((x,y)=>(y.pow-x.pow)||((!!CARDS[x.id].fx)-(!!CARDS[y.id].fx)))[0];
+    let c=best(S.deck.e); if(c) S.deck.e=S.deck.e.filter(x=>x!==c); else { c=best(S.hand.e); if(c){ S.hand.e=S.hand.e.filter(x=>x!==c); draw("e"); } }
+    if(c){ const li=Math.floor(Math.random()*3); c.rev=true; S.board.e[li].push(c); S.chron.adv={uid:c.uid,li};
+      log(`${rv.n} commence avec ${CARDS[c.id].name} (${c.pow}) déjà en jeu`); } }
+  log(`Chronique · match ${r.step+1}/3 · ${rv.n}, deck ${FAC[ai.fac].n}, niveau ${TIERS[sp.tier]}${boss?" · Loi du Trône : le Trône vaut 2 lieux":""}`);
+  screen="play"; startTurn(); }
+function chronHTML(){
+  if(!chOpen()) return `<section class="sec"><h2>Chronique</h2><p>La Chronique arrive bientôt.</p><button class="ghost" data-act="go" data-to="home">Retour à l'accueil</button></section>`;
+  const r=P.ch.run, live=S&&S.chron&&!S.over, at=r?r.step:-1;
+  const steps=`<div class="chsteps">${CHRON.steps.map((sp,i)=>{ const rv=rivalOf(sp.rival), won=r?(r.over||i<at):false, cur=r&&!r.over&&i===at;
+    return `<div class="chstep${won?" won":""}${cur?" cur":""}">${rivalAv(rv,"sm")}<div class="cdtx"><b>${i+1}. ${sp.n}</b><span>${sp.d}</span><span class="hint">${rv.n} · ${TIERS[sp.tier]}${(P.ch.paid|0)>i?" · récompense déjà reçue":` · +${sp.chf} CHF à la première victoire`}</span></div>${won?`<span class="chok" aria-label="Gagné">✓</span>`:""}</div>`; }).join("")}</div>`;
+  const deck=r?r.deck:P.deck, strip=`<div class="strip">${Array.from({length:12},(_,i)=>deck[i]?thumb(deck[i],`data-act="zoom" data-id="${deck[i]}"`):`<div class="thumb empty"></div>`).join("")}</div>`;
+  const title=P.ch.title?`<p class="hint">Titre gagné : <b>${CHRON.title}</b>${P.ch.done>1?` · Chronique terminée ${P.ch.done} fois`:""}</p>`:"";
+  if(!r) return `<section class="sec"><h2>Chronique I · Le Trône</h2>
+    <p>Trois matchs contre l'IA avec ton deck actuel, gardé du premier au dernier match. Une défaite ne termine rien : tu rejoues le match.</p>
+    ${steps}${title}
+    <button class="play" data-act="chstart" ${deckReady()?"":"disabled"}>${deckReady()?(P.ch.done?"Rejouer la Chronique":"Commencer la Chronique"):"Il te faut un deck de 12 cartes"}</button>
+    <div class="hint">Ton deck est figé pour toute la Chronique. Le titre « ${CHRON.title} » récompense la première Chronique terminée.</div>
+    <section class="sec"><h2>Ton deck</h2>${strip}</section></section>`;
+  if(r.over) return `<section class="sec"><h2>Chronique terminée</h2><div class="reward">${CHRON.title}</div>
+    <p>Tu as pris le Trône. Ton titre s'affiche sur ton profil.</p>${steps}
+    <button class="play" data-act="chclear">Terminer</button></section>`;
+  const sp=CHRON.steps[at];
+  return `<section class="sec"><h2>Match ${at+1} / 3</h2>${steps}
+    ${r.tries?`<p class="hint">Essai n° ${r.tries+1}. Ton deck ne change pas.</p>`:""}
+    <button class="play" data-act="chplay">${live?"Reprendre le match":sp.k==="boss"?"Affronter le boss":"Jouer le match"}</button>
+    <section class="sec"><h2>Ton deck de Chronique</h2>${strip}</section></section>
+    <button class="ghost" data-act="chquit">Abandonner la Chronique</button>`;
+}
+
 /* ======= DUEL ENTRE AMIS ======= */
 /* BUILD : version du moteur de duel. Deux joueurs de versions différentes se désynchroniseraient (lockstep) : le match est refusé.
    À changer à chaque modification qui touche au déroulement d'une partie (effets, lieux, tirage, IA du serment…). */
-const BUILD="alpha-0.49", MP_VER_MSG="Version différente : recharge la page";
+const BUILD="alpha-0.50", MP_VER_MSG="Version différente : recharge la page";
 const MP_KEY="duel-helvara-mp", MP_PLACES=["OUCHY","FLON","RUELLE","FAILLE","VOILE","SOUSGARE","LEMAN"];
 let roomC=null, roomQ=null, roomTried=false, myMp=null, mpMsg="", mpConn=false;
 /* Coups scellés (anti-triche, lot A) : mes coups du tour, envoyés d'abord sous forme d'empreinte. Ils restent ICI (jamais dans la présence)

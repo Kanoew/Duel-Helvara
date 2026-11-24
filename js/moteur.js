@@ -414,6 +414,12 @@ function total(s,li){
   if(locIs(li,"trone")){ const a=S.board[s][li].filter(c=>c.rev).length, b=S.board[opp(s)][li].filter(c=>c.rev).length; if(S.turn<=3?(a>0&&a<b):a>b) t+=2; }   /* Trône de Tiamat : le moins de cartes aux tours 1-3, le plus dès le tour 4 */
   return t;
 }
+/* Chronique 1 (24 novembre) : au match du boss, le lieu du centre (le Trône de Tiamat) vaut 2 lieux au décompte (« Loi du Trône », choix de Jordan).
+   4 points en jeu : le Trône et un autre lieu suffisent ; 2 contre 2 se départage à la puissance totale, comme une égalité. Partout ailleurs, chaque lieu vaut 1. */
+const thronLaw=()=>!!(S&&S.chron&&S.chron.boss);
+const locW=li=>thronLaw()&&li===1?2:1;
+/* Chances de gagner la partie à partir des chances de gagner chaque lieu (IA). Sans Loi du Trône : au moins 2 lieux sur 3 (formule d'avant, inchangée). */
+const winOdds=p=>thronLaw()?p[1]*(p[0]+p[2]-p[0]*p[2])+0.5*(p[1]*(1-p[0])*(1-p[2])+(1-p[1])*p[0]*p[2]):p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2];
 function leader(li){
   let a=total("p",li), b=total("e",li);
   if(nemInv(li)){ a=-a; b=-b; }
@@ -1115,7 +1121,7 @@ function aiPlan(me="e",tierOv){
   const late=c=>c.id==="tezcatlipoca"||c.id==="horus"?-1:c.id==="pandore"?3:c.id==="aphrodite"||c.id==="anahita"?2:isNike(c.id)?1:0, prepFor=(c,cs)=>(AI_PAY[c.id]||[]).some(p=>cs.some(x=>x.id===p.a))?1:0;
   const order=cs=>cs.slice().sort((a,b)=>late(a)-late(b)||prepFor(a,cs)-prepFor(b,cs)||CARDS[b.id].cost-CARDS[a.id].cost);
   const winP=(add,hit)=>{ const p=[0,1,2].map(li=>{ let m=me0[li]+add[li]+meFut[li]-(op0[li]-hit[li]+opFut[li]); if(nemInv(li)) m=-m; return 1/(1+Math.exp(-1.6*m/sd)); });
-    return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
+    return winOdds(p); };
   /* simulation exacte d'un plan sur une copie de la partie (Révélations comprises), sans son ni journal visibles */
   const sim=plays=>{ const keep=S, kq=quiet, kr=RNG; let out=null;
     try{ quiet=true; RNG=mulberry(7); S=structuredClone(keep);
@@ -1132,7 +1138,7 @@ function aiPlan(me="e",tierOv){
     }catch(e){ out=null; } finally{ S=keep; quiet=kq; RNG=kr; }   /* le hasard de la vraie partie n'est jamais consommé par la simulation (replay) */
     return out; };
   const exactP=r=>{ const p=[0,1,2].map(li=>{ let m=r.m[li]+meFut[li]-(r.o[li]+opFut[li]); if(r.inv[li]) m=-m; if(r.ank&&r.ank[li]) return r.inv[li]?.03:(capOf(op,li)-S.board[op][li].length<=0?.95:.8); return 1/(1+Math.exp(-1.6*m/sd)); });
-    return p[0]*p[1]+p[0]*p[2]+p[1]*p[2]-2*p[0]*p[1]*p[2]; };
+    return winOdds(p); };
   const cands=[];
   for(let mask=0;mask<(1<<hand.length);mask++){
     const cs=order(hand.filter((_,i)=>mask>>i&1)), ctx={en:en0,first:true,jf:true,plays:[],pend:[0,0,0],nike:cs.some(x=>isNike(x.id))}, add=[0,0,0], hit=[0,0,0]; let adj=0, ok=true;
@@ -1346,6 +1352,14 @@ function finish(){
       P.dy={d,res,w:rows.map(r=>r.w||""),oath:oath?(oath.kept?"kept":"broken"):"",pc:S.daily.pc}; P.chf+=gain; save(); }
     S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain,daily:true,oath};
     endCine(S.over); endMusic(res); setTimeout(()=>sfx("coin"),700); render(); return; }
+  if(S.chron){ S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); pt+=a; et+=b; if(w==="p") pw+=locW(li); else if(w==="e") ew+=locW(li); rows.push({n:LOCS[L.id].name,a,b,w,inv:nemInv(li),x2:locW(li)===2}); });
+    const res=pw>ew?"win":ew>pw?"lose":pt>et?"win":et>pt?"lose":"draw";
+    /* Chronique : ni étoiles ni statistiques de cartes (rien n'est envoyé) ; quêtes et journal des factions comptent ; le Serment suit la règle habituelle sans CHF, comme le Défi du jour */
+    ensureQuests(); qProg("play3"); if(res==="win") qProg("win3"); qEnd(res,false); if(P.ch&&P.ch.run) fjCount(P.ch.run.deck);
+    const oath=S.oath!=null?{kept:leader(S.oath)==="p",cross:S.aiOath===S.oath}:null;
+    const ch=chEnd(res);
+    save(); S.over={res,rows,pw,ew,pt,et,tie:pw===ew,gain:ch.gain,chron:true,step:ch.step,done:ch.done,first:ch.first,oath};
+    endCine(S.over); endMusic(res); if(ch.gain) setTimeout(()=>sfx("coin"),700); render(); return; }
   if(S.blitz){ S.locs.forEach((L,li)=>{ const a=total("p",li), b=total("e",li), w=leader(li); pt+=a; et+=b; if(w==="p") pw++; else if(w==="e") ew++; rows.push({n:LOCS[L.id].name,a,b,w,inv:nemInv(li)}); });
     const res=pw>ew?"win":ew>pw?"lose":pt>et?"win":et>pt?"lose":"draw"; const r=P.bz.run;
     ensureQuests(); qProg("play3"); if(res==="win") qProg("win3"); qEnd(res,true);
