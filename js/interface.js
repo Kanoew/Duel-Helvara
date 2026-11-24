@@ -364,6 +364,7 @@ function homeHTML(){
   return `
   ${APERCU&&!window.__sandbox?`<div class="hint apercu">Avant-première activée sur cet appareil · <a href="?apercu=0">la retirer</a></div>`:""}
   ${noticeHTML()}
+  ${P.tuto&&MAJ[0]?`<button class="majbtn" data-act="majshow"><span aria-hidden="true">✦</span> <span>Notes de mise à jour</span> · <span>${MAJ[0].date}</span></button>`:""}
   ${vitrineHTML()}
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
   ${resumable?`<button class="play" data-act="mpresume">Reprendre le duel</button>`:`<button class="play" data-act="${inGame?"resume":"sheet"}" ${inGame?"":'data-s="play" aria-haspopup="dialog"'}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>`}
