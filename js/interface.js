@@ -254,6 +254,7 @@ function majHTML(){
   return `<div class="veil"><div class="result majpop" role="dialog" aria-label="Notes de mise à jour">
     <div class="eyebrow"><span>Notes de mise à jour</span> · <span>${m.date}</span></div><h2>${m.t||"Équilibrage"}</h2>
     <ul class="majlist">${m.items.map(t=>`<li>${t}</li>`).join("")}</ul>
+    ${MAJ.slice(1).map(o=>`<details class="majold"><summary><span>${o.date}</span> · <span>${o.t||"Équilibrage"}</span></summary><ul class="majlist">${o.items.map(t=>`<li>${t}</li>`).join("")}</ul></details>`).join("")}
     <button class="primary" data-act="majok">Compris</button></div></div>`;
 }
 function ulHTML(){
