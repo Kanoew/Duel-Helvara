@@ -156,7 +156,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 👤 Le montage du trailer de 30 secondes (et la musique : les vidéos n'ont pas de son).
 - 🟣 👤 Devlog r/gamedev (le seul post possible avant la sortie).
 - 🟣 👤 **Droits sur les illustrations** : relire les conditions de l'outil qui les a générées avant d'activer la cagnotte. Un avis rapide d'un pro serait utile.
-- ✅ 🛠️ **Bouton de partage** (24 novembre, `js/partage.js`) : « Partager ma victoire » sur l'écran de fin d'une partie gagnée (tous les modes), et « Partager <carte> » à la fin d'une ouverture de paquet (la carte la plus rare, une nouvelle d'abord). Une image 1080 × 1350 est dessinée dans le téléphone (illustration, lieux et scores, ×2 du Trône, Serment, rang ou titre, lien du jeu), puis le menu de partage du téléphone s'ouvre. Sans partage d'image, l'image est téléchargée et la phrase copiée. Le jeu n'envoie rien lui-même. FR et EN. ✅ Victoire et carte tirée vérifiées sur le téléphone de Jordan (24 novembre). 🟣 À la fin de la Première Brûlure (paquet de 12), le bouton de partage semble mal affiché : capture attendue.
+- ✅ 🛠️ **Bouton de partage** (24 novembre, `js/partage.js`) : « Partager ma victoire » sur l'écran de fin d'une partie gagnée (tous les modes), et « Partager <carte> » à la fin d'une ouverture de paquet (la carte la plus rare, une nouvelle d'abord). Une image 1080 × 1350 est dessinée dans le téléphone (illustration, lieux et scores, ×2 du Trône, Serment, rang ou titre, lien du jeu), puis le menu de partage du téléphone s'ouvre. Sans partage d'image, l'image est téléchargée et la phrase copiée. Le jeu n'envoie rien lui-même. FR et EN. ✅ Victoire et carte tirée vérifiées sur le téléphone de Jordan (24 novembre). ✅ Fin de la Première Brûlure (paquet de 12) : sur un écran court (Brave avec sa barre d'adresse), « Continuer » recouvrait la grille de cartes ; les boutons se calent maintenant au-dessus de la grille (24 novembre). 👤 À revérifier sur ton téléphone.
 - ✅ Licence : « Tous droits réservés » (fichier `LICENSE`). Ne **jamais** écrire « open source ».
 
 ### 3.6 🟣 La sortie
@@ -200,9 +200,9 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 👤 **Répliques des rivaux** : une seule phrase par tempérament aujourd'hui (on devine le tempérament en 4 ou 5 parties). En écrire 3 ou 4 par tempérament, plus une réplique quand tu relèves son Serment et une quand il perd le sien. 🛠️ Ensuite, un « tableau de chasse » au profil : Exodus, Clara, Timothée, Mira et ton score contre chacun.
 - 🟣 👤 Saison Saint-Valentin : les illustrations et la musique sont prêtes, il manque les effets des cartes et celui de Nike V.
 - 🟣 👤 Noms à confirmer : `reflet_noir` (à renommer), « L'Enfant sans École ».
-- ✅ Questions du 22 octobre, réponses de Jordan (24 novembre) : « univers d'Helvara » sans préciser l'inspiration (texte des règles corrigé, FR et EN) ; La Source : 50 parties avec 8 cartes Helvara, comme les autres. 🟣 Restent la nuance de Vesta et les cartes holo sans coût ni nom (expliquées à Jordan).
+- ✅ Questions du 22 octobre, réponses de Jordan (24 novembre) : « univers d'Helvara » sans préciser l'inspiration (texte des règles corrigé, FR et EN) ; La Source : 50 parties avec 8 cartes Helvara, comme les autres. Cartes holo sans coût ni nom : on garde. 🟣 🛠️ **Vesta** (décision de Jordan) : la réduction va à la prochaine carte Jugement, **même à 0** (au joueur de bien l'ordonner), avec un repère « −1 » visible sur la carte qui en profitera. Changement de règle : `BUILD`, tests, IA.
 - 🟣 👤 Marduk, Ymir, Nammu : ultra-légendaires de faction ou pas ?
-- 🟣 👤 Raccourcir les textes de lieux les plus longs (le Trône et les Eaux d'Apsu sont les nouveaux plus longs).
+- 🟣 🛠️ Textes de lieux (décision de Jordan, 24 novembre) : on ne raccourcit pas ; le texte de la règle quitte le plateau et ne se lit plus qu'en touchant le lieu.
 - 🟣 👤 Gel des nouvelles cartes jusqu'au lot de mars (hors mots-clés et Serment) : toujours d'actualité ?
 
 ---

@@ -507,6 +507,10 @@ function ouvrirTirage(op){
       ${typeof shareCard === "function" && shareBest(cards) ? `<button class="ghost" type="button" data-t="share">${tr("Partager")} ${CARDS[shareBest(cards).id].name}</button>` : ""}
       <button class="ghost" type="button" data-t="close">${tr("Continuer")}</button></div>`;
     endEl.hidden = false;
+    /* Paquet en grille (Première Brûlure) : les boutons se calent juste au-dessus des cartes, sinon ils les recouvrent sur un écran court */
+    if(grid){ const cw = parseFloat(fan.style.getPropertyValue("--cw")) || 84, rows = Math.ceil(N / 4), h = endEl.offsetHeight,
+        ft = root.clientHeight - parseFloat(getComputedStyle(fan).bottom) - rows * cw * 1.5 - (rows - 1) * 18;   /* haut de la grille, d'après la taille finale des cartes (les images peuvent encore charger) */
+      endEl.style.top = Math.max(h / 2 + 48, Math.min(root.clientHeight * .4, ft - 14 - h / 2)) + "px"; }
     anim(endEl, [{ opacity: 0, transform: "translate(-50%,-44%)" }, { opacity: 1, transform: "translate(-50%,-50%)" }], { duration: 320, commit: true });
     const first = endEl.querySelector("button:not([disabled])"); if(first) first.focus({ preventScroll: true });
   }
