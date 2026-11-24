@@ -504,6 +504,7 @@ function ouvrirTirage(op){
     const lack = pk && !pk.starter ? pk.price - P.chf : 0;
     endEl.innerHTML = `<div class="t-hint">${tr("Touche une carte pour la lire")}</div>${refund ? `<div class="t-refund">${tr("Doublons")} : +${refund} CHF</div>` : ""}
       <div class="t-btns">${pk && !pk.starter ? `<button class="primary" type="button" data-t="again" ${again ? "" : "disabled"}>${again ? tr("Ouvrir un autre paquet") : (lack > 0 ? tr("Il manque") + " " + lack + " CHF" : tr("Paquet indisponible"))}</button>` : ""}
+      ${typeof shareCard === "function" && shareBest(cards) ? `<button class="ghost" type="button" data-t="share">${tr("Partager")} ${CARDS[shareBest(cards).id].name}</button>` : ""}
       <button class="ghost" type="button" data-t="close">${tr("Continuer")}</button></div>`;
     endEl.hidden = false;
     anim(endEl, [{ opacity: 0, transform: "translate(-50%,-44%)" }, { opacity: 1, transform: "translate(-50%,-50%)" }], { duration: 320, commit: true });
@@ -559,6 +560,7 @@ function ouvrirTirage(op){
     const t = e.target.closest("[data-t]");
     if(t){ e.stopPropagation(); if(t.disabled) return;
       if(t.dataset.t === "close") close();
+      else if(t.dataset.t === "share"){ const b = shareBest(cards); if(b){ t.disabled = true; shareCard(b.id, b.isNew).then(r => { t.disabled = false; if(r === "telecharge") t.textContent = tr("Image enregistrée, phrase copiée"); }); } }
       else if(t.dataset.t === "again"){ const pid = op.pid; destroy(); if(typeof buyPack === "function") buyPack(pid); }
       return; }
     if(state === "waiting") settle();

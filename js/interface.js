@@ -956,6 +956,7 @@ function resultHTML(){
     <div class="m" style="color:var(--mist)">${o.pw} ${o.chron&&o.rows.some(r=>r.x2)?"point":"lieu"}${o.pw>1?(o.chron&&o.rows.some(r=>r.x2)?"s":"x"):""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
     <div class="rows sc3"><div class="row rh" aria-hidden="true"><span>Lieu</span><span class="c me">Toi</span><span class="c foe"${o.mp?` title="${esc(S.mp.oppNick)}"`:""}>${o.mp?esc(S.mp.oppNick):esc(foeName())}</span></div>${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}${r.x2?` <small style="color:var(--warm)">×2</small>`:""}</span><span class="c me${r.w==="p"?" w":""}">${r.a}</span><span class="c foe${r.w==="e"?" w":""}">${r.b}</span></div>`).join("")}</div>
     ${bilanHTML(o)}
+    ${o.res==="win"?`<button class="ghost small sharebtn" data-act="sharewin">${shareLabel("Partager ma victoire")}</button>`:""}
     ${fbHTML(o)}
     ${o.mp&&S.mp.srv?`<p class="hint" role="status">${S.mp.srv==="valid"?"✓ Résultat validé par le serveur":S.mp.srv==="conflict"?"⚠ Résultats différents entre les deux joueurs : partie non validée":"Résultat envoyé, en attente de l'adversaire…"}</p>`:""}
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
@@ -1386,6 +1387,7 @@ document.addEventListener("click", e=>{
     case "bzquit": if(S&&S.blitz&&!S.over) S=null; bzEndRun(); render(); return;
     case "bzclear": P.bz.run=null; save(); sfx("click"); render(); return;
     case "chstart": chStart(); return;
+    case "sharewin": sfx("click"); shareWin(); return;
     case "chplay": if(S&&S.chron&&!S.over){ screen="play"; render(); return; } sfx("click"); chGame(); window.scrollTo(0,0); return;
     case "chquit": chQuit(); return;
     case "chclear": if(P.ch.run&&P.ch.run.over){ P.ch.run=null; save(); } sfx("click"); render(); return;

@@ -101,7 +101,7 @@ Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : le
 - ✅ 🛠️ **IA corrigée** (relevé d'une relecture extérieure du code) : une quinzaine de cartes qui frappent l'adversaire ici (Lilith, Ereshkigal, Rusalka, Durga, Izzy Lune de Sang…) n'étaient pas évaluées selon le lieu ; Tentation et Verdict ignoraient certaines protections ; pour les coups d'une ou deux cartes, le deuxième meilleur lieu est maintenant simulé aussi. Nos mesures sous-estimaient donc les cartes qui détruisent.
 - Factions : Helvara 47,8 · Primordial 52,7 · Désir 51,8 · **Jugement 46,6** ; decks avec Ananké 55,1 %. Pire face-à-face : Désir contre Jugement ~56 %, Primordial contre Jugement ~56 %.
 - ✅ **Lilith** : « 5 ou moins » au lieu de 6 (+8,9 → +7,6).
-- 🟣 👤 **Yarden X Apsu** : +9,9 en simulation même en 10 / 9, et **87,3 % de victoires sur 150 vraies parties** avant son nerf. Tu l'essaies d'abord, puis on décide.
+- 🟣 👤 **Yarden X Apsu** (remesurée le 24 novembre, 4 versions × 3 graines, avec Yarden Weiss et Apsu toujours dans le deck) : version actuelle 63,8 % en deck ; **le même deck sans elle fait déjà 58,3 %**, son apport propre est donc de **+5,5** (à surveiller, pas à corriger). Malus de Jordan « −1 / −2 par tour en jeu » : −0,8 / −1,7 point seulement (85 % des poses se font aux tours 5-6, et un humain attendrait le tour 6) → écarté. Puissance 7 : −3,1 points, apport +2,4. **Vraies parties** (Supabase, lecture seule) : avant le nerf du 20 novembre, Yarden X Apsu 87,1 % (147 parties), Yarden Weiss 87,6 %, Apsu 89,5 %, toutes cartes 73,0 % : c'est le duo qui gagne, pas l'ultra seule. Depuis le nerf : 4 parties, rien à lire. Décision : attendre les stats après le 1er décembre ; si une retouche est nécessaire, puissance 8 (à mesurer) ou 7, plutôt que le malus.
 - 🟣 Entre +6 et +8 : Ereshkigal +6,7, Apsu +6,6, Arès d'Halloween +6,5, Calypso +6,4, Nyx d'Halloween +6,1, le Troll +6,1.
 - ✅ **Nike, l'Élan de la Victoire** (choix de Jordan, idée d'une relecture extérieure) : 3/3, « +2 de puissance pour chaque autre carte jouée avant elle ce tour, et chacune d'elles gagne +1 de puissance ». Decks avec Nike 47,4 → 53,7 % ; **Jugement 46,6 → 48,6 %**. L'IA de Jugement est corrigée aussi (Apollon, Vesta, Bia, Eir, Chernobog).
 - ✅ **Helvara mesurée avec et sans les Escaliers du Marché** (24 novembre, 3 graines × 6 000 parties, decks identiques) : 48,9 % hors de son lieu, **54,8 % avec les Escaliers**. Face-à-face avec les Escaliers : 53,7 % contre Primordial, 58,1 % contre Désir, 56,3 % contre Jugement, aucun au-delà de 60 %. Les cartes Lien passent de −1,5 / −2,6 à environ 0. Verdict : faible hors de son lieu, correcte dedans, rien à corriger sur simulation. 🟣 Après le 1er décembre : relever Helvara et ses cartes Lien dans les vraies statistiques. À surveiller : **Mendiant −6,4** (Costumes −4,5, Doyenne −2,9). Si Helvara reste sous 47 % en vrai, la piste la plus sûre est une commune Helvara (Mendiant), pas le lieu.
@@ -118,8 +118,10 @@ Côté code, **c'est fait** (24 novembre, `alpha-0.50`), en avant-première seul
 - ✅ Ni étoiles ni statistiques de cartes (rien n'est envoyé à Supabase) ; les quêtes et le journal des factions comptent ; le Serment suit la règle habituelle, sans CHF (comme le Défi du jour). La progression est gardée dans la sauvegarde (`P.ch`), comme le Blitz.
 - ✅ Difficulté mesurée (IA contre IA, 7 decks prêts, 210 parties par match) : un joueur moyen gagne environ 56 % / 58 % / 44 %, un bon joueur 57 % / 52 % / 43 %.
 - ✅ **Boss en 6 tours, pas 8** (validé le 20 novembre) : 8 tours casseraient Ananké, Cronos, Nemesis, Méduse, Konohana, Loviatar, Fenrir, Médée d'Halloween et l'IA, tous calés sur le tour 6. À la place : **le Trône de Tiamat fixe au centre**, avec une « Loi du Trône » propre au boss ✅ **Loi du Trône choisie le 24 novembre : le Trône vaut 2 lieux au décompte** (4 points en jeu). Gagner le Trône et un autre lieu suffit ; gagner seulement le Trône, ou seulement les deux autres, fait 2 contre 2 et c'est le départage habituel qui tranche (la puissance totale sur les trois lieux). 👤 À confirmer : ce départage te va pour le boss ?
-- 🟣 👤 **À essayer sur ton téléphone** (avec `?apercu=1`) : la difficulté de chaque match, le ×2 du Trône, la carte d'avance de Clara.
-- 🟣 👤 L'histoire de la Chronique, le choix des rivaux (Mira, Clara, Exodus sont provisoires) et un boss à lui, les textes des trois étapes, les récompenses (30 / 50 / 120 CHF, titre) et la **date de sortie** de la Chronique.
+- ✅ 👤 **Essayée par Jordan sur son téléphone** (24 novembre, `?apercu=1`) : Chronique terminée avec un deck cohérent, titre gagné. Avec un deck Nike, le match 2 a bloqué, surtout par malchance au tirage selon lui. Difficulté jugée correcte : un deck cohérent est nécessaire, et c'est voulu.
+- ✅ 👤 Défi du jour essayé : il se joue avec un deck prêté, le même pour tout le monde (c'est voulu, pour comparer les résultats sur Discord).
+- ✅ **Date de sortie de la Chronique : 15 décembre** (choix de Jordan, 24 novembre), avec le Défi du jour et le nouveau Tirage.
+- 🟣 👤 L’histoire de la Chronique, le choix des rivaux (Mira, Clara, Exodus sont provisoires) et un boss à lui, les textes des trois étapes, les récompenses (30 / 50 / 120 CHF, titre).
 - 🟣 👤 Départage d'un 2 contre 2 au boss : la puissance totale, comme d'habitude. À confirmer.
 
 ### 3.4 🟣 🛠️ Accueil des nouveaux joueurs
@@ -150,10 +152,11 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 
 ### 3.5 🟣 Préparer la sortie (en parallèle, sans rien publier)
 - 🟣 👤🛠️ Page itch.io en brouillon : textes FR et EN, captures, prix 0 € et cagnotte.
-- 🟣 🛠️ Séquences de jeu enregistrées pour le trailer de 30 secondes. 👤 Toi : le montage.
+- ✅ 🛠️ **Séquences de jeu enregistrées** (24 novembre, `outils/enregistrer-sequences.js`) : 4 vidéos sur écran de téléphone (780 × 1688, sans son) : Tirage avec une ultra, partie avec un Serment croisé tenu (3 lieux sur 3), boss du Trône jusqu'au titre, Collection ; plus 7 captures fixes pour itch.io. Envoyées à Jordan. On les refait en une commande à chaque nouveauté.
+- 🟣 👤 Le montage du trailer de 30 secondes (et la musique : les vidéos n'ont pas de son).
 - 🟣 👤 Devlog r/gamedev (le seul post possible avant la sortie).
 - 🟣 👤 **Droits sur les illustrations** : relire les conditions de l'outil qui les a générées avant d'activer la cagnotte. Un avis rapide d'un pro serait utile.
-- 🟣 🛠️ Bouton de partage (victoire, carte tirée).
+- ✅ 🛠️ **Bouton de partage** (24 novembre, `js/partage.js`) : « Partager ma victoire » sur l'écran de fin d'une partie gagnée (tous les modes), et « Partager <carte> » à la fin d'une ouverture de paquet (la carte la plus rare, une nouvelle d'abord). Une image 1080 × 1350 est dessinée dans le téléphone (illustration, lieux et scores, ×2 du Trône, Serment, rang ou titre, lien du jeu), puis le menu de partage du téléphone s'ouvre. Sans partage d'image, l'image est téléchargée et la phrase copiée. Le jeu n'envoie rien lui-même. FR et EN. 👤 À essayer sur ton téléphone (Brave Android : le menu de partage doit proposer Discord, WhatsApp…).
 - ✅ Licence : « Tous droits réservés » (fichier `LICENSE`). Ne **jamais** écrire « open source ».
 
 ### 3.6 🟣 La sortie
@@ -275,3 +278,5 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Loi du Trône de la Chronique 1 : le Trône vaut 2 lieux (voir 3.3).
 - ✅ **Chronique 1** codée en avant-première (`alpha-0.50`) : trois matchs, deck persistant, Loi du Trône, titre « Conquérant du Trône », FR et EN, 13 nouveaux scénarios (751 en tout), toutes les suites de tests passent.
 - ✅ Défi du jour et nouveau Tirage : sortie pour tous le 15 décembre. Le test de durée de l'ouverture d'une ultra-légendaire suit maintenant le Tirage actif (4,6 s avec l'ombre de Tiamat).
+- ✅ Bouton de partage (victoire, carte tirée) : image dessinée dans le téléphone, menu de partage du téléphone (voir 3.5).
+- ✅ Séquences du trailer et captures itch.io enregistrées (`outils/enregistrer-sequences.js`).

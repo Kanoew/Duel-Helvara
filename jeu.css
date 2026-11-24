@@ -1206,3 +1206,5 @@ html.faible :is(.zoomwrap,.t-zoomwrap,.gzloc) .zoominfo{backdrop-filter:blur(4px
 .loc .locx2{position:absolute;top:3px;left:3px;min-width:24px;height:22px;padding:0 5px;border-radius:11px;background:rgba(10,14,22,.78);border:1px solid var(--warm);color:var(--warm);font:700 12px/20px var(--display);text-align:center;pointer-events:none}
 .modesheet .bzcard+.chcard{margin-top:-10px}
 .chcard{border-color:rgba(111,184,222,.5)!important;background:linear-gradient(135deg,rgba(111,184,222,.16),rgba(17,24,39,.85) 60%)!important}
+/* Bouton de partage (24 novembre) : fin de partie gagnée */
+.result .sharebtn{display:block;margin:10px auto 0;min-width:60%}
