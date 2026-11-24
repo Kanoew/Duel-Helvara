@@ -26,7 +26,7 @@ Les parties gardent leur ordre d'origine. Un titre en ✅ veut dire que toute la
 - ✅ **Prix itch.io** : 0 €, avec une cagnotte façon « offre-moi un café ».
 - ✅ **Économie des CHF** : prix des paquets inchangés ; Serment du Blitz ramené à ±25 (croisé ±50) ; gains de Serment plafonnés à 150 CHF par jour.
 - ✅ **Les chiffres du Serment** : validés (tableau ci-dessous).
-- 🟣 👤 **Date de sortie** : avant janvier 2027, le plus tôt possible. À fixer quand les chantiers 3.2 à 3.4 auront une taille connue.
+- ✅ **Date de sortie sur itch.io : 15 janvier 2027**, le jour de la sortie d'Hédoné (choix de Jordan, 24 novembre ; le 15 décembre reste la sortie dans le jeu du Défi du jour, du Tirage et de la Chronique).
 - 🟣 👤 **Serment « Intensifier »** (choix secret au tour 3, ×2 ou ×3 sur le Serment du tour 5) : il arrive avec le Voile, après la sortie. Rien à décider avant.
 
 | Sujet | Valeur |
