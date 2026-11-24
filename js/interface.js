@@ -254,6 +254,7 @@ function majHTML(){
   return `<div class="veil"><div class="result majpop" role="dialog" aria-label="Notes de mise à jour">
     <div class="eyebrow"><span>Notes de mise à jour</span> · <span>${m.date}</span></div><h2>${m.t||"Équilibrage"}</h2>
     <ul class="majlist">${m.items.map(t=>`<li>${t}</li>`).join("")}</ul>
+    ${MAJ.slice(1).map(o=>`<details class="majold"><summary><span>${o.date}</span> · <span>${o.t||"Équilibrage"}</span></summary><ul class="majlist">${o.items.map(t=>`<li>${t}</li>`).join("")}</ul></details>`).join("")}
     <button class="primary" data-act="majok">Compris</button></div></div>`;
 }
 function ulHTML(){
@@ -363,6 +364,7 @@ function homeHTML(){
   return `
   ${APERCU&&!window.__sandbox?`<div class="hint apercu">Avant-première activée sur cet appareil · <a href="?apercu=0">la retirer</a></div>`:""}
   ${noticeHTML()}
+  ${P.tuto&&MAJ[0]?`<button class="majbtn" data-act="majshow"><span aria-hidden="true">✦</span> <span>Notes de mise à jour</span> · <span>${MAJ[0].date}</span></button>`:""}
   ${vitrineHTML()}
   <div class="hint playhint top">${deckReady()?(played?`Cette saison : ${splayed?Math.round(P.sw/splayed*100):0} % de victoires`:"Première partie : la Ruelle, le Lac Ouchy et le Sous-gare."):(P.owned.length<ECO.deckSize?"Ouvre la Première Brûlure à la boutique pour obtenir ton premier deck.":`Ton deck a ${P.deck.length} carte${P.deck.length>1?"s":""} sur 12. Complète-le dans la Collection pour jouer.`)}</div>
   ${resumable?`<button class="play" data-act="mpresume">Reprendre le duel</button>`:`<button class="play" data-act="${inGame?"resume":"sheet"}" ${inGame?"":'data-s="play" aria-haspopup="dialog"'}>${inGame?(S.mp?"Reprendre le duel":"Reprendre la partie"):"Jouer"}</button>`}
@@ -672,7 +674,7 @@ function tutoHTML(){
     <div class="tutocard">${fullCard("yarden")}</div>
     <p class="tb">Chaque duel se joue sur <b>3 lieux</b> et dure <b>6 tours</b>. Pour gagner, il faut avoir plus de puissance que l'adversaire sur <b>2 lieux sur 3</b>.</p>
     <ul class="tbl"><li><b>Énergie</b> : au tour N, tu as N énergie (1 au tour 1, 2 au tour 2…). Elle ne se cumule pas d'un tour à l'autre, sauf effet de carte.</li>
-      <li><b>Lieux</b> : trois lieux tirés au hasard parmi ceux de l'univers d'Helvara, inspiré par le lore Helvara de Lausanne dans Le Sang de Tiamat. Chacun a sa règle, révélée aux tours 1, 2 et 3.</li>
+      <li><b>Lieux</b> : trois lieux tirés au hasard parmi ceux de l'univers d'Helvara. Chacun a sa règle, révélée aux tours 1, 2 et 3.</li>
       <li><b>Cartes</b> : une <b>Révélation</b> se déclenche quand la carte est révélée, à la fin du tour ; un effet <b>Continu</b> agit tant que la carte reste en jeu.</li>
       <li><b>⚖ Serment</b> : une fois par partie, jure sur un lieu. Gagne-le avec la partie et tu es récompensé ; perds-le et tu le paies. C'est la marque d'Helvara.</li></ul>
     <p class="tb">La partie guidée t'apprend tout en 5 minutes, carte par carte.${reward?" Dans les deux cas, tu reçois <b>100 CHF</b> pour ton premier deck.":""}</p>

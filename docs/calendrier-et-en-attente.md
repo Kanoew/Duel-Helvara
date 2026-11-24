@@ -4,8 +4,8 @@ Extrait de l'ancien `CLAUDE.md` (22 octobre 2026), **texte inchangé**, sauf la 
 
 ## Questions restées ouvertes au 22 octobre 2026
 
-- Tutoriel : la formulation « univers d'Helvara, inspiré de Lausanne » est à faire confirmer par Jordan.
-- La Source : 50 parties avec 8 cartes Helvara, « à confirmer par Jordan ».
+- ✅ Tutoriel : « univers d'Helvara », sans l'inspiration (Jordan, 24 novembre).
+- ✅ La Source : 50 parties avec 8 cartes Helvara (confirmé par Jordan, 24 novembre).
 - Vesta : la réduction va à la première carte Jugement de coût imprimé 1 ou plus (nuance « à faire confirmer par Jordan »).
 - Cartes holo : elles n'affichent ni coût, ni puissance, ni nom (illustration pleine) : « décision de Jordan à prendre ». Jordan a testé sur son Android (ROG Phone 8 Pro) le 22 octobre : aucun problème, et il juge l'effet « parfait » ; un ami doit encore tester sur un autre téléphone.
 - Noms : « L'Enfant sans École » (Jordan avait écrit « sans éco »), et `reflet_noir` (Jordan veut changer le nom).

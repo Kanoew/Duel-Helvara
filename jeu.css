@@ -161,6 +161,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-grad
 .result .rows{display:flex;flex-direction:column;gap:6px;text-align:left}
 .majlist{margin:0;padding-left:18px;text-align:left;font-size:14px;line-height:1.5}
 .majlist li+li{margin-top:8px}
+.majbtn{display:flex;align-items:center;gap:6px;margin:0 0 12px;padding:7px 14px;border-radius:999px;border:1px solid rgba(219,168,98,.45);background:rgba(219,168,98,.08);color:var(--warm);font-size:13px;cursor:pointer}
+.majold{text-align:left;border-top:1px solid var(--line);padding-top:10px}
+.majold summary{cursor:pointer;color:var(--mist);font-size:13px;letter-spacing:.02em}
+.majold[open] summary{margin-bottom:8px}
 .result .row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-block:6px;font-variant-numeric:tabular-nums}
 .result .row span:last-child{font-family:var(--display)}
 .primary{background:var(--me);color:#06121b;border:0;border-radius:10px;padding:11px 18px;font-weight:700;cursor:pointer}

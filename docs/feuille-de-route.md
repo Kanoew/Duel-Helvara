@@ -28,7 +28,7 @@ Les parties gardent leur ordre d'origine. Un titre en ✅ veut dire que toute la
 - ✅ **Prix itch.io** : 0 €, avec une cagnotte façon « offre-moi un café ».
 - ✅ **Économie des CHF** : prix des paquets inchangés ; Serment du Blitz ramené à ±25 (croisé ±50) ; gains de Serment plafonnés à 150 CHF par jour.
 - ✅ **Les chiffres du Serment** : validés (tableau ci-dessous).
-- 🟣 👤 **Date de sortie** : avant janvier 2027, le plus tôt possible. À fixer quand les chantiers 3.2 à 3.4 auront une taille connue.
+- ✅ **Date de sortie sur itch.io : 15 janvier 2027**, le jour de la sortie d'Hédoné (choix de Jordan, 24 novembre ; le 15 décembre reste la sortie dans le jeu du Défi du jour, du Tirage et de la Chronique).
 - 🟣 👤 **Serment « Intensifier »** (choix secret au tour 3, ×2 ou ×3 sur le Serment du tour 5) : il arrive avec le Voile, après la sortie. Rien à décider avant.
 
 | Sujet | Valeur |
@@ -50,8 +50,8 @@ Les parties gardent leur ordre d'origine. Un titre en ✅ veut dire que toute la
 - ✅ Conseils de fin de partie : réécrits avec tes cinq textes (FR et EN).
 - ✅ Aperçu du lien sur Discord : vérifié par toi (avec et sans `?x=1`).
 - ✅ Niveau de l'IA : jugé bien meilleur par toi et ton pote. À revoir seulement si besoin.
-- ✅ Cartes holo : correctes sur Sony Xperia 10 IV et sur Xiaomi Redmi Note 14 dans Chrome. Dans Messenger, un correctif est en place mais n'a pas été retesté.
-- 🟣 👤 Un duel en ligne sur les cinq nouveaux lieux (ils n'ont été joués que contre l'IA).
+- ✅ Cartes holo : correctes sur Sony Xperia 10 IV et sur Xiaomi Redmi Note 14 dans Chrome. Dans Messenger, un correctif est en place ; Jordan le considère comme réglé (24 novembre, personne ne joue par là).
+- ✅ Duels en ligne sur les cinq nouveaux lieux : plusieurs parties jouées par Jordan, rien à signaler (24 novembre).
 - 🟣 👤 Musique : mise de côté, et loin. Tu veux d'abord y réfléchir à fond.
 
 ---
@@ -96,7 +96,7 @@ Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : le
   Pire face-à-face : Primordial contre Jugement, 56,7 % (contre 62,9 % pour Primordial contre Désir avant). Aucun au-delà de 60 %. Détail des mesures et des 12 réglages de Primordial : `docs/historique-equilibrage.md`.
 
 **Ce qu'il te reste**
-- 🟣 👤 Fusionner la dernière PR (Ère, Primordial, verre dépoli étendu), puis essayer sur ton téléphone : les symboles ⧉ ❦ ⚖ ⧗ avec la police d'Android, et le verre dans la Collection (fluidité derrière les cartes holo).
+- ✅ Symboles ⧉ ❦ ⚖ ⧗ corrects sur Android (navigateur et application installée) ; verre dépoli fluide sur le téléphone de Jordan et ceux de ses amis (24 novembre).
 - 🟣 👤 Ta plume, avant la sortie des cartes cachées : leurs coût, puissance, rareté et date. Les 4 de Tentation sont identiques (3/3), les 4 de Verdict aussi (Verdict 2, 3/3, un peu faibles : un Verdict 3 sur certaines est une piste, à remesurer). Il ne reste plus de carte cachée sans effet en Jugement pour Juré / Parjure.
 
 **À surveiller** (remesuré le 20 novembre au soir avec l'IA corrigée, 3 graines × 6 000 parties)
@@ -124,10 +124,10 @@ Côté code, **c'est fait** (24 novembre, `alpha-0.50`), en avant-première seul
 - ✅ 👤 Défi du jour essayé : il se joue avec un deck prêté, le même pour tout le monde (c'est voulu, pour comparer les résultats sur Discord).
 - ✅ **Date de sortie de la Chronique : 15 décembre** (choix de Jordan, 24 novembre), avec le Défi du jour et le nouveau Tirage.
 - 🟣 👤 L’histoire de la Chronique, le choix des rivaux (Mira, Clara, Exodus sont provisoires) et un boss à lui, les textes des trois étapes, les récompenses (30 / 50 / 120 CHF, titre).
-- 🟣 👤 Départage d'un 2 contre 2 au boss : la puissance totale, comme d'habitude. À confirmer.
+- ✅ Départage d'un 2 contre 2 au boss : la puissance totale, comme d'habitude (confirmé par Jordan le 24 novembre).
 
 ### 3.4 🟣 🛠️ Accueil des nouveaux joueurs
-- ✅ **Tutoriel centré sur le Serment, moins guidé** : le Serment présenté dès l'accueil ; l'adversaire jure à la fin du tour 2 ; au tour 3, tu jures où tu veux ou tu relèves son défi (Serment croisé) ; tours 4 à 6 libres, avec des indices ; à la fin, ce que ton Serment aurait valu en partie classée. 👤 À essayer sur ton téléphone.
+- ✅ **Tutoriel centré sur le Serment, moins guidé** : le Serment présenté dès l'accueil ; l'adversaire jure à la fin du tour 2 ; au tour 3, tu jures où tu veux ou tu relèves son défi (Serment croisé) ; tours 4 à 6 libres, avec des indices ; à la fin, ce que ton Serment aurait valu en partie classée. ✅ Refait en entier par Jordan dans le bac à sable (24 novembre) : cohérent.
 - ✅ Partie rapide avec un deck prêté : couverte par le Défi du jour (21 novembre).
 - ✅ 🛠️ **Défi du jour** (21 novembre, `alpha-0.49`) : chaque jour la même partie pour tout le monde (lieux, deck prêté parmi les 7, deck et rival adverses, tirage), un seul essai compté dès le lancement ; après un rechargement, « Reprendre le défi » reconstruit la partie au tour où elle s'était arrêtée (coups et Serments gardés dans la sauvegarde), +20 CHF si victoire, +5 sinon. Ni étoiles, ni quêtes, ni journal des factions ; Serment avec la règle habituelle, sans CHF. Carte à l'accueil après la Première Brûlure, bouton « Copier mon résultat » (lieux en 🟢 / 🔴, Serment), FR et EN. Le résultat est gardé dans la sauvegarde du joueur, comme la carte du jour. 👤 À essayer sur ton téléphone.
 - ✅ 🛠️ **Fin de la Première Brûlure** (21 novembre) : « Jouer ma première partie » lance une partie contre l'IA, « Voir mon deck » à côté.
@@ -158,7 +158,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 👤 Le montage du trailer de 30 secondes (et la musique : les vidéos n'ont pas de son).
 - 🟣 👤 Devlog r/gamedev (le seul post possible avant la sortie).
 - 🟣 👤 **Droits sur les illustrations** : relire les conditions de l'outil qui les a générées avant d'activer la cagnotte. Un avis rapide d'un pro serait utile.
-- ✅ 🛠️ **Bouton de partage** (24 novembre, `js/partage.js`) : « Partager ma victoire » sur l'écran de fin d'une partie gagnée (tous les modes), et « Partager <carte> » à la fin d'une ouverture de paquet (la carte la plus rare, une nouvelle d'abord). Une image 1080 × 1350 est dessinée dans le téléphone (illustration, lieux et scores, ×2 du Trône, Serment, rang ou titre, lien du jeu), puis le menu de partage du téléphone s'ouvre. Sans partage d'image, l'image est téléchargée et la phrase copiée. Le jeu n'envoie rien lui-même. FR et EN. ✅ 👤 Essayé par Jordan sur Android le 24 novembre : le menu de partage s'ouvre avec l'image et le lien.
+- ✅ 🛠️ **Bouton de partage** (24 novembre, `js/partage.js`) : « Partager ma victoire » sur l'écran de fin d'une partie gagnée (tous les modes), et « Partager <carte> » à la fin d'une ouverture de paquet (la carte la plus rare, une nouvelle d'abord). Une image 1080 × 1350 est dessinée dans le téléphone (illustration, lieux et scores, ×2 du Trône, Serment, rang ou titre, lien du jeu), puis le menu de partage du téléphone s'ouvre. Sans partage d'image, l'image est téléchargée et la phrase copiée. Le jeu n'envoie rien lui-même. FR et EN. ✅ Victoire et carte tirée vérifiées sur le téléphone de Jordan (24 novembre). ✅ Fin de la Première Brûlure (paquet de 12) : sur un écran court (Brave avec sa barre d'adresse), « Continuer » recouvrait la grille de cartes ; les boutons se calent maintenant au-dessus de la grille (24 novembre). 👤 À revérifier sur ton téléphone.
 - ✅ Licence : « Tous droits réservés » (fichier `LICENSE`). Ne **jamais** écrire « open source ».
 
 ### 3.6 🟣 La sortie
@@ -202,9 +202,9 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 👤 **Répliques des rivaux** : une seule phrase par tempérament aujourd'hui (on devine le tempérament en 4 ou 5 parties). En écrire 3 ou 4 par tempérament, plus une réplique quand tu relèves son Serment et une quand il perd le sien. 🛠️ Ensuite, un « tableau de chasse » au profil : Exodus, Clara, Timothée, Mira et ton score contre chacun.
 - 🟣 👤 Saison Saint-Valentin : les illustrations et la musique sont prêtes, il manque les effets des cartes et celui de Nike V.
 - 🟣 👤 Noms à confirmer : `reflet_noir` (à renommer), « L'Enfant sans École ».
-- 🟣 👤 Questions du 22 octobre : formulation « univers d'Helvara, inspiré de Lausanne » dans le tutoriel, La Source (50 parties avec 8 cartes Helvara ?), nuance de Vesta, cartes holo sans coût ni nom affichés.
+- ✅ Questions du 22 octobre, réponses de Jordan (24 novembre) : « univers d'Helvara » sans préciser l'inspiration (texte des règles corrigé, FR et EN) ; La Source : 50 parties avec 8 cartes Helvara, comme les autres. Cartes holo sans coût ni nom : on garde. 🟣 🛠️ **Vesta** (décision de Jordan) : la réduction va à la prochaine carte Jugement, **même à 0** (au joueur de bien l'ordonner), avec un repère « −1 » visible sur la carte qui en profitera. Changement de règle : `BUILD`, tests, IA.
 - 🟣 👤 Marduk, Ymir, Nammu : ultra-légendaires de faction ou pas ?
-- 🟣 👤 Raccourcir les textes de lieux les plus longs (le Trône et les Eaux d'Apsu sont les nouveaux plus longs).
+- 🟣 🛠️ Textes de lieux (décision de Jordan, 24 novembre) : on ne raccourcit pas ; le texte de la règle quitte le plateau et ne se lit plus qu'en touchant le lieu.
 - 🟣 👤 Gel des nouvelles cartes jusqu'au lot de mars (hors mots-clés et Serment) : toujours d'actualité ?
 
 ---
