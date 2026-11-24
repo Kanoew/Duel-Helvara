@@ -152,7 +152,8 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 
 ### 3.5 🟣 Préparer la sortie (en parallèle, sans rien publier)
 - 🟣 👤🛠️ Page itch.io en brouillon : textes FR et EN, captures, prix 0 € et cagnotte.
-- 🟣 🛠️ Séquences de jeu enregistrées pour le trailer de 30 secondes. 👤 Toi : le montage.
+- ✅ 🛠️ **Séquences de jeu enregistrées** (24 novembre, `outils/enregistrer-sequences.js`) : 4 vidéos sur écran de téléphone (780 × 1688, sans son) : Tirage avec une ultra, partie avec un Serment croisé tenu (3 lieux sur 3), boss du Trône jusqu'au titre, Collection ; plus 7 captures fixes pour itch.io. Envoyées à Jordan. On les refait en une commande à chaque nouveauté.
+- 🟣 👤 Le montage du trailer de 30 secondes (et la musique : les vidéos n'ont pas de son).
 - 🟣 👤 Devlog r/gamedev (le seul post possible avant la sortie).
 - 🟣 👤 **Droits sur les illustrations** : relire les conditions de l'outil qui les a générées avant d'activer la cagnotte. Un avis rapide d'un pro serait utile.
 - ✅ 🛠️ **Bouton de partage** (24 novembre, `js/partage.js`) : « Partager ma victoire » sur l'écran de fin d'une partie gagnée (tous les modes), et « Partager <carte> » à la fin d'une ouverture de paquet (la carte la plus rare, une nouvelle d'abord). Une image 1080 × 1350 est dessinée dans le téléphone (illustration, lieux et scores, ×2 du Trône, Serment, rang ou titre, lien du jeu), puis le menu de partage du téléphone s'ouvre. Sans partage d'image, l'image est téléchargée et la phrase copiée. Le jeu n'envoie rien lui-même. FR et EN. 👤 À essayer sur ton téléphone (Brave Android : le menu de partage doit proposer Discord, WhatsApp…).
@@ -278,3 +279,4 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ **Chronique 1** codée en avant-première (`alpha-0.50`) : trois matchs, deck persistant, Loi du Trône, titre « Conquérant du Trône », FR et EN, 13 nouveaux scénarios (751 en tout), toutes les suites de tests passent.
 - ✅ Défi du jour et nouveau Tirage : sortie pour tous le 15 décembre. Le test de durée de l'ouverture d'une ultra-légendaire suit maintenant le Tirage actif (4,6 s avec l'ombre de Tiamat).
 - ✅ Bouton de partage (victoire, carte tirée) : image dessinée dans le téléphone, menu de partage du téléphone (voir 3.5).
+- ✅ Séquences du trailer et captures itch.io enregistrées (`outils/enregistrer-sequences.js`).
