@@ -2,6 +2,7 @@
 
 > Préparée par Karina le 24 novembre 2026. Ce sont seulement **tes** points : ce que tu dois vérifier, décider ou écrire.
 > Coche au fur et à mesure (`[x]`). Le détail de chaque point est dans `docs/feuille-de-route.md`.
+> 📂 **Tes dossiers de travail** (à remplir sur PC) : `docs/a-faire/`, en commençant par `00-sommaire.md`.
 
 ---
 
@@ -50,7 +51,7 @@
 
 - [ ] **Les 45 cartes cachées** : coûts, puissances, raretés et dates. Les 4 de Tentation et les 4 de Verdict sont identiques entre elles ; un Verdict 3 sur certaines est une piste.
 - [ ] **Les cartes Serment** (« Juré » / « Parjure ») : une ou deux cartes cachées par faction qui combinent leur mot-clé avec le Serment.
-- [ ] **Marduk, Ymir, Nammu** : ultra-légendaires de faction ou pas ?
+- [ ] **Marduk** : il reste Légendaire (sortie le 15 janvier) ou devient la seconde ultra de Jugement ? (Ymir et Nammu sont déjà prévues comme secondes ultras.)
 - [ ] **Le gel des nouvelles cartes** jusqu'au lot de mars : toujours d'actualité ?
 - [ ] **La musique** : mise de côté, à réfléchir à fond.
 
