@@ -49,7 +49,7 @@ const today=()=>window.__today||dayKey();
 const REL=id=>!CARDS[id].rel||today()>=CARDS[id].rel;
 /* Nouveautés en avant-première (21 novembre) : visibles dans le bac à sable (?date=), sur un appareil où ?apercu=1 a été ouvert
    (gardé sur l'appareil ; ?apercu=0 l'enlève), ou pour tout le monde à partir de leur date. 2099 = date pas encore choisie par Jordan. */
-const NOUV={defi:"2026-12-15", tirage:"2026-12-15", chronique:"2099-01-01"};   /* Défi et Tirage : 15 décembre (choix de Jordan, 24 novembre) */
+const NOUV={defi:"2026-12-15", tirage:"2026-12-15", chronique:"2026-12-15"};   /* Défi et Tirage : 15 décembre (choix de Jordan, 24 novembre) */
 const APERCU=(()=>{ try{ const m=/[?&]apercu=([01])(?=&|$)/.exec(location.search); if(m){ if(m[1]==="1") localStorage.setItem("helvara-apercu","1"); else localStorage.removeItem("helvara-apercu"); } return localStorage.getItem("helvara-apercu")==="1"; }catch(e){ return false; } })();
 const nouv=k=>!!window.__sandbox||APERCU||today()>=NOUV[k];
 const avail=()=>POOL.filter(REL);
