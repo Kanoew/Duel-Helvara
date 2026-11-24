@@ -154,7 +154,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 🛠️ Séquences de jeu enregistrées pour le trailer de 30 secondes. 👤 Toi : le montage.
 - 🟣 👤 Devlog r/gamedev (le seul post possible avant la sortie).
 - 🟣 👤 **Droits sur les illustrations** : relire les conditions de l'outil qui les a générées avant d'activer la cagnotte. Un avis rapide d'un pro serait utile.
-- 🟣 🛠️ Bouton de partage (victoire, carte tirée).
+- ✅ 🛠️ **Bouton de partage** (24 novembre, `js/partage.js`) : « Partager ma victoire » sur l'écran de fin d'une partie gagnée (tous les modes), et « Partager <carte> » à la fin d'une ouverture de paquet (la carte la plus rare, une nouvelle d'abord). Une image 1080 × 1350 est dessinée dans le téléphone (illustration, lieux et scores, ×2 du Trône, Serment, rang ou titre, lien du jeu), puis le menu de partage du téléphone s'ouvre. Sans partage d'image, l'image est téléchargée et la phrase copiée. Le jeu n'envoie rien lui-même. FR et EN. 👤 À essayer sur ton téléphone (Brave Android : le menu de partage doit proposer Discord, WhatsApp…).
 - ✅ Licence : « Tous droits réservés » (fichier `LICENSE`). Ne **jamais** écrire « open source ».
 
 ### 3.6 🟣 La sortie
@@ -276,3 +276,4 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - ✅ Loi du Trône de la Chronique 1 : le Trône vaut 2 lieux (voir 3.3).
 - ✅ **Chronique 1** codée en avant-première (`alpha-0.50`) : trois matchs, deck persistant, Loi du Trône, titre « Conquérant du Trône », FR et EN, 13 nouveaux scénarios (751 en tout), toutes les suites de tests passent.
 - ✅ Défi du jour et nouveau Tirage : sortie pour tous le 15 décembre. Le test de durée de l'ouverture d'une ultra-légendaire suit maintenant le Tirage actif (4,6 s avec l'ombre de Tiamat).
+- ✅ Bouton de partage (victoire, carte tirée) : image dessinée dans le téléphone, menu de partage du téléphone (voir 3.5).
