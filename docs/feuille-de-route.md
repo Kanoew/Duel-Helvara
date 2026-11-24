@@ -1,5 +1,7 @@
 # Duel d'Helvara : feuille de route
 
+> Ta liste à toi (vérifier, décider, écrire) : **`docs/a-faire-jordan.md`**.
+>
 > Écrite le 18 novembre 2026 par Karina, mise à jour le 20 novembre au soir. Elle rassemble en un seul endroit :
 > l'analyse compétitive du 17 novembre et mon avis (`docs/analyse-competitive-avis-karina.md`),
 > le plan d'action du 16 novembre (`docs/plan-action.md`) et les questions encore ouvertes (`docs/calendrier-et-en-attente.md`).
@@ -105,7 +107,7 @@ Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : le
 - 🟣 Entre +6 et +8 : Ereshkigal +6,7, Apsu +6,6, Arès d'Halloween +6,5, Calypso +6,4, Nyx d'Halloween +6,1, le Troll +6,1.
 - ✅ **Nike, l'Élan de la Victoire** (choix de Jordan, idée d'une relecture extérieure) : 3/3, « +2 de puissance pour chaque autre carte jouée avant elle ce tour, et chacune d'elles gagne +1 de puissance ». Decks avec Nike 47,4 → 53,7 % ; **Jugement 46,6 → 48,6 %**. L'IA de Jugement est corrigée aussi (Apollon, Vesta, Bia, Eir, Chernobog).
 - ✅ **Helvara mesurée avec et sans les Escaliers du Marché** (24 novembre, 3 graines × 6 000 parties, decks identiques) : 48,9 % hors de son lieu, **54,8 % avec les Escaliers**. Face-à-face avec les Escaliers : 53,7 % contre Primordial, 58,1 % contre Désir, 56,3 % contre Jugement, aucun au-delà de 60 %. Les cartes Lien passent de −1,5 / −2,6 à environ 0. Verdict : faible hors de son lieu, correcte dedans, rien à corriger sur simulation. 🟣 Après le 1er décembre : relever Helvara et ses cartes Lien dans les vraies statistiques. À surveiller : **Mendiant −6,4** (Costumes −4,5, Doyenne −2,9). Si Helvara reste sous 47 % en vrai, la piste la plus sûre est une commune Helvara (Mendiant), pas le lieu.
-- 🟣 👤 **Patch note** des nouveautés à préparer à ton retour (sur le modèle de `docs/patch-note-2026-11-18.md`).
+- ✅ **Patch note** des nouveautés du 20 au 24 novembre, avec ce qui arrive le 15 décembre : `docs/patch-note-2026-11-24.md`.
 - 🟣 Après le 1er décembre : vraies statistiques d'Ananké, de Yarden X Apsu, de Lilith et de Dionysos dans Supabase (lecture seule). Correction seulement au-delà de ±8 points avec au moins 100 decks.
 - ✅ 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage (24 novembre) : `node outils/equilibrage.js --lieu escaliers` (le lieu est dans chaque partie, à une place tirée au hasard).
 
@@ -143,7 +145,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
   - ✅ coups scellés (18 novembre, `alpha-0.41`) ;
   - ✅ graine commune (18 novembre, `alpha-0.42`) ;
   - ✅ deck adverse vérifié (`alpha-0.43`) ; lieu à l'honneur gardé en duel, seulement si les deux téléphones sont d'accord ;
-  - 🟣 👤 un duel en ligne entre deux téléphones avec la nouvelle version.
+  - ✅ 👤 un duel en ligne entre deux téléphones avec la nouvelle version (Jordan contre un ami, 24 novembre : sans souci).
 - 🟣 🛠️ **Lot B, « Jouer » contre un humain ou l'IA** :
   - ✅ présence en direct anonyme ; « Jouer » attend 15 s seulement si quelqu'un est libre, sinon IA tout de suite (18 novembre) ;
   - 🛠️ résultat envoyé par les deux joueurs et validé par le serveur, parties gardées 15 jours (décidé le 18 novembre) : codé (`alpha-0.44`). 🟣 👤 coller `duels-valides.sql` dans Supabase après relecture `db-guard`.
@@ -156,7 +158,7 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 - 🟣 👤 Le montage du trailer de 30 secondes (et la musique : les vidéos n'ont pas de son).
 - 🟣 👤 Devlog r/gamedev (le seul post possible avant la sortie).
 - 🟣 👤 **Droits sur les illustrations** : relire les conditions de l'outil qui les a générées avant d'activer la cagnotte. Un avis rapide d'un pro serait utile.
-- ✅ 🛠️ **Bouton de partage** (24 novembre, `js/partage.js`) : « Partager ma victoire » sur l'écran de fin d'une partie gagnée (tous les modes), et « Partager <carte> » à la fin d'une ouverture de paquet (la carte la plus rare, une nouvelle d'abord). Une image 1080 × 1350 est dessinée dans le téléphone (illustration, lieux et scores, ×2 du Trône, Serment, rang ou titre, lien du jeu), puis le menu de partage du téléphone s'ouvre. Sans partage d'image, l'image est téléchargée et la phrase copiée. Le jeu n'envoie rien lui-même. FR et EN. 👤 À essayer sur ton téléphone (Brave Android : le menu de partage doit proposer Discord, WhatsApp…).
+- ✅ 🛠️ **Bouton de partage** (24 novembre, `js/partage.js`) : « Partager ma victoire » sur l'écran de fin d'une partie gagnée (tous les modes), et « Partager <carte> » à la fin d'une ouverture de paquet (la carte la plus rare, une nouvelle d'abord). Une image 1080 × 1350 est dessinée dans le téléphone (illustration, lieux et scores, ×2 du Trône, Serment, rang ou titre, lien du jeu), puis le menu de partage du téléphone s'ouvre. Sans partage d'image, l'image est téléchargée et la phrase copiée. Le jeu n'envoie rien lui-même. FR et EN. ✅ 👤 Essayé par Jordan sur Android le 24 novembre : le menu de partage s'ouvre avec l'image et le lien.
 - ✅ Licence : « Tous droits réservés » (fichier `LICENSE`). Ne **jamais** écrire « open source ».
 
 ### 3.6 🟣 La sortie
