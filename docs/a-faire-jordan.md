@@ -11,31 +11,33 @@
 - [x] Un duel en ligne contre un ami, avec la nouvelle version *(24 novembre)*
 - [x] La Chronique I terminée, avec le titre « Conquérant du Trône » *(24 novembre)*
 - [x] Le Défi du jour *(24 novembre)*
-- [ ] **Le partage d'une carte tirée** : à la fin d'une ouverture de paquet, le bouton « Partager <carte> »
-- [ ] **Un duel en ligne sur les cinq nouveaux lieux** (Trône, Autel, Jardins, Eaux d'Apsu, Marché des Ombres) : jusqu'ici, ils n'ont été joués que contre l'IA
-- [ ] **Les symboles des mots-clés** ⧉ ❦ ⚖ ⧗ : ils s'affichent bien avec la police d'Android ?
-- [ ] **Le verre dépoli** dans la Collection : ça reste fluide derrière les cartes holo ?
-- [ ] **Le tutoriel** refait autour du Serment, à refaire une fois du début à la fin
-- [ ] **Les cartes holo dans Messenger** : le correctif n'a pas encore été vérifié
+- [x] Le partage d'une carte tirée *(24 novembre)*
+- [ ] **La fin de la Première Brûlure** (bac à sable) : les boutons « Partager » et « Continuer » doivent être au-dessus des cartes, sans rien recouvrir *(corrigé le 24 novembre)*
+- [x] Des duels en ligne sur les cinq nouveaux lieux *(24 novembre)*
+- [x] Les symboles ⧉ ❦ ⚖ ⧗, navigateur et application installée *(24 novembre)*
+- [x] Le verre dépoli, fluide chez toi et tes amis *(24 novembre)*
+- [x] Le tutoriel autour du Serment *(24 novembre)*
+- [ ] **Le bouton « Notes de mise à jour »** à l'accueil : il ouvre la dernière note, les anciennes repliées en bas *(ajouté le 24 novembre)*
+- [x] Les cartes holo dans Messenger : considéré comme réglé *(24 novembre)*
 
 ## 2. À faire de ton côté
 
-- [ ] **Le redesign de tes cartes** (prévu ce week-end). Dis-moi quand il est dans le jeu : je refais **toutes** les vidéos et captures en une commande (`outils/enregistrer-sequences.js`).
+- [ ] **Le redesign de tes cartes** (environ 100 sur 300 faites). Quand il est fini, je te donne les consignes de découpe pour Antigravity. Dis-moi quand il est dans le jeu : je refais **toutes** les vidéos et captures en une commande (`outils/enregistrer-sequences.js`).
 - [ ] **Le montage du trailer** de 30 secondes, de préférence **après** le redesign. Les vidéos n'ont pas de son : la musique, c'est toi.
 - [ ] **Les droits sur les illustrations** : relire les conditions de l'outil qui les a générées **avant** d'activer la cagnotte itch.io. L'avis rapide d'un pro serait utile.
-- [ ] **Le devlog r/gamedev** : le seul post possible avant la sortie. J'en prépare le brouillon.
+- [ ] **Le devlog r/gamedev** : le seul post possible avant la sortie. Tu l'écris toi-même ; je relis l'anglais si tu veux.
 
 ## 3. À décider avant la sortie
 
-- [ ] **La date de sortie sur itch.io** (avant janvier). Les grosses nouveautés sortent le 15 décembre : itch.io juste après ?
-- [ ] **Le départage à 2 contre 2 contre le boss** de la Chronique : aujourd'hui, c'est la puissance totale sur les trois lieux qui décide. On garde ?
-- [ ] **Raccourcir les textes de lieux** les plus longs (le Trône et les Eaux d'Apsu).
-- [ ] **Les noms à confirmer** : `reflet_noir` (à renommer) et « L'Enfant sans École ».
-- [ ] **Les questions du 22 octobre** :
-  - [ ] La formulation « univers d'Helvara, inspiré de Lausanne » dans le tutoriel.
-  - [ ] La Source (50 parties avec 8 cartes Helvara ?).
-  - [ ] La nuance de Vesta.
-  - [ ] Les cartes holo sans coût ni nom affichés.
+- [x] La date de sortie sur itch.io : **le 15 janvier 2027**, avec Hédoné *(24 novembre)*
+- [x] Le départage contre le boss : la puissance totale, comme d'habitude *(24 novembre)*
+- [x] Les textes de lieux : on ne raccourcit pas, le texte quitte le plateau et se lit en touchant le lieu *(24 novembre, chantier de Karina)*
+- [ ] **Les noms à confirmer** : `reflet_noir` et « L'Enfant sans École », avec le redesign. On change le nom affiché, jamais l'identifiant.
+- [x] **Les questions du 22 octobre** *(24 novembre)* :
+  - [x] « L'univers d'Helvara », sans l'inspiration (corrigé).
+  - [x] La Source : 50 parties avec 8 cartes Helvara.
+  - [x] Vesta : la réduction va à la prochaine carte Jugement, même à 0, avec un « −1 » visible (chantier de Karina).
+  - [x] Les cartes holo sans coût ni nom : on garde.
 
 ## 4. Ta plume (écriture)
 
