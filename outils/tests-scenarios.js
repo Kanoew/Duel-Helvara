@@ -28,6 +28,8 @@ async function inPage() {
   const card = (id, pow) => { const c = mk(id); if (pow != null) c.pow = pow; return c; };
   const find = (s, id) => { for (let li = 0; li < 3; li++) for (const c of S.board[s][li]) if (c.id === id) return c; return null; };
   const wait = ms => new Promise(r => setTimeout(r, ms));
+  /* Choix de l'IA vérifié sur n essais : vrai si le bon choix l'emporte au moins min fois sur n (l'IA garde une part de hasard). */
+  const mostly = (play, good, n = 100, min = 55) => { let k = 0; const seen = {}; for (let i = 0; i < n; i++) { const ids = play(); if (good(ids)) k++; else { const x = ids.join() || "rien"; seen[x] = (seen[x] || 0) + 1; } } return { ok: k >= min, d: `${k}/${n} bons choix ; autres : ${JSON.stringify(seen)}` }; };
 
   /* 1. Nike + Aphrodite : 2 cartes à 1, Nike (3/2), Aphrodite au tour 6 → Nike finit à 10 */
   fresh(); S.turn = 6; { const a = card(plain[0], 1), b = card(plain[1], 1), n = card("nike"), ap = card("aphrodite"); S.hand.p = [a, b, n, ap];
@@ -139,7 +141,9 @@ async function inPage() {
     $(".t-pack").click(); await until(() => /choisis|pick/i.test($(".t-status").textContent));
     const t0 = Date.now(); document.querySelector(".t-slot").click();
     const waiting = await until(() => /touche pour|tap to/i.test($(".t-status").textContent), 9000), dt = Date.now() - t0;
-    T("Ouverture : une Ultra attend le toucher après 3,6 s environ (attente 0,8 + tension 2,3 + révélation 0,55)", waiting && dt > 3200 && dt < 5200, dt + " ms");
+    /* durée attendue selon le Tirage actif : le nouveau (ombre de Tiamat, 4,6 s) dès sa sortie pour tous (NOUV.tirage), l'ancien (3,65 s) avant */
+    const tu = nouv("tirage") ? OUV_TIMING.U : OUV_TIMING_AVANT.U, exp = tu.wait + tu.tension + tu.reveal;
+    T(`Ouverture : une Ultra attend le toucher après ${(exp / 1000).toFixed(2).replace(".", ",")} s environ (attente + tension + révélation, ${nouv("tirage") ? "nouveau" : "ancien"} Tirage)`, waiting && dt > exp - 400 && dt < exp + 1600, dt + " ms");
     $(".t-skip").click(); await until(() => !$(".t-end").hidden); $("[data-t=close]").click(); await tick(60);
   }
   /* 8. Fusions (ultra-légendaires) dans les paquets */
@@ -589,8 +593,9 @@ async function inPage() {
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 4 → Apollon n'est plus gardé pour son tour (sa Flèche à 0 arrive en main pour la suite)", ids.includes("apollon"), ids.join() || "rien"); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { const n = card("nike"), v = card("vesta"), o3 = card(other3); S.hand.e = [n, v, o3];
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 5 → Vesta jouée (Nike coûtera 1 de moins au tour 6)", ids.includes("vesta") && !ids.includes("nike"), ids.join() || "rien"); }
-    fresh(); S.turn = 4; S.energy = S.energyE = 4; { const n = card("nike"), m = card("maat"); S.hand.e = [n, m];
-      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : pas de Nike au tour 4 avec moins de 3 cartes devant elle", !ids.includes("nike"), ids.join() || "rien"); }
+    /* L'IA a du hasard (bruit du palier 5) : ce choix se vérifie sur 100 essais, il doit l'emporter au moins 55 fois (il l'emporte ~75 fois) ; un seul essai ratait une fois sur quatre (24 novembre) */
+    { const r = mostly(() => { fresh(); S.turn = 4; S.energy = S.energyE = 4; const n = card("nike"), m = card("maat"); S.hand.e = [n, m]; return aiPlan("e", 5).map(x => x.c.id); }, ids => !ids.includes("nike"));
+      T("IA : pas de Nike au tour 4 avec moins de 3 cartes devant elle (la plupart du temps)", r.ok, r.d); }
     fresh(); S.turn = 6; S.energy = S.energyE = 6; { const hs = ["maat", "vesta", "apollon", "fleche", "nike"].map(id => card(id)); S.hand.e = hs;
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : au tour 6, Nike jouée en dernier avec au moins 3 cartes devant elle", ids[ids.length - 1] === "nike" && ids.length >= 4, ids.join()); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("e", 0, "maat"); put("e", 1, "vesta"); const z = card("zeus"), n = card("nike"); S.hand.e = [z, n];
@@ -647,8 +652,8 @@ async function inPage() {
       SRC = { s: "e", cost: 3 }; const ok = destroy("p", 0, nk); SRC = null; T("Styx : Nike V détruite par l'adversaire revient en main", ok && S.hand.p.includes(nk) && !S.graveyard.p.includes("nike_v"), ok); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { const m = card("maat"), a = card("apollon"), n = card("nike_v"); S.hand.e = [n, m, a];
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike V posée après Mā'at et Apollon, comme Nike", ids.indexOf("nike_v") === ids.length - 1 && ids.length === 3, ids.join()); }
-    fresh(); S.turn = 3; S.energy = S.energyE = 3; { const n = card("nike_v"), m = card("maat"), a = card("apollon"), o3 = card(Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id)) || "athena"); S.hand.e = [n, m, a, o3];
-      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike V en main au tour 3 → les petites cartes sont gardées pour son tour", !ids.includes("maat") && !ids.includes("apollon") && !ids.includes("nike_v"), ids.join() || "rien"); }
+    { const r = mostly(() => { fresh(); S.turn = 3; S.energy = S.energyE = 3; const n = card("nike_v"), m = card("maat"), a = card("apollon"), o3 = card(Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id)) || "athena"); S.hand.e = [n, m, a, o3]; return aiPlan("e", 5).map(x => x.c.id); }, ids => !ids.includes("maat") && !ids.includes("apollon") && !ids.includes("nike_v"));
+      T("IA : Nike V en main au tour 3 → les petites cartes sont gardées pour son tour (la plupart du temps, sur 100 essais)", r.ok, r.d); }
     { const keep = window.__today, jr = () => { P.owned = P.owned.filter(x => x !== "nike_v"); return journalHTML(); };
       window.__today = "2027-01-31"; P.fj = { nikev: 7 }; T("Journal : pas de ligne Saint-Valentin avant le 1er février", !jr().includes("Saint-Valentin"));
       window.__today = "2027-02-03"; { const h = jr(); T("Journal : la quête est visible dès le 1er février, la carte et le seuil ne sont pas encore révélés", h.includes("Saint-Valentin · avec Nike") && h.includes("7 parties") && h.includes("bientôt") && !h.includes("/25") && !h.includes("Nike de la Saint-Valentin")); }
@@ -1646,6 +1651,39 @@ async function inPage() {
     const bad = S.board.p.flat().filter(c => (c.mods || []).reduce((s, x) => s + x.v, 0) !== c.pow - CARDS[c.id].pow).map(c => `${c.id} ${c.pow}/${CARDS[c.id].pow} ${JSON.stringify(c.mods)}`);
     T("Détail des bonus : pas de doublon (Nike + Aphrodite, Mā‘at, Tefnut), la liste correspond à la puissance", !bad.length && t.mods.filter(x => x.src === "Nike").length === 2, bad.join(" | ") || JSON.stringify(t.mods));
     S = null; }
+  /* Chronique 1 (24 novembre) : Loi du Trône (le lieu du centre vaut 2 lieux au match du boss), CHF à la première victoire de chaque match, carte d'avance du match 2 */
+  { const keepCh = JSON.stringify(P.ch), keepChf = P.chf, keepDeck = P.deck.slice();
+    const fin = async (wins, pows) => { /* wins : gagnant voulu par lieu ("p", "e", "=") ; pows : puissance du gagnant */
+      for (let li = 0; li < 3; li++) { S.board.p[li] = []; S.board.e[li] = []; if (wins[li] === "p") put("p", li, plain[0], pows[li]); else if (wins[li] === "e") put("e", li, plain[0], pows[li]); }
+      S.turn = 6; S.over = null; finish(); return S.over; };
+    const setup = step => { fresh(); P.ch = { run: { step, deck: P.deck.slice(0, 12), over: false, tries: 0 }, paid: 0, done: 0, title: false };
+      S.chron = { step, boss: step === 2 }; S.locs.forEach((L, li) => { L.id = li === 1 && step === 2 ? "trone" : "tour"; }); };
+    setup(2); let o = await fin(["e", "p", "="], [3, 4, 0]);
+    T("Loi du Trône : le Trône seul contre un lieu fait 2 points contre 1 → victoire", o && o.res === "win" && o.pw === 2 && o.ew === 1 && o.rows[1].x2, o && `${o.res} ${o.pw}-${o.ew}`);
+    setup(2); o = await fin(["e", "p", "e"], [5, 3, 5]);
+    T("Loi du Trône : le Trône seul contre les deux autres fait 2 contre 2, départage à la puissance totale (3 contre 10 → défaite)", o && o.res === "lose" && o.pw === 2 && o.ew === 2 && o.tie, o && `${o.res} ${o.pw}-${o.ew} ${o.pt}-${o.et}`);
+    setup(0); o = await fin(["e", "p", "="], [3, 4, 0]);
+    T("Hors du boss, le lieu du centre vaut 1 : 1 contre 1, départage (4 contre 3 → victoire)", o && o.res === "win" && o.pw === 1 && o.ew === 1 && !o.rows[1].x2, o && `${o.res} ${o.pw}-${o.ew}`);
+    setup(0); P.chf = 0; o = await fin(["p", "p", "e"], [3, 3, 1]); const g1 = P.chf, step1 = P.ch.run.step;
+    P.ch.run.step = 0; S.chron.step = 0; o = await fin(["p", "p", "e"], [3, 3, 1]);
+    T("Chronique : CHF à la première victoire du match seulement (30 puis 0), passage au match suivant", g1 === 30 && P.chf === 30 && step1 === 1, `${g1} puis ${P.chf}, match ${step1}`);
+    setup(1); P.ch.paid = 1; o = await fin(["e", "e", "p"], [3, 3, 1]);
+    T("Chronique : une défaite garde le match et compte l'essai", o.res === "lose" && P.ch.run.step === 1 && P.ch.run.tries === 1, JSON.stringify(P.ch.run));
+    setup(2); P.ch.paid = 2; P.chf = 0; o = await fin(["e", "p", "p"], [1, 4, 4]);
+    T("Chronique : le boss battu termine la Chronique, +120 CHF et le titre", o.res === "win" && o.done && P.ch.run.over && P.ch.title && P.ch.done === 1 && P.chf === 120, JSON.stringify(P.ch));
+    const odds = [[.2, .7, .4], [.9, .1, .5], [.5, .5, .5]]; S.chron = null;
+    T("IA : hors Loi du Trône, les chances de victoire sont celles d'avant (2 lieux sur 3)", odds.every(p => Math.abs(winOdds(p) - (p[0] * p[1] + p[0] * p[2] + p[1] * p[2] - 2 * p[0] * p[1] * p[2])) < 1e-12));
+    S.chron = { boss: true }; T("IA : avec la Loi du Trône, gagner le Trône compte plus que gagner un autre lieu", winOdds([.5, .9, .5]) > winOdds([.9, .5, .5]), `${winOdds([.5, .9, .5]).toFixed(3)} contre ${winOdds([.9, .5, .5]).toFixed(3)}`);
+    S = null;
+    P.deck = keepDeck.length === 12 ? keepDeck : Object.keys(CARDS).filter(id => !CARDS[id].token && !ULof(id)).slice(0, 12); P.ch = { run: { step: 1, deck: P.deck.slice(), over: false, tries: 0 }, paid: 3, done: 0, title: false };
+    const kd = window.preloadFoe; window.preloadFoe = null; chGame(); window.preloadFoe = kd;
+    const adv = S.chron.adv, ac = adv && S.board.e[adv.li].find(c => c.uid === adv.uid);
+    T("Chronique, match 2 : la carte adverse la plus forte de coût 3 au plus est déjà en jeu au tour 1", ac && ac.rev && CARDS[ac.id].cost <= 3 && !ULof(ac.id) && S.board.e.flat().length === 1 && S.deck.e.length + S.hand.e.length === 11, ac ? `${ac.id} ${ac.pow}` : "aucune");
+    T("Chronique, match 2 : ton deck est celui figé au départ", S.deck.p.length + S.hand.p.length === 12 && [...S.deck.p, ...S.hand.p].every(c => P.ch.run.deck.includes(c.id)));
+    S = null; P.ch = { run: { step: 2, deck: P.deck.slice(), over: false, tries: 0 }, paid: 3, done: 0, title: false }; window.preloadFoe = null; chGame(); window.preloadFoe = kd;
+    T("Chronique, boss : le Trône de Tiamat au centre, connu dès le départ", S.locs[1].id === "trone" && S.locs[1].rev && S.locs[0].id !== "trone" && S.locs[2].id !== "trone" && S.chron.boss);
+    T("Profil : une Chronique abîmée dans la sauvegarde est nettoyée", JSON.stringify(cleanCh({ run: { step: 9, deck: ["x"] }, paid: 7, title: 1 })) === JSON.stringify({ run: null, paid: 3, done: 0, title: true }), JSON.stringify(cleanCh({ run: { step: 9, deck: ["x"] }, paid: 7, title: 1 })));
+    S = null; P.ch = JSON.parse(keepCh || "null") || { run: null, paid: 0, done: 0, title: false }; P.chf = keepChf; P.deck = keepDeck; }
 
   return res;
 }

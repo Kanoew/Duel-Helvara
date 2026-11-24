@@ -335,6 +335,7 @@ const duelLive=()=>!!(S&&S.mp&&!S.over);
 function homeNotes(){
   const n=[]; if(duelLive()) n.push(`Duel en cours contre ${esc(S.mp.oppNick)}`); else if(mpSession()&&!duelResumable()) n.push("Un duel peut être repris");
   if(!mq&&!duelLive()&&lobSeeking()) n.push("Un joueur cherche un adversaire : appuie sur Jouer");
+  if(chOpen()&&chRun()) n.push(`Chronique en cours · match ${P.ch.run.step+1} sur 3`);
   if(blitzRun()) n.push(`Blitz en cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`);
   return n.length?`<div class="hint playhint modenotes" role="status">${n.map(t=>`<span>${t}</span>`).join("")}</div>`:"";
 }
@@ -342,13 +343,14 @@ function playSheetHTML(){
   if(mq&&mq.jouer){ const left=Math.max(0,Math.ceil((mq.until-Date.now())/1000));
     return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div><p class="hint" role="status">${mq.room?"Adversaire trouvé, connexion au salon…":`Recherche d'un adversaire… ${left} s`}</p><button class="primary" data-act="seekai">Jouer contre l'IA maintenant</button></section>`; }
   const ms=duelResumable()&&mpSession(), resumeBox=ms?`<div class="notice">Duel contre ${esc(safeNick(ms.oppNick))} interrompu. <span class="row2" style="margin-top:8px;display:flex"><button class="primary" data-act="mpresume">Reprendre</button><button class="ghost" data-act="mpforget">Oublier ce duel</button></span></div>`:"";
-  const ready=deckReady(), inG=!!(S&&!S.over&&!S.blitz&&!S.rp&&!S.mp), rec=P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:"";
+  const ready=deckReady(), inG=!!(S&&!S.over&&!S.blitz&&!S.chron&&!S.rp&&!S.mp), rec=P.dw+P.dl+P.dd?` · ${P.dw} V · ${P.dl} D · ${P.dd} É`:"";
   const rival=`<button class="qcard duelcard modemain" data-act="${inG?"resume":"play"}" ${ready||inG?"":"disabled"}><span class="t">Contre un rival</span><span class="m">${inG?"Partie en cours : la reprendre":ready?(lobFree()?"Un joueur en ligne : un humain d'abord, sinon l'IA":"Partie classée contre l'IA"):"Il te faut un deck de 12 cartes"}</span></button>`;
   const friend=`<button class="qcard duelcard" data-act="go" data-to="duel"><span class="t">Défier un ami</span><span class="m">${duelLive()?`En cours contre ${esc(S.mp.oppNick)}`:mpSession()?"Un duel peut être repris":"Crée un salon"}${rec}</span></button>`;
   const bz=blitzOpen()
     ?`<button class="qcard duelcard bzcard" data-act="go" data-to="blitz"><span class="t">Blitz</span><span class="m">${blitzRun()?`En cours · ${P.bz.run.wins} victoire${P.bz.run.wins>1?"s":""} sur 3`:bzFree()?"Partie gratuite du jour":`Gratuit dans ${hoursToReset()} h`}</span></button>`
     :`<div class="qcard duelcard bzcard modelock" role="group" aria-disabled="true"><span class="t">${ico("lock")} Blitz</span><span class="m">${blitzLockText()}</span></div>`;
-  return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div>${resumeBox}${rival}${friend}${bz}</section>`;
+  const chr=chOpen()?`<button class="qcard duelcard chcard" data-act="go" data-to="chron"><span class="t">Chronique I · Le Trône</span><span class="m">${chRun()?(P.ch.run.over?"Terminée : voir le bilan":`En cours · match ${P.ch.run.step+1} sur 3`):P.ch.title?`Titre gagné : ${CHRON.title}`:"Trois matchs avec ton deck, jusqu'au boss du Trône"}</span></button>`:"";
+  return `<section class="quests modesheet"><div class="qhead"><h2>Jouer</h2></div>${resumeBox}${rival}${friend}${bz}${chr}</section>`;
 }
 /* Joueurs en ligne (présence anonyme du lot B) : jeux ouverts et visibles de même version, toi compris. Rien si la présence est indisponible. */
 function lobCountHTML(){ if(!lob) return ""; const n=lobOthers().length+1;
@@ -415,7 +417,7 @@ function profileHTML(){
   return `<section class="sec who">
       <div class="idrow">
         <button class="avbtn" data-act="avpick" aria-label="Changer d'avatar">${avatarHTML("lg")}<span class="avedit">Changer</span></button>
-        <div class="idtext"><div class="eyebrow">${season()?SEASON[season()].who:"Joueur d'Helvara"}</div><h2 class="pname">${esc(P.name)}</h2></div>
+        <div class="idtext"><div class="eyebrow">${P.ch&&P.ch.title?CHRON.title:season()?SEASON[season()].who:"Joueur d'Helvara"}</div><h2 class="pname">${esc(P.name)}</h2></div>
       </div>
       ${nameBlock}
       <div class="rankcard">
@@ -837,7 +839,7 @@ function locHTML(li){
   const can=!S.busy&&((S.sel&&canStage(findHand(S.sel),li))||(S.swimSel&&swimOk(li)));
   const img=L.rev?d.img:"images/lieux/inconnu.webp";
   const cross=S.oath===li&&S.aiOath===li;
-  const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":S.oathStage===li?"⚖ Serment (caché)":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":""].filter(Boolean);
+  const tags=[cross?"⚖ Serment croisé":S.oath===li?"⚖ Serment":S.aiOath===li?"⚖ Serment adverse":S.oathStage===li?"⚖ Serment (caché)":"",L.stopped?"Effet arrêté":"",L.locked?"Verrouillé":"",muted("p",li)?"Silence : tu ne peux pas jouer ici":"",muted("e",li)?"Silence adverse":"",nemInv(li)?"Nemesis : le plus faible gagne":"",locW(li)===2?"Loi du Trône : vaut 2 lieux":""].filter(Boolean);
   /* Cérémonie du Serment : sceau ⚖ posé sur le lieu + lueur durable. Pendant ~1,8 s après le serment, l'animation reprend là où elle en était à chaque nouveau rendu (délai négatif). */
   const nw=S.oathNew&&S.oathNew.li===li&&Date.now()-S.oathNew.at<1800?Date.now()-S.oathNew.at:-1;
   const seal=k=>`<span class="oathseal ${k}${nw>=0?" new":""}" ${nw>=0?`style="animation-delay:-${nw}ms"`:""} aria-hidden="true">⚖</span>`;
@@ -845,7 +847,7 @@ function locHTML(li){
   return `<div class="loc${can?" can":""}${L.locked?" locked":""}${cross?" cross":S.oath===li?" oath":S.aiOath===li?" aioath":S.oathStage===li?" oathhid":""}${nw>=0?" oathnew":""}" style="background-image:${VEIL},url('${img}')${nw>=0?`;--od:-${nw}ms`:""}" data-act="stage" data-li="${li}" data-lp="l${li}" tabindex="0">${seals}
     <span class="tot f${w==="e"?" lead":""}">${b}</span>${L.rev?`<button class="locinfo" data-act="locinfo" data-li="${li}" aria-label="Lire la règle : ${esc(d.name)}">i</button>`:""}
     <div class="inner"><div class="nm">${L.rev?d.name:"Lieu inconnu"}</div><div class="fx">${tags.length?`<b>${tags.join(" · ")}</b>`:(L.rev?d.fx:`Révélé au tour ${li+1}`)}</div></div>
-    <span class="tot m${w==="p"?" lead":""}">${a}</span></div>`;
+    <span class="tot m${w==="p"?" lead":""}">${a}</span>${locW(li)===2?`<span class="locx2" aria-hidden="true">×2</span>`:""}</div>`;
 }
 function findHand(uid){ return S.hand.p.find(c=>c.uid===uid); }
 function findAny(uid){
@@ -945,18 +947,19 @@ function resultHTML(){
   const se=season(); const t=o.res==="win"?(se?SEASON[se].win:"Victoire"):o.res==="lose"?(se?SEASON[se].lose:"Défaite"):"Égalité";
   return `<div class="veil"><div class="result" role="dialog" aria-label="${t}">
     <h2>${t}</h2>
-    ${o.blitz?`<div class="rankline"><b>Blitz · ${o.wins} victoire${o.wins>1?"s":""} sur 3</b><br><span>${o.ended?(o.gain?`Blitz terminé : +${o.gain} CHF`:"Blitz terminé, sans récompense"):o.res==="draw"?"Égalité : le match est à rejouer":`Prochain match contre une IA ${TIERS[BZ.tiers[o.wins]]}`}</span></div>`:`<div class="reward">+${o.gain} CHF</div>`}
+    ${o.chron?(o.gain?`<div class="reward">+${o.gain} CHF</div>`:""):o.blitz?`<div class="rankline"><b>Blitz · ${o.wins} victoire${o.wins>1?"s":""} sur 3</b><br><span>${o.ended?(o.gain?`Blitz terminé : +${o.gain} CHF`:"Blitz terminé, sans récompense"):o.res==="draw"?"Égalité : le match est à rejouer":`Prochain match contre une IA ${TIERS[BZ.tiers[o.wins]]}`}</span></div>`:`<div class="reward">+${o.gain} CHF</div>`}
+    ${o.chron?`<div class="rankline"><b>Chronique · match ${o.step+1} sur 3</b><br><span>${o.done?`Chronique terminée${P.ch.done===1?` : titre « ${CHRON.title} » gagné`:""}`:o.res==="win"?`Prochain match : ${CHRON.steps[o.step+1].n}`:"Le match est à rejouer, avec le même deck"}${o.oath?` · ⚖ Serment ${o.oath.cross?"croisé ":""}${o.oath.kept?"tenu":"rompu"}`:""}</span></div>`:""}
     ${o.feat?`<div class="qdone">Lieu à l'honneur : +${o.feat} CHF pour ta première partie du jour.</div>`:""}
     ${o.oath&&(o.mp||o.blitz)?oathChfHTML(o):""}
     ${o.qDone&&o.qDone.length?`<div class="qdone">Quête accomplie : ${o.qDone.join(" · ")}. Récupère ta récompense à l'accueil.</div>`:""}
-    ${o.daily?`<div class="rankline"><b>Défi du jour</b><br><span>Hors classement${o.oath?` · ⚖ Serment ${o.oath.cross?"croisé ":""}${o.oath.kept?"tenu":"rompu"}`:""}</span></div>`:o.blitz?"":o.mp&&!o.rk?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>${!S.mp.ranked?"Duel entre amis · hors classement":S.mp.srv==="conflict"?"Duel classé · résultat non validé : aucune étoile":S.mp.rankDone&&!S.mp.counted?(o.res==="lose"?"Duel classé · ce joueur a déjà 10 victoires comptées contre toi aujourd'hui : rien de perdu":"Duel classé · déjà 10 victoires comptées aujourd'hui contre ce joueur : aucune étoile"):"Duel classé · étoiles dès que le serveur a validé le résultat"}</span></div>`:`${o.mp?`<div class="hint">Duel classé contre ${esc(S.mp.oppNick)}</div>`:""}<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
-    <div class="m" style="color:var(--mist)">${o.pw} lieu${o.pw>1?"x":""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
-    <div class="rows sc3"><div class="row rh" aria-hidden="true"><span>Lieu</span><span class="c me">Toi</span><span class="c foe"${o.mp?` title="${esc(S.mp.oppNick)}"`:""}>${o.mp?esc(S.mp.oppNick):esc(foeName())}</span></div>${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}</span><span class="c me${r.w==="p"?" w":""}">${r.a}</span><span class="c foe${r.w==="e"?" w":""}">${r.b}</span></div>`).join("")}</div>
+    ${o.daily?`<div class="rankline"><b>Défi du jour</b><br><span>Hors classement${o.oath?` · ⚖ Serment ${o.oath.cross?"croisé ":""}${o.oath.kept?"tenu":"rompu"}`:""}</span></div>`:o.blitz||o.chron?"":o.mp&&!o.rk?`<div class="rankline"><b>Duel contre ${esc(S.mp.oppNick)}</b><br><span>${!S.mp.ranked?"Duel entre amis · hors classement":S.mp.srv==="conflict"?"Duel classé · résultat non validé : aucune étoile":S.mp.rankDone&&!S.mp.counted?(o.res==="lose"?"Duel classé · ce joueur a déjà 10 victoires comptées contre toi aujourd'hui : rien de perdu":"Duel classé · déjà 10 victoires comptées aujourd'hui contre ce joueur : aucune étoile"):"Duel classé · étoiles dès que le serveur a validé le résultat"}</span></div>`:`${o.mp?`<div class="hint">Duel classé contre ${esc(S.mp.oppNick)}</div>`:""}<div class="rankline">${rankIcon(P.lv,"md")}<br><b>${rankName(P.lv)}</b> ${starsHTML(P.lv,P.st)}${o.rk.oath?`<br><span class="oathres ${o.rk.oath}">${o.rk.cross?(o.rk.oath==="kept"?(o.res==="win"?"Serment croisé tenu : +4 étoiles":o.res==="lose"?"Serment croisé tenu : ta défaite ne coûte rien":"Serment croisé tenu"):(o.res==="win"?"Serment croisé perdu : ta victoire ne rapporte aucune étoile":o.res==="lose"?"Serment croisé perdu : −4 étoiles":"Serment croisé perdu")):o.rk.oath==="kept"?(o.res==="win"?"Serment tenu : +2 étoiles":"Serment tenu, mais la partie est perdue"):"Serment rompu : −1 étoile"}</span>`:""}<br><span>${o.rk.up?"Promotion !":o.rk.down?"Rétrogradation":o.rk.res==="win"?(o.rk.cross?(o.rk.oath==="kept"?"+4 étoiles (serment croisé)":"Aucune étoile gagnée"):o.rk.bonus?"+2 étoiles (série)":"+1 étoile"):o.rk.res==="lose"?(o.rk.cross?(o.rk.oath==="kept"?"Aucune étoile perdue":"−4 étoiles (serment croisé)"):tierOf(P.lv)<2?"Passant et Initié : une défaite ne coûte rien":isFloor(P.lv)&&P.st===0?"Plancher du palier : rien de perdu":"−1 étoile"):"Égalité : rang inchangé"}</span></div>`}
+    <div class="m" style="color:var(--mist)">${o.pw} ${o.chron&&o.rows.some(r=>r.x2)?"point":"lieu"}${o.pw>1?(o.chron&&o.rows.some(r=>r.x2)?"s":"x"):""} contre ${o.ew}${o.tie?` · départage à la puissance totale ${o.pt} contre ${o.et}`:""}</div>
+    <div class="rows sc3"><div class="row rh" aria-hidden="true"><span>Lieu</span><span class="c me">Toi</span><span class="c foe"${o.mp?` title="${esc(S.mp.oppNick)}"`:""}>${o.mp?esc(S.mp.oppNick):esc(foeName())}</span></div>${o.rows.map(r=>`<div class="row"><span>${r.n}${r.a===r.b&&r.w?` <small style="color:var(--mist)">(Morrigan)</small>`:""}${r.inv?` <small style="color:var(--mist)">(Nemesis)</small>`:""}${r.x2?` <small style="color:var(--warm)">×2</small>`:""}</span><span class="c me${r.w==="p"?" w":""}">${r.a}</span><span class="c foe${r.w==="e"?" w":""}">${r.b}</span></div>`).join("")}</div>
     ${bilanHTML(o)}
     ${fbHTML(o)}
     ${o.mp&&S.mp.srv?`<p class="hint" role="status">${S.mp.srv==="valid"?"✓ Résultat validé par le serveur":S.mp.srv==="conflict"?"⚠ Résultats différents entre les deux joueurs : partie non validée":"Résultat envoyé, en attente de l'adversaire…"}</p>`:""}
     ${o.mp?`<button class="primary" data-act="mpagain" ${S.mp.wantAgain||S.mp.gone?"disabled":""}>${S.mp.gone?`${esc(S.mp.oppNick)} a quitté le salon`:S.mp.wantAgain?`En attente de ${esc(S.mp.oppNick)}…`:"Revanche"}</button>
-    <div class="row2"><button class="ghost" data-act="mpquit">Quitter le salon</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.blitz?`<button class="primary" data-act="go" data-to="blitz">${o.ended?"Voir le bilan":"Continuer le Blitz"}</button><div class="row2"><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.daily?`<button class="primary" data-act="dailycopy">${dailyCopyLabel()}</button>
+    <div class="row2"><button class="ghost" data-act="mpquit">Quitter le salon</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.blitz?`<button class="primary" data-act="go" data-to="blitz">${o.ended?"Voir le bilan":"Continuer le Blitz"}</button><div class="row2"><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.chron?`<button class="primary" data-act="go" data-to="chron">${o.done?"Voir le bilan":"Continuer la Chronique"}</button><div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:o.daily?`<button class="primary" data-act="dailycopy">${dailyCopyLabel()}</button>
     <div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`:`<button class="primary" data-act="play">Rejouer</button>
     <div class="row2"><button class="ghost" data-act="go" data-to="home">Accueil</button><button class="ghost" data-act="close">Voir le plateau</button></div>`}
   </div></div>`;
@@ -1042,7 +1045,7 @@ function gameHTML(){
   ${resultHTML()}${gzHTML()}`;
 }
 function endBtnHTML(){
-  return S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:S.daily?`<button class="endbtn" data-act="go" data-to="home">Accueil</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`;
+  return S.over?(S.mp?`<button class="endbtn" data-act="mpquit">Quitter le duel</button>`:(S.blitz?`<button class="endbtn" data-act="go" data-to="blitz">Blitz</button>`:S.chron?`<button class="endbtn" data-act="go" data-to="chron">Chronique</button>`:S.daily?`<button class="endbtn" data-act="go" data-to="home">Accueil</button>`:`<button class="endbtn" data-act="play">Nouvelle partie</button>`)):`<button class="endbtn${S.tut&&!tutDone()?" wait":""}" data-act="end" ${S.tut&&!tutDone()?'aria-disabled="true"':""} ${S.busy||(S.mp&&S.mp.locked)?"disabled":""}>${S.busy?"Révélation…":S.mp&&S.mp.locked?`En attente de ${esc(S.mp.oppNick)}…`:"Fin du tour"}</button>`;
 }
 /* Le Serment est possible jusqu'au tour 5 : partie classée, Blitz, duel (caché jusqu'à la fin du tour) et partie guidée (sans enjeu). Jamais en replay ni pendant la reprise d'un duel. */
 const oathOK=()=>S&&!S.rp&&!S.over&&S.turn<=5&&!(S.mp&&(S.mp.resuming||S.mp.replaying));
@@ -1092,7 +1095,7 @@ function render(){
   { const se=season(); if(se) document.documentElement.dataset.season=se; else delete document.documentElement.dataset.season; }
   const hw=document.querySelector(".handwrap"), hs=hw?hw.scrollLeft:0;
   if(screen==="codex") screen="deck"; /* Deck et Collection ne font plus qu'un */
-  const body = screen==="play"?gameHTML():screen==="profile"?profileHTML():screen==="deck"?deckHTML():screen==="shop"?shopHTML():screen==="codex"?codexHTML():screen==="rules"?rulesHTML():screen==="duel"?duelHTML():screen==="blitz"?blitzHTML():screen==="board"?boardHTML():screen==="hist"?histHTML():homeHTML();
+  const body = screen==="play"?gameHTML():screen==="profile"?profileHTML():screen==="deck"?deckHTML():screen==="shop"?shopHTML():screen==="codex"?codexHTML():screen==="rules"?rulesHTML():screen==="duel"?duelHTML():screen==="blitz"?blitzHTML():screen==="chron"?chronHTML():screen==="board"?boardHTML():screen==="hist"?histHTML():homeHTML();
   if(storeReady && !P.tuto && tutoStep<0 && screen!=="play") tutoStep=0;
   /* le code de salon en cours de saisie survit aux redessins (le salon de duel en provoque à chaque arrivée ou départ ; la présence anonyme seulement quand le nombre de joueurs libres ou en recherche change) */
   const mpIn=document.getElementById("mp-code"), mpKeep=mpIn&&{v:mpIn.value,f:document.activeElement===mpIn,s:mpIn.selectionStart,e:mpIn.selectionEnd};
@@ -1382,6 +1385,10 @@ document.addEventListener("click", e=>{
     case "bzplay": if(S&&S.blitz&&!S.over){ screen="play"; render(); return; } sfx("click"); bzGame(); window.scrollTo(0,0); return;
     case "bzquit": if(S&&S.blitz&&!S.over) S=null; bzEndRun(); render(); return;
     case "bzclear": P.bz.run=null; save(); sfx("click"); render(); return;
+    case "chstart": chStart(); return;
+    case "chplay": if(S&&S.chron&&!S.over){ screen="play"; render(); return; } sfx("click"); chGame(); window.scrollTo(0,0); return;
+    case "chquit": chQuit(); return;
+    case "chclear": if(P.ch.run&&P.ch.run.over){ P.ch.run=null; save(); } sfx("click"); render(); return;
     case "deckpick": { const i=+el.dataset.i; if(i===P.di) return; P.decks[P.di].cards=[...P.deck]; P.di=i; P.deck=[...P.decks[i].cards].filter(id=>P.owned.includes(id)); deckMsg=pruneUL(); deckRename=false; save(); sfx("select"); render(); preloadDeck(); return; }
     case "deckrename": deckRename=true; render(); { const i=document.getElementById("deck-input"); if(i){ i.focus(); i.select(); } } return;
     case "deckcover": { const D=P.decks[P.di]; D.cover=COVERS[(COVERS.indexOf(D.cover)+1)%COVERS.length]; save(); sfx("click"); render(); return; }
