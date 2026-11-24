@@ -13,6 +13,7 @@
      node outils/equilibrage.js --cartes aphrodite,set,styx --parties 1000   # mode ciblé : chaque deck contient 2 de ces cartes ; écrit rapport-cible.md (ne touche pas à rapport-cartes.md)
      node outils/equilibrage.js --inclure cronos,izanami,loki   # ne rend jouables que ces cartes cachées (elles restent « pas sorties » dans le rapport)
      node outils/equilibrage.js --inclure-cachees     # ajoute les cartes sans date (2099) : elles n'ont pas d'effet, chiffres peu parlants
+     node outils/equilibrage.js --lieu escaliers      # ce lieu est dans chaque partie (à une place tirée au hasard), les deux autres sont tirés comme d'habitude
      node outils/equilibrage.js --graine 42           # même graine = mêmes parties (reproductible)
      node outils/equilibrage.js --ouvriers 4          # nombre de Chromium en parallèle
      node outils/equilibrage.js --sortie autre.md     # fichier de sortie
@@ -36,6 +37,7 @@ const OPT = {
   cartes: String(opt("cartes", "")).split(",").map(x => x.trim()).filter(Boolean),     /* mode ciblé : ces cartes sont placées exprès dans les decks des deux camps */
   sortie: path.resolve(process.cwd(), String(opt("sortie", path.join(ROOT, String(opt("cartes", "")) ? "rapport-cible.md" : "rapport-cartes.md")))),
   brut: opt("brut", null),
+  lieu: String(opt("lieu", "")).trim(),   /* id d'un lieu présent dans chaque partie (ex. escaliers) */
   aujourdhui: String(opt("aujourdhui", new Date().toISOString().slice(0, 10))),
 };
 if (OPT.cachees) OPT.date = "2100-01-01";
@@ -119,7 +121,9 @@ function inPageSetup(o) {
         rec.dp = dp; rec.de = de;
         P.owned = ids; P.deck = dp; P.w = Math.max(P.w, 1); P.chf = 0; P.lv = START[o.palier]; P.st = 0; P.streak = 0; P.best = P.lv; /* même état de départ à chaque partie */
         const keep = window.aiDeck; window.aiDeck = () => ({ deck: de, fac: "helvara" });
-        try { newGame(); } finally { window.aiDeck = keep; }
+        const keepL = window.pickLocs;
+        if (o.lieu) window.pickLocs = () => { const a = shuffle(locPool().filter(x => x !== o.lieu)).slice(0, 2); a.splice(Math.floor(Math.random() * 3), 0, o.lieu); return a; };
+        try { newGame(); } finally { window.aiDeck = keep; window.pickLocs = keepL; }
         const pl = { p: [], e: [] }, bad = [];
         for (let t = 1; t <= 6 && !S.over; t++) {
           const smallIn = side => S.hand[side].filter(c => CARDS[c.id].fac === "jugement" && CARDS[c.id].cost <= 1 && c.id !== "nike").length;
@@ -159,7 +163,7 @@ async function newWorker(browser, port, k) {
   await page.goto(`http://127.0.0.1:${port}/index.html`); await page.waitForFunction(() => typeof newGame === "function" && typeof aiPlan === "function");
   page.setDefaultTimeout(180000);
   if (OPT.inclure.length) await page.evaluate(ids => { window.__relOrig = {}; for (const id of ids) if (CARDS[id]) { window.__relOrig[id] = CARDS[id].rel; CARDS[id].rel = "2026-10-01"; } }, OPT.inclure);
-  const info = await page.evaluate(inPageSetup, { seed: OPT.graine, palier: OPT.palier, cartes: OPT.cartes });
+  const info = await page.evaluate(inPageSetup, { seed: OPT.graine, palier: OPT.palier, cartes: OPT.cartes, lieu: OPT.lieu });
   return { page, errors, info };
 }
 
@@ -172,9 +176,10 @@ async function main() {
   const data = await dataW.page.evaluate(() => ({
     cards: Object.entries(CARDS).map(([id, c]) => ({ id, name: c.name, cost: c.cost, pow: c.pow, fac: c.fac, r: c.r, rel: (window.__relOrig && window.__relOrig[id]) || c.rel || null, soon: c.soon || null, ex: c.ex || null, base: c.base || null, token: !!c.token, fx: c.fx || "" })),
     uls: ULS.map(u => ({ id: u.id, req: u.req, fac: u.fac || null, min: u.min || null })),
-    facs: Object.fromEntries(Object.entries(FAC).map(([k, v]) => [k, v.n])), build: typeof BUILD === "string" ? BUILD : "?",
+    facs: Object.fromEntries(Object.entries(FAC).map(([k, v]) => [k, v.n])), build: typeof BUILD === "string" ? BUILD : "?", locs: Object.keys(LOCS),
   }));
   const poolInfo = dataW.info;
+  if (OPT.lieu && !data.locs.includes(OPT.lieu)) { console.error(`Lieu inconnu : ${OPT.lieu}. Lieux possibles : ${data.locs.join(", ")}`); process.exit(1); }
   await dataW.page.context().close();
   console.log(`Cartes en jeu à la date ${OPT.date} : ${poolInfo.pool} · fusions et ultras utilisables : ${poolInfo.decksU}`);
   if (poolInfo.unstubbed.length) console.log("Attention, non neutralisés : " + poolInfo.unstubbed.join(", "));
@@ -317,6 +322,7 @@ function reportCible(data, games, pageErrors, secs) {
   L.push(`# Rapport ciblé · Duel d'Helvara\n`);
   L.push(`Généré le ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC par \`outils/equilibrage.js --cartes ${OPT.cartes.join(",")}\` (version du moteur ${data.build}). Il ne remplace pas \`rapport-cartes.md\`.\n`);
   L.push(`- **Parties simulées** : ${games.length} (${played.length} terminées), IA de palier ${OPT.palier} contre IA de palier ${OPT.palier}, graine ${OPT.graine}, ${secs} s.`);
+  if (OPT.lieu) L.push(`- **Lieu forcé** : ${OPT.lieu} dans chaque partie (place tirée au hasard).`);
   L.push(`- **Decks** : 12 cartes, mêmes règles que le jeu ; **chaque deck des deux camps contient 2 des cartes ciblées**, tirées au hasard, le reste est tiré comme d'habitude.`);
   L.push(`- **Moteur** : ${!errs.length && !bads.length && !pageErrors.length ? "aucune erreur, aucune puissance invalide, aucune erreur de console." : `**${errs.length} partie(s) en erreur, ${bads.length} avec puissance invalide, ${pageErrors.length} erreur(s) de console**.`}`);
   L.push(`- Sous 100 decks, la marge d'erreur dépasse ±10 points (⚠).\n`);
@@ -346,7 +352,7 @@ function report(data, games, pageErrors, secs) {
   out(`- **Parties simulées** : ${games.length} (${played.length} terminées), IA de palier ${OPT.palier} contre IA de palier ${OPT.palier}, graine ${OPT.graine}, ${secs} s.`);
   out(`- **Cartes en jeu** : toutes celles dont la date de sortie est au plus le ${OPT.date}${OPT.cachees ? " (cartes cachées de 2099 incluses)" : OPT.inclure.length ? ` (cartes cachées de 2099 jouées : ${OPT.inclure.join(", ")} ; les autres cachées, sans effet, ne sont pas jouées)` : " (les cartes cachées de 2099, sans effet, ne sont pas jouées)"}.`);
   out(`- **Decks** : 12 cartes, mêmes règles que le jeu (une version par personnage, une seule ultra-légendaire, ses conditions remplies). Trois decks sur quatre sont tirés au hasard avec une faction dominante et une courbe de coûts raisonnable ; un sur quatre est fabriqué par le jeu pour son IA. Ce ne sont pas des decks de joueurs : les cartes les plus fortes ne sont pas surreprésentées.`);
-  out(`- **Lieux** : 3 lieux tirés au hasard parmi ceux sortis à cette date, comme dans une vraie partie.`);
+  out(OPT.lieu ? `- **Lieux** : **${OPT.lieu} dans chaque partie** (option \`--lieu\`, place tirée au hasard), les deux autres tirés au hasard parmi ceux sortis à cette date.` : `- **Lieux** : 3 lieux tirés au hasard parmi ceux sortis à cette date, comme dans une vraie partie.`);
   out(`- **Camp qui révèle en premier** (le « joueur ») : ${pct(A.pWins, A.ok)} % de victoires (nulles : ${pct(A.nul, A.ok)} %). Un écart net avec 50 % signalerait un avantage lié à l'ordre de révélation.`);
   out(`- **Moyenne de victoires d'une carte présente dans un deck** : ${avg} % (nulles : ${pct(A.nul, A.ok)} % des parties).`);
   out(`- Lecture : ce sont des parties IA contre IA. Un humain joue les combinaisons, le serment et les lieux mieux (ou moins bien) que l'IA : les chiffres indiquent des tendances, pas une vérité. En dessous de 100 decks, la marge d'erreur dépasse ±10 points : à lire avec prudence (⚠).\n`);

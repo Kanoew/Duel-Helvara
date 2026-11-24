@@ -28,6 +28,8 @@ async function inPage() {
   const card = (id, pow) => { const c = mk(id); if (pow != null) c.pow = pow; return c; };
   const find = (s, id) => { for (let li = 0; li < 3; li++) for (const c of S.board[s][li]) if (c.id === id) return c; return null; };
   const wait = ms => new Promise(r => setTimeout(r, ms));
+  /* Choix de l'IA vérifié sur n essais : vrai si le bon choix l'emporte au moins min fois sur n (l'IA garde une part de hasard). */
+  const mostly = (play, good, n = 100, min = 55) => { let k = 0; const seen = {}; for (let i = 0; i < n; i++) { const ids = play(); if (good(ids)) k++; else { const x = ids.join() || "rien"; seen[x] = (seen[x] || 0) + 1; } } return { ok: k >= min, d: `${k}/${n} bons choix ; autres : ${JSON.stringify(seen)}` }; };
 
   /* 1. Nike + Aphrodite : 2 cartes à 1, Nike (3/2), Aphrodite au tour 6 → Nike finit à 10 */
   fresh(); S.turn = 6; { const a = card(plain[0], 1), b = card(plain[1], 1), n = card("nike"), ap = card("aphrodite"); S.hand.p = [a, b, n, ap];
@@ -589,8 +591,9 @@ async function inPage() {
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 4 → Apollon n'est plus gardé pour son tour (sa Flèche à 0 arrive en main pour la suite)", ids.includes("apollon"), ids.join() || "rien"); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { const n = card("nike"), v = card("vesta"), o3 = card(other3); S.hand.e = [n, v, o3];
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike en main au tour 5 → Vesta jouée (Nike coûtera 1 de moins au tour 6)", ids.includes("vesta") && !ids.includes("nike"), ids.join() || "rien"); }
-    fresh(); S.turn = 4; S.energy = S.energyE = 4; { const n = card("nike"), m = card("maat"); S.hand.e = [n, m];
-      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : pas de Nike au tour 4 avec moins de 3 cartes devant elle", !ids.includes("nike"), ids.join() || "rien"); }
+    /* L'IA a du hasard (bruit du palier 5) : ce choix se vérifie sur 100 essais, il doit l'emporter au moins 55 fois (il l'emporte ~75 fois) ; un seul essai ratait une fois sur quatre (24 novembre) */
+    { const r = mostly(() => { fresh(); S.turn = 4; S.energy = S.energyE = 4; const n = card("nike"), m = card("maat"); S.hand.e = [n, m]; return aiPlan("e", 5).map(x => x.c.id); }, ids => !ids.includes("nike"));
+      T("IA : pas de Nike au tour 4 avec moins de 3 cartes devant elle (la plupart du temps)", r.ok, r.d); }
     fresh(); S.turn = 6; S.energy = S.energyE = 6; { const hs = ["maat", "vesta", "apollon", "fleche", "nike"].map(id => card(id)); S.hand.e = hs;
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : au tour 6, Nike jouée en dernier avec au moins 3 cartes devant elle", ids[ids.length - 1] === "nike" && ids.length >= 4, ids.join()); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { put("e", 0, "maat"); put("e", 1, "vesta"); const z = card("zeus"), n = card("nike"); S.hand.e = [z, n];
@@ -647,8 +650,8 @@ async function inPage() {
       SRC = { s: "e", cost: 3 }; const ok = destroy("p", 0, nk); SRC = null; T("Styx : Nike V détruite par l'adversaire revient en main", ok && S.hand.p.includes(nk) && !S.graveyard.p.includes("nike_v"), ok); }
     fresh(); S.turn = 5; S.energy = S.energyE = 5; { const m = card("maat"), a = card("apollon"), n = card("nike_v"); S.hand.e = [n, m, a];
       const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike V posée après Mā'at et Apollon, comme Nike", ids.indexOf("nike_v") === ids.length - 1 && ids.length === 3, ids.join()); }
-    fresh(); S.turn = 3; S.energy = S.energyE = 3; { const n = card("nike_v"), m = card("maat"), a = card("apollon"), o3 = card(Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id)) || "athena"); S.hand.e = [n, m, a, o3];
-      const ids = aiPlan("e", 5).map(x => x.c.id); T("IA : Nike V en main au tour 3 → les petites cartes sont gardées pour son tour", !ids.includes("maat") && !ids.includes("apollon") && !ids.includes("nike_v"), ids.join() || "rien"); }
+    { const r = mostly(() => { fresh(); S.turn = 3; S.energy = S.energyE = 3; const n = card("nike_v"), m = card("maat"), a = card("apollon"), o3 = card(Object.keys(CARDS).find(id => !CARDS[id].token && CARDS[id].fac !== "jugement" && CARDS[id].cost === 3 && !CARDS[id].fx && !ULof(id)) || "athena"); S.hand.e = [n, m, a, o3]; return aiPlan("e", 5).map(x => x.c.id); }, ids => !ids.includes("maat") && !ids.includes("apollon") && !ids.includes("nike_v"));
+      T("IA : Nike V en main au tour 3 → les petites cartes sont gardées pour son tour (la plupart du temps, sur 100 essais)", r.ok, r.d); }
     { const keep = window.__today, jr = () => { P.owned = P.owned.filter(x => x !== "nike_v"); return journalHTML(); };
       window.__today = "2027-01-31"; P.fj = { nikev: 7 }; T("Journal : pas de ligne Saint-Valentin avant le 1er février", !jr().includes("Saint-Valentin"));
       window.__today = "2027-02-03"; { const h = jr(); T("Journal : la quête est visible dès le 1er février, la carte et le seuil ne sont pas encore révélés", h.includes("Saint-Valentin · avec Nike") && h.includes("7 parties") && h.includes("bientôt") && !h.includes("/25") && !h.includes("Nike de la Saint-Valentin")); }

@@ -104,15 +104,15 @@ Côté code, **c'est terminé** (20 novembre, `alpha-0.46` à `alpha-0.48`) : le
 - 🟣 👤 **Yarden X Apsu** : +9,9 en simulation même en 10 / 9, et **87,3 % de victoires sur 150 vraies parties** avant son nerf. Tu l'essaies d'abord, puis on décide.
 - 🟣 Entre +6 et +8 : Ereshkigal +6,7, Apsu +6,6, Arès d'Halloween +6,5, Calypso +6,4, Nyx d'Halloween +6,1, le Troll +6,1.
 - ✅ **Nike, l'Élan de la Victoire** (choix de Jordan, idée d'une relecture extérieure) : 3/3, « +2 de puissance pour chaque autre carte jouée avant elle ce tour, et chacune d'elles gagne +1 de puissance ». Decks avec Nike 47,4 → 53,7 % ; **Jugement 46,6 → 48,6 %**. L'IA de Jugement est corrigée aussi (Apollon, Vesta, Bia, Eir, Chernobog).
-- 🟣 **Helvara est maintenant la faction la plus basse** (47,3 %, ~44 % contre Primordial) : à surveiller, Lien n'a pas encore été mesuré avec l'IA corrigée sur les Escaliers du Marché.
+- ✅ **Helvara mesurée avec et sans les Escaliers du Marché** (24 novembre, 3 graines × 6 000 parties, decks identiques) : 48,9 % hors de son lieu, **54,8 % avec les Escaliers**. Face-à-face avec les Escaliers : 53,7 % contre Primordial, 58,1 % contre Désir, 56,3 % contre Jugement, aucun au-delà de 60 %. Les cartes Lien passent de −1,5 / −2,6 à environ 0. Verdict : faible hors de son lieu, correcte dedans, rien à corriger sur simulation. 🟣 Après le 1er décembre : relever Helvara et ses cartes Lien dans les vraies statistiques. À surveiller : **Mendiant −6,4** (Costumes −4,5, Doyenne −2,9). Si Helvara reste sous 47 % en vrai, la piste la plus sûre est une commune Helvara (Mendiant), pas le lieu.
 - 🟣 👤 **Patch note** des nouveautés à préparer à ton retour (sur le modèle de `docs/patch-note-2026-11-18.md`).
 - 🟣 Après le 1er décembre : vraies statistiques d'Ananké, de Yarden X Apsu, de Lilith et de Dionysos dans Supabase (lecture seule). Correction seulement au-delà de ±8 points avec au moins 100 decks.
-- 🟣 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage, pour mesurer Lien sur les Escaliers du Marché (+2 aux cartes Helvara).
+- ✅ 🛠️ Option « forcer un lieu » dans l'outil d'équilibrage (24 novembre) : `node outils/equilibrage.js --lieu escaliers` (le lieu est dans chaque partie, à une place tirée au hasard).
 
 ### 3.3 🟣 🛠️ Chronique 1, en 3 matchs
 - 🟣 Un adversaire de faction, puis un adversaire avec un avantage, puis un boss.
 - 🟣 Deck persistant, titre permanent, CHF.
-- 🟣 **Boss en 6 tours, pas 8** (validé le 20 novembre) : 8 tours casseraient Ananké, Cronos, Nemesis, Méduse, Konohana, Loviatar, Fenrir, Médée d'Halloween et l'IA, tous calés sur le tour 6. À la place : **le Trône de Tiamat fixe au centre**, avec une « Loi du Trône » propre au boss (par exemple : il vaut 2 lieux au décompte, ou le boss y prête Serment dès le tour 1, ou une onde à la fin du tour 3 quand le Trône change d'allégeance). 👤 La loi exacte : ta plume.
+- 🟣 **Boss en 6 tours, pas 8** (validé le 20 novembre) : 8 tours casseraient Ananké, Cronos, Nemesis, Méduse, Konohana, Loviatar, Fenrir, Médée d'Halloween et l'IA, tous calés sur le tour 6. À la place : **le Trône de Tiamat fixe au centre**, avec une « Loi du Trône » propre au boss ✅ **Loi du Trône choisie le 24 novembre : le Trône vaut 2 lieux au décompte** (4 points en jeu). Gagner le Trône et un autre lieu suffit ; gagner seulement le Trône, ou seulement les deux autres, fait 2 contre 2 et c'est le départage habituel qui tranche (la puissance totale sur les trois lieux). 👤 À confirmer : ce départage te va pour le boss ?
 - 🟣 👤 L'histoire de la Chronique et les portraits des quatre rivaux (provisoires aujourd'hui : Set, Lilith, Anubis, Joanna).
 
 ### 3.4 🟣 🛠️ Accueil des nouveaux joueurs
@@ -257,7 +257,12 @@ Détail et inventaire de ce qu'un joueur peut modifier : `docs/anti-triche.md`.
 ### 21 novembre
 - ✅ Agents : `balance-reviewer` et `playtest-qa` sur Sonnet, règle de délégation dans `CLAUDE.md`.
 - ✅ Accueil des nouveaux joueurs (3.4) : fin de la Première Brûlure, pastille ⏳, aperçu du bonus au glisser-déposer, Défi du jour (`alpha-0.49`).
-- 🟣 Deux tests de l'IA autour de Nike échouent par moments (environ 1 lancement sur 10, déjà avant ces changements) : à rendre fiables.
+- ✅ Deux tests de l'IA autour de Nike échouaient par moments : rendus fiables le 24 novembre (voir plus bas).
 - ✅ **Avant-première** : le Défi du jour et le nouveau Tirage ne sont visibles que dans le bac à sable (`?date=`) ou sur un appareil où `?apercu=1` a été ouvert (`?apercu=0` pour l'enlever). 👤 Leur date de sortie pour tous : à choisir (`NOUV`, `js/langue-profil.js`). Les petites améliorations (Première Brûlure, pastille ⏳, aperçu du bonus, tutoriel) sortent pour tous à la fusion.
 - ✅ Bac à sable : les paquets restent ouvrables avec toutes les cartes, fusions comprises, et deux boutons de test (« avec une légendaire », « avec une ultra-légendaire ») dans la boutique.
 - ✅ Bouton « 🏊 Nageuse : changer de lieu » affiché chez tout le monde pendant chaque révélation, même sans Nageuse (vidéo de Jordan) : corrigé, il n'apparaît plus que si la Nageuse est en jeu, et jamais pendant une révélation.
+
+### 24 novembre
+- ✅ Tests de Nike fiables : l'IA garde une part de hasard, et ces deux tests ne l'essayaient qu'une fois (ils rataient 24 à 29 % du temps, donc presque une suite sur deux). Chaque choix est maintenant vérifié sur 100 essais, et le bon doit l'emporter au moins 55 fois. Résultat : 739 scénarios sur 739, six fois de suite. Reste un test de durée de l'ouverture de paquet qui peut rater quand la machine est très chargée (vu en lançant trois suites en parallèle).
+- ✅ Outil d'équilibrage : option `--lieu`. Helvara mesurée sur les Escaliers du Marché (voir 3.2).
+- ✅ Loi du Trône de la Chronique 1 : le Trône vaut 2 lieux (voir 3.3).
